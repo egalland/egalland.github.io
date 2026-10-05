@@ -15,7 +15,23 @@
  const emptyRecord=()=>({note:'',done:false,appUrl:'',appTitle:'',promptMinutes:null,chatgptMinutes:null,devMinutes:null});
  const recordFor=day=>records.get(day)||emptyRecord();
  const sameRecord=(a,b)=>recordFields.every(key=>a[key]===b[key]);
- function safeUrl(value){if(!value.trim())return '';try{const url=new URL(value.trim());if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw new Error();return url.href;}catch{throw new Error('Indiquez un lien complet commençant par https:// ou http://.');}}
+ function safeUrl(value){
+  const raw=value.trim();if(!raw)return '';
+  try{
+   let url;
+   if(/^https?:\/\//i.test(raw))url=new URL(raw);
+   else {
+    if(!/^\/?[a-z0-9_-]+(?:\/[a-z0-9_-]+)*\/?$/i.test(raw))throw new Error();
+    url=new URL(raw.replace(/^\//,'').replace(/\/?$/,'/'),'https://egalland.github.io/');
+   }
+   if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw new Error();
+   return url.href;
+  }catch{throw new Error('Indiquez le nom du dépôt ou le chemin de l’app (ex. cactocalypse), ou une adresse complète https://.');}
+ }
+ function appPath(value){
+  try{const url=new URL(value);if(url.origin==='https://egalland.github.io'&&!url.search&&!url.hash)return url.pathname.replace(/^\/|\/$/g,'');}catch{}
+  return value;
+ }
  function render(){
   const count=available(),day=today();calendar.replaceChildren();
   for(let n=1;n<=31;n++){
@@ -80,16 +96,16 @@ Avant de terminer, vérifie le parcours principal et un cas d’erreur, puis exp
  async function load(){if(loading)return;loading=true;ready=false;render();feedback('Chargement de vos tuiles…');try{const data=await api('/api/calendar');if(!Array.isArray(data.days))throw new Error('Impossible de charger vos tuiles. Réessayez.');opened.clear();records.clear();for(const row of data.days){if(Number.isInteger(row.day)&&row.day>=1&&row.day<=31){if(row.opened)opened.add(row.day);records.set(row.day,normalizeRecord(row));}}settings=normalizeSettings(data.settings);ready=true;showSettings();feedback();}catch(error){feedback(error.message,true);}finally{loading=false;render();}}
  async function openDay(n){if(!ready)return {error:'Vos tuiles ne sont pas encore chargées.'};if(!Number.isInteger(n)||n<1||n>available()||busy)return {error:'Cette porte n’est pas encore disponible.'};busy=true;try{const button=calendar.querySelector(`button[data-day="${n}"]`);if(!opened.has(n)){button?.classList.add('opening');const [result]=await Promise.all([api(`/api/days/${n}`,{opened:true}),matchMedia('(prefers-reduced-motion: reduce)').matches?Promise.resolve():new Promise(r=>setTimeout(r,420))]);opened.add(n);records.set(n,normalizeRecord(result));render();}feedback();showPrompt(n);return {day:n,theme:prompts[n-1],...recordFor(n),ideas:inspiration[n-1].ideas,tip:inspiration[n-1].tip,prompt:makePrompt(n,choices.get(n)||0)};}catch(error){render();feedback(error.message+' Cliquez à nouveau sur la tuile pour réessayer.');return {error:error.message};}finally{busy=false;}}
  function readMinutes(id){const raw=$(id).value.trim();return raw===''?null:Number(raw);}
- function formValue(){return {note:$('day-note').value,done:$('day-done').checked,appUrl:$('day-url').value,appTitle:$('day-title').value,promptMinutes:readMinutes('day-prompt-minutes'),chatgptMinutes:readMinutes('day-chatgpt-minutes'),devMinutes:readMinutes('day-dev-minutes')};}
- function updateForm(){const value=formValue(),changed=!sameRecord(value,recordFor(current));$('form-done-label').textContent=value.done?'Fait':'À faire';$('form-done-label').className=value.done?'form-done':'';$('note-status').textContent=changed?'Modifications non enregistrées':records.has(current)?'Enregistré':'';$('save-note').disabled=saving||!changed;let url='';try{url=safeUrl(value.appUrl);}catch{}$('app-link-preview').hidden=!url;if(url)$('app-link-preview').href=url;else $('app-link-preview').removeAttribute('href');const estimate=metrics.calculate([{...value,done:true,day:current}],settings);$('app-vibe-cost').textContent=money(estimate.vibeCost.value);$('app-dev-cost').textContent=money(estimate.devCost.value);}
- function showRecord(){const value=drafts.get(current)||recordFor(current);$('day-note').value=value.note;$('day-done').checked=value.done;$('day-url').value=value.appUrl;$('day-title').value=value.appTitle;$('day-prompt-minutes').value=value.promptMinutes??'';$('day-chatgpt-minutes').value=value.chatgptMinutes??'';$('day-dev-minutes').value=value.devMinutes??'';updateForm();}
+ function formValue(){let appUrl=$('day-url').value;try{appUrl=safeUrl(appUrl);}catch{}return {note:$('day-note').value,done:$('day-done').checked,appUrl,appTitle:$('day-title').value,promptMinutes:readMinutes('day-prompt-minutes'),chatgptMinutes:readMinutes('day-chatgpt-minutes'),devMinutes:readMinutes('day-dev-minutes')};}
+ function updateForm(){const value=formValue(),changed=!sameRecord(value,recordFor(current));$('form-done-label').textContent=value.done?'Fait':'À faire';$('form-done-label').className=value.done?'form-done':'';$('note-status').textContent=changed?'Modifications non enregistrées':records.has(current)?'Enregistré':'';$('save-note').disabled=saving||!changed;let url='';try{url=safeUrl(value.appUrl);}catch{}$('app-link-preview').hidden=!url;if(url)$('app-link-preview').href=url;else $('app-link-preview').removeAttribute('href');$('app-url-resolved').textContent=url||'';const estimate=metrics.calculate([{...value,done:true,day:current}],settings);$('app-vibe-cost').textContent=money(estimate.vibeCost.value);$('app-dev-cost').textContent=money(estimate.devCost.value);}
+ function showRecord(){const value=drafts.get(current)||recordFor(current);$('day-note').value=value.note;$('day-done').checked=value.done;$('day-url').value=appPath(value.appUrl);$('day-title').value=value.appTitle;$('day-prompt-minutes').value=value.promptMinutes??'';$('day-chatgpt-minutes').value=value.chatgptMinutes??'';$('day-dev-minutes').value=value.devMinutes??'';updateForm();}
  function rememberForm(){drafts.set(current,formValue());updateForm();}
  for(const id of ['day-note','day-url','day-title','day-prompt-minutes','day-chatgpt-minutes','day-dev-minutes'])$(id).addEventListener('input',rememberForm);$('day-done').addEventListener('change',rememberForm);
  async function saveProgress(day,patch){
   if(!ready)throw new Error('Vos tuiles ne sont pas encore chargées.');if(saving)throw new Error('Un enregistrement est déjà en cours.');
   if(!Number.isInteger(day)||day<1||day>available()||!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).length===0||Object.keys(patch).some(key=>!recordFields.includes(key))||(patch.note!==undefined&&(typeof patch.note!=='string'||patch.note.length>2000))||(patch.done!==undefined&&typeof patch.done!=='boolean')||(patch.appTitle!==undefined&&(typeof patch.appTitle!=='string'||patch.appTitle.length>120))||(patch.appUrl!==undefined&&(typeof patch.appUrl!=='string'||patch.appUrl.length>2000)))throw new Error('Vérifiez le jour, le titre, la description et le lien.');
   for(const key of ['promptMinutes','chatgptMinutes','devMinutes'])if(patch[key]!==undefined&&patch[key]!==null&&(!Number.isInteger(patch[key])||patch[key]<0||patch[key]>100000))throw new Error('Indiquez les durées en minutes entières, positives ou nulles.');
-  if(patch.appUrl!==undefined)safeUrl(patch.appUrl);const snapshot={...recordFor(day),...patch};saving=true;$('save-note').disabled=true;if(current===day)$('note-status').textContent='Enregistrement…';
+  if(patch.appUrl!==undefined)patch={...patch,appUrl:safeUrl(patch.appUrl)};const snapshot={...recordFor(day),...patch};saving=true;$('save-note').disabled=true;if(current===day)$('note-status').textContent='Enregistrement…';
   try{const result=await api(`/api/days/${day}`,patch);const record=normalizeRecord(result);records.set(day,record);opened.add(day);if(drafts.has(day)&&sameRecord(drafts.get(day),snapshot))drafts.delete(day);render();if(current===day)showRecord();return {day,...record,saved:true};}
   catch(error){if(current===day)$('note-status').textContent=error.message;throw error;}
   finally{saving=false;if(current===day)$('save-note').disabled=sameRecord(formValue(),recordFor(day));else if(current)showRecord();}
