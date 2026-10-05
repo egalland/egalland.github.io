@@ -1,0 +1,13 @@
+/* Each fixed plane moves at a different scroll and pointer speed. */
+body{isolation:isolate}
+.landscape{z-index:0;inset:-210px -40px;animation:none;transform:translate3d(calc(var(--parallax-x,0) * -18px),calc(var(--parallax-y,0) * -14px - var(--far-scroll,0px)),0);background-image:linear-gradient(180deg,#14121d14 0%,#14121d59 45%,#14121dcc 100%),url('woodland.webp');background-size:cover;background-position:center 42%;opacity:0;transition:opacity 600ms ease;will-change:transform;pointer-events:none}
+.landscape.scene-ready{opacity:1}
+.mist{z-index:1;inset:-320px -80px;opacity:.5;animation:none;transform:translate3d(calc(var(--parallax-x,0) * -42px),calc(var(--parallax-y,0) * -32px - var(--mid-scroll,0px)),0);will-change:transform;pointer-events:none}
+.mist:after{animation:mist-drift 34s ease-in-out infinite alternate;opacity:.6}
+.ambient-light{z-index:1;inset:-70px;transform:translate3d(calc(var(--parallax-x,0) * -28px),calc(var(--parallax-y,0) * -22px),0);pointer-events:none}
+.embers{z-index:2;inset:-430px -95px;transform:translate3d(calc(var(--parallax-x,0) * -70px),calc(var(--parallax-y,0) * -55px - var(--near-scroll,0px)),0);will-change:transform;pointer-events:none}
+.embers span{bottom:180px;animation-name:parallax-ember-rise}
+.page{z-index:3}
+@keyframes parallax-ember-rise{0%{transform:translate3d(0,0,0);opacity:0}12%{opacity:.65}85%{opacity:.4}100%{transform:translate3d(36px,calc(-100vh - 720px),0);opacity:0}}
+@media(max-width:600px){.landscape{background-position:56% 38%}.mist{opacity:.32}.embers{opacity:.7}}
+@media(prefers-reduced-motion:reduce){.landscape,.mist,.ambient-light,.embers{transform:none!important;animation:none!important;will-change:auto;transition:none}.mist:after{animation:none!important}.embers{display:none}}

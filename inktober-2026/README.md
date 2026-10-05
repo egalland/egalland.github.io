@@ -1,17 +1,40 @@
-# Inktober 2026 — Le calendrier des ombres
+# Inktober 2026 · Le calendrier des ombres
 
-Calendrier prévu en page d’accueil : https://egalland.github.io/. Le chemin /inktober-2026/ conserve également une copie du calendrier.
+Calendrier : https://egalland.github.io/ — copie accessible sur `/inktober-2026/`.
 
-Le dossier contient les fichiers statiques du calendrier, les corrections mobiles, les idées quotidiennes et les calculs de temps/coûts. L’ancienne page d’accueil est remplacée ; elle reste récupérable dans l’historique Git.
+## Modifier et sauvegarder
 
-## Sauvegarde privée (version transitoire)
+Le bouton **Connecter GitHub** accepte un jeton personnel fine-grained du compte `egalland`. Sélectionner uniquement `egalland.github.io` et accorder **Contents: Read and write**. La vérification du compte et les écritures passent directement par l’API GitHub ; aucun serveur ni service Sites n’est requis.
 
-Le bouton « Connecter ma sauvegarde » ouvre la page de connexion du calendrier Sites existant. Après autorisation explicite, cette fenêtre transmet les demandes à l'API authentifiée du calendrier. Garder cette fenêtre ouverte pendant l'édition. Les descriptions, liens, durées et tarifs restent dans la base D1 privée existante et ne sont pas copiés dans ce dépôt public.
+Le jeton reste dans une variable en mémoire, jamais dans localStorage, les URL ou les fichiers du dépôt. Il faut le saisir à nouveau après un rechargement. Seules les ouvertures de portes des visiteurs sont conservées localement ; celles du propriétaire connecté sont enregistrées dans le dépôt.
 
-La consultation des thèmes et des idées est possible sans connexion. Les données personnelles et formulaires apparaissent après connexion. Sans connexion, ouvrir une porte ne sauvegarde aucun état de compte.
+Chaque enregistrement met à jour `inktober-2026/calendar.json` et crée un commit sur `master`. Les titres, descriptions, états, liens, durées et tarifs sont **publics**, comme ce dépôt. La sauvegarde précédente n’est pas importée. Les informations peuvent être ressaisies.
 
-Le transport accepte exclusivement l'origine du calendrier Sites, la fenêtre ouverte par le bouton et un identifiant aléatoire de session. Le pont Sites accepte exclusivement https://egalland.github.io et les opérations du calendrier. Aucun jeton de compte ni secret n'est stocké dans le dépôt ou le navigateur.
+Avant chaque écriture, la version GitHub est relue. Les modifications faites sur d’autres champs sont conservées ; un changement concurrent du même champ bloque l’enregistrement. **Actualiser les données** permet de recharger la version récente en conservant le brouillon dans le formulaire. L’historique Git permet de retrouver les versions précédentes.
 
-## Travail restant pour quitter Sites
+## Un dépôt par app
 
-La connexion GitHub de l'interface admin et l'import des dépôts d'apps ne sont pas implémentés. Une migration complète nécessite une authentification et un service serveur configurés, ainsi qu'un export de la base D1. Le calendrier conserve actuellement sa dépendance à Sites pour les données personnelles.
+Dans la case du jour, saisir `cactocalypse` ou `https://github.com/egalland/cactocalypse`. Le lien final sera `https://egalland.github.io/cactocalypse/`. Une URL complète reste acceptée.
+
+1. **Vérifier le dépôt** : contrôle du propriétaire et de la présence d’un `index.html` ou d’une commande npm `build`.
+2. **Construire et publier l’app** : installation du workflow `.github/workflows/inktober-pages.yml` dans le dépôt d’app et lancement de GitHub Actions. Aucun code de dépôt n’est exécuté dans le navigateur.
+3. **Tester l’app publiée** : lien disponible après réussite de la construction et du déploiement.
+4. **Enregistrer** la case pour valider son titre, son lien et son suivi dans le calendrier.
+
+Pour cette publication, sélectionner aussi les dépôts d’apps dans le jeton et accorder **Contents, Workflows, Pages et Actions: Read and write**. Activer au préalable `Settings > Pages > GitHub Actions` sur le dépôt d’app, ou accorder aussi **Administration: Read and write** pour que le bouton le configure. Le calendrier conserve ses propres paramètres de publication.
+
+Le workflow prend en charge les apps statiques et les projets npm produisant `dist/`, `build/` ou `out/`. Les projets Vite reçoivent automatiquement la base correspondant au nom du dépôt. Un projet avec serveur doit exporter une version statique ou utiliser son propre backend. Un workflow Inktober déjà personnalisé n’est pas remplacé.
+
+Les pushes suivants sur la branche principale de l’app reconstruisent sa publication. Le calendrier et les apps gardent des historiques et des cycles de mise à jour indépendants.
+
+## Fond et mouvement
+
+`atmosphere.css` et `parallax.js` définissent trois plans : paysage, brume et particules. Chacun se déplace à une vitesse différente pendant tout le défilement ; la souris ajoute une profondeur indépendante. Le traitement suit requestAnimationFrame, s’arrête lorsque les valeurs se stabilisent ou lorsque la page est masquée, et respecte prefers-reduced-motion. L’image WebP est chargée localement et ses chemins fonctionnent depuis les deux pages d’entrée.
+
+## Vérifications
+
+```sh
+node tests/check-calendar.mjs
+```
+
+Le test emploie une API GitHub simulée et un jeton factice. Il vérifie les commits de données, les permissions, les conflits, le rechargement, les liens de dépôts, les calculs, le parcours GitHub Actions et les mouvements du fond. La connexion avec un vrai jeton et la construction des dépôts d’apps nécessitent leur configuration par le propriétaire.

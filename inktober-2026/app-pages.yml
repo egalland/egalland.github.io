@@ -1,0 +1,66 @@
+name: Inktober app publication
+on:
+  push:
+    branches: [__DEFAULT_BRANCH__]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: inktober-pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Build static application
+        env:
+          APP_REPOSITORY: ${{ github.event.repository.name }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const {execFileSync} = require('node:child_process');
+          const pkg = fs.existsSync('package.json') ? JSON.parse(fs.readFileSync('package.json', 'utf8')) : null;
+          if (pkg?.scripts?.build) {
+            execFileSync('npm', fs.existsSync('package-lock.json') ? ['ci', '--no-audit', '--no-fund'] : ['install', '--no-audit', '--no-fund'], {stdio:'inherit', timeout:480000});
+            const args = ['run', 'build'];
+            if (/\bvite\b/.test(pkg.scripts.build)) args.push('--', '--base=/' + process.env.APP_REPOSITORY + '/');
+            execFileSync('npm', args, {stdio:'inherit', timeout:300000});
+          }
+          const folders = pkg?.scripts?.build ? ['dist','build','out'] : ['dist','build','out','.'];
+          const output = folders.find(p => fs.existsSync(path.join(p,'index.html')));
+          if (!output) throw new Error('No static index.html found. Export to dist/, build/, out/, or provide a root index.html without a build script. Server applications require a separate backend.');
+          const excluded = new Set(['.git','.github','node_modules','_site','.env','.openai','package.json','package-lock.json']);
+          fs.rmSync('_site',{recursive:true,force:true});fs.mkdirSync('_site');
+          function copy(source,destination) {
+            const stat=fs.lstatSync(source);if(stat.isSymbolicLink()) throw new Error('Symlink not supported: '+source);
+            if(stat.isDirectory()){fs.mkdirSync(destination,{recursive:true});for(const name of fs.readdirSync(source)){if(!excluded.has(name)&&!name.startsWith('.env'))copy(path.join(source,name),path.join(destination,name));}}
+            else fs.copyFileSync(source,destination);
+          }
+          for(const name of fs.readdirSync(output)){if(!excluded.has(name)&&!name.startsWith('.env'))copy(path.join(output,name),path.join('_site',name));}
+          fs.writeFileSync('_site/.nojekyll','');
+          NODE
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
