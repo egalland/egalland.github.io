@@ -2,7 +2,7 @@
  'use strict';
  const $=id=>document.getElementById(id),api=window.inktoberTransport.github;
  const workflow='inktober-pages.yml',path='.github/workflows/'+workflow;
- let selected=null,busy=false,epoch=0,timer=null;
+ let selected=null,busy=false,running=false,epoch=0,timer=null;
  function repositoryName(raw){
   const text=raw.trim();let name=text;
   if(/^https?:\/\//i.test(text)){
@@ -15,11 +15,11 @@
   return name;
  }
  function message(text){$('repository-status').textContent=text;}
- function reset(){epoch++;if(timer)clearTimeout(timer);timer=null;selected=null;$('publish-repository').hidden=true;$('repository-preview').hidden=true;$('repository-workflow').hidden=true;message('');}
+ function reset(){running=false;controls(false);epoch++;if(timer)clearTimeout(timer);timer=null;selected=null;$('publish-repository').hidden=true;$('repository-preview').hidden=true;$('repository-workflow').hidden=true;message('');}
  $('day-url').addEventListener('input',reset);
  document.getElementById('prompt-dialog').addEventListener('close',reset);
  addEventListener('github-calendar-auth',()=>{if(!window.inktoberTransport.connected)reset();});
- function controls(on){busy=on;$('check-repository').disabled=on;$('publish-repository').disabled=on;}
+ function controls(on){busy=on;$('check-repository').disabled=on;$('publish-repository').disabled=on||running;}
  $('check-repository').addEventListener('click',async()=>{
   if(busy)return;reset();const current=epoch;controls(true);message('Vérification du dépôt…');
   try{
@@ -43,7 +43,7 @@
    if(current!==epoch)return;
    const run=data.workflow_runs.find(r=>r.id>minId&&r.head_branch===selection.branch&&(!expectedSha||r.head_sha===expectedSha));
    if(run){const link=$('repository-workflow');link.href=run.html_url;link.hidden=false;
-    if(run.status==='completed'){
+    if(run.status==='completed'){running=false;controls(false);
      if(run.conclusion!=='success'){message('La construction ou la publication a échoué. Consultez le détail GitHub et corrigez le dépôt avant de réessayer.');return;}
      const pages=await api(selection.base+'/pages');if(current!==epoch)return;
      const link=$('repository-preview');link.href=pages.html_url||`https://egalland.github.io/${selection.name}/`;link.hidden=false;
@@ -51,9 +51,9 @@
     }
     message('GitHub construit et publie l’app…');
    }
-   if(Date.now()-selection.started>900000){message('La construction prend plus de temps. Suivez-la sur GitHub, puis vérifiez à nouveau le dépôt.');return;}
+   if(Date.now()-selection.started>900000){running=false;controls(false);message('La construction prend plus de temps. Suivez-la sur GitHub, puis vérifiez à nouveau le dépôt.');return;}
    timer=setTimeout(()=>poll(selection,current,minId,expectedSha),5000);
-  }catch(error){if(current!==epoch)return;if(error.status===404&&Date.now()-selection.started<60000){timer=setTimeout(()=>poll(selection,current,minId,expectedSha),3000);return;}message(error.message+' Utilisez « Suivre la construction » pour vérifier la publication.');}
+  }catch(error){if(current!==epoch)return;if(error.status===404&&Date.now()-selection.started<60000){timer=setTimeout(()=>poll(selection,current,minId,expectedSha),3000);return;}running=false;controls(false);message(error.message+' Utilisez « Suivre la construction » pour vérifier la publication.');}
  }
  $('publish-repository').addEventListener('click',async()=>{
   if(busy||!selected)return;const selection={...selected},current=epoch;controls(true);message('Préparation de la publication GitHub…');
@@ -72,7 +72,7 @@
     let binary='';for(const b of new TextEncoder().encode(content))binary+=String.fromCharCode(b);
     const result=await api(selection.base+'/contents/'+path,{method:'PUT',body:{message:'Add Inktober static app build and Pages publication',content:btoa(binary),branch:selection.branch}});expectedSha=result.commit.sha;
    }
-   if(current!==epoch)return;selection.started=Date.now();const link=$('repository-workflow');link.href=`https://github.com/egalland/${selection.name}/actions/workflows/${workflow}`;link.hidden=false;message('Publication lancée sur GitHub. Le lien de test apparaîtra après réussite.');void poll(selection,current,minId,expectedSha);
+   if(current!==epoch)return;selection.started=Date.now();const link=$('repository-workflow');link.href=`https://github.com/egalland/${selection.name}/actions/workflows/${workflow}`;link.hidden=false;message('Publication lancée sur GitHub. Le lien de test apparaîtra après réussite.');running=true;void poll(selection,current,minId,expectedSha);
   }catch(error){if(current===epoch)message(error.message);}
   finally{controls(false);}
  });

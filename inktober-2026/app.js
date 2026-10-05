@@ -112,7 +112,7 @@ Avant de terminer, vérifie le parcours principal et un cas d’erreur, puis exp
   finally{saving=false;if(current===day)$('save-note').disabled=!canEdit()||sameRecord(formValue(),recordFor(day));else if(current)showRecord();}
  }
  const saveNote=(day,note)=>saveProgress(day,{note});
- $('day-form').addEventListener('submit',event=>{event.preventDefault();saveProgress(current,formValue()).catch(error=>{$('note-status').textContent=error.message;});});
+ $('day-form').addEventListener('submit',event=>{event.preventDefault();const values=formValue(),patch=Object.fromEntries(recordFields.filter(key=>values[key]!==recordFor(current)[key]).map(key=>[key,values[key]]));if(Object.keys(patch).length)saveProgress(current,patch).catch(error=>{$('note-status').textContent=error.message;});});
  $('retry-load').onclick=load;$('refresh-calendar').onclick=load;
  addEventListener('github-calendar-auth',()=>{for(const id of ['vibe-rate','dev-rate'])$(id).disabled=!ready||!canEdit();updateSettingsStatus();if(current)updateForm();});
  addEventListener('beforeunload',event=>{if([...drafts].some(([day,value])=>!sameRecord(value,recordFor(day)))||!sameSettings(settingsFormValue(),settings)){event.preventDefault();event.returnValue='';}});
