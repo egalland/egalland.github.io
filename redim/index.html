@@ -1,0 +1,1859 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redimensionnement d’image</title>
+<style>
+:root{
+  --bg:#0a0c12;
+  --panel:rgba(19,22,30,.82);
+  --panel2:rgba(255,255,255,.045);
+  --stroke:rgba(255,255,255,.09);
+  --stroke2:rgba(255,255,255,.16);
+  --text:#f7f8fb;
+  --muted:#9ea7ba;
+  --accent:#8d7cff;
+  --accent2:#5fe4c2;
+  --ok:#70e6aa;
+  --warn:#ffcc70;
+  --danger:#ff7a8e;
+  --mx:50%;
+  --my:20%;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI Variable","Inter","Aptos",system-ui,sans-serif}
+body{
+  min-height:100vh; overflow-x:hidden;
+  background:
+    radial-gradient(900px circle at var(--mx) var(--my),rgba(141,124,255,.16),transparent 38%),
+    radial-gradient(780px circle at 85% 18%,rgba(95,228,194,.09),transparent 40%),
+    linear-gradient(180deg,#090b10 0%,#0f131b 58%,#090b10 100%);
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.26;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:34px 34px;mask-image:linear-gradient(to bottom,black,transparent 86%);
+  animation:gridMove 18s linear infinite;
+}
+button,input,select{font:inherit}
+button{position:relative;overflow:hidden}
+button .ripple{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,.28);animation:ripple .56s ease-out;pointer-events:none}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+
+@keyframes fadeRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+body{
+  background:
+    radial-gradient(1000px circle at var(--mx) var(--my),rgba(110,96,220,.08),transparent 34%),
+    linear-gradient(180deg,#0c0e13 0%,#11141b 55%,#0d1015 100%);
+}
+body:before{
+  opacity:.11;
+  animation:none;
+}
+.app{animation:fadeRise .35s ease-out}
+.brand h1{
+  color:var(--text);
+  background:none;
+  -webkit-background-clip:initial;
+  background-clip:initial;
+  animation:none;
+}
+.logo{
+  animation:none;
+  background:linear-gradient(145deg,#8074d9,#6257bd);
+  box-shadow:0 10px 28px rgba(67,57,135,.24),inset 0 1px rgba(255,255,255,.18);
+}
+.card{
+  animation:fadeRise .35s ease-out both;
+  background:rgba(18,21,28,.88);
+  border-color:rgba(255,255,255,.08);
+  box-shadow:0 14px 40px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.025);
+}
+.stack .card:nth-child(1){animation-delay:.02s}
+.stack .card:nth-child(2){animation-delay:.05s}
+.stack .card:nth-child(3){animation-delay:.08s}
+.stack .card:nth-child(4){animation-delay:.11s}
+.editorCard{animation-delay:.05s}
+.card:after{display:none}
+.btn.primary{
+  background:#7568d7;
+  box-shadow:0 10px 28px rgba(92,79,190,.22);
+}
+.btn.primary:before{display:none}
+.btn:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,.07);
+}
+.btn.primary:hover{background:#8174e3}
+.btn:active{transform:translateY(0) scale(.99)}
+.drop{
+  animation:none;
+  background:rgba(255,255,255,.025);
+  box-shadow:inset 0 1px rgba(255,255,255,.025);
+}
+.dropIcon{
+  animation:none;
+  background:rgba(117,104,215,.12);
+  border-color:rgba(117,104,215,.18);
+}
+.galleryItem:hover,.sideBox:hover{transform:none}
+.stageWrap{
+  box-shadow:inset 0 1px rgba(255,255,255,.025),0 12px 34px rgba(0,0,0,.18);
+}
+.stageWrap:before{display:none}
+.sideBox{
+  background:rgba(255,255,255,.028);
+  box-shadow:none;
+}
+.modal{
+  background:#171b24;
+}
+.footer{opacity:.6;letter-spacing:.14em}
+
+@media (prefers-reduced-motion: reduce){
+  *,*:before,*:after{animation:none!important;transition:none!important}
+}
+.app{width:min(1520px,calc(100% - 30px));margin:0 auto;padding:24px 0 14px;position:relative;z-index:1}
+.topbar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+  width:48px;height:48px;border-radius:15px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#9a89ff,#6958f2 58%,#2b2747);
+  box-shadow:0 18px 40px rgba(102,85,239,.34),inset 0 1px rgba(255,255,255,.24);
+  font-weight:950;font-size:22px;letter-spacing:-.08em
+}
+.brand h1{margin:0;font-size:clamp(22px,2vw,31px);line-height:1;letter-spacing:-.045em;font-weight:950}
+.brand p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.top-actions{display:flex;gap:9px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--stroke);border-radius:999px;background:rgba(255,255,255,.04);font-size:12px;color:#cad1dc}
+.pill i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 14px var(--accent2)}
+.btn{
+  border:1px solid var(--stroke);background:rgba(255,255,255,.055);color:var(--text);
+  border-radius:14px;padding:11px 14px;cursor:pointer;transition:.18s ease;
+  box-shadow:inset 0 1px rgba(255,255,255,.03)
+}
+.btn:hover{transform:translateY(-1px);border-color:var(--stroke2);background:rgba(255,255,255,.075)}
+.btn:active{transform:translateY(1px) scale(.988)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.primary{
+  background:linear-gradient(135deg,#9d8cff,#6d5cf4 52%,#5647d8);
+  border-color:rgba(255,255,255,.15);font-weight:850;
+  box-shadow:0 16px 40px rgba(100,84,236,.28),inset 0 1px rgba(255,255,255,.22)
+}
+.btn.ghost{background:transparent}
+.btn.icon{width:38px;height:38px;padding:0;display:grid;place-items:center;border-radius:12px}
+.btn.warn{color:#ffd78d}
+.btn.soft{background:rgba(141,124,255,.09);border-color:rgba(141,124,255,.18)}
+.layout{display:grid;grid-template-columns:380px minmax(0,1fr);gap:18px}
+.stack{display:grid;gap:14px}
+.card{
+  border:1px solid var(--stroke);
+  background:linear-gradient(180deg,rgba(22,26,35,.86),rgba(16,19,27,.80));
+  backdrop-filter:blur(18px);border-radius:24px;padding:18px;
+  box-shadow:0 24px 80px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.035);
+  position:relative;overflow:hidden
+}
+.card:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,rgba(255,255,255,.03),transparent 26%,transparent 72%,rgba(141,124,255,.04))
+}
+.cardHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.kicker{display:flex;align-items:center;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#b7bfce;font-weight:850}
+.num{
+  width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:11px;
+  background:linear-gradient(145deg,rgba(141,124,255,.28),rgba(141,124,255,.06));
+  border:1px solid rgba(141,124,255,.28);color:#e4dfff
+}
+.title{font-size:18px;line-height:1.1;font-weight:850;letter-spacing:-.028em;margin-top:8px}
+.hint{color:var(--muted);font-size:12px;line-height:1.45;margin-top:5px}
+.drop{
+  min-height:162px;border:1px dashed rgba(255,255,255,.16);border-radius:20px;background:rgba(255,255,255,.03);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;cursor:pointer;transition:.18s
+}
+.drop:hover,.drop.drag{border-color:rgba(141,124,255,.55);background:rgba(141,124,255,.07)}
+.dropIcon{
+  width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font-size:24px;margin-bottom:12px;
+  background:linear-gradient(145deg,rgba(141,124,255,.24),rgba(95,228,194,.09));
+  border:1px solid rgba(255,255,255,.07)
+}
+.drop strong{font-size:17px;letter-spacing:-.025em}
+.drop span{font-size:12px;color:var(--muted);margin-top:6px}
+.meta{display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:12px;margin-top:12px}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.field{display:grid;gap:7px}
+.field.span2{grid-column:1/-1}
+label{font-size:12px;color:#b8c0cf;font-weight:700}
+.input,.select{
+  width:100%;border:1px solid var(--stroke);background:rgba(255,255,255,.045);color:var(--text);
+  border-radius:13px;padding:12px 13px;outline:none;transition:.16s ease
+}
+.input:focus,.select:focus{border-color:rgba(141,124,255,.55);box-shadow:0 0 0 4px rgba(141,124,255,.08)}
+.select option{background:#171b23;color:white}
+.segmented{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;border:1px solid var(--stroke);background:rgba(0,0,0,.12);border-radius:14px}
+.segmented button{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800;cursor:pointer}
+.segmented button.active{background:rgba(255,255,255,.08);color:white}
+.switchRow{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:8px 0}
+.switchCopy strong{display:block;font-size:12px}
+.switchCopy span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.switch{position:relative;width:45px;height:25px;flex:none}
+.switch input{display:none}
+.switch i{position:absolute;inset:0;border-radius:999px;background:#323947;border:1px solid rgba(255,255,255,.08);transition:.18s}
+.switch i:before{content:"";position:absolute;width:19px;height:19px;left:2px;top:2px;border-radius:50%;background:#bbc2cd;transition:.18s}
+.switch input:checked + i{background:linear-gradient(135deg,#8574fb,#5d4fe0)}
+.switch input:checked + i:before{transform:translateX(19px);background:white}
+.range{width:100%;accent-color:#8d7cff}
+.inline{display:flex;align-items:center;gap:8px}
+.gallery{display:grid;gap:8px;max-height:340px;overflow:auto;padding-right:3px}
+.galleryItem{
+  display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;
+  padding:8px;border-radius:14px;border:1px solid var(--stroke);background:rgba(255,255,255,.03);cursor:pointer;transition:.16s
+}
+.galleryItem:hover{border-color:rgba(141,124,255,.28);background:rgba(141,124,255,.06)}
+.galleryItem.active{border-color:rgba(141,124,255,.44);background:rgba(141,124,255,.12);box-shadow:inset 0 0 0 1px rgba(141,124,255,.12)}
+.galleryThumb{width:52px;height:52px;border-radius:12px;overflow:hidden;background:#0e1118;border:1px solid rgba(255,255,255,.06)}
+.galleryThumb img{width:100%;height:100%;object-fit:cover}
+.galleryName{min-width:0}
+.galleryName strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.galleryName span{display:block;font-size:10px;color:var(--muted);margin-top:4px}
+.badge{
+  padding:5px 7px;border-radius:999px;font-size:10px;font-weight:800;border:1px solid var(--stroke);color:#d6dbe4
+}
+.badge.edited{background:rgba(141,124,255,.14);border-color:rgba(141,124,255,.26);color:#efeaff}
+.editorCard{min-height:calc(100vh - 112px);display:flex;flex-direction:column}
+.editorTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.editorGrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;margin-top:14px;flex:1}
+.stageWrap{
+  border:1px solid var(--stroke);border-radius:24px;overflow:hidden;position:relative;
+  background:
+    linear-gradient(45deg,#161a22 25%,transparent 25%),
+    linear-gradient(-45deg,#161a22 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#161a22 75%),
+    linear-gradient(-45deg,transparent 75%,#161a22 75%);
+  background-size:26px 26px;background-position:0 0,0 13px,13px -13px,-13px 0;
+  min-height:620px;display:grid;place-items:center
+}
+.stageWrap.dragging{cursor:grabbing}
+#stageCanvas{max-width:100%;max-height:74vh;display:none}
+.emptyStage{text-align:center;color:#728094;padding:30px}
+.emptyStage b{display:block;color:#aab3c3;font-size:14px;margin-bottom:6px}
+.editorSide{display:grid;gap:12px;align-content:start}
+.sideBox{
+  border:1px solid var(--stroke);background:rgba(255,255,255,.03);border-radius:18px;padding:14px
+}
+.sideBox h3{margin:0 0 10px;font-size:13px;letter-spacing:-.015em}
+.infoList{display:grid;gap:8px}
+.infoLine{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#aeb6c5}
+.infoLine b{color:#eef2f8;text-align:right}
+.toolRow{display:flex;gap:8px;flex-wrap:wrap}
+.toolRow .btn{padding:10px 12px;font-size:12px}
+.small{font-size:11px;color:var(--muted)}
+.progressArea{display:none;margin-top:12px}
+.progressArea.show{display:block}
+.progressTrack{height:9px;border-radius:999px;background:#252b35;overflow:hidden;border:1px solid rgba(255,255,255,.04)}
+.progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .18s}
+.progressMeta{display:flex;justify-content:space-between;gap:10px;margin-top:7px;color:var(--muted);font-size:11px}
+.footer{text-align:center;color:#5e6777;font-size:11px;padding:18px 0 6px;letter-spacing:.13em;text-transform:uppercase}
+.modalBack{
+  position:fixed;inset:0;background:rgba(5,6,9,.72);backdrop-filter:blur(12px);
+  display:none;align-items:center;justify-content:center;padding:18px;z-index:100
+}
+.modalBack.open{display:flex}
+.modal{
+  width:min(560px,100%);border-radius:26px;padding:22px;border:1px solid var(--stroke2);
+  background:linear-gradient(180deg,#1a1f28,#11151d);box-shadow:0 40px 120px rgba(0,0,0,.55);animation:modalIn .22s ease
+}
+.modalIcon{
+  width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:24px;margin-bottom:14px;
+  background:linear-gradient(145deg,rgba(141,124,255,.24),rgba(95,228,194,.08));border:1px solid var(--stroke)
+}
+.modal h2{margin:0;font-size:24px;letter-spacing:-.04em}
+.modal p{color:var(--muted);font-size:12px;line-height:1.55;margin:8px 0 17px}
+.modalChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{
+  text-align:left;padding:15px;border-radius:16px;border:1px solid var(--stroke);background:rgba(255,255,255,.035);
+  color:white;cursor:pointer;transition:.18s
+}
+.choice:hover{border-color:rgba(141,124,255,.4);background:rgba(141,124,255,.08);transform:translateY(-1px)}
+.choice strong{display:block;font-size:13px}
+.choice span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.modalActions{display:flex;justify-content:flex-end;gap:9px;margin-top:16px}
+.toast{
+  position:fixed;right:22px;bottom:22px;z-index:140;max-width:min(420px,calc(100% - 44px));
+  padding:13px 15px;border-radius:16px;border:1px solid var(--stroke2);
+  background:rgba(23,27,36,.95);backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.35);
+  opacity:0;transform:translateY(12px);pointer-events:none;transition:.22s ease
+}
+.toast.show{opacity:1;transform:none}
+.toast strong{display:block;font-size:12px}
+.toast span{display:block;font-size:11px;color:var(--muted);margin-top:4px}
+.hidden{display:none!important}
+
+.helpLabel{
+  display:flex;align-items:center;gap:6px;width:max-content;max-width:100%;
+}
+.helpIcon{
+  width:17px;height:17px;border-radius:50%;display:inline-grid;place-items:center;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.035);
+  color:#aeb6c5;font-size:10px;font-weight:850;line-height:1;cursor:help;
+  transition:.16s ease;flex:none;user-select:none;
+}
+.helpIcon:hover,.helpIcon:focus-visible{
+  color:#fff;border-color:rgba(141,124,255,.45);background:rgba(141,124,255,.12);
+  outline:none;transform:translateY(-1px)
+}
+.helpPopover{
+  position:fixed;z-index:180;width:292px;max-width:calc(100vw - 24px);
+  padding:13px;border-radius:16px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(19,22,30,.97);backdrop-filter:blur(14px);
+  box-shadow:0 18px 55px rgba(0,0,0,.40);
+  opacity:0;visibility:hidden;transform:translateY(5px) scale(.985);
+  transition:opacity .14s ease,transform .14s ease,visibility .14s;
+  pointer-events:none
+}
+.helpPopover.show{opacity:1;visibility:visible;transform:none}
+.helpPopover h4{margin:0;font-size:12px;letter-spacing:-.01em}
+.helpPopover p{margin:6px 0 0;color:var(--muted);font-size:11px;line-height:1.48}
+.helpDemo{
+  height:94px;margin-bottom:11px;border-radius:12px;overflow:hidden;position:relative;
+  border:1px solid rgba(255,255,255,.07);background:#10131a;
+  display:grid;place-items:center
+}
+.demoFrame{
+  width:116px;height:68px;border:1px solid rgba(255,255,255,.28);
+  border-radius:8px;position:relative;overflow:hidden;background:rgba(255,255,255,.03)
+}
+.demoPhoto{
+  position:absolute;inset:8px;border-radius:5px;
+  background:
+    radial-gradient(circle at 68% 35%,#d4b08a 0 7px,transparent 8px),
+    linear-gradient(145deg,#7889a6,#343c4c 54%,#202631);
+}
+.helpDemo.rotation .demoPhoto{
+  inset:14px 27px;animation:helpRotate 2.6s ease-in-out infinite
+}
+.helpDemo.zoom .demoPhoto{
+  inset:16px 31px;animation:helpZoom 2.5s ease-in-out infinite
+}
+.helpDemo.position .demoPhoto{
+  width:90px;height:58px;inset:auto;animation:helpPosition 3s ease-in-out infinite
+}
+.helpDemo.fit .demoFrame:after{
+  content:"";position:absolute;inset:0;border:2px solid rgba(95,228,194,.65);border-radius:7px;
+}
+.helpDemo.fit .demoPhoto{animation:helpFit 3s ease-in-out infinite}
+.helpDemo.compress .fileDemo{
+  width:112px;height:50px;border-radius:9px;border:1px solid rgba(255,255,255,.14);
+  display:flex;align-items:center;padding:9px;gap:8px;background:rgba(255,255,255,.04)
+}
+.helpDemo.compress .fileIcon{width:28px;height:32px;border-radius:5px;background:#7267c6}
+.helpDemo.compress .fileBars{flex:1;display:grid;gap:5px}
+.helpDemo.compress .fileBars i{display:block;height:5px;border-radius:999px;background:#555e70}
+.helpDemo.compress .fileBars i:first-child{animation:helpCompress 2.8s ease-in-out infinite}
+.helpDemo.dpi .ruler{
+  width:160px;height:40px;border-bottom:2px solid #8f99aa;position:relative
+}
+.helpDemo.dpi .ruler:before{
+  content:"100 mm";position:absolute;left:0;top:0;color:#cbd2dd;font-size:10px
+}
+.helpDemo.dpi .pixels{
+  position:absolute;bottom:13px;display:grid;grid-template-columns:repeat(10,6px);gap:3px;
+  animation:helpPixels 2.8s ease-in-out infinite
+}
+.helpDemo.dpi .pixels i{width:6px;height:6px;background:#8175db;border-radius:1px}
+.helpDemo.units .unitBox{
+  display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#dce1e9
+}
+.helpDemo.units .unitSwap{
+  width:54px;height:30px;border-radius:999px;border:1px solid rgba(255,255,255,.12);
+  position:relative;background:rgba(255,255,255,.04)
+}
+.helpDemo.units .unitSwap:before{
+  content:"px";position:absolute;left:6px;top:7px;font-size:9px;color:#fff;
+  animation:helpUnitText 3s step-end infinite
+}
+.helpDemo.units .unitSwap:after{
+  content:"";position:absolute;width:22px;height:22px;top:3px;left:3px;border-radius:50%;
+  background:#7568d7;animation:helpUnitKnob 3s ease-in-out infinite
+}
+@keyframes helpRotate{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+@keyframes helpZoom{0%,100%{transform:scale(.78)}50%{transform:scale(1.28)}}
+@keyframes helpPosition{
+  0%,100%{transform:translate(-22px,0)}
+  50%{transform:translate(22px,0)}
+}
+@keyframes helpFit{
+  0%,45%{transform:scale(1.34)}
+  55%,100%{transform:scale(.86)}
+}
+@keyframes helpCompress{
+  0%,100%{width:100%;background:#7d87a0}
+  50%{width:42%;background:#5fe4c2}
+}
+@keyframes helpPixels{
+  0%,100%{transform:scaleX(.68);opacity:.65}
+  50%{transform:scaleX(1);opacity:1}
+}
+@keyframes helpUnitKnob{0%,45%,100%{transform:translateX(0)}55%,90%{transform:translateX(25px)}}
+@keyframes helpUnitText{0%,49%,100%{content:"px"}50%,99%{content:"mm"}}
+@media(max-width:640px){
+  .helpPopover{width:270px}
+}
+
+.hiddenInput{display:none}
+@media(max-width:1120px){
+  .layout{grid-template-columns:1fr}
+  .editorCard{min-height:auto}
+  .editorGrid{grid-template-columns:1fr}
+  .stageWrap{min-height:420px}
+}
+@media(max-width:640px){
+  .app{width:min(100% - 18px,1520px);padding-top:12px}
+  .topbar{align-items:flex-start}
+  .pill{display:none}
+  .formGrid{grid-template-columns:1fr}
+  .field.span2{grid-column:auto}
+  .modalChoices{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">R</div>
+      <div>
+        <h1>Redimensionnement d’image</h1>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn ghost" id="resetAllBtn">↺ Tout réinitialiser</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="stack">
+      <article class="card">
+        <div class="cardHead">
+          <div>
+            <div class="kicker"><span class="num">01</span> IMPORT</div>
+            <div class="title">Images source</div>
+            <div class="hint">Sélectionne des fichiers, un dossier complet, ou fais un glisser-déposer.</div>
+          </div>
+          <button class="btn icon" id="resetImportBtn" title="Réinitialiser">↺</button>
+        </div>
+        <div class="drop" id="dropzone">
+          <div class="dropIcon">↥</div>
+          <strong>Dépose tes images ici</strong>
+          <span>JPG, JPEG, PNG, WebP ou AVIF · ou ouvre le sélecteur</span>
+          <button class="btn" style="margin-top:14px" id="openImportBtn">Ajouter des images</button>
+        </div>
+        <div class="meta">
+          <span id="countMeta">Aucune image sélectionnée</span>
+          <span id="sizeMeta">—</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cardHead">
+          <div>
+            <div class="kicker"><span class="num">02</span> SORTIE</div>
+            <div class="title">Cadre final & compression</div>
+            <div class="hint">Définis le format de sortie. Le recadrage se fait manuellement dans l’éditeur.</div>
+          </div>
+          <button class="btn icon" id="resetSettingsBtn" title="Réinitialiser">↺</button>
+        </div>
+        <div class="formGrid">
+          <div class="field">
+            <label class="helpLabel">Unité de dimensions <span class="helpIcon" tabindex="0" data-help="units" aria-label="Aide sur les unités">?</span></label>
+            <select class="select" id="unitSelect">
+              <option value="px">Pixels (px)</option>
+              <option value="mm">Millimètres (mm)</option>
+            </select>
+          </div>
+          <div class="field" id="dpiField" style="display:none">
+            <label class="helpLabel">DPI / PPP <span class="helpIcon" tabindex="0" data-help="dpi" aria-label="Aide sur le DPI">?</span></label>
+            <input class="input" id="dpiInput" type="number" min="1" value="300">
+          </div>
+
+          <div class="field span2" id="dpiHelp" style="display:none">
+            <div style="
+              padding:12px 13px;
+              border-radius:13px;
+              border:1px solid rgba(255,255,255,.08);
+              background:rgba(255,255,255,.025);
+              color:var(--muted);
+              font-size:11px;
+              line-height:1.55;
+            ">
+              <strong style="display:block;color:var(--text);font-size:12px;margin-bottom:5px">
+                À quoi sert le DPI ?
+              </strong>
+              Le DPI détermine le nombre de pixels utilisés pour représenter une taille en millimètres.
+              Plus le DPI est élevé, plus l’image contient de pixels et peut être détaillée.
+              <br><br>
+              Exemple : <strong style="color:var(--text)">100 × 150 mm à 300 DPI</strong>
+              correspondent à environ <strong style="color:var(--text)">1181 × 1772 px</strong>.
+              À 150 DPI, la taille reste <strong style="color:var(--text)">100 × 150 mm</strong>,
+              mais l’image contient environ deux fois moins de pixels.
+            </div>
+          </div>
+
+          <div class="field"><label>Largeur finale</label><input class="input" id="outW" type="number" min="1" value="1200"></div>
+          <div class="field"><label>Hauteur finale</label><input class="input" id="outH" type="number" min="1" value="1200"></div>
+          <div class="field">
+            <label>Format</label>
+            <select class="select" id="formatSelect">
+              <option value="keep">Conserver l’original</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/webp">WEBP</option>
+              <option value="image/png">PNG</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Fond JPEG</label>
+            <select class="select" id="jpegBg">
+              <option value="#ffffff">Blanc</option>
+              <option value="#f4f4f4">Gris clair</option>
+              <option value="#000000">Noir</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="helpLabel">Type de cadrage auto <span class="helpIcon" tabindex="0" data-help="fit" aria-label="Aide sur le cadrage">?</span></label>
+            <select class="select" id="fitModeSelect">
+              <option value="cover">Remplir</option>
+              <option value="contain">Ajuster</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="helpLabel">Position auto <span class="helpIcon" tabindex="0" data-help="position" aria-label="Aide sur la position">?</span></label>
+            <select class="select" id="autoPosSelect">
+              <option value="center">Centre</option>
+              <option value="top">Haut</option>
+              <option value="bottom">Bas</option>
+              <option value="left">Gauche</option>
+              <option value="right">Droite</option>
+              <option value="top-left">Haut gauche</option>
+              <option value="top-right">Haut droite</option>
+              <option value="bottom-left">Bas gauche</option>
+              <option value="bottom-right">Bas droite</option>
+            </select>
+          </div>
+          <div class="field span2">
+            <label class="helpLabel">Mode de compression <span class="helpIcon" tabindex="0" data-help="compress" aria-label="Aide sur la compression">?</span></label>
+            <div class="segmented">
+              <button id="modeQualityBtn" class="active">Qualité</button>
+              <button id="modeWeightBtn">Poids cible</button>
+            </div>
+          </div>
+          <div class="field span2">
+            <label class="helpLabel">Performance <span class="helpIcon" tabindex="0" data-help="performance" aria-label="Aide sur les performances">?</span></label>
+            <div class="segmented">
+              <button id="modeFastBtn" class="active">Optimisé</button>
+              <button id="modeMaxBtn">Qualité max</button>
+            </div>
+            <div class="small" id="performanceHint" style="margin-top:7px">Optimisé : traitement plus rapide, avec parallélisation limitée quand la mémoire le permet.</div>
+          </div>
+          <div class="field span2" id="qualityPanel">
+            <label>Qualité JPEG / WEBP · <span id="qualityLabel">90 %</span></label>
+            <input class="range" id="qualityRange" type="range" min="35" max="100" value="90">
+          </div>
+          <div class="field" id="weightPanelA" style="display:none">
+            <label>Poids maximum</label>
+            <input class="input" id="targetWeight" type="number" min="10" value="500">
+          </div>
+          <div class="field" id="weightPanelB" style="display:none">
+            <label>Unité</label>
+            <select class="select" id="targetUnit">
+              <option value="KB">Ko</option>
+              <option value="MB">Mo</option>
+            </select>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cardHead">
+          <div>
+            <div class="kicker"><span class="num">03</span> NOMMAGE & DOSSIER</div>
+            <div class="title">Destination</div>
+            <div class="hint">Choisis le dossier de sortie et le comportement du nom des fichiers.</div>
+          </div>
+          <button class="btn icon" id="resetOutputBtn" title="Réinitialiser">↺</button>
+        </div>
+        <div class="switchRow">
+          <div class="switchCopy"><strong>Conserver le nom d’origine</strong><span>Garde le nom du fichier si le format ne change pas.</span></div>
+          <label class="switch"><input id="keepName" type="checkbox" checked><i></i></label>
+        </div>
+        <div class="switchRow">
+          <div class="switchCopy"><strong>Ajouter un préfixe</strong><span>Préfixe optionnel devant le nom.</span></div>
+          <label class="switch"><input id="prefixToggle" type="checkbox"><i></i></label>
+        </div>
+        <div class="field"><label>Préfixe</label><input class="input" id="prefixText" type="text" value="redim_" disabled></div>
+        <div class="field" style="margin-top:10px">
+          <label>Dossier de sortie</label>
+          <div class="toolRow">
+            <button class="btn" id="pickOutputBtn">Choisir un dossier</button>
+            <button class="btn ghost" id="clearOutputBtn">Effacer</button>
+          </div>
+          <div class="small" id="outputInfo" style="margin-top:8px">Aucun dossier sélectionné. Sans dossier, le navigateur utilisera son emplacement de téléchargement par défaut.</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cardHead">
+          <div>
+            <div class="kicker"><span class="num">04</span> GALERIE</div>
+            <div class="title">Images du lot</div>
+            <div class="hint">Sélectionne une image pour la cadrer individuellement.</div>
+          </div>
+        </div>
+        <div class="gallery" id="gallery"></div>
+      </article>
+    </section>
+
+    <section class="card editorCard">
+      <div class="editorTop">
+        <div>
+          <div class="kicker">ÉDITEUR</div>
+          <div class="title" id="editorTitle">Aucune image active</div>
+          <div class="hint">Glisse dans la zone pour déplacer l’image. Molette pour zoomer. Le cadrage auto suit maintenant le mode cover / contain et la position choisie.</div>
+        </div>
+        <div class="toolRow">
+          <button class="btn" id="copyToAllBtn" disabled>Copier vers tout le lot</button>
+          <button class="btn primary" id="processBtn" disabled>Exporter le lot</button>
+        </div>
+      </div>
+
+      <div class="editorGrid">
+        <div class="stageWrap" id="stageWrap">
+          <div class="emptyStage" id="emptyStage"><b>Aucune image à éditer</b>Ajoute des images puis sélectionne-en une dans la galerie.</div>
+          <canvas id="stageCanvas"></canvas>
+        </div>
+
+        <aside class="editorSide">
+          <div class="sideBox">
+            <h3>Réglages de l’image</h3>
+            <div class="field">
+              <label class="helpLabel">Zoom · <span id="zoomLabel">100 %</span> <span class="helpIcon" tabindex="0" data-help="zoom" aria-label="Aide sur le zoom">?</span></label>
+              <input class="range" id="zoomRange" type="range" min="50" max="300" value="100">
+            </div>
+            <div class="field">
+              <label class="helpLabel">Rotation · <span id="rotationLabel">0°</span> <span class="helpIcon" tabindex="0" data-help="rotation" aria-label="Aide sur la rotation">?</span></label>
+              <input class="range" id="rotationRange" type="range" min="-45" max="45" value="0">
+            </div>
+            <div class="toolRow" style="margin-top:10px">
+              <button class="btn soft" id="rotateLeftBtn" disabled>↺ -90°</button>
+              <button class="btn soft" id="rotateRightBtn" disabled>↻ +90°</button>
+            </div>
+            <div class="toolRow" style="margin-top:10px">
+              <button class="btn" id="autoFitBtn" disabled>Auto-fit</button>
+              <button class="btn" id="centerBtn" disabled>Recentrer</button>
+              <button class="btn ghost" id="resetImageBtn" disabled>Reset image</button>
+            </div>
+            <div class="small" style="margin-top:10px">Astuce : flèches clavier pour déplacer finement l’image.</div>
+          </div>
+
+          <div class="sideBox">
+            <h3>Informations</h3>
+            <div class="infoList">
+              <div class="infoLine"><span>Original</span><b id="infoOriginal">—</b></div>
+              <div class="infoLine"><span>Cadre final</span><b id="infoOutput">1200 × 1200 px</b></div>
+              <div class="infoLine"><span>Nom de sortie</span><b id="infoFilename">—</b></div>
+              <div class="infoLine"><span>Poids estimé</span><b id="infoWeight">—</b></div>
+              <div class="infoLine"><span>État</span><b id="infoState">Auto</b></div>
+            </div>
+          </div>
+
+          <div class="sideBox">
+            <h3>Récapitulatif</h3>
+            <div class="infoList">
+              <div class="infoLine"><span>Images</span><b id="sumCount">0</b></div>
+              <div class="infoLine"><span>Modifiées</span><b id="sumEdited">0</b></div>
+                          </div>
+          </div>
+
+          <div class="progressArea" id="progressArea">
+            <div class="progressTrack"><div class="progressBar" id="progressBar"></div></div>
+            <div class="progressMeta"><span id="progressLabel">Préparation…</span><span id="progressPct">0 %</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">DMBP 2026</footer>
+</div>
+
+<input class="hiddenInput" id="filesInput" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif">
+<input class="hiddenInput" id="folderInput" type="file" webkitdirectory multiple accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif">
+
+<div class="modalBack" id="importModal">
+  <div class="modal">
+    <div class="modalIcon">↥</div>
+    <h2>Ajouter des images</h2>
+    <p>Choisis la méthode d’import. Tu peux relancer l’opération pour enrichir le lot courant.</p>
+    <div class="modalChoices">
+      <button class="choice" id="chooseFilesBtn"><strong>Plusieurs fichiers</strong><span>Sélectionne une ou plusieurs images</span></button>
+      <button class="choice" id="chooseFolderBtn"><strong>Dossier complet</strong><span>Récupère toutes les images du dossier</span></button>
+    </div>
+    <div class="modalActions"><button class="btn ghost closeModal">Fermer</button></div>
+  </div>
+</div>
+
+<div class="modalBack" id="noOutputModal">
+  <div class="modal">
+    <div class="modalIcon" style="background:rgba(255,204,112,.11)">!</div>
+    <h2>Aucun dossier de sortie</h2>
+    <p>Tu n’as pas choisi de dossier de destination. Si tu continues, le navigateur utilisera son emplacement de téléchargement par défaut. Tu peux sélectionner un dossier maintenant ou continuer quand même.</p>
+    <div class="modalActions">
+      <button class="btn ghost closeModal">Annuler</button>
+      <button class="btn" id="pickOutputFromModalBtn">Choisir un dossier</button>
+      <button class="btn primary" id="continueNoOutputBtn">Continuer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modalBack" id="doneModal">
+  <div class="modal">
+    <div class="modalIcon" style="background:rgba(112,230,170,.12)">✓</div>
+    <h2>Export terminé</h2>
+    <p id="doneText">Le traitement du lot est terminé.</p>
+    <div class="modalActions">
+      <button class="btn" id="doneResetBtn">Nouveau lot</button>
+      <button class="btn primary closeModal">Fermer</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="helpPopover" id="helpPopover" role="tooltip" aria-hidden="true">
+  <div id="helpDemo" class="helpDemo"></div>
+  <h4 id="helpTitle"></h4>
+  <p id="helpText"></p>
+</div>
+
+<div class="toast" id="toast"><strong id="toastTitle">Information</strong><span id="toastText"></span></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+let files = [];
+let states = {};
+let currentId = null;
+let outputDirHandle = null;
+let compressionMode = 'quality';
+let performanceMode = 'fast';
+let isProcessing = false;
+let drag = null;
+let previewRAF = 0;
+
+// Protection mémoire pour les photos très lourdes.
+const MAX_PREVIEW_SIDE = 2200;
+const MAX_THUMB_SIDE = 160;
+const MAX_WORKING_SIDE = 6500;
+const MAX_OUTPUT_SIDE = 10000;
+const MAX_OUTPUT_PIXELS = 36_000_000;
+const MAX_WEIGHT_ESTIMATE_PIXELS = 8_000_000;
+const FAST_PARALLEL_MAX_PIXELS = 5_000_000;
+const FAST_PARALLEL_MAX_FILE_BYTES = 18 * 1024 * 1024;
+
+let activeDecoded = { id:null, image:null };
+let thumbnailQueue = [];
+let thumbnailWorkerRunning = false;
+let weightEstimateTimer = null;
+let weightEstimateToken = 0;
+
+const els = {
+  dropzone: $('#dropzone'), filesInput: $('#filesInput'), folderInput: $('#folderInput'),
+  countMeta: $('#countMeta'), sizeMeta: $('#sizeMeta'),
+  unitSelect: $('#unitSelect'), dpiField: $('#dpiField'), dpiHelp: $('#dpiHelp'), dpiInput: $('#dpiInput'), outW: $('#outW'), outH: $('#outH'), formatSelect: $('#formatSelect'), jpegBg: $('#jpegBg'), fitModeSelect: $('#fitModeSelect'), autoPosSelect: $('#autoPosSelect'),
+  modeQualityBtn: $('#modeQualityBtn'), modeWeightBtn: $('#modeWeightBtn'),
+  modeFastBtn: $('#modeFastBtn'), modeMaxBtn: $('#modeMaxBtn'), performanceHint: $('#performanceHint'),
+  qualityPanel: $('#qualityPanel'), weightPanelA: $('#weightPanelA'), weightPanelB: $('#weightPanelB'),
+  qualityRange: $('#qualityRange'), qualityLabel: $('#qualityLabel'), targetWeight: $('#targetWeight'), targetUnit: $('#targetUnit'),
+  keepName: $('#keepName'), prefixToggle: $('#prefixToggle'), prefixText: $('#prefixText'),
+  outputInfo: $('#outputInfo'),
+  gallery: $('#gallery'),
+  editorTitle: $('#editorTitle'),
+  stageWrap: $('#stageWrap'), stageCanvas: $('#stageCanvas'), emptyStage: $('#emptyStage'),
+  zoomRange: $('#zoomRange'), zoomLabel: $('#zoomLabel'), rotationRange: $('#rotationRange'), rotationLabel: $('#rotationLabel'),
+  rotateLeftBtn: $('#rotateLeftBtn'), rotateRightBtn: $('#rotateRightBtn'),
+  autoFitBtn: $('#autoFitBtn'), centerBtn: $('#centerBtn'), resetImageBtn: $('#resetImageBtn'),
+  copyToAllBtn: $('#copyToAllBtn'), processBtn: $('#processBtn'),
+  infoOriginal: $('#infoOriginal'), infoOutput: $('#infoOutput'), infoFilename: $('#infoFilename'),
+  infoWeight: $('#infoWeight'), infoState: $('#infoState'),
+  sumCount: $('#sumCount'), sumEdited: $('#sumEdited'),
+  progressArea: $('#progressArea'), progressBar: $('#progressBar'), progressLabel: $('#progressLabel'), progressPct: $('#progressPct')
+};
+const stageCtx = els.stageCanvas.getContext('2d');
+
+
+const helpContent = {
+  units:{
+    title:"Pixels ou millimètres",
+    text:"Pixels = dimensions numériques directes. Millimètres = taille physique ; le DPI détermine ensuite combien de pixels seront générés.",
+    demo:'<div class="unitBox"><span>Dimensions</span><span class="unitSwap"></span></div>',
+    cls:"units"
+  },
+  dpi:{
+    title:"DPI / PPP",
+    text:"En millimètres, le DPI définit la densité de pixels. Plus il est élevé, plus le fichier contient de pixels, sans changer la taille en mm.",
+    demo:'<div class="ruler"><div class="pixels">' + '<i></i>'.repeat(10) + '</div></div>',
+    cls:"dpi"
+  },
+  fit:{
+    title:"Remplir ou Ajuster",
+    text:"Remplir occupe tout le cadre et peut rogner l’image. Ajuster conserve toute l’image mais peut laisser de l’espace autour.",
+    demo:'<div class="demoFrame"><div class="demoPhoto"></div></div>',
+    cls:"fit"
+  },
+  position:{
+    title:"Position automatique",
+    text:"Choisit la zone privilégiée lors du cadrage automatique : centre, haut, bas, gauche, droite ou un coin.",
+    demo:'<div class="demoFrame"><div class="demoPhoto"></div></div>',
+    cls:"position"
+  },
+  compress:{
+    title:"Compression",
+    text:"Qualité règle directement le niveau de compression. Poids cible essaie d’obtenir un fichier inférieur à la limite choisie.",
+    demo:'<div class="fileDemo"><div class="fileIcon"></div><div class="fileBars"><i></i><i></i><i></i></div></div>',
+    cls:"compress"
+  },
+  performance:{
+    title:"Vitesse de traitement",
+    text:"Optimisé réduit les recalculs et peut traiter deux images en parallèle si le lot reste léger. Qualité max privilégie un traitement plus prudent et plus précis.",
+    demo:'<div class="fileDemo"><div class="fileIcon"></div><div class="fileBars"><i></i><i></i><i></i></div></div>',
+    cls:"compress"
+  },
+  zoom:{
+    title:"Zoom",
+    text:"Agrandit ou réduit l’image dans le cadre sans modifier les dimensions finales du fichier.",
+    demo:'<div class="demoFrame"><div class="demoPhoto"></div></div>',
+    cls:"zoom"
+  },
+  rotation:{
+    title:"Rotation",
+    text:"Fait pivoter l’image avant l’export. Utilise le curseur pour une correction fine ou les boutons ±90°.",
+    demo:'<div class="demoFrame"><div class="demoPhoto"></div></div>',
+    cls:"rotation"
+  }
+};
+
+const helpPopover = document.getElementById('helpPopover');
+const helpDemo = document.getElementById('helpDemo');
+const helpTitle = document.getElementById('helpTitle');
+const helpText = document.getElementById('helpText');
+let activeHelp = null;
+
+function placeHelp(icon){
+  const r = icon.getBoundingClientRect();
+  const gap = 9;
+  const popW = Math.min(292, window.innerWidth - 24);
+  let left = r.left + r.width/2 - popW/2;
+  left = Math.max(12, Math.min(window.innerWidth - popW - 12, left));
+  let top = r.bottom + gap;
+  const estimatedH = 155;
+  if(top + estimatedH > window.innerHeight - 12){
+    top = Math.max(12, r.top - estimatedH - gap);
+  }
+  helpPopover.style.left = `${left}px`;
+  helpPopover.style.top = `${top}px`;
+}
+function showHelp(icon){
+  const key = icon.dataset.help;
+  const info = helpContent[key];
+  if(!info) return;
+  activeHelp = icon;
+  helpDemo.className = `helpDemo ${info.cls}`;
+  helpDemo.innerHTML = info.demo;
+  helpTitle.textContent = info.title;
+  helpText.textContent = info.text;
+  placeHelp(icon);
+  helpPopover.classList.add('show');
+  helpPopover.setAttribute('aria-hidden','false');
+}
+function hideHelp(icon){
+  if(icon && activeHelp !== icon) return;
+  helpPopover.classList.remove('show');
+  helpPopover.setAttribute('aria-hidden','true');
+  activeHelp = null;
+}
+document.querySelectorAll('.helpIcon').forEach(icon=>{
+  icon.addEventListener('mouseenter',()=>showHelp(icon));
+  icon.addEventListener('mouseleave',()=>hideHelp(icon));
+  icon.addEventListener('focus',()=>showHelp(icon));
+  icon.addEventListener('blur',()=>hideHelp(icon));
+});
+window.addEventListener('resize',()=>{ if(activeHelp) placeHelp(activeHelp); });
+window.addEventListener('scroll',()=>{ if(activeHelp) placeHelp(activeHelp); },true);
+
+document.addEventListener('pointermove', e=>{
+  document.documentElement.style.setProperty('--mx', `${e.clientX}px`);
+  document.documentElement.style.setProperty('--my', `${e.clientY}px`);
+});
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn || btn.disabled) return;
+  const rect = btn.getBoundingClientRect(), size = Math.max(rect.width, rect.height);
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+  btn.appendChild(ripple); setTimeout(()=>ripple.remove(),600);
+});
+
+function toast(title,text){
+  $('#toastTitle').textContent = title;
+  $('#toastText').textContent = text;
+  $('#toast').classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>$('#toast').classList.remove('show'),3600);
+}
+function openModal(id){ $(id).classList.add('open'); }
+function closeModal(id){ $(id).classList.remove('open'); }
+$$('.closeModal').forEach(b=>b.addEventListener('click',()=>b.closest('.modalBack').classList.remove('open')));
+$$('.modalBack').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+function fileId(file){ return `${file.name}-${file.size}-${file.lastModified}`; }
+function isSupportedImage(file){
+  const mimeOk = typeof file.type === 'string' && (
+    file.type === 'image/jpeg' ||
+    file.type === 'image/png' ||
+    file.type === 'image/webp' ||
+    file.type === 'image/avif'
+  );
+  const extensionOk = /\.(jpe?g|png|webp|avif)$/i.test(file.name || '');
+  return mimeOk || extensionOk;
+}
+function formatBytes(bytes){
+  if(bytes < 1024) return bytes+' o';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(0)+' Ko';
+  return (bytes/1024/1024).toFixed(bytes<10*1024*1024?1:0)+' Mo';
+}
+function totalInputBytes(){ return files.reduce((s,f)=>s+f.size,0); }
+
+function outputType(file){
+  if(els.formatSelect.value !== 'keep') return els.formatSelect.value;
+  if(file.type === 'image/png') return 'image/png';
+  if(file.type === 'image/webp') return 'image/webp';
+  return 'image/jpeg';
+}
+function extFor(type){ return type==='image/png'?'png':type==='image/webp'?'webp':'jpg'; }
+function baseName(name){ return name.replace(/\.[^.]+$/,''); }
+function outputFilename(file){
+  const type = outputType(file);
+  const prefix = els.prefixToggle.checked ? (els.prefixText.value || '') : '';
+  const canKeepOriginalExtension = ['image/jpeg','image/png','image/webp'].includes(file.type);
+  if(els.keepName.checked && els.formatSelect.value==='keep' && !prefix && canKeepOriginalExtension) return file.name;
+  return `${prefix}${baseName(file.name)}.${extFor(type)}`;
+}
+function targetBytes(){
+  const n = Math.max(1, Number(els.targetWeight.value)||1);
+  return els.targetUnit.value==='MB' ? n*1024*1024 : n*1024;
+}
+function getDpi(){
+  return Math.max(1, Number(els.dpiInput.value) || 300);
+}
+function mmToPx(mm){
+  return Math.max(1, Math.round((Number(mm) || 0) / 25.4 * getDpi()));
+}
+function outputPxDims(){
+  const unit = els.unitSelect.value;
+  const w = unit === 'mm' ? mmToPx(els.outW.value) : Math.max(1, Number(els.outW.value) || 1);
+  const h = unit === 'mm' ? mmToPx(els.outH.value) : Math.max(1, Number(els.outH.value) || 1);
+  return {w, h};
+}
+function outputDimsLabel(){
+  const {w, h} = outputPxDims();
+  if(els.unitSelect.value === 'mm'){
+    return `${els.outW.value} × ${els.outH.value} mm · ${w} × ${h} px`;
+  }
+  return `${w} × ${h} px`;
+}
+function outputSafety(){
+  const {w,h} = outputPxDims();
+  const pixels = w*h;
+  if(w > MAX_OUTPUT_SIDE || h > MAX_OUTPUT_SIDE){
+    return {ok:false,w,h,reason:`Un côté dépasse ${MAX_OUTPUT_SIDE.toLocaleString('fr-FR')} px.`};
+  }
+  if(pixels > MAX_OUTPUT_PIXELS){
+    return {ok:false,w,h,reason:`La sortie dépasse ${(MAX_OUTPUT_PIXELS/1_000_000).toFixed(0)} mégapixels.`};
+  }
+  return {ok:true,w,h,pixels};
+}
+function updateUnitUI(){
+  const isMm = els.unitSelect.value === 'mm';
+  els.dpiField.style.display = isMm ? 'grid' : 'none';
+  els.dpiHelp.style.display = isMm ? 'grid' : 'none';
+}
+
+function setCompressionMode(mode){
+  compressionMode = mode;
+  els.modeQualityBtn.classList.toggle('active', mode==='quality');
+  els.modeWeightBtn.classList.toggle('active', mode==='weight');  els.qualityPanel.style.display = mode==='quality' ? 'block' : 'none';
+  els.weightPanelA.style.display = mode==='weight' ? 'grid' : 'none';
+  els.weightPanelB.style.display = mode==='weight' ? 'grid' : 'none';
+}
+els.modeQualityBtn.addEventListener('click',()=>{ setCompressionMode('quality'); refreshAllUI(); renderCurrent(); });
+els.modeWeightBtn.addEventListener('click',()=>{ setCompressionMode('weight'); refreshAllUI(); renderCurrent(); });
+function setPerformanceMode(mode){
+  performanceMode = mode;
+  els.modeFastBtn.classList.toggle('active', mode==='fast');
+  els.modeMaxBtn.classList.toggle('active', mode==='max');
+  els.performanceHint.textContent = mode==='fast'
+    ? 'Optimisé : traitement plus rapide, avec parallélisation limitée quand la mémoire le permet.'
+    : 'Qualité max : traitement séquentiel, lissage maximal et recherche de compression plus fine.';
+}
+els.modeFastBtn.addEventListener('click',()=>{ setPerformanceMode('fast'); });
+els.modeMaxBtn.addEventListener('click',()=>{ setPerformanceMode('max'); });
+els.qualityRange.addEventListener('input',()=>{ els.qualityLabel.textContent = els.qualityRange.value+' %'; refreshAllUI(); });
+els.qualityRange.addEventListener('change',()=>renderCurrent());
+[els.targetWeight, els.targetUnit].forEach(el=>el.addEventListener('change',()=>{ refreshAllUI(); renderCurrent(); }));
+
+async function readU24LE(d, i){
+  return d[i] | (d[i+1] << 8) | (d[i+2] << 16);
+}
+function readU32BE(d, i){
+  return ((d[i] << 24) | (d[i+1] << 16) | (d[i+2] << 8) | d[i+3]) >>> 0;
+}
+async function getImageDimensions(file){
+  const st = ensureState(file);
+  if(st.naturalW && st.naturalH) return {w:st.naturalW,h:st.naturalH};
+
+  try{
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const maxRead = Math.min(file.size, 1024 * 1024);
+    const d = new Uint8Array(await file.slice(0, maxRead).arrayBuffer());
+    let w=0,h=0;
+
+    // PNG
+    if(d.length >= 24 && d[0]===0x89 && d[1]===0x50 && d[2]===0x4E && d[3]===0x47){
+      w = readU32BE(d,16); h = readU32BE(d,20);
+    }
+
+    // JPEG
+    if(!w && d.length > 4 && d[0]===0xFF && d[1]===0xD8){
+      let i=2;
+      const sof = new Set([0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF]);
+      while(i + 8 < d.length){
+        if(d[i] !== 0xFF){ i++; continue; }
+        while(i < d.length && d[i]===0xFF) i++;
+        const marker = d[i++];
+        if(marker===0xD8 || marker===0xD9 || (marker>=0xD0 && marker<=0xD7) || marker===0x01) continue;
+        if(i+1 >= d.length) break;
+        const len = (d[i]<<8) | d[i+1];
+        if(len < 2 || i+len > d.length) break;
+        if(sof.has(marker)){
+          h = (d[i+3]<<8) | d[i+4];
+          w = (d[i+5]<<8) | d[i+6];
+          break;
+        }
+        i += len;
+      }
+    }
+
+    // WebP
+    if(!w && d.length >= 30 &&
+       String.fromCharCode(...d.slice(0,4))==='RIFF' &&
+       String.fromCharCode(...d.slice(8,12))==='WEBP'){
+      const chunk = String.fromCharCode(...d.slice(12,16));
+      if(chunk==='VP8X' && d.length>=30){
+        w = 1 + readU24LE(d,24);
+        h = 1 + readU24LE(d,27);
+      }else if(chunk==='VP8L' && d.length>=25 && d[20]===0x2F){
+        const b1=d[21], b2=d[22], b3=d[23], b4=d[24];
+        w = 1 + (b1 | ((b2 & 0x3F) << 8));
+        h = 1 + ((b2 >> 6) | (b3 << 2) | ((b4 & 0x0F) << 10));
+      }else{
+        // VP8 lossy: recherche de la signature de frame.
+        for(let j=20;j+9<d.length;j++){
+          if(d[j]===0x9D && d[j+1]===0x01 && d[j+2]===0x2A){
+            w = (d[j+3] | (d[j+4]<<8)) & 0x3FFF;
+            h = (d[j+5] | (d[j+6]<<8)) & 0x3FFF;
+            break;
+          }
+        }
+      }
+    }
+
+    // AVIF / HEIF-like ISOBMFF: boîte ispe.
+    if(!w && (ext==='avif' || file.type==='image/avif')){
+      for(let i=4;i+16<d.length;i++){
+        if(d[i]===0x69 && d[i+1]===0x73 && d[i+2]===0x70 && d[i+3]===0x65){
+          const iw = readU32BE(d,i+8);
+          const ih = readU32BE(d,i+12);
+          if(iw>0 && ih>0){ w=iw; h=ih; break; }
+        }
+      }
+    }
+
+    if(w>0 && h>0){
+      st.naturalW=w; st.naturalH=h;
+      return {w,h};
+    }
+  }catch(e){
+    console.warn('Lecture dimensions impossible', e);
+  }
+  return null;
+}
+
+function releaseImageResource(img){
+  try{
+    if(img && typeof img.close === 'function') img.close();
+  }catch(_){}
+}
+function releaseActiveDecoded(){
+  releaseImageResource(activeDecoded.image);
+  activeDecoded = {id:null,image:null};
+}
+function desiredDecodeSize(original, purpose, st){
+  if(!original) return null;
+
+  if(purpose === 'thumb'){
+    const factor = Math.min(1, MAX_THUMB_SIDE / Math.max(original.w,original.h));
+    return {
+      w:Math.max(1,Math.round(original.w*factor)),
+      h:Math.max(1,Math.round(original.h*factor))
+    };
+  }
+
+  if(purpose === 'preview'){
+    const factor = Math.min(1, MAX_PREVIEW_SIDE / Math.max(original.w,original.h));
+    return {
+      w:Math.max(1,Math.round(original.w*factor)),
+      h:Math.max(1,Math.round(original.h*factor))
+    };
+  }
+
+  const {w:outW,h:outH} = outputPxDims();
+  const zoom = Math.max(1, st?.zoom || 1);
+  // Marge pour rotation / recadrage manuel.
+  let factor = Math.max((outW*zoom*1.35)/original.w, (outH*zoom*1.35)/original.h);
+  factor = Math.min(1, factor);
+
+  let w = Math.max(1,Math.round(original.w*factor));
+  let h = Math.max(1,Math.round(original.h*factor));
+  const longSide = Math.max(w,h);
+  if(longSide > MAX_WORKING_SIDE){
+    const f = MAX_WORKING_SIDE / longSide;
+    w = Math.max(1,Math.round(w*f));
+    h = Math.max(1,Math.round(h*f));
+  }
+  return {w,h};
+}
+
+async function decodeImageSafe(file, purpose='preview', st=ensureState(file)){
+  const original = await getImageDimensions(file);
+  const desired = desiredDecodeSize(original, purpose, st);
+
+  if('createImageBitmap' in window){
+    try{
+      const opts = {resizeQuality:'high'};
+      if(desired && original){
+        // Une seule dimension est imposée : le navigateur conserve le ratio.
+        if(original.w >= original.h) opts.resizeWidth = desired.w;
+        else opts.resizeHeight = desired.h;
+      }
+      const bitmap = await createImageBitmap(file, opts);
+      if(!st.naturalW || !st.naturalH){
+        st.naturalW = original?.w || bitmap.width;
+        st.naturalH = original?.h || bitmap.height;
+      }
+      return bitmap;
+    }catch(e){
+      console.warn('createImageBitmap fallback', e);
+    }
+  }
+
+  // Fallback classique pour les navigateurs qui ne prennent pas createImageBitmap en charge.
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      if(!st.naturalW || !st.naturalH){
+        st.naturalW=img.naturalWidth; st.naturalH=img.naturalHeight;
+      }
+      resolve(img);
+    };
+    img.onerror=(e)=>{URL.revokeObjectURL(url);reject(e)};
+    img.src=url;
+  });
+}
+
+function ensureState(file){
+  const id = fileId(file);
+  if(!states[id]){
+    states[id] = {
+      zoom:1, rotation:0, x:0, y:0, edited:false,
+      naturalW:0, naturalH:0,
+      thumbUrl:null, thumbPending:false
+    };
+  }
+  return states[id];
+}
+function currentFile(){ return files.find(f=>fileId(f)===currentId) || null; }
+function currentState(){ return currentId ? states[currentId] : null; }
+
+async function hydrateImage(file){
+  const id = fileId(file);
+  const st = ensureState(file);
+  if(activeDecoded.id === id && activeDecoded.image) return activeDecoded.image;
+
+  releaseActiveDecoded();
+  const img = await decodeImageSafe(file, 'preview', st);
+  activeDecoded = {id,image:img};
+  return img;
+}
+function rotatedBox(w,h,deg){
+  const rad = deg*Math.PI/180;
+  const c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
+  return { w: w*c + h*s, h: w*s + h*c };
+}
+function fitScale(nw,nh,deg){
+  const {w: outW, h: outH} = outputPxDims();
+  const box = rotatedBox(nw,nh,deg);
+  if(els.fitModeSelect.value === 'contain'){
+    return Math.min(outW/box.w, outH/box.h);
+  }
+  return Math.max(outW/box.w, outH/box.h);
+}
+function autoOffsets(renderedW, renderedH){
+  const {w: outW, h: outH} = outputPxDims();
+  const pos = els.autoPosSelect.value;
+  let x = 0, y = 0;
+
+  if(pos.includes('left')) x = (renderedW - outW) / 2;
+  if(pos.includes('right')) x = -(renderedW - outW) / 2;
+  if(pos.includes('top')) y = (renderedH - outH) / 2;
+  if(pos.includes('bottom')) y = -(renderedH - outH) / 2;
+
+  if(pos === 'top') { x = 0; y = (renderedH - outH) / 2; }
+  if(pos === 'bottom') { x = 0; y = -(renderedH - outH) / 2; }
+  if(pos === 'left') { x = (renderedW - outW) / 2; y = 0; }
+  if(pos === 'right') { x = -(renderedW - outW) / 2; y = 0; }
+
+  return {x, y};
+}
+function syncCurrentControls(){
+  const st = currentState();
+  const has = !!st;
+  [els.zoomRange, els.rotationRange, els.rotateLeftBtn, els.rotateRightBtn, els.autoFitBtn, els.centerBtn, els.resetImageBtn, els.copyToAllBtn].forEach(el=>el.disabled=!has);
+  if(!has){
+    els.zoomRange.value = 100; els.rotationRange.value = 0; els.zoomLabel.textContent='100 %'; els.rotationLabel.textContent='0°';
+    return;
+  }
+  els.zoomRange.value = Math.round(st.zoom*100);
+  els.rotationRange.value = Math.round(st.rotation);
+  els.zoomLabel.textContent = Math.round(st.zoom*100)+' %';
+  els.rotationLabel.textContent = Math.round(st.rotation)+'°';
+}
+function markEdited(st){
+  st.edited = Math.abs(st.x) > .1 || Math.abs(st.y) > .1 || Math.abs(st.zoom-1) > .001 || Math.abs(st.rotation) > .001;
+}
+function refreshEditUI(){
+  const st = currentState();
+  const edited = Object.values(states).filter(s=>s.edited).length;
+  els.sumEdited.textContent = edited;
+  if(st) els.infoState.textContent = st.edited ? 'Modifiée' : 'Auto';
+  if(currentId){
+    for(const row of els.gallery.querySelectorAll('.galleryItem')){
+      if(row.dataset.id === currentId){
+        const badge = row.querySelector('.badge');
+        if(badge){
+          badge.classList.toggle('edited', !!st?.edited);
+          badge.textContent = st?.edited ? 'Modifiée' : 'Auto';
+        }
+        break;
+      }
+    }
+  }
+}
+function schedulePreviewRender(){
+  if(previewRAF) return;
+  previewRAF = requestAnimationFrame(()=>{
+    previewRAF = 0;
+    renderCurrent();
+  });
+}
+function updateSummary(){
+  const edited = Object.values(states).filter(s=>s.edited).length;
+  els.sumCount.textContent = files.length;
+  els.sumEdited.textContent = edited;
+  els.countMeta.textContent = files.length ? `${files.length} image${files.length>1?'s':''} sélectionnée${files.length>1?'s':''}` : 'Aucune image sélectionnée';
+  els.sizeMeta.textContent = files.length ? formatBytes(totalInputBytes()) : '—';
+  els.processBtn.disabled = !files.length || isProcessing;
+}
+function renderGallery(){
+  els.gallery.innerHTML = '';
+  files.forEach(file=>{
+    const id = fileId(file);
+    const st = ensureState(file);
+    const row = document.createElement('button');
+    row.className = 'galleryItem' + (id===currentId?' active':'');
+    row.type = 'button';
+    row.dataset.id = id;
+
+    const thumb = document.createElement('div');
+    thumb.className='galleryThumb';
+    if(st.thumbUrl){
+      const im=document.createElement('img');
+      im.src=st.thumbUrl;
+      thumb.appendChild(im);
+    }else{
+      thumb.style.display='grid';
+      thumb.style.placeItems='center';
+      thumb.style.color='#778094';
+      thumb.style.fontSize='10px';
+      thumb.textContent='IMG';
+      queueThumbnail(file);
+    }
+
+    const name = document.createElement('div'); name.className='galleryName';
+    const strong = document.createElement('strong'); strong.textContent = file.name;
+    const small = document.createElement('span'); small.textContent = formatBytes(file.size);
+    name.append(strong, small);
+    const badge = document.createElement('div');
+    badge.className='badge'+(st.edited?' edited':'');
+    badge.textContent = st.edited ? 'Modifiée' : 'Auto';
+    row.append(thumb, name, badge);
+    row.addEventListener('click',()=>selectFile(id));
+    els.gallery.appendChild(row);
+  });
+}
+
+function queueThumbnail(file){
+  const st = ensureState(file);
+  if(st.thumbUrl || st.thumbPending) return;
+  st.thumbPending = true;
+  thumbnailQueue.push(file);
+  processThumbnailQueue();
+}
+async function processThumbnailQueue(){
+  if(thumbnailWorkerRunning) return;
+  thumbnailWorkerRunning = true;
+  while(thumbnailQueue.length){
+    const file = thumbnailQueue.shift();
+    const st = ensureState(file);
+    let img = null;
+    try{
+      img = await decodeImageSafe(file,'thumb',st);
+      const c = document.createElement('canvas');
+      c.width=112;c.height=112;
+      const cc=c.getContext('2d');
+      const iw=imageW(img), ih=imageH(img);
+      const s=Math.max(112/iw,112/ih);
+      const dw=iw*s, dh=ih*s;
+      cc.drawImage(img,(112-dw)/2,(112-dh)/2,dw,dh);
+      const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',.78));
+      if(blob){
+        st.thumbUrl=URL.createObjectURL(blob);
+      }
+      c.width=1;c.height=1;
+    }catch(e){
+      console.warn('Miniature impossible',e);
+    }finally{
+      st.thumbPending=false;
+      releaseImageResource(img);
+    }
+    // Met à jour uniquement si le fichier existe toujours.
+    if(files.some(f=>fileId(f)===fileId(file))) renderGallery();
+    await new Promise(r=>setTimeout(r,0));
+  }
+  thumbnailWorkerRunning = false;
+}
+function refreshAllUI(){
+  updateSummary();
+  renderGallery();
+  els.infoOutput.textContent = outputDimsLabel();
+  els.outputInfo.textContent = outputDirHandle
+    ? `Dossier sélectionné : ${outputDirHandle.name}`
+    : `Aucun dossier sélectionné. Sans dossier, le navigateur utilisera son emplacement de téléchargement par défaut.`;
+  els.prefixText.disabled = !els.prefixToggle.checked;
+  syncCurrentControls();
+  updateInfoPanel();
+}
+function resetCanvasEmpty(){
+  els.stageCanvas.style.display = 'none';
+  els.emptyStage.classList.remove('hidden');
+  els.editorTitle.textContent = 'Aucune image active';
+  els.infoOriginal.textContent = '—';
+  els.infoFilename.textContent = '—';
+  els.infoWeight.textContent = '—';
+  els.infoState.textContent = 'Auto';
+}
+async function selectFile(id){
+  currentId = id;
+  refreshAllUI();
+  const file = currentFile();
+  if(!file){ resetCanvasEmpty(); return; }
+  await hydrateImage(file);
+  els.editorTitle.textContent = file.name;
+  renderCurrent();
+}
+
+function imageW(img){ return img?.naturalWidth || img?.width || 1; }
+function imageH(img){ return img?.naturalHeight || img?.height || 1; }
+
+function previewCanvasDims(outW,outH){
+  const maxSide = 1600;
+  const maxPixels = 2_200_000;
+  let factor = Math.min(1, maxSide/Math.max(outW,outH));
+  factor = Math.min(factor, Math.sqrt(maxPixels/(outW*outH)));
+  return {
+    w:Math.max(1,Math.round(outW*factor)),
+    h:Math.max(1,Math.round(outH*factor))
+  };
+}
+function drawToCanvas(canvas, img, st, outW, outH, renderW=outW, renderH=outH){
+  const c = canvas.getContext('2d');
+  canvas.width = renderW; canvas.height = renderH;
+  c.imageSmoothingEnabled = true;
+  c.imageSmoothingQuality = performanceMode==='fast' ? 'medium' : 'high';
+  const typeForBg = outputType(currentFile() || files[0] || {type:'image/jpeg'}) === 'image/jpeg';
+  c.clearRect(0,0,renderW,renderH);
+  if(typeForBg){ c.fillStyle = els.jpegBg.value; c.fillRect(0,0,renderW,renderH); }
+
+  const iw = imageW(img), ih = imageH(img);
+  const rad = st.rotation * Math.PI / 180;
+  const baseScale = fitScale(iw, ih, st.rotation);
+  const finalScale = baseScale * st.zoom;
+  const box = rotatedBox(iw, ih, st.rotation);
+  const renderedLogicalW = box.w * finalScale;
+  const renderedLogicalH = box.h * finalScale;
+  const baseOffset = autoOffsets(renderedLogicalW, renderedLogicalH);
+
+  c.save();
+  c.scale(renderW/outW, renderH/outH);
+  c.translate(outW/2 + baseOffset.x + st.x, outH/2 + baseOffset.y + st.y);
+  c.rotate(rad);
+  c.scale(finalScale, finalScale);
+  c.drawImage(img, -iw/2, -ih/2);
+  c.restore();
+}
+async function estimateCurrentWeight(token){
+  const file = currentFile(), st = currentState();
+  if(!file || !st || !activeDecoded.image) return;
+  const safety = outputSafety();
+  if(!safety.ok || safety.pixels > MAX_WEIGHT_ESTIMATE_PIXELS){
+    if(token===weightEstimateToken) els.infoWeight.textContent='Calcul à l’export';
+    return;
+  }
+
+  const off = makeWorkingCanvas();
+  try{
+    drawToCanvas(off, activeDecoded.image, st, safety.w, safety.h);
+    const type = outputType(file);
+    let blob;
+    if(compressionMode==='quality'){
+      blob = await new Promise(res=>off.toBlob(res, type, Number(els.qualityRange.value)/100));
+    }else{
+      blob = (await encodeTarget(off, type, targetBytes())).blob;
+    }
+    if(token===weightEstimateToken){
+      els.infoWeight.textContent = blob ? formatBytes(blob.size) : '—';
+    }
+  }catch(e){
+    if(token===weightEstimateToken) els.infoWeight.textContent='—';
+  }finally{
+    off.width=1;off.height=1;
+  }
+}
+function scheduleWeightEstimate(){
+  clearTimeout(weightEstimateTimer);
+  const token=++weightEstimateToken;
+  els.infoWeight.textContent='Calcul…';
+  weightEstimateTimer=setTimeout(()=>estimateCurrentWeight(token),350);
+}
+function updateInfoPanel(){
+  const file = currentFile(), st = currentState();
+  if(!file || !st){ return resetCanvasEmpty(); }
+  els.infoOriginal.textContent = st.naturalW && st.naturalH ? `${st.naturalW} × ${st.naturalH}` : '—';
+  els.infoFilename.textContent = outputFilename(file);
+  els.infoState.textContent = st.edited ? 'Modifiée' : 'Auto';
+  if(isProcessing){
+    clearTimeout(weightEstimateTimer);
+    els.infoWeight.textContent='Calcul suspendu';
+    return;
+  }
+  scheduleWeightEstimate();
+}
+async function renderCurrent(){
+  const file = currentFile(), st = currentState();
+  if(!file || !st){ resetCanvasEmpty(); return; }
+
+  const safety = outputSafety();
+  if(!safety.ok){
+    els.stageCanvas.style.display='none';
+    els.emptyStage.classList.remove('hidden');
+    els.emptyStage.innerHTML=`<b>Dimensions de sortie trop élevées</b>${safety.reason}`;
+    els.infoWeight.textContent='—';
+    return;
+  }
+
+  try{
+    const img = await hydrateImage(file);
+    // Une sélection peut changer pendant le décodage.
+    if(fileId(file)!==currentId) return;
+    const pv = previewCanvasDims(safety.w,safety.h);
+    drawToCanvas(els.stageCanvas, img, st, safety.w, safety.h, pv.w, pv.h);
+    els.stageCanvas.style.display = 'block';
+    els.emptyStage.classList.add('hidden');
+    els.zoomLabel.textContent = Math.round(st.zoom*100)+' %';
+    els.rotationLabel.textContent = Math.round(st.rotation)+'°';
+    els.editorTitle.textContent = file.name;
+    updateInfoPanel();
+  }catch(e){
+    console.error(e);
+    els.stageCanvas.style.display='none';
+    els.emptyStage.classList.remove('hidden');
+    els.emptyStage.innerHTML='<b>Image trop lourde ou illisible</b>Le navigateur n’a pas pu préparer l’aperçu.';
+    toast('Image non chargée','La photo est très lourde ou son format n’a pas pu être décodé.');
+  }
+}
+els.zoomRange.addEventListener('input',()=>{ const st=currentState(); if(!st)return; st.zoom = Number(els.zoomRange.value)/100; markEdited(st); els.zoomLabel.textContent=Math.round(st.zoom*100)+' %'; refreshEditUI(); schedulePreviewRender(); });
+els.rotationRange.addEventListener('input',()=>{ const st=currentState(); if(!st)return; st.rotation = Number(els.rotationRange.value); markEdited(st); els.rotationLabel.textContent=Math.round(st.rotation)+'°'; refreshEditUI(); schedulePreviewRender(); });
+els.rotateLeftBtn.addEventListener('click',()=>{ const st=currentState(); if(!st)return; st.rotation -= 90; markEdited(st); syncCurrentControls(); refreshAllUI(); renderCurrent(); });
+els.rotateRightBtn.addEventListener('click',()=>{ const st=currentState(); if(!st)return; st.rotation += 90; markEdited(st); syncCurrentControls(); refreshAllUI(); renderCurrent(); });
+els.autoFitBtn.addEventListener('click',()=>{ const st=currentState(); if(!st)return; st.zoom = 1; st.x = 0; st.y = 0; markEdited(st); refreshAllUI(); renderCurrent(); });
+els.centerBtn.addEventListener('click',()=>{ const st=currentState(); if(!st)return; st.x=0; st.y=0; markEdited(st); refreshAllUI(); renderCurrent(); });
+els.resetImageBtn.addEventListener('click',()=>{ const st=currentState(); if(!st)return; st.zoom=1; st.rotation=0; st.x=0; st.y=0; markEdited(st); refreshAllUI(); renderCurrent(); });
+els.copyToAllBtn.addEventListener('click',()=>{
+  const st = currentState(); if(!st)return;
+  files.forEach(f=>{
+    const s = ensureState(f);
+    s.zoom = st.zoom; s.rotation = st.rotation; s.x = st.x; s.y = st.y;
+    markEdited(s);
+  });
+  refreshAllUI(); renderCurrent(); toast('Réglages copiés','Les réglages de l’image active ont été appliqués au lot.');
+});
+
+function canvasPoint(ev){
+  const rect = els.stageCanvas.getBoundingClientRect();
+  const px = (ev.clientX - rect.left) * (els.stageCanvas.width / rect.width);
+  const py = (ev.clientY - rect.top) * (els.stageCanvas.height / rect.height);
+  const {w:outW,h:outH}=outputPxDims();
+  return {
+    x:px * (outW/els.stageCanvas.width),
+    y:py * (outH/els.stageCanvas.height)
+  };
+}
+els.stageCanvas.addEventListener('pointerdown', e=>{
+  const st = currentState(); if(!st) return;
+  const p = canvasPoint(e);
+  drag = {start:p, ox:st.x, oy:st.y};
+  els.stageCanvas.setPointerCapture(e.pointerId);
+  els.stageWrap.classList.add('dragging');
+});
+els.stageCanvas.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  const st = currentState(); if(!st)return;
+  const p = canvasPoint(e);
+  st.x = drag.ox + (p.x - drag.start.x);
+  st.y = drag.oy + (p.y - drag.start.y);
+  markEdited(st); refreshEditUI(); schedulePreviewRender();
+});
+function endDrag(){ drag=null; els.stageWrap.classList.remove('dragging'); refreshEditUI(); }
+els.stageCanvas.addEventListener('pointerup', endDrag);
+els.stageCanvas.addEventListener('pointercancel', endDrag);
+els.stageCanvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const st = currentState(); if(!st) return;
+  st.zoom += (e.deltaY < 0 ? .05 : -.05);
+  st.zoom = Math.max(.5, Math.min(3, st.zoom));
+  markEdited(st); syncCurrentControls(); refreshEditUI(); schedulePreviewRender();
+},{passive:false});
+window.addEventListener('keydown', e=>{
+  const st = currentState(); if(!st) return;
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
+    e.preventDefault();
+    const step = e.shiftKey ? 20 : 5;
+    if(e.key==='ArrowLeft') st.x -= step;
+    if(e.key==='ArrowRight') st.x += step;
+    if(e.key==='ArrowUp') st.y -= step;
+    if(e.key==='ArrowDown') st.y += step;
+    markEdited(st); refreshEditUI(); schedulePreviewRender();
+  }
+});
+
+function setFiles(fileList, append=true){
+  const allIncoming = [...fileList];
+  const incoming = allIncoming.filter(isSupportedImage);
+  const ignored = allIncoming.length - incoming.length;
+  if(ignored > 0){
+    toast(
+      'Format non pris en charge',
+      `${ignored} fichier${ignored>1?'s ont':' a'} été ignoré${ignored>1?'s':''}. Formats acceptés : JPG, JPEG, PNG, WebP et AVIF.`
+    );
+  }
+  files = append ? [...files, ...incoming] : incoming;
+  const seen = new Set();
+  files = files.filter(f=>{
+    const id = fileId(f);
+    if(seen.has(id)) return false;
+    seen.add(id); ensureState(f); return true;
+  });
+  if(files.length && !currentId) currentId = fileId(files[0]);
+  if(currentId && !files.some(f=>fileId(f)===currentId)) currentId = files.length ? fileId(files[0]) : null;
+  refreshAllUI();
+  const veryLarge = incoming.filter(f=>f.size >= 20*1024*1024).length;
+  if(veryLarge){
+    toast(
+      'Mode mémoire optimisé',
+      `${veryLarge} image${veryLarge>1?'s lourdes ont':' lourde a'} été détectée${veryLarge>1?'s':''}. L’aperçu sera allégé automatiquement.`
+    );
+  }
+  if(currentId) selectFile(currentId); else resetCanvasEmpty();
+}
+function resetImport(){
+  releaseActiveDecoded();
+  clearTimeout(weightEstimateTimer);
+  thumbnailQueue = [];
+  Object.values(states).forEach(st=>{
+    if(st.thumbUrl) URL.revokeObjectURL(st.thumbUrl);
+  });
+  files = []; states = {}; currentId = null;
+  refreshAllUI(); resetCanvasEmpty();
+}
+function resetSettings(){
+  els.unitSelect.value = 'px'; updateUnitUI(); els.dpiInput.value = 300;
+  els.outW.value = 1200; els.outH.value = 1200; els.formatSelect.value = 'keep'; els.jpegBg.value = '#ffffff';
+  els.fitModeSelect.value = 'cover'; els.autoPosSelect.value = 'center';
+  els.qualityRange.value = 90; els.qualityLabel.textContent = '90 %'; els.targetWeight.value = 500; els.targetUnit.value = 'KB';
+  setCompressionMode('quality'); setPerformanceMode('fast'); refreshAllUI(); renderCurrent();
+}
+function resetOutput(){
+  outputDirHandle = null;
+  els.keepName.checked = true; els.prefixToggle.checked = false; els.prefixText.value = 'redim_'; els.prefixText.disabled = true;
+  refreshAllUI();
+}
+function resetAll(){
+  if(isProcessing) return;
+  resetImport(); resetSettings(); resetOutput();
+  els.progressArea.classList.remove('show'); els.progressBar.style.width='0%';
+  toast('Réinitialisé','Le projet a été remis à zéro.');
+}
+$('#resetAllBtn').addEventListener('click', resetAll);
+$('#resetImportBtn').addEventListener('click', resetImport);
+$('#resetSettingsBtn').addEventListener('click', resetSettings);
+$('#resetOutputBtn').addEventListener('click', resetOutput);
+
+$('#openImportBtn').addEventListener('click', e=>{ e.stopPropagation(); openModal('#importModal'); });
+els.dropzone.addEventListener('click', e=>{ if(!e.target.closest('button')) openModal('#importModal'); });
+$('#chooseFilesBtn').addEventListener('click', ()=>{ closeModal('#importModal'); els.filesInput.click(); });
+$('#chooseFolderBtn').addEventListener('click', ()=>{ closeModal('#importModal'); els.folderInput.click(); });
+els.filesInput.addEventListener('change', ()=>setFiles(els.filesInput.files, true));
+els.folderInput.addEventListener('change', ()=>setFiles(els.folderInput.files, true));
+
+['dragenter','dragover'].forEach(ev=>els.dropzone.addEventListener(ev,e=>{e.preventDefault();els.dropzone.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>els.dropzone.addEventListener(ev,e=>{e.preventDefault();els.dropzone.classList.remove('drag')}));
+els.dropzone.addEventListener('drop', e=>setFiles(e.dataTransfer.files, true));
+
+[els.unitSelect, els.outW, els.outH, els.formatSelect, els.jpegBg, els.fitModeSelect, els.autoPosSelect, els.keepName].forEach(el=>el.addEventListener('change',()=>{
+  updateUnitUI(); refreshAllUI(); renderCurrent();
+}));
+els.dpiInput.addEventListener('change',()=>{ updateUnitUI(); refreshAllUI(); renderCurrent(); });
+els.prefixToggle.addEventListener('change',()=>{ refreshAllUI(); renderCurrent(); });
+els.prefixText.addEventListener('input',()=>{ refreshAllUI(); renderCurrent(); });
+
+async function pickOutputDir(){
+  if(!('showDirectoryPicker' in window)){
+    toast('Fonction indisponible','La sélection de dossier de sortie nécessite Chrome ou Edge.');
+    return false;
+  }
+  try{
+    outputDirHandle = await window.showDirectoryPicker({mode:'readwrite'});
+    refreshAllUI();
+    return true;
+  }catch(e){ if(e.name!=='AbortError') toast('Erreur', e.message || 'Impossible de sélectionner le dossier.'); return false; }
+}
+$('#pickOutputBtn').addEventListener('click', pickOutputDir);
+$('#clearOutputBtn').addEventListener('click',()=>{ outputDirHandle = null; refreshAllUI(); });
+$('#pickOutputFromModalBtn').addEventListener('click', async ()=>{ if(await pickOutputDir()) closeModal('#noOutputModal'); });
+
+function makeWorkingCanvas(w=1,h=1){
+  if(performanceMode==='fast' && 'OffscreenCanvas' in window){
+    try{ return new OffscreenCanvas(w,h); }catch(_){}
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width=w; canvas.height=h;
+  return canvas;
+}
+async function blobFromCanvas(canvas, type, quality){
+  if(typeof canvas.convertToBlob === 'function'){
+    try{
+      return await canvas.convertToBlob({type, quality});
+    }catch(e){
+      console.warn('convertToBlob fallback', e);
+    }
+  }
+  return new Promise(res=>canvas.toBlob(res, type, quality));
+}
+async function encodeTarget(canvas, type, maxBytes){
+  if(type==='image/png'){
+    const blob = await blobFromCanvas(canvas, type);
+    return {blob, hit: blob.size <= maxBytes};
+  }
+  let low=.25, high=.98, best=null;
+  const iterations = performanceMode==='fast' ? 5 : 8;
+  for(let i=0;i<iterations;i++){
+    const q=(low+high)/2;
+    const b = await blobFromCanvas(canvas, type, q);
+    if(b.size <= maxBytes){ best=b; low=q; } else high=q;
+  }
+  if(best) return {blob:best, hit:true};
+  const fallback = await blobFromCanvas(canvas, type, .22);
+  return {blob:fallback, hit:fallback.size <= maxBytes};
+}
+async function saveBlob(blob, filename){
+  if(outputDirHandle){
+    const handle = await outputDirHandle.getFileHandle(filename, {create:true});
+    const writable = await handle.createWritable();
+    await writable.write(blob); await writable.close();
+  }else{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    await new Promise(r=>setTimeout(r,130));
+  }
+}
+async function processAll(){
+  if(!files.length){ toast('Aucune image','Ajoute au moins une image avant de lancer l’export.'); return; }
+  if(!outputDirHandle){ openModal('#noOutputModal'); return; }
+  await runExport();
+}
+$('#processBtn').addEventListener('click', processAll);
+$('#continueNoOutputBtn').addEventListener('click', async ()=>{ closeModal('#noOutputModal'); await runExport(); });
+
+function canUseParallelExport(safety){
+  if(performanceMode!=='fast' || !outputDirHandle || files.length < 2) return false;
+  if(safety.pixels > FAST_PARALLEL_MAX_PIXELS) return false;
+  if(files.some(f=>f.size > FAST_PARALLEL_MAX_FILE_BYTES)) return false;
+  const names = files.map(outputFilename);
+  if(new Set(names).size !== names.length) return false;
+  return true;
+}
+
+async function exportOne(file, index, total, safety, onStage){
+  const st = ensureState(file);
+  let img = null;
+  let off = null;
+  try{
+    onStage('Décodage', .08);
+    img = await decodeImageSafe(file,'export',st);
+
+    onStage('Redimensionnement', .32);
+    off = makeWorkingCanvas(safety.w, safety.h);
+    drawToCanvas(off, img, st, safety.w, safety.h);
+
+    onStage('Compression', .58);
+    const type = outputType(file);
+    let blob, miss = false;
+    if(compressionMode === 'quality'){
+      blob = await blobFromCanvas(off, type, Number(els.qualityRange.value)/100);
+    }else{
+      const result = await encodeTarget(off, type, targetBytes());
+      blob = result.blob;
+      miss = !result.hit;
+    }
+    if(!blob) throw new Error('Encodage impossible');
+
+    onStage('Enregistrement', .90);
+    await saveBlob(blob, outputFilename(file));
+    onStage('Terminé', 1);
+    return {ok:true, miss};
+  }catch(e){
+    console.error(e);
+    return {ok:false, miss:false};
+  }finally{
+    if(off){ off.width=1; off.height=1; }
+    releaseImageResource(img);
+    await new Promise(r=>setTimeout(r,0));
+  }
+}
+
+async function runExport(){
+  const safety = outputSafety();
+  if(!safety.ok){
+    toast('Dimensions trop élevées', safety.reason + ' Réduis la largeur, la hauteur ou le DPI.');
+    return;
+  }
+
+  isProcessing = true;
+  clearTimeout(weightEstimateTimer);
+  releaseActiveDecoded();
+  refreshAllUI();
+  els.progressArea.classList.add('show');
+
+  let success = 0, errors = 0, misses = 0, completed = 0, lastPct = 0;
+  const total = files.length;
+  const parallel = canUseParallelExport(safety);
+
+  const updateProgress = (index, stage, fraction)=>{
+    const raw = ((completed + Math.max(0, Math.min(1, fraction))) / total) * 100;
+    lastPct = Math.max(lastPct, Math.min(99, Math.round(raw)));
+    els.progressBar.style.width = lastPct + '%';
+    els.progressPct.textContent = lastPct + ' %';
+    els.progressLabel.textContent = `${index+1}/${total} · ${stage} · ${files[index].name}`;
+  };
+
+  const applyResult = result=>{
+    completed++;
+    if(result.ok) success++; else errors++;
+    if(result.miss) misses++;
+    const pct = Math.min(99, Math.round(completed/total*100));
+    lastPct = Math.max(lastPct,pct);
+    els.progressBar.style.width = lastPct + '%';
+    els.progressPct.textContent = lastPct + ' %';
+  };
+
+  if(parallel){
+    els.progressLabel.textContent = 'Mode optimisé · 2 images en parallèle';
+    let cursor = 0;
+    const worker = async ()=>{
+      while(true){
+        const index = cursor++;
+        if(index >= total) return;
+        const result = await exportOne(files[index], index, total, safety, (stage,f)=>updateProgress(index,stage,f));
+        applyResult(result);
+      }
+    };
+    await Promise.all([worker(), worker()]);
+  }else{
+    for(let i=0;i<total;i++){
+      const result = await exportOne(files[i], i, total, safety, (stage,f)=>updateProgress(i,stage,f));
+      applyResult(result);
+    }
+  }
+
+  els.progressBar.style.width = '100%';
+  els.progressPct.textContent = '100 %';
+  els.progressLabel.textContent = 'Export terminé';
+  isProcessing = false;
+  refreshAllUI();
+  if(currentId) renderCurrent();
+
+  $('#doneText').textContent =
+    `${success} image${success>1?'s':''} exportée${success>1?'s':''}` +
+    `${errors?`, ${errors} erreur${errors>1?'s':''}`:''}` +
+    `${misses?`, ${misses} cible${misses>1?'s':''} de poids non atteinte${misses>1?'s':''}`:''}` +
+    `${parallel?' · traitement parallèle utilisé':''}.`;
+  openModal('#doneModal');
+}
+$('#doneResetBtn').addEventListener('click', ()=>{ closeModal('#doneModal'); resetAll(); });
+
+setPerformanceMode('fast');
+updateUnitUI();
+refreshAllUI();
+resetCanvasEmpty();
+</script>
+</body>
+</html>
