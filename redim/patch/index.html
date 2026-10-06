@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Patch notes — Redimensionnement d’image</title>
+<style>
+  body{
+    margin:0;
+    padding:40px 20px;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:#fff;
+    color:#171717;
+    line-height:1.6;
+  }
+  main{max-width:820px;margin:0 auto}
+  h1{font-size:28px;margin:0 0 8px}
+  h2{font-size:18px;margin:32px 0 8px}
+  p,li{font-size:15px}
+  .muted{color:#666}
+  a{color:inherit}
+  code{background:#f3f3f3;padding:2px 5px;border-radius:4px}
+  hr{border:0;border-top:1px solid #e5e5e5;margin:32px 0}
+</style>
+</head>
+<body>
+<main>
+  <h1>Patch notes — Redimensionnement d’image</h1>
+  <p class="muted">Historique des principales corrections et évolutions de l’outil.</p>
+  <p><a href="/redim/">← Retour à l’outil</a></p>
+
+  <h2>V3.11 — Performances</h2>
+  <ul>
+    <li>Ajout d’un mode <strong>Optimisé</strong> et d’un mode <strong>Qualité max</strong>.</li>
+    <li>Réduction des recalculs pendant le zoom, la rotation et le déplacement.</li>
+    <li>Utilisation de <code>OffscreenCanvas</code> lorsqu’il est disponible.</li>
+    <li>Compression par poids cible accélérée.</li>
+    <li>Traitement possible de deux images en parallèle lorsque la mémoire et la résolution le permettent.</li>
+    <li>Retour automatique au traitement séquentiel pour les gros fichiers.</li>
+    <li>Progression détaillée : décodage, redimensionnement, compression et enregistrement.</li>
+  </ul>
+
+  <h2>V3.10 — Grosses images / mémoire</h2>
+  <ul>
+    <li>Correction des plantages liés aux images très lourdes.</li>
+    <li>Aperçus et miniatures générés en résolution réduite.</li>
+    <li>Une seule image active est conservée décodée en mémoire.</li>
+    <li>Traitement séquentiel des images à l’export avec libération de la mémoire entre chaque fichier.</li>
+    <li>Ajout de garde-fous sur les dimensions de sortie très élevées.</li>
+    <li>Détection des fichiers lourds et activation d’un mode mémoire optimisé.</li>
+  </ul>
+
+  <h2>V3.9 — Aides contextuelles</h2>
+  <ul>
+    <li>Ajout d’infobulles d’aide sur les réglages techniques.</li>
+    <li>Mini-animations explicatives pour les unités, le DPI, le cadrage, la position, la compression, le zoom et la rotation.</li>
+    <li>Les aides apparaissent au survol ou au focus clavier.</li>
+  </ul>
+
+  <h2>V3.8 — Formats d’image</h2>
+  <ul>
+    <li>Correction de l’import des PNG pouvant être ignorés lorsque le navigateur ne fournit pas de type MIME.</li>
+    <li>Détection basée à la fois sur le type MIME et l’extension du fichier.</li>
+    <li>Formats explicitement acceptés : JPG, JPEG, PNG, WebP et AVIF.</li>
+    <li>Message d’information lorsqu’un fichier non pris en charge est ignoré.</li>
+  </ul>
+
+  <h2>V3.7 — Aide DPI</h2>
+  <ul>
+    <li>Ajout d’une explication du fonctionnement du DPI en mode millimètres.</li>
+    <li>Exemple de conversion entre millimètres, DPI et pixels.</li>
+    <li>Rappel que le changement de DPI ne modifie pas la taille physique en millimètres.</li>
+  </ul>
+
+  <h2>V3.6 — Interface plus sobre</h2>
+  <ul>
+    <li>Réduction des animations et effets décoratifs permanents.</li>
+    <li>Suppression des gros effets de fond animés.</li>
+    <li>Palette plus neutre et interface plus proche d’un outil professionnel.</li>
+    <li>Conservation des animations utiles sur les interactions.</li>
+  </ul>
+
+  <h2>V3.5 — Animations d’interface</h2>
+  <ul>
+    <li>Ajout d’animations d’arrivée, de survol et d’ambiance.</li>
+    <li>Ajout d’effets de fond et de mouvements indépendants de la souris.</li>
+    <li>Ajout d’effets visuels sur les cartes, boutons et zone d’import.</li>
+  </ul>
+
+  <h2>V3.4 et précédentes — Base fonctionnelle</h2>
+  <ul>
+    <li>Import de plusieurs images ou d’un dossier complet.</li>
+    <li>Sélection d’un dossier de sortie lorsque le navigateur le permet.</li>
+    <li>Renommage avec préfixe et conservation du nom original.</li>
+    <li>Dimensions en pixels ou millimètres avec gestion du DPI.</li>
+    <li>Cadrage automatique <strong>Remplir</strong> ou <strong>Ajuster</strong>.</li>
+    <li>Positions automatiques : centre, haut, bas, gauche, droite et coins.</li>
+    <li>Éditeur individuel avec déplacement, zoom et rotation.</li>
+    <li>Copie des réglages vers tout le lot.</li>
+    <li>Formats de sortie : JPEG, PNG et WebP, avec conservation du format source quand possible.</li>
+    <li>Compression par qualité ou poids cible.</li>
+    <li>Choix du fond pour les exports JPEG.</li>
+    <li>Galerie des images avec état Auto / Modifiée.</li>
+    <li>Réinitialisation de l’import, des réglages, du nommage et de l’ensemble de l’outil.</li>
+    <li>Message de confirmation en fin de traitement.</li>
+    <li>Suppression de l’ancien affichage de coût par image.</li>
+    <li>Footer simplifié en <strong>DMBP 2026</strong>.</li>
+  </ul>
+
+  <hr>
+  <p class="muted">Version actuelle : 3.11-performance</p>
+</main>
+</body>
+</html>
