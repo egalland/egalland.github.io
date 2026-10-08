@@ -19,6 +19,18 @@
       "devMaxMinutes": 6000
     },
     {
+      "day": 2,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Reliquaire",
+      "note": "Une enquête en équipe à La Défense : six reliques, parcours libre, énigmes géolocalisées et interface maître de jeu.",
+      "appUrl": "https://inktober-2026.emmanuel-galland117.chatgpt.site/reliquaire/",
+      "repoUrl": "https://github.com/egalland/le-reliquaire"
+    },
+    {
       "day": 3,
       "promptMinutes": null,
       "chatgptMinutes": null,
@@ -108,5 +120,5 @@
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-08T11:34:47.719114+00:00"
+  "updatedAt": "2026-10-08T19:03:47.688Z"
 }
