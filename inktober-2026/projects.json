@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "day": 1,
+      "path": "pomme",
+      "repository": "egalland/one-more-thing",
+      "sourceCommit": "56bad2d8b41cd2a8534032c2fe721509572afcc3",
+      "title": "One More Thing",
+      "description": "Un jeu incrémental autour de l’histoire d’Apple : recherches, produits, améliorations et prestige."
+    },
+    {
+      "day": 3,
+      "path": "miniature",
+      "repository": "egalland/micro-habitudes",
+      "sourceCommit": "20a497d68726e12665b16b671abb5913612689c6",
+      "title": "Micro · Habitudes",
+      "description": "Un journal de petites actions avec grilles annuelles, séries et exports. Sauvegarde dans ce navigateur ; import JSON disponible."
+    },
+    {
+      "day": 4,
+      "path": "cactus",
+      "repository": "egalland/cactocalypse",
+      "sourceCommit": "7ae6a05a2682a4cf1dd839e11daa0609803cc46b",
+      "title": "Cactocalypse",
+      "description": "Un jeu de survie 2D : mutations de cactus, monstres, objets et terrains variés."
+    },
+    {
+      "day": 5,
+      "path": "claque",
+      "repository": "egalland/ghost-slap",
+      "sourceCommit": "6244ef28eeb2cabda1861bb71c151f448678094e",
+      "title": "Ghost Slap",
+      "description": "Une chasse aux fantômes de 45 secondes, au toucher ou avec la caméra et la détection des gestes."
+    },
+    {
+      "day": 6,
+      "path": "ogre",
+      "repository": "egalland/le-garde-du-pont",
+      "sourceCommit": "df1be91ef537e1640eae72ca9705eb9741936d90",
+      "title": "Le garde du pont",
+      "description": "Négociez avec l’ogre Bröm pour traverser son pont ; cinq fins et sauvegarde de la progression."
+    },
+    {
+      "day": 7,
+      "path": "panique",
+      "repository": "egalland/panique",
+      "sourceCommit": "90d129ec19c3ff16e198147fec7ead7b8c0d9617",
+      "title": "Panique",
+      "description": "Un bouton rouge déclenche des scénarios et des effets de panique fictifs."
+    }
+  ]
+}

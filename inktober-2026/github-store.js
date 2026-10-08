@@ -1,6 +1,6 @@
 (() => {
  'use strict';
- const fields=['note','done','appUrl','appTitle','promptMinutes','chatgptMinutes','devMinutes','opened'];
+ const fields=['note','done','appUrl','repoUrl','appTitle','promptMinutes','chatgptMinutes','devMinutes','opened'];
  const empty=()=>({version:1,days:[],settings:{vibeRateCents:null,devRateCents:null},updatedAt:null});
  const clone=value=>JSON.parse(JSON.stringify(value));
  function parse(value){
@@ -19,7 +19,7 @@
   if(['opened','done'].includes(key)){if(typeof value!=='boolean')throw new Error('Statut invalide.');return;}
   if(['promptMinutes','chatgptMinutes','devMinutes'].includes(key)){if(value!==null&&(!Number.isInteger(value)||value<0||value>100000))throw new Error('Durée invalide.');return;}
   const max=key==='appTitle'?120:2000;if(typeof value!=='string'||value.length>max)throw new Error('Texte invalide.');
-  if(key==='appUrl'&&value){let url;try{url=new URL(value);}catch{throw new Error('Lien invalide.');}if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw new Error('Lien invalide.');}
+  if(['appUrl','repoUrl'].includes(key)&&value){let url;try{url=new URL(value);}catch{throw new Error('Lien invalide.');}if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw new Error('Lien invalide.');if(key==='repoUrl'&&(url.origin!=='https://github.com'||!/^\/egalland\/[a-z0-9_.-]+\/?$/i.test(url.pathname)||url.search||url.hash))throw new Error('Dépôt invalide.');}
  }
  const defaults={note:'',done:false,appUrl:'',appTitle:'',promptMinutes:null,chatgptMinutes:null,devMinutes:null,opened:false};
  function merge(latest,baseline,path,patch){

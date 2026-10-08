@@ -38,3 +38,9 @@ node tests/check-calendar.mjs
 ```
 
 Le test emploie une API GitHub simulée et un jeton factice. Il vérifie les commits de données, les permissions, les conflits, le rechargement, les liens de dépôts, les calculs, le parcours GitHub Actions et les mouvements du fond. La connexion avec un vrai jeton et la construction des dépôts d’apps nécessitent leur configuration par le propriétaire.
+
+## Projets intégrés
+
+Les six projets des jours 1, 3, 4, 5, 6 et 7 sont publiés directement sous `/pomme/`, `/miniature/`, `/cactus/`, `/claque/`, `/ogre/` et `/panique/`. Les liens « Ouvrir l’app » et « Voir le code » sont publics dans les cases et leurs fenêtres. `projects.json` précise le dépôt et le commit source de chaque version. Les apps sont des copies statiques ; leurs dépôts gardent leurs sources et leur historique. Les futures mises à jour doivent être construites et recopiées ici avant publication.
+
+Micro · Habitudes utilise sa version Pages avec stockage local vérifié, export/import JSON et aucun serveur. Une sauvegarde Sites existante peut être exportée puis importée ; elle n’est pas copiée automatiquement. Les temps et tarifs absents ne sont pas estimés par l’intégration. Les dossiers `/redim/` et `/livre/` sont conservés sans modification.

@@ -1,9 +1,82 @@
 {
   "version": 1,
-  "days": [],
+  "days": [
+    {
+      "day": 1,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "One More Thing",
+      "note": "Un jeu incrémental autour de l’histoire d’Apple : recherches, produits, améliorations et prestige.",
+      "appUrl": "https://egalland.github.io/pomme/",
+      "repoUrl": "https://github.com/egalland/one-more-thing"
+    },
+    {
+      "day": 3,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "Micro · Habitudes",
+      "note": "Un journal de petites actions avec grilles annuelles, séries et exports. Sauvegarde dans ce navigateur ; import JSON disponible.",
+      "appUrl": "https://egalland.github.io/miniature/",
+      "repoUrl": "https://github.com/egalland/micro-habitudes"
+    },
+    {
+      "day": 4,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "Cactocalypse",
+      "note": "Un jeu de survie 2D : mutations de cactus, monstres, objets et terrains variés.",
+      "appUrl": "https://egalland.github.io/cactus/",
+      "repoUrl": "https://github.com/egalland/cactocalypse"
+    },
+    {
+      "day": 5,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "Ghost Slap",
+      "note": "Une chasse aux fantômes de 45 secondes, au toucher ou avec la caméra et la détection des gestes.",
+      "appUrl": "https://egalland.github.io/claque/",
+      "repoUrl": "https://github.com/egalland/ghost-slap"
+    },
+    {
+      "day": 6,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le garde du pont",
+      "note": "Négociez avec l’ogre Bröm pour traverser son pont ; cinq fins et sauvegarde de la progression.",
+      "appUrl": "https://egalland.github.io/ogre/",
+      "repoUrl": "https://github.com/egalland/le-garde-du-pont"
+    },
+    {
+      "day": 7,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "Panique",
+      "note": "Un bouton rouge déclenche des scénarios et des effets de panique fictifs.",
+      "appUrl": "https://egalland.github.io/panique/",
+      "repoUrl": "https://github.com/egalland/panique"
+    }
+  ],
   "settings": {
     "vibeRateCents": null,
     "devRateCents": null
   },
-  "updatedAt": null
+  "updatedAt": "2026-10-08T05:20:35.807887+00:00"
 }
