@@ -48,6 +48,14 @@
       "sourceCommit": "90d129ec19c3ff16e198147fec7ead7b8c0d9617",
       "title": "Panique",
       "description": "Un bouton rouge déclenche des scénarios et des effets de panique fictifs."
+    },
+    {
+      "day": 8,
+      "path": "compost",
+      "repository": "egalland/carnet-du-compost",
+      "sourceCommit": "d7912bbd1dc1cd722f312a82b74e74b9884fa715",
+      "title": "Carnet du compost",
+      "description": "Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles."
     }
   ]
 }

@@ -114,11 +114,23 @@
       "vibeMaxMinutes": 45,
       "devMinMinutes": 180,
       "devMaxMinutes": 360
+    },
+    {
+      "day": 8,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "Carnet du compost",
+      "note": "Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles.",
+      "appUrl": "https://egalland.github.io/compost/",
+      "repoUrl": "https://github.com/egalland/carnet-du-compost"
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-08T19:03:47.688Z"
+  "updatedAt": "2026-10-08T20:01:04.558Z"
 }
