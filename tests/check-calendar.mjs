@@ -29,7 +29,14 @@ assert(door(2).className.includes('opened'));assert(door(8).className.includes('
 const count=calls.length;await a.registry.get('open_inktober_day').execute({day:2});assert.equal(calls.length,count);assert.equal(a.get('prompt-name').textContent,'Relique');assert(a.get('prompt-dialog').open);
 assert.match((await a.registry.get('open_inktober_day').execute({day:9})).error,/disponible/);
 await a.registry.get('open_inktober_day').execute({day:1});assert.equal(a.get('project-launch').href,'https://egalland.github.io/pomme/');assert.equal(a.get('project-code').href,'https://github.com/egalland/one-more-thing');
-assert.equal(a.registry.get('read_inktober_statistics').execute().doneCount,6);
+const initial=a.registry.get('read_inktober_statistics').execute();
+assert.equal(initial.doneCount,6);assert.equal(initial.vibeTime.value,641);assert.equal(initial.dev.value,13530);assert.equal(initial.vibeCost.value,37392);assert.equal(initial.devCost.value,902000);
+assert.equal(initial.vibeMin.value,425);assert.equal(initial.vibeMax.value,855);assert.equal(initial.devMin.value,9720);assert.equal(initial.devMax.value,17340);
+assert.equal(initial.prompt.value,null);assert.equal(initial.chatgpt.value,null);assert(a.get('project-vibe-time').textContent.includes('3 h'));assert(a.get('project-dev-time').textContent.includes('80 h'));
+assert.equal(a.win.githubCalendarStore.parse({version:1,days:[]}).settings.vibeRateCents,3500);
+assert.throws(()=>a.win.githubCalendarStore.parse({version:1,days:[{day:1,vibeMinutes:20,vibeMinMinutes:30,vibeMaxMinutes:60}]}),/Fourchette/);
+const historical=a.win.inktoberMetrics.calculate([{day:1,done:true,promptMinutes:30,chatgptMinutes:60,devMinutes:240}],{vibeRateCents:3500,devRateCents:4000});assert.equal(historical.vibeTime.value,90);assert.equal(historical.vibeCost.value,5250);assert.equal(historical.devCost.value,16000);
+const explicit=a.win.inktoberMetrics.calculate([{day:1,done:true,vibeMinutes:10,promptMinutes:30,chatgptMinutes:60,devMinutes:null},{day:2,done:true,vibeMinutes:null,promptMinutes:null,chatgptMinutes:2,devMinutes:0}],{vibeRateCents:3500,devRateCents:4000});assert.equal(explicit.vibeTime.value,10);assert.equal(explicit.vibeTime.count,1);assert.equal(explicit.vibeCost.value,583);assert.equal(explicit.devCost.value,0);
 for(const name of ['save_inktober_note','save_inktober_progress','save_inktober_rates'])assert(!a.registry.has(name));
 await assert.rejects(a.win.inktoberTransport.api('/api/days/2',{opened:true}),/lecture seule/);
 await assert.rejects(a.win.inktoberTransport.api('/api/settings',{vibeRateCents:1}),/lecture seule/);
@@ -41,11 +48,10 @@ for(const [date,n] of [['2026-09-30T21:59:59Z',0],['2026-09-30T22:00:00Z',1],['2
 }
 now='2026-10-08T12:00:00Z';tick();
 remote.days[0].appTitle='Updated <title>';await a.get('refresh-calendar').click();assert(door(1).innerHTML.includes('Updated &lt;title&gt;'));assert(!door(1).innerHTML.includes('Updated <title>'));
-remote.settings={vibeRateCents:3500,devRateCents:4000};Object.assign(remote.days[0],{promptMinutes:30,chatgptMinutes:60,devMinutes:240});await a.get('refresh-calendar').click();const stats=a.registry.get('read_inktober_statistics').execute();assert.equal(stats.vibeCost.value,5250);assert.equal(stats.devCost.value,16000);assert(a.get('vibe-rate').textContent.includes('35,00'));
-a.get('tab-stats').click();assert.equal(a.get('view-stats').hidden,false);a.get('stats-settings').click();assert.equal(a.get('view-settings').hidden,false);
+a.get('tab-stats').click();assert.equal(a.get('view-stats').hidden,false);assert(a.get('stats-rates-note').textContent.includes('35,00'));assert(a.get('stats-rates-note').textContent.includes('40,00'));a.get('tab-stats').listeners.keydown({key:'ArrowRight',preventDefault(){}});assert.equal(a.get('view-calendar').hidden,false);
 failure=true;await a.get('refresh-calendar').click();assert.equal(a.get('retry-load').hidden,false);failure=false;await a.get('retry-load').click();assert(availability().loaded);
-for(const html of ['../index.html','index.html']){const source=fs.readFileSync(root+html,'utf8');assert(!/id="(?:github-login|github-token|connect-calendar|day-form|settings-form)"/.test(source));assert(!source.includes('repository.js'));}
-console.log('PASS: automatic Paris dates and DST, midnight update, locked future days, read-only transport, no login/storage/writes, public projects, refreshed content, KPI calculations, tabs and error retry.');
+for(const html of ['../index.html','index.html']){const source=fs.readFileSync(root+html,'utf8');assert(!/id="(?:github-login|github-token|connect-calendar|day-form|settings-form|tab-settings|view-settings|stats-settings)"/.test(source));assert(!source.includes('repository.js'));}
+console.log('PASS: automatic Paris dates and DST, midnight update, locked future days, read-only transport, no login/storage/writes, public projects, refreshed content, estimated durations/ranges, fixed hourly rates and cent rounding, unknown duration handling, KPI totals, two tabs and error retry.');
 // Parallax: verify distinct scroll depth, smoothing stop, and immediate reduced-motion reset.
 const vars=new Map(),handlers=new Map(),frames=new Map();let next=0,reduced=false;
 const motion={get matches(){return reduced},addEventListener(t,f){handlers.set('motion',f)}};

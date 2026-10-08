@@ -5,78 +5,108 @@
       "day": 1,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 4800,
       "opened": true,
       "done": true,
       "appTitle": "One More Thing",
       "note": "Un jeu incrémental autour de l’histoire d’Apple : recherches, produits, améliorations et prestige.",
       "appUrl": "https://egalland.github.io/pomme/",
-      "repoUrl": "https://github.com/egalland/one-more-thing"
+      "repoUrl": "https://github.com/egalland/one-more-thing",
+      "vibeMinutes": 180,
+      "vibeMinMinutes": 120,
+      "vibeMaxMinutes": 240,
+      "devMinMinutes": 3600,
+      "devMaxMinutes": 6000
     },
     {
       "day": 3,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 1080,
       "opened": true,
       "done": true,
       "appTitle": "Micro · Habitudes",
       "note": "Un journal de petites actions avec grilles annuelles, séries et exports. Sauvegarde dans ce navigateur ; import JSON disponible.",
       "appUrl": "https://egalland.github.io/miniature/",
-      "repoUrl": "https://github.com/egalland/micro-habitudes"
+      "repoUrl": "https://github.com/egalland/micro-habitudes",
+      "vibeMinutes": 90,
+      "vibeMinMinutes": 60,
+      "vibeMaxMinutes": 120,
+      "devMinMinutes": 720,
+      "devMaxMinutes": 1440
     },
     {
       "day": 4,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 4500,
       "opened": true,
       "done": true,
       "appTitle": "Cactocalypse",
       "note": "Un jeu de survie 2D : mutations de cactus, monstres, objets et terrains variés.",
       "appUrl": "https://egalland.github.io/cactus/",
-      "repoUrl": "https://github.com/egalland/cactocalypse"
+      "repoUrl": "https://github.com/egalland/cactocalypse",
+      "vibeMinutes": 135,
+      "vibeMinMinutes": 90,
+      "vibeMaxMinutes": 180,
+      "devMinMinutes": 3300,
+      "devMaxMinutes": 5700
     },
     {
       "day": 5,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 2160,
       "opened": true,
       "done": true,
       "appTitle": "Ghost Slap",
       "note": "Une chasse aux fantômes de 45 secondes, au toucher ou avec la caméra et la détection des gestes.",
       "appUrl": "https://egalland.github.io/claque/",
-      "repoUrl": "https://github.com/egalland/ghost-slap"
+      "repoUrl": "https://github.com/egalland/ghost-slap",
+      "vibeMinutes": 135,
+      "vibeMinMinutes": 90,
+      "vibeMaxMinutes": 180,
+      "devMinMinutes": 1440,
+      "devMaxMinutes": 2880
     },
     {
       "day": 6,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 720,
       "opened": true,
       "done": true,
       "appTitle": "Le garde du pont",
       "note": "Négociez avec l’ogre Bröm pour traverser son pont ; cinq fins et sauvegarde de la progression.",
       "appUrl": "https://egalland.github.io/ogre/",
-      "repoUrl": "https://github.com/egalland/le-garde-du-pont"
+      "repoUrl": "https://github.com/egalland/le-garde-du-pont",
+      "vibeMinutes": 68,
+      "vibeMinMinutes": 45,
+      "vibeMaxMinutes": 90,
+      "devMinMinutes": 480,
+      "devMaxMinutes": 960
     },
     {
       "day": 7,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 270,
       "opened": true,
       "done": true,
       "appTitle": "Panique",
       "note": "Un bouton rouge déclenche des scénarios et des effets de panique fictifs.",
       "appUrl": "https://egalland.github.io/panique/",
-      "repoUrl": "https://github.com/egalland/panique"
+      "repoUrl": "https://github.com/egalland/panique",
+      "vibeMinutes": 33,
+      "vibeMinMinutes": 20,
+      "vibeMaxMinutes": 45,
+      "devMinMinutes": 180,
+      "devMaxMinutes": 360
     }
   ],
   "settings": {
-    "vibeRateCents": null,
-    "devRateCents": null
+    "vibeRateCents": 3500,
+    "devRateCents": 4000
   },
-  "updatedAt": "2026-10-08T05:20:35.807887+00:00"
+  "updatedAt": "2026-10-08T11:34:47.719114+00:00"
 }
