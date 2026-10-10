@@ -128,6 +128,23 @@
       "repoUrl": "https://github.com/egalland/carnet-du-compost"
     },
     {
+      "day": 9,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": 960,
+      "opened": true,
+      "done": true,
+      "appTitle": "ASTRE BRUT",
+      "note": "Un atlas astrologique brutaliste : douze signes et typographies, correspondances et 36 lectures éditoriales intégrées en rotation de trois jours.",
+      "appUrl": "https://egalland.github.io/belier/",
+      "repoUrl": "https://github.com/egalland/astre-brut",
+      "vibeMinutes": 90,
+      "vibeMinMinutes": 60,
+      "vibeMaxMinutes": 120,
+      "devMinMinutes": 720,
+      "devMaxMinutes": 1200
+    },
+    {
       "day": 10,
       "promptMinutes": null,
       "chatgptMinutes": null,
@@ -149,5 +166,5 @@
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-10T18:11:36.154Z"
+  "updatedAt": "2026-10-10T19:02:37.419Z"
 }
