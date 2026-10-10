@@ -126,11 +126,28 @@
       "note": "Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles.",
       "appUrl": "https://egalland.github.io/compost/",
       "repoUrl": "https://github.com/egalland/carnet-du-compost"
+    },
+    {
+      "day": 10,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": 4800,
+      "opened": true,
+      "done": true,
+      "appTitle": "Archives du Voile",
+      "note": "Un bestiaire immersif de Lovecraft : 30 dossiers illustrés, reliques, glyphes animés, ambiances sonores et notes de lecture.",
+      "appUrl": "https://egalland.github.io/mystique/",
+      "repoUrl": "https://github.com/egalland/archives-du-voile",
+      "vibeMinutes": 360,
+      "vibeMinMinutes": 240,
+      "vibeMaxMinutes": 480,
+      "devMinMinutes": 3600,
+      "devMaxMinutes": 6000
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-08T20:01:04.558Z"
+  "updatedAt": "2026-10-10T18:11:36.154Z"
 }

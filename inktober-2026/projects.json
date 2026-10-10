@@ -56,6 +56,14 @@
       "sourceCommit": "d7912bbd1dc1cd722f312a82b74e74b9884fa715",
       "title": "Carnet du compost",
       "description": "Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles."
+    },
+    {
+      "day": 10,
+      "path": "mystique",
+      "repository": "egalland/archives-du-voile",
+      "sourceCommit": "491873bbf792305ac67946796568b258dcfbb121",
+      "title": "Archives du Voile",
+      "description": "Un bestiaire immersif de Lovecraft : 30 dossiers illustrés, reliques, glyphes animés, ambiances sonores et notes de lecture."
     }
   ]
 }

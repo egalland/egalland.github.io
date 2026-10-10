@@ -1,0 +1,23 @@
+{
+  "title": "Archives du Voile",
+  "inktober": {
+    "year": 2026,
+    "day": 10,
+    "theme": "Mystique"
+  },
+  "repository": "https://github.com/egalland/archives-du-voile",
+  "appUrl": "https://egalland.github.io/mystique/",
+  "estimates": {
+    "status": "indicative, non chronométré",
+    "vibeMinutes": 360,
+    "vibeMinMinutes": 240,
+    "vibeMaxMinutes": 480,
+    "devMinutes": 4800,
+    "devMinMinutes": 3600,
+    "devMaxMinutes": 6000,
+    "excludes": [
+      "publication GitHub",
+      "illustration manuelle"
+    ]
+  }
+}
