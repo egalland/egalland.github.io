@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#242d65">
+  <meta name="description" content="Le laboratoire de créations web d’Emmanuel Galland. Découvrez mes outils, jeux et expériences interactives.">
+  <title>Emmanuel Galland — Créations web</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23252d67'/%3E%3Cpath d='M9 8h14v3H12v4h9v3h-9v3h11v3H9z' fill='white'/%3E%3C/svg%3E">
+  <link rel="preload" href="/inktober-2026/woodland.webp" as="image">
+  <link rel="preload" href="/mystique/src/assets/33e9f47ec4e65b1b.webp" as="image">
+  <link rel="preload" href="/mystique/src/assets/020b7aee0108e029.webp" as="image">
+  <link rel="stylesheet" href="styles.css?v=20261011">
+  <script src="arrival.js?v=20261011" defer></script>
+</head>
+<body class="arriving">
+  <a class="skip-link" href="#selection-button">Aller aux projets</a>
+  <main class="landing" id="landing" aria-label="Les créations web d’Emmanuel Galland">
+    <header class="site-header arrival-content">
+      <a class="text-link about-link" href="/inktober-2026/">Calendrier</a>
+      <a class="wordmark" href="./" aria-label="Emmanuel Galland, accueil">
+        <svg class="wordmark-sign" viewBox="0 0 30 30" aria-hidden="true"><path d="M23 5H7v20h16M7 15h13"/></svg><span>EGALLAND</span>
+      </a>
+      <a class="text-link contact-link" href="https://github.com/egalland" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </header>
+
+    <div class="headline-viewport" aria-hidden="true"><div class="headline-reveal"><div class="headline-track">
+      <span class="headline-unit">Créer. Explorer.&nbsp;</span><span class="headline-unit">Créer. Explorer.&nbsp;</span><span class="headline-unit">Créer. Explorer.&nbsp;</span><span class="headline-unit">Créer. Explorer.&nbsp;</span>
+    </div></div></div>
+    <h1 class="sr-only">Emmanuel Galland — Outils, jeux et expériences web</h1>
+
+    <div class="photo-stage" aria-hidden="true">
+      <img class="photo photo-garden" src="/inktober-2026/woodland.webp" width="1536" height="1024" alt="">
+      <div class="photo-layer tower-layer"><img class="photo photo-tower" src="/mystique/src/assets/33e9f47ec4e65b1b.webp" width="1916" height="821" alt=""></div>
+      <div class="photo-layer terrace-layer"><img class="photo photo-terrace" src="/mystique/src/assets/020b7aee0108e029.webp" width="1672" height="941" alt=""></div>
+    </div>
+
+    <section class="hero-copy arrival-content" aria-label="Présentation">
+      <p>Des outils, des jeux et des expériences.<br>Mon laboratoire de créations web.</p>
+      <span class="price-label">Emmanuel Galland · 2026</span>
+    </section>
+
+    <footer class="site-footer arrival-content">
+      <span class="copyright">Emmanuel Galland © 2026</span>
+      <div class="footer-actions">
+        <button class="selection-button" id="selection-button" data-dialog="selection-dialog">Mes projets <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 2h5v5H2zm11 0h5v5h-5zM2 13h5v5H2zm11 0h5v5h-5z"/></svg></button>
+        <div class="menu-wrap">
+          <button class="menu-toggle" id="menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="animation-menu"><span></span><span></span></button>
+          <div class="animation-menu" id="animation-menu" hidden>
+            <p>EGALLAND · CRÉATIONS</p>
+            <button id="replay-button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6a7 7 0 1 1-1 7M4 2v5h5"/></svg>Rejouer l’arrivée</button>
+            <button data-dialog="selection-dialog">Mes projets <span>↗</span></button>
+            <a href="/inktober-2026/">Calendrier Inktober <span>↗</span></a>
+            <button data-dialog="about-dialog">À propos <span>↗</span></button>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+  <div class="intro-curtain" aria-hidden="true"></div>
+  <div class="intro-counter" aria-hidden="true"><div class="counter-digits"></div><span class="counter-line"></span></div>
+
+  <dialog id="selection-dialog" class="selection-dialog" aria-labelledby="projects-title">
+    <div class="dialog-heading"><span class="small-label">EGALLAND · LES CRÉATIONS</span><button class="close-button" data-close aria-label="Fermer les projets">×</button></div>
+    <h2 id="projects-title">Des idées<br>à explorer.</h2>
+    <div class="quick-links"><a href="/redim/">Redim ↗</a><a href="/livre/">Livre ↗</a><a href="/inktober-2026/">Inktober ↗</a><a href="https://github.com/egalland" target="_blank" rel="noopener noreferrer">Tous les dépôts ↗</a></div>
+    <div class="project-grid" id="project-grid">
+<article class="project-card"><span class="project-number">PROJET 01</span><h3>Redim</h3><p>Un outil pour redimensionner des images.</p><div class="project-actions"><a href="/redim/">Ouvrir ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 02</span><h3>Livre</h3><p>Un outil pour créer et consulter un livre.</p><div class="project-actions"><a href="/livre/">Ouvrir ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 03</span><h3>One More Thing</h3><p>Un jeu incrémental autour de l’histoire d’Apple : recherches, produits, améliorations et prestige.</p><div class="project-actions"><a href="/pomme/">Ouvrir ↗</a><a href="https://github.com/egalland/one-more-thing" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 04</span><h3>Micro · Habitudes</h3><p>Un journal de petites actions avec grilles annuelles, séries et exports. Sauvegarde dans ce navigateur ; import JSON disponible.</p><div class="project-actions"><a href="/miniature/">Ouvrir ↗</a><a href="https://github.com/egalland/micro-habitudes" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 05</span><h3>Cactocalypse</h3><p>Un jeu de survie 2D : mutations de cactus, monstres, objets et terrains variés.</p><div class="project-actions"><a href="/cactus/">Ouvrir ↗</a><a href="https://github.com/egalland/cactocalypse" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 06</span><h3>Ghost Slap</h3><p>Une chasse aux fantômes de 45 secondes, au toucher ou avec la caméra et la détection des gestes.</p><div class="project-actions"><a href="/claque/">Ouvrir ↗</a><a href="https://github.com/egalland/ghost-slap" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 07</span><h3>Le garde du pont</h3><p>Négociez avec l’ogre Bröm pour traverser son pont ; cinq fins et sauvegarde de la progression.</p><div class="project-actions"><a href="/ogre/">Ouvrir ↗</a><a href="https://github.com/egalland/le-garde-du-pont" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 08</span><h3>Panique</h3><p>Un bouton rouge déclenche des scénarios et des effets de panique fictifs.</p><div class="project-actions"><a href="/panique/">Ouvrir ↗</a><a href="https://github.com/egalland/panique" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 09</span><h3>Carnet du compost</h3><p>Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles.</p><div class="project-actions"><a href="/compost/">Ouvrir ↗</a><a href="https://github.com/egalland/carnet-du-compost" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+<article class="project-card"><span class="project-number">PROJET 10</span><h3>Archives du Voile</h3><p>Un bestiaire immersif de Lovecraft : 30 dossiers illustrés, reliques, glyphes animés, ambiances sonores et notes de lecture.</p><div class="project-actions"><a href="/mystique/">Ouvrir ↗</a><a href="https://github.com/egalland/archives-du-voile" target="_blank" rel="noopener noreferrer">Voir le code ↗</a></div></article>
+</div>
+    <p class="dialog-note">Outils, jeux et expériences publiés sur ma page GitHub.</p>
+  </dialog>
+
+  <dialog id="about-dialog" class="info-dialog" aria-labelledby="about-title">
+    <div class="dialog-heading"><span class="small-label">À PROPOS</span><button class="close-button" data-close aria-label="Fermer">×</button></div>
+    <h2 id="about-title">Créer. Explorer.</h2>
+    <p>Un espace pour découvrir mes outils web, mes jeux et mes expériences interactives. Le calendrier Inktober rassemble les créations du défi d’octobre.</p>
+    <a class="primary-button" href="/inktober-2026/">Découvrir le calendrier <span>↗</span></a>
+    <button class="secondary-button" data-replay>Rejouer l’arrivée ↻</button>
+  </dialog>
+  <noscript><style>.intro-curtain,.intro-counter{display:none}.photo-stage{top:40.7%}.terrace-layer{clip-path:none}.arrival-content{opacity:1;transform:none}.hero-copy{transform:translate(-50%,0)}.headline-reveal{transform:none}</style></noscript>
+</body>
+</html>
