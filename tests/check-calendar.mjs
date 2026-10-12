@@ -7,6 +7,8 @@ let now='2026-10-08T12:00:00Z',tick,failure=false,calls=[];
 const CalendarDate=class extends Date {constructor(...args){super(...(args.length?args:[now]))}static now(){return new Date(now).getTime()}};
 const plain=v=>JSON.parse(JSON.stringify(v));
 let remote=JSON.parse(fs.readFileSync(root+'calendar.json','utf8'));
+// Stable integration fixture: later published apps must not change this six-app scenario.
+remote.days=remote.days.filter(row=>[1,3,4,5,6,7].includes(row.day));
 function browser(){
  const nodes=new Map(),registry=new Map(),events=new Map();
  const ids=new Set([...fs.readFileSync(root+'index.html','utf8').matchAll(/id="([^"]+)"/g)].map(m=>m[1]));
@@ -41,25 +43,26 @@ for(const name of ['save_inktober_note','save_inktober_progress','save_inktober_
 await assert.rejects(a.win.inktoberTransport.api('/api/days/2',{opened:true}),/lecture seule/);
 await assert.rejects(a.win.inktoberTransport.api('/api/settings',{vibeRateCents:1}),/lecture seule/);
 remote.days.push({day:9,appTitle:'Secret future',note:'Future description',done:true,appUrl:'https://egalland.github.io/future/'});
-await a.get('refresh-calendar').click();assert(!door(9).innerHTML.includes('Future description'));assert(!availability().progress[9]);
+await a.get('retry-load').click();assert(!door(9).innerHTML.includes('Future description'));assert(!availability().progress[9]);
 for(const [date,n] of [['2026-09-30T21:59:59Z',0],['2026-09-30T22:00:00Z',1],['2026-10-08T21:59:59Z',8],['2026-10-08T22:00:00Z',9],['2026-10-24T22:00:00Z',25],['2026-10-25T22:59:59Z',25],['2026-10-25T23:00:00Z',26],['2026-10-30T23:00:00Z',31],['2026-11-01T00:00:00Z',31]]){
  now=date;tick();assert.equal(availability().availableDays,n,date);assert.equal(a.get('calendar').children.filter(e=>e.children[0].className.includes('opened')).length,n,date);
  if(n<31)assert(door(n+1).disabled,date);if(n)assert(!door(n).disabled,date);
 }
 now='2026-10-08T12:00:00Z';tick();
-remote.days[0].appTitle='Updated <title>';await a.get('refresh-calendar').click();assert(door(1).innerHTML.includes('Updated &lt;title&gt;'));assert(!door(1).innerHTML.includes('Updated <title>'));
+remote.days[0].appTitle='Updated <title>';await a.get('retry-load').click();assert(door(1).innerHTML.includes('Updated &lt;title&gt;'));assert(!door(1).innerHTML.includes('Updated <title>'));
 a.get('tab-stats').click();assert.equal(a.get('view-stats').hidden,false);assert(a.get('stats-rates-note').textContent.includes('35,00'));assert(a.get('stats-rates-note').textContent.includes('40,00'));a.get('tab-stats').listeners.keydown({key:'ArrowRight',preventDefault(){}});assert.equal(a.get('view-calendar').hidden,false);
-failure=true;await a.get('refresh-calendar').click();assert.equal(a.get('retry-load').hidden,false);failure=false;await a.get('retry-load').click();assert(availability().loaded);
-for(const html of ['../index.html','index.html']){const source=fs.readFileSync(root+html,'utf8');assert(!/id="(?:github-login|github-token|connect-calendar|day-form|settings-form|tab-settings|view-settings|stats-settings)"/.test(source));assert(!source.includes('repository.js'));}
+failure=true;await a.get('retry-load').click();assert.equal(a.get('retry-load').hidden,false);failure=false;await a.get('retry-load').click();assert(availability().loaded);
+for(const html of ['../index.html','index.html']){const source=fs.readFileSync(root+html,'utf8');assert(!/id="(?:github-login|github-token|connect-calendar|day-form|settings-form|tab-settings|view-settings|stats-settings|refresh-calendar)"/.test(source));assert(!source.includes('repository.js'));}
 console.log('PASS: automatic Paris dates and DST, midnight update, locked future days, read-only transport, no login/storage/writes, public projects, refreshed content, estimated durations/ranges, fixed hourly rates and cent rounding, unknown duration handling, KPI totals, two tabs and error retry.');
 // Parallax: verify distinct scroll depth, smoothing stop, and immediate reduced-motion reset.
 const vars=new Map(),handlers=new Map(),frames=new Map();let next=0,reduced=false;
 const motion={get matches(){return reduced},addEventListener(t,f){handlers.set('motion',f)}};
 const pointer={matches:true,addEventListener(){}};
-const scene={classList:{add(){}}};const win={scrollY:0};
+const decoded=[new Set(),new Set(),new Set()];const planes=decoded.map((classes,index)=>({classList:{add:name=>classes.add(name)},querySelector:()=>({decode:()=>index===2?Promise.reject(new Error('Missing decorative asset')):Promise.resolve()})}));const win={scrollY:0};
 const add=(t,f)=>handlers.set(t,f);
-const context={window:win,document:{hidden:false,documentElement:{style:{setProperty:(k,v)=>vars.set(k,v)}},querySelector:()=>scene,addEventListener:add},innerWidth:1200,innerHeight:800,matchMedia:q=>q.includes('reduced')?motion:pointer,addEventListener:add,requestAnimationFrame:f=>{frames.set(++next,f);return next},cancelAnimationFrame:id=>frames.delete(id),Image:class{decode(){return Promise.resolve()}}};
+const context={window:win,document:{hidden:false,documentElement:{style:{setProperty:(k,v)=>vars.set(k,v)}},querySelectorAll:()=>planes,addEventListener:add},innerWidth:1200,innerHeight:800,matchMedia:q=>q.includes('reduced')?motion:pointer,addEventListener:add,requestAnimationFrame:f=>{frames.set(++next,f);return next},cancelAnimationFrame:id=>frames.delete(id),Image:class{decode(){return Promise.resolve()}}};
 vm.runInNewContext(fs.readFileSync(root+'parallax.js','utf8'),context);
 let time=0;const drain=()=>{for(let i=0;i<300&&frames.size;i++){const callbacks=[...frames.values()];frames.clear();time+=16;callbacks.forEach(f=>f(time))}assert.equal(frames.size,0)};
-drain();win.scrollY=400;handlers.get('scroll')();drain();const far=parseFloat(vars.get('--far-scroll')),mid=parseFloat(vars.get('--mid-scroll')),near=parseFloat(vars.get('--near-scroll'));assert(far>40&&mid>far*1.5&&near>mid);handlers.get('pointermove')({clientX:1200,clientY:0,pointerType:'mouse'});drain();assert(parseFloat(vars.get('--parallax-x'))>.99);reduced=true;handlers.get('motion')();assert.equal(vars.get('--far-scroll'),'0px');assert.equal(vars.get('--parallax-x'),'0');handlers.get('scroll')();assert.equal(frames.size,0);
-console.log('PASS: three distinct parallax depths, mouse movement, stable frame stop and reduced-motion reset.');
+drain();win.scrollY=400;handlers.get('scroll')();drain();const far=parseFloat(vars.get('--far-scroll')),mid=parseFloat(vars.get('--mid-scroll')),near=parseFloat(vars.get('--near-scroll'));assert(far>10&&mid>far*1.5&&near>mid);assert(near<=110);handlers.get('pointermove')({clientX:1200,clientY:0,pointerType:'mouse'});drain();assert(parseFloat(vars.get('--parallax-x'))>.99);handlers.get('pointermove')({clientX:0,clientY:0,pointerType:'touch'});assert.equal(frames.size,0);assert(parseFloat(vars.get('--parallax-x'))>.99);context.document.hidden=true;handlers.get('visibilitychange')();assert.equal(vars.get('--scene-play-state'),'paused');handlers.get('scroll')();assert.equal(frames.size,0);context.document.hidden=false;handlers.get('visibilitychange')();drain();assert.equal(vars.get('--scene-play-state'),'running');handlers.get('blur')();drain();assert(Math.abs(parseFloat(vars.get('--parallax-x')))<.001);reduced=true;handlers.get('motion')();assert.equal(vars.get('--far-scroll'),'0px');assert.equal(vars.get('--parallax-x'),'0');handlers.get('scroll')();assert.equal(frames.size,0);
+await new Promise(resolve=>setTimeout(resolve,0));assert(decoded[0].has('scene-ready'));assert(decoded[1].has('scene-ready'));assert(decoded[2].has('scene-unavailable'));assert.equal(vars.get('--scene-play-state'),'paused');
+console.log('PASS: independent image decoding/failure, three bounded parallax depths, mouse motion, touch ignored, blur recenter, hidden-tab pause, idle-frame stop and reduced-motion reset.');

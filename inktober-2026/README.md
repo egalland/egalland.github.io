@@ -6,11 +6,15 @@ Calendrier : https://egalland.github.io/ — copie accessible sur `/inktober-202
 
 Toutes les cases jusqu’au jour courant s’ouvrent automatiquement, à minuit dans le fuseau Europe/Paris. Avant octobre 2026, aucune case n’est ouverte ; après le 31 octobre, les 31 sont visibles. Le thème et les projets futurs restent masqués dans l’interface. Aucune action ni sauvegarde locale n’est nécessaire pour ouvrir les cases.
 
-Le site est public et en lecture seule : aucune connexion, aucun jeton GitHub et aucune écriture depuis le navigateur. Les projets, descriptions, liens, statuts, durées et tarifs sont publiés via `inktober-2026/calendar.json` dans le dépôt. Les mises à jour du calendrier sont effectuées avec Codex puis déployées sur GitHub Pages. Le bouton **Actualiser les projets** recharge le fichier public. Les statistiques affichent les tarifs fixes : 35 €/h en Vibe Coding et 40 €/h en développement classique. Aucun onglet Paramétrage.
+Le site est public et en lecture seule : aucune connexion, aucun jeton GitHub et aucune écriture depuis le navigateur. Les projets, descriptions, liens, statuts, durées et tarifs sont publiés via `inktober-2026/calendar.json` dans le dépôt. Les mises à jour du calendrier sont effectuées avec Codex puis déployées sur GitHub Pages. Le fichier public est chargé à chaque ouverture ; le bouton d’actualisation a été retiré. Les statistiques affichent les tarifs fixes : 35 €/h en Vibe Coding et 40 €/h en développement classique. Aucun onglet Paramétrage.
 
 ## Fond et mouvement
 
-`atmosphere.css` et `parallax.js` définissent trois plans : paysage, brume et particules. Chacun se déplace à une vitesse différente pendant tout le défilement ; la souris ajoute une profondeur indépendante. Le traitement suit requestAnimationFrame, s’arrête lorsque les valeurs se stabilisent ou lorsque la page est masquée, et respecte prefers-reduced-motion. L’image WebP est chargée localement et ses chemins fonctionnent depuis les deux pages d’entrée.
+`atmosphere.css` et `parallax.js` composent un décor inspiré des plans indépendants des Archives du Voile : trois images (paysage lointain, lisière de forêt, branches proches avec citrouilles), deux bancs de brume, lumière de lune et lueurs chaudes. Les images transparentes ont un centre vide pour laisser lire les tuiles. Des braises, feuilles et petites chauves-souris parcourent le décor, toujours derrière le contenu et sans capturer les interactions.
+
+Chaque plan suit une profondeur différente au défilement et à la souris. Les mouvements autonomes lents sont séparés du parallax ; le traitement JavaScript ne tourne que pendant les transitions et s’arrête au repos. L’onglet masqué met aussi les animations CSS en pause. Sur mobile, le nombre de particules est divisé par deux et les images sont cadrées pour garder une lisière visible de chaque côté. `prefers-reduced-motion` coupe les mouvements, la brume et les particules, et conserve le décor fixe. Chaque image est décodée séparément : un fichier décoratif manquant n’empêche ni le chargement ni l’utilisation du calendrier.
+
+Les trois plans totalisent environ 1,2 Mo en WebP ; aucun service externe ni son n’est ajouté. L’introduction photographique existante reste indépendante. Les chemins absolus des images fonctionnent depuis les deux pages d’entrée.
 
 ## Vérifications
 
