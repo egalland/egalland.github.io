@@ -30,17 +30,36 @@ Les six projets des jours 1, 3, 4, 5, 6 et 7 sont publiés directement sous `/po
 
 Micro · Habitudes utilise sa version Pages avec stockage local vérifié, export/import JSON et aucun serveur. Une sauvegarde Sites existante peut être exportée puis importée ; elle n’est pas copiée automatiquement. Les temps des six apps sont des estimations ajoutées le 8 octobre ; les durées inconnues des autres cases restent vides. Les dossiers `/redim/` et `/livre/` sont conservés sans modification.
 
-## Estimations des temps et coûts
+## Durées et coûts
 
-Les valeurs Vibe Coding centrales sont les milieux des fourchettes discutées, arrondis à la minute : 180, 90, 135, 135, 68 et 33 minutes. Aucun découpage fictif entre utilisateur et ChatGPT : les deux champs historiques restent inconnus, `vibeMinutes` contient le total estimé (conception, prompts, génération, tests, corrections). Hors intégration au calendrier. Les bornes sont conservées en minutes et visibles dans le détail et les statistiques.
+Le Vibe Coding affiche une durée unique par app, sans fourchette, dans les statistiques et les cases. `vibeMinutes` conserve cette durée en minutes. `vibeBasis` distingue `estimated` des durées reconstituées à partir des sessions (`session_elapsed`). Pour ces dernières, `vibeObservedSeconds` conserve la durée écoulée avant arrondi à la minute. Les valeurs existantes restent des estimations lorsqu’aucun suivi exact n’a été retrouvé : supprimer une fourchette ne transforme pas une estimation en mesure. Aucun découpage fictif entre utilisateur et ChatGPT : les deux champs historiques restent inconnus.
 
-| App | Vibe Coding | Dev classique équivalent | Hypothèse de périmètre classique |
+Les coûts utilisent les minutes affichées × tarif horaire, arrondis au centime par app. Ils valorisent des heures à 35 €/h et 40 €/h, sans représenter des dépenses payées ni une économie démontrée.
+
+| Jour / app | Vibe Coding affiché | Origine | Dev classique équivalent |
 |---|---|---|---|
-| One More Thing | 2–4 h, centre 3 h | 60–100 h, centre 80 h | Économie, recherches, progression, produits, prestige, sauvegarde, interface mobile et tests |
-| Micro · Habitudes | 1–2 h, centre 1 h 30 | 12–24 h, centre 18 h | Habitudes, grilles annuelles, séries, sauvegarde locale et import/export |
-| Cactocalypse | 1 h 30–3 h, centre 2 h 15 | 55–95 h, centre 75 h | Combat, personnages, mutations, objets, trois mondes et boss, animations et tests |
-| Ghost Slap | 1 h 30–3 h, centre 2 h 15 | 24–48 h, centre 36 h | Jeu tactile, suivi mains/visage avec MediaPipe, caméra, worker, scores et tests mobiles |
-| Le garde du pont | 45 min–1 h 30, centre 1 h 08 | 8–16 h, centre 12 h | Dialogues, ressources, cinq fins, interface, sauvegarde et import/export |
-| Panique | 20–45 min, centre 33 min | 3–6 h, centre 4 h 30 | Effets visuels et audio, scénarios aléatoires, clavier et remise à zéro |
+| 01 · One More Thing | 3 h | Estimation antérieure | 80 h · 60–100 h |
+| 02 · Le Reliquaire | 59 min | Session retrouvée : 58 min 51 s | 120 h · 80–160 h |
+| 03 · Micro · Habitudes | 1 h 30 | Estimation antérieure | 18 h · 12–24 h |
+| 04 · Cactocalypse | 2 h 15 | Estimation antérieure | 75 h · 55–95 h |
+| 05 · Ghost Slap | 2 h 15 | Estimation antérieure | 36 h · 24–48 h |
+| 06 · Le garde du pont | 1 h 08 | Estimation antérieure | 12 h · 8–16 h |
+| 07 · Panique | 33 min | Estimation antérieure | 4 h 30 · 3–6 h |
+| 08 · Carnet du compost | 31 min | Trois sessions retrouvées : 31 min 01 s | 12 h · 8–16 h |
+| 09 · ASTRE BRUT | 1 h 30 | Estimation antérieure | 16 h · 12–20 h |
+| 10 · Archives du Voile | 6 h | Estimation antérieure | 80 h · 60–100 h |
 
-Les fourchettes classiques sont des estimations de réalisation manuelle du même périmètre, avec intégration des assets disponibles et bibliothèques existantes. Elles ne proviennent pas d’un multiplicateur fixe, ne constituent ni devis ni chronométrage et excluent la création artistique originale, les abonnements et l’hébergement. Les coûts utilisent les valeurs centrales × tarifs horaires, arrondis au centime par app. Total central : 641 min (10 h 41), 13 530 min (225 h 30), 373,92 € et 9 020 €. Les totaux sont des sommes de scénarios, pas un temps réel observé ni une économie démontrée.
+### Sessions retrouvées des jours 2 et 8
+
+- Reliquaire : 8 octobre 2026, 15:34:24Z à 16:33:15Z, soit 3 531 secondes. Création/tests/publication du Site dans la session identifiée. La conception antérieure et les actions non tracées ne sont pas ajoutées.
+- Compost : création 14:07:46Z à 14:23:32Z (946 s), build HTML 14:46:08Z à 14:51:28Z (320 s), publication 19:54:08Z à 20:04:03Z (595 s), toutes le 8 octobre 2026. Total : 1 861 secondes. Les intervalles entre les trois sessions sont exclus.
+
+Ces horodatages viennent des échanges retrouvés. Ils décrivent des durées écoulées, incluant l’attente à l’intérieur d’une session ; ce ne sont pas des chronométrages du temps actif utilisateur ou du temps processeur ChatGPT, ni une garantie d’exhaustivité de l’effort sur le projet.
+
+### Estimations développeur des jours 2 et 8
+
+Reliquaire : valeur centrale de 120 h pour une réalisation manuelle du même périmètre, avec une fourchette de 80–160 h. Périmètre lu dans le dépôt source : client React/TypeScript, serveur Worker, D1 et R2, autorisations maître/capitaines, GPS, équipes, scores et délais, messagerie, galerie photo, exports et tests d’intégration. Ce n’est pas un multiplicateur du temps IA.
+
+Compost : valeur centrale de 12 h, fourchette de 8–16 h, pour le journal CRUD, contrôles datés et cas limites, sauvegarde locale vérifiée, import/export, adaptation mobile, accessibilité, build autonome et tests du carnet. La version serveur optionnelle ne fait pas partie de la publication Pages.
+
+Total des valeurs affichées : 19 h 41 en Vibe Coding, 453 h 30 en dev équivalent ; 688,92 € et 18 140 €. Le total Vibe Coding combine 2 durées de sessions retrouvées et 8 estimations. Les fourchettes développeur restent des scénarios, pas des devis ; création artistique originale, abonnements et hébergement exclus.

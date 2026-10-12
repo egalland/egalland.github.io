@@ -10,6 +10,6 @@ window.inktoberMetrics = {
    devCostCents:price(row.devMinutes,settings.devRateCents),
   }));
   const total=field=>{const filled=rows.filter(row=>known(row[field]));return {value:filled.length?filled.reduce((sum,row)=>sum+row[field],0):null,count:filled.length};};
-  return {doneCount:rows.length,rows,prompt:total('promptMinutes'),chatgpt:total('chatgptMinutes'),dev:total('devMinutes'),vibeTime:total('vibeMinutes'),vibeMin:total('vibeMinMinutes'),vibeMax:total('vibeMaxMinutes'),devMin:total('devMinMinutes'),devMax:total('devMaxMinutes'),vibeCost:total('vibeCostCents'),devCost:total('devCostCents')};
+  return {doneCount:rows.length,rows,prompt:total('promptMinutes'),chatgpt:total('chatgptMinutes'),dev:total('devMinutes'),vibeTime:total('vibeMinutes'),devMin:total('devMinMinutes'),devMax:total('devMaxMinutes'),vibeCost:total('vibeCostCents'),devCost:total('devCostCents')};
  }
 };

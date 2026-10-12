@@ -13,22 +13,26 @@
       "appUrl": "https://egalland.github.io/pomme/",
       "repoUrl": "https://github.com/egalland/one-more-thing",
       "vibeMinutes": 180,
-      "vibeMinMinutes": 120,
-      "vibeMaxMinutes": 240,
       "devMinMinutes": 3600,
-      "devMaxMinutes": 6000
+      "devMaxMinutes": 6000,
+      "vibeBasis": "estimated"
     },
     {
       "day": 2,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 7200,
       "opened": true,
       "done": true,
       "appTitle": "Le Reliquaire",
       "note": "Une enquête en équipe à La Défense : six reliques, parcours libre, énigmes géolocalisées et interface maître de jeu.",
       "appUrl": "https://inktober-2026.emmanuel-galland117.chatgpt.site/reliquaire/",
-      "repoUrl": "https://github.com/egalland/le-reliquaire"
+      "repoUrl": "https://github.com/egalland/le-reliquaire",
+      "vibeMinutes": 59,
+      "vibeBasis": "session_elapsed",
+      "vibeObservedSeconds": 3531,
+      "devMinMinutes": 4800,
+      "devMaxMinutes": 9600
     },
     {
       "day": 3,
@@ -42,10 +46,9 @@
       "appUrl": "https://egalland.github.io/miniature/",
       "repoUrl": "https://github.com/egalland/micro-habitudes",
       "vibeMinutes": 90,
-      "vibeMinMinutes": 60,
-      "vibeMaxMinutes": 120,
       "devMinMinutes": 720,
-      "devMaxMinutes": 1440
+      "devMaxMinutes": 1440,
+      "vibeBasis": "estimated"
     },
     {
       "day": 4,
@@ -59,10 +62,9 @@
       "appUrl": "https://egalland.github.io/cactus/",
       "repoUrl": "https://github.com/egalland/cactocalypse",
       "vibeMinutes": 135,
-      "vibeMinMinutes": 90,
-      "vibeMaxMinutes": 180,
       "devMinMinutes": 3300,
-      "devMaxMinutes": 5700
+      "devMaxMinutes": 5700,
+      "vibeBasis": "estimated"
     },
     {
       "day": 5,
@@ -76,10 +78,9 @@
       "appUrl": "https://egalland.github.io/claque/",
       "repoUrl": "https://github.com/egalland/ghost-slap",
       "vibeMinutes": 135,
-      "vibeMinMinutes": 90,
-      "vibeMaxMinutes": 180,
       "devMinMinutes": 1440,
-      "devMaxMinutes": 2880
+      "devMaxMinutes": 2880,
+      "vibeBasis": "estimated"
     },
     {
       "day": 6,
@@ -93,10 +94,9 @@
       "appUrl": "https://egalland.github.io/ogre/",
       "repoUrl": "https://github.com/egalland/le-garde-du-pont",
       "vibeMinutes": 68,
-      "vibeMinMinutes": 45,
-      "vibeMaxMinutes": 90,
       "devMinMinutes": 480,
-      "devMaxMinutes": 960
+      "devMaxMinutes": 960,
+      "vibeBasis": "estimated"
     },
     {
       "day": 7,
@@ -110,22 +110,26 @@
       "appUrl": "https://egalland.github.io/panique/",
       "repoUrl": "https://github.com/egalland/panique",
       "vibeMinutes": 33,
-      "vibeMinMinutes": 20,
-      "vibeMaxMinutes": 45,
       "devMinMinutes": 180,
-      "devMaxMinutes": 360
+      "devMaxMinutes": 360,
+      "vibeBasis": "estimated"
     },
     {
       "day": 8,
       "promptMinutes": null,
       "chatgptMinutes": null,
-      "devMinutes": null,
+      "devMinutes": 720,
       "opened": true,
       "done": true,
       "appTitle": "Carnet du compost",
       "note": "Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles.",
       "appUrl": "https://egalland.github.io/compost/",
-      "repoUrl": "https://github.com/egalland/carnet-du-compost"
+      "repoUrl": "https://github.com/egalland/carnet-du-compost",
+      "vibeMinutes": 31,
+      "vibeBasis": "session_elapsed",
+      "vibeObservedSeconds": 1861,
+      "devMinMinutes": 480,
+      "devMaxMinutes": 960
     },
     {
       "day": 9,
@@ -139,10 +143,9 @@
       "appUrl": "https://egalland.github.io/belier/",
       "repoUrl": "https://github.com/egalland/astre-brut",
       "vibeMinutes": 90,
-      "vibeMinMinutes": 60,
-      "vibeMaxMinutes": 120,
       "devMinMinutes": 720,
-      "devMaxMinutes": 1200
+      "devMaxMinutes": 1200,
+      "vibeBasis": "estimated"
     },
     {
       "day": 10,
@@ -156,15 +159,14 @@
       "appUrl": "https://egalland.github.io/mystique/",
       "repoUrl": "https://github.com/egalland/archives-du-voile",
       "vibeMinutes": 360,
-      "vibeMinMinutes": 240,
-      "vibeMaxMinutes": 480,
       "devMinMinutes": 3600,
-      "devMaxMinutes": 6000
+      "devMaxMinutes": 6000,
+      "vibeBasis": "estimated"
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-10T19:02:37.419Z"
+  "updatedAt": "2026-10-12T05:30:31.921792+00:00"
 }
