@@ -171,7 +171,7 @@
       "opened": true,
       "done": true,
       "appTitle": "Priorités fragiles",
-      "note": "Tableau de projets et dépendances : blocages expliqués, maillon unique, exemple A → B → C et boucles refusées. App et dépôt privés ; sauvegarde dans ce navigateur, import/export JSON. Développement manuel estimé : 8 h.",
+      "note": "Tableau de projets et dépendances : blocages expliqués, maillon unique, exemple A → B → C et boucles refusées. Dépôt public ; app privée ; sauvegarde dans ce navigateur, import/export JSON. Développement manuel estimé : 8 h.",
       "appUrl": "https://priorites-fragiles.emmanuel-galland117.chatgpt.site",
       "repoUrl": "https://github.com/egalland/priorites-fragiles",
       "vibeMinutes": 7,
@@ -183,5 +183,5 @@
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-13T04:38:14.466Z"
+  "updatedAt": "2026-10-13T05:25:09.079Z"
 }
