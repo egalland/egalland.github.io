@@ -33,7 +33,7 @@ function exportFilename(){const raw=titleInput.value.trim()||chosenFile?.name.re
 function formatSize(bytes){return bytes<1048576?Math.max(1,Math.round(bytes/1024))+' Ko':(bytes/1048576).toLocaleString('fr-FR',{maximumFractionDigits:1})+' Mo';}
 function status(message,kind='normal'){statusText.textContent=message;statusText.dataset.kind=kind;}
 function clearPreview(){converted=null;exportButton.disabled=true;preview.hidden=true;preview.removeAttribute('src');emptyPreview.hidden=false;summary.textContent='';if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}}
-function setBusy(value){busy=value;buildButton.disabled=value||!chosenFile;fileInput.disabled=value;titleInput.disabled=value;addChapterButton.disabled=value;chapterRows.querySelectorAll('input,button').forEach(el=>el.disabled=value);cancelButton.hidden=!value;dropZone.setAttribute('aria-disabled',String(value));}
+function setBusy(value){busy=value;buildButton.disabled=value||!chosenFile;fileInput.disabled=value;titleInput.disabled=value;$('renderQuality').disabled=value;addChapterButton.disabled=value;chapterRows.querySelectorAll('input,button').forEach(el=>el.disabled=value);cancelButton.hidden=!value;dropZone.setAttribute('aria-disabled',String(value));}
 function selectFile(file){
   if(busy)return;
   clearPreview();chosenFile=null;fileInput.value='';fileLabel.textContent='Choisir un PDF';fileMeta.textContent='ou le déposer ici';buildButton.disabled=true;
@@ -63,8 +63,9 @@ function showPassword(receiver,reason,lib){
 }
 async function renderPdf(file,onProgress,isCurrent){
   const lib=await loadPdfLibrary();if(!isCurrent())throw new Error('CANCELLED');
+  const maxSide=Number($('renderQuality').value)||3600;
   const bytes=new Uint8Array(await file.arrayBuffer());if(!isCurrent())throw new Error('CANCELLED');
-  const loadingTask=lib.getDocument({data:bytes,BinaryDataFactory:EmbeddedBinaryDataFactory,useWorkerFetch:false,cMapUrl:'embedded://cmaps/',cMapPacked:true,standardFontDataUrl:'embedded://standard_fonts/',wasmUrl:'embedded://wasm/',isEvalSupported:false,stopAtErrors:true,canvasMaxAreaInBytes:32*1024*1024});
+  const loadingTask=lib.getDocument({data:bytes,BinaryDataFactory:EmbeddedBinaryDataFactory,useWorkerFetch:false,cMapUrl:'embedded://cmaps/',cMapPacked:true,standardFontDataUrl:'embedded://standard_fonts/',wasmUrl:'embedded://wasm/',isEvalSupported:false,stopAtErrors:true,canvasMaxAreaInBytes:128*1024*1024});
   activeTask=loadingTask;loadingTask.onPassword=(receiver,reason)=>showPassword(receiver,reason,lib);
   try{
     const pdf=await loadingTask.promise;if(!isCurrent())throw new Error('CANCELLED');
@@ -76,12 +77,11 @@ async function renderPdf(file,onProgress,isCurrent){
         if(!isCurrent())throw new Error('CANCELLED');onProgress(i,pdf.numPages);
         const page=await pdf.getPage(i),base=page.getViewport({scale:1});
         if(i===1)ratio=base.width/base.height;
-        const maxSide=pdf.numPages>100?1200:pdf.numPages>40?1500:2000;
-        const scale=Math.min(maxSide/Math.max(base.width,base.height),Math.sqrt(2600000/(base.width*base.height)));
+        const scale=maxSide/Math.max(base.width,base.height);
         const viewport=page.getViewport({scale});canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
         await page.render({canvas,viewport,background:'rgb(255,255,255)'}).promise;
         if(!isCurrent())throw new Error('CANCELLED');
-        const image=canvas.toDataURL('image/jpeg',.93);if(!image.startsWith('data:image/jpeg;'))throw new Error('CANVAS_ERROR');
+        const image=canvas.toDataURL('image/jpeg',.98);if(!image.startsWith('data:image/jpeg;'))throw new Error('CANVAS_ERROR');
         pages.push(image);page.cleanup();canvas.width=canvas.height=1;
         await new Promise(resolve=>setTimeout(resolve,0));
       }
