@@ -34,7 +34,7 @@ function readPdfBase64(file){return new Promise((resolve,reject)=>{const reader=
 function exportFilename(){const raw=titleInput.value.trim()||chosenFile?.name.replace(/\.pdf$/i,'')||'livre';return 'livre-'+(raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80)||'export')+'.html';}
 function formatSize(bytes){return bytes<1048576?Math.max(1,Math.round(bytes/1024))+' Ko':(bytes/1048576).toLocaleString('fr-FR',{maximumFractionDigits:1})+' Mo';}
 function status(message,kind='normal'){statusText.textContent=message;statusText.dataset.kind=kind;}
-function clearPreview(){converted=null;exportButton.disabled=true;preview.hidden=true;preview.removeAttribute('src');emptyPreview.hidden=false;summary.textContent='';if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}}
+function clearPreview(){converted=null;exportButton.disabled=true;$('openPreviewButton').disabled=true;preview.hidden=true;preview.removeAttribute('src');emptyPreview.hidden=false;summary.textContent='';if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}}
 function setBusy(value){busy=value;buildButton.disabled=value||!chosenFile;fileInput.disabled=value;titleInput.disabled=value;$('renderQuality').disabled=value;$('includePdf').disabled=value;addChapterButton.disabled=value;chapterRows.querySelectorAll('input,button').forEach(el=>el.disabled=value);cancelButton.hidden=!value;dropZone.setAttribute('aria-disabled',String(value));}
 function selectFile(file){
   if(busy)return;
@@ -50,7 +50,7 @@ function refreshPreview(){
   const nextURL=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
   const old=previewUrl;previewUrl=nextURL;preview.src=nextURL;preview.hidden=false;emptyPreview.hidden=true;
   if(old)setTimeout(()=>URL.revokeObjectURL(old),1000);
-  exportButton.disabled=false;
+  exportButton.disabled=false;$('openPreviewButton').disabled=false;
   const chapterCount=getChapters(converted.pages.length).length;summary.textContent=converted.pages.length+' page'+(converted.pages.length>1?'s':'')+(chapterCount?' · '+chapterCount+' chapitre'+(chapterCount>1?'s':''):'')+' · export '+formatSize(new Blob([html]).size);
 }
 function stopPassword(){passwordReceiver=null;const dialog=$('passwordDialog');if(dialog.open)dialog.close();$('password').value='';}
@@ -114,6 +114,7 @@ dropZone.addEventListener('drop',e=>{if(busy)return;const files=e.dataTransfer.f
 cancelButton.addEventListener('click',cancelJob);
 addChapterButton.addEventListener('click',()=>{const row=addChapter();row.querySelector('[data-page]').focus();});
 titleInput.addEventListener('input',()=>{if(converted){clearTimeout(titleTimer);titleTimer=setTimeout(refreshPreview,250);}});
+$('openPreviewButton').addEventListener('click',()=>{if(converted&&previewUrl&&!busy)window.open(previewUrl,'_blank','noopener');});
 exportButton.addEventListener('click',()=>{
   if(!converted||busy)return;
   const html=createBookHTML(converted,titleInput.value.trim());const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
