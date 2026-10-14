@@ -194,11 +194,28 @@
       "vibeMinutes": 7,
       "vibeBasis": "session_elapsed",
       "vibeObservedSeconds": 389
+    },
+    {
+      "day": 14,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": 3600,
+      "devMinMinutes": 2400,
+      "devMaxMinutes": 4800,
+      "opened": true,
+      "done": true,
+      "appTitle": "Dames de porcelaine",
+      "note": "Dames roguelite : 5 duels, 3 difficultés IA, 13 pouvoirs, atelier de mémoire, glisser-déposer et salons à code. App publique hébergée avec serveur ; accès depuis GitHub. Temps Vibe Coding : sessions de réalisation et publication retrouvées, hors pauses entre échanges. Développement manuel équivalent estimé : 60 h (40 à 80 h).",
+      "appUrl": "https://egalland.github.io/dames-de-porcelaine/",
+      "repoUrl": "https://github.com/egalland/dames-de-porcelaine",
+      "vibeMinutes": 28,
+      "vibeBasis": "session_elapsed",
+      "vibeObservedSeconds": 1664
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-14T17:20:56.988Z"
+  "updatedAt": "2026-10-14T19:28:09.558Z"
 }
