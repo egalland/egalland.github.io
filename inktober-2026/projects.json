@@ -72,6 +72,15 @@
       "sourceCommit": "07e2865f9cafa3d4f952ca3d9f6eee854775c0b6",
       "title": "La fronde de Cthulhu",
       "description": "Jeu de fronde Lovecraftien : sprites animés, ricochets, structures destructibles et cinq missions. Jouable à la souris sur PC et au doigt sur mobile."
+    },
+    {
+      "day": 14,
+      "path": "dames-de-porcelaine",
+      "repository": "egalland/dames-de-porcelaine",
+      "sourceCommit": "236769199601e19f16763b90dbb5cc6262f1ddb4",
+      "title": "Dames de porcelaine",
+      "description": "Dames roguelite : campagne IA, pouvoirs, atelier de mémoire et salons par code. Lancement de la version serveur hébergée.",
+      "hostedUrl": "https://dames-de-porcelaine.emmanuel-galland117.chatgpt.site"
     }
   ]
 }
