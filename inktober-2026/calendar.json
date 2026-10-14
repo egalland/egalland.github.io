@@ -164,6 +164,22 @@
       "vibeBasis": "estimated"
     },
     {
+      "day": 12,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "opened": true,
+      "done": true,
+      "appTitle": "La fronde de Cthulhu",
+      "note": "Jeu de fronde Lovecraftien : sprites animés, ricochets, structures destructibles et cinq missions. Jouable à la souris sur PC et au doigt sur mobile.",
+      "appUrl": "https://egalland.github.io/la-fronde-de-cthulhu/",
+      "repoUrl": "https://github.com/egalland/la-fronde-de-cthulhu",
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeBasis": "estimated"
+    },
+    {
       "day": 13,
       "promptMinutes": null,
       "chatgptMinutes": null,
@@ -183,5 +199,5 @@
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-13T05:25:09.079Z"
+  "updatedAt": "2026-10-14T17:13:12.087Z"
 }

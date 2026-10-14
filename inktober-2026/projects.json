@@ -64,6 +64,14 @@
       "sourceCommit": "491873bbf792305ac67946796568b258dcfbb121",
       "title": "Archives du Voile",
       "description": "Un bestiaire immersif de Lovecraft : 30 dossiers illustrés, reliques, glyphes animés, ambiances sonores et notes de lecture."
+    },
+    {
+      "day": 12,
+      "path": "la-fronde-de-cthulhu",
+      "repository": "egalland/la-fronde-de-cthulhu",
+      "sourceCommit": "07e2865f9cafa3d4f952ca3d9f6eee854775c0b6",
+      "title": "La fronde de Cthulhu",
+      "description": "Jeu de fronde Lovecraftien : sprites animés, ricochets, structures destructibles et cinq missions. Jouable à la souris sur PC et au doigt sur mobile."
     }
   ]
 }
