@@ -16,7 +16,7 @@ let a=await post('join','',{name:'Alice'}),b=await post('join','',{name:'Bob'});
 now+=5000;let snap=(await post('sync',a.cookie)).body;assert.equal(snap.phase,'guess');assert.equal(snap.question.answer,undefined);
 const {QUESTIONS}=await import(game);const state=JSON.parse(sql.prepare('SELECT state FROM rooms WHERE id=?').get('cinema').state);const answer=QUESTIONS[state.deck[0]].answer;
 now+=1000;const guesses=await Promise.all([post('answer',a.cookie,{answer,game:snap.game,round:1}),post('answer',a.cookie,{answer,game:snap.game,round:1}),post('answer',b.cookie,{answer,game:snap.game,round:1})]);assert.ok(guesses.every(g=>g.status===200));snap=(await post('sync',a.cookie)).body;assert.equal(snap.phase,'reveal');assert.equal(snap.players.find(p=>p.id==='me').score,955);assert.equal(snap.question.answer,answer);
-const avatar={shape:4,hair:3,eyes:2,mouth:5,accessory:1,color:'#c8b9ff'};
+const avatar={shape:4,hair:3,eyes:2,mouth:5,accessory:1,outfit:4,color:'#c8b9ff'};
 const edited=await post('profile',a.cookie,{name:'KiwiCosmique',avatar});assert.equal(edited.status,200);const editedMe=edited.body.players.find(p=>p.id==='me');assert.equal(editedMe.score,955);assert.equal(editedMe.name,'KiwiCosmique');assert.deepEqual(editedMe.avatar,avatar);
 const otherView=(await post('sync',b.cookie)).body;assert.equal(otherView.players.find(p=>p.name==='KiwiCosmique').avatar.color,'#c8b9ff');
 const blank=await post('profile',a.cookie,{name:'   ',avatar});assert.equal(blank.status,400);
