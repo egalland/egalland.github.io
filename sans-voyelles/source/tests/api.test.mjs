@@ -15,12 +15,12 @@ async function post(action,cookie='',extra={}){const r=await POST(new Request('h
 let a=await post('join','',{name:'Alice'}),b=await post('join','',{name:'Bob'});assert.equal(a.status,200);assert.equal(a.body.phase,'countdown');assert.ok(a.cookie.startsWith('sv_player='));assert.equal(b.body.players.length,2);
 now+=5000;let snap=(await post('sync',a.cookie)).body;assert.equal(snap.phase,'guess');assert.equal(snap.question.answer,undefined);
 const {QUESTIONS}=await import(game);const state=JSON.parse(sql.prepare('SELECT state FROM rooms WHERE id=?').get('cinema').state);const answer=QUESTIONS[state.deck[0]].answer;
-now+=1000;const guesses=await Promise.all([post('answer',a.cookie,{answer,game:snap.game,round:1}),post('answer',a.cookie,{answer,game:snap.game,round:1}),post('answer',b.cookie,{answer,game:snap.game,round:1})]);assert.ok(guesses.every(g=>g.status===200));snap=(await post('sync',a.cookie)).body;assert.equal(snap.phase,'reveal');assert.equal(snap.players.find(p=>p.id==='me').score,940);assert.equal(snap.question.answer,answer);
+now+=1000;const guesses=await Promise.all([post('answer',a.cookie,{answer,game:snap.game,round:1}),post('answer',a.cookie,{answer,game:snap.game,round:1}),post('answer',b.cookie,{answer,game:snap.game,round:1})]);assert.ok(guesses.every(g=>g.status===200));snap=(await post('sync',a.cookie)).body;assert.equal(snap.phase,'reveal');assert.equal(snap.players.find(p=>p.id==='me').score,955);assert.equal(snap.question.answer,answer);
 const avatar={shape:4,hair:3,eyes:2,mouth:5,accessory:1,color:'#c8b9ff'};
-const edited=await post('profile',a.cookie,{name:'KiwiCosmique',avatar});assert.equal(edited.status,200);const editedMe=edited.body.players.find(p=>p.id==='me');assert.equal(editedMe.score,940);assert.equal(editedMe.name,'KiwiCosmique');assert.deepEqual(editedMe.avatar,avatar);
+const edited=await post('profile',a.cookie,{name:'KiwiCosmique',avatar});assert.equal(edited.status,200);const editedMe=edited.body.players.find(p=>p.id==='me');assert.equal(editedMe.score,955);assert.equal(editedMe.name,'KiwiCosmique');assert.deepEqual(editedMe.avatar,avatar);
 const otherView=(await post('sync',b.cookie)).body;assert.equal(otherView.players.find(p=>p.name==='KiwiCosmique').avatar.color,'#c8b9ff');
 const blank=await post('profile',a.cookie,{name:'   ',avatar});assert.equal(blank.status,400);
-const refresh=await post('join',a.cookie,{name:'KiwiCosmique',avatar});assert.deepEqual(refresh.body.players.find(p=>p.id==='me').avatar,avatar);assert.equal(refresh.body.players.find(p=>p.id==='me').score,940);
+const refresh=await post('join',a.cookie,{name:'KiwiCosmique',avatar});assert.deepEqual(refresh.body.players.find(p=>p.id==='me').avatar,avatar);assert.equal(refresh.body.players.find(p=>p.id==='me').score,955);
 await post('leave',a.cookie);const empty=await post('leave',b.cookie);assert.equal(empty.body.phase,'empty');assert.equal(empty.body.players.length,0);
 const list=await GET();assert.equal((await list.json()).rooms.find(r=>r.id==='cinema').count,0);
 now+=100000;const restart=await post('join',a.cookie,{name:'Alice'});assert.equal(restart.body.phase,'countdown');assert.equal(restart.body.players.find(p=>p.id==='me').score,0);
@@ -35,5 +35,5 @@ const winner=await post('sync',a.cookie);assert.ok(JSON.stringify(winner.body).i
 const rejected=await post('chat',third.cookie,{message:'public shortcut',game:start.game,round:start.round});assert.equal(rejected.body.result,'wait');
 const stale=await post('chat',a.cookie,{message:'stale',game:start.game,round:99});assert.equal(stale.status,409);
 const emote=await post('emote',third.cookie,{message:'🔥',game:start.game,round:start.round});assert.equal(emote.body.result,'sent');
-assert.ok((await post('sync',a.cookie)).body.messages.some(m=>m.text==='🔥'));
+const observed=(await post('sync',a.cookie)).body;assert.ok(observed.players.some(p=>p.reaction?.text==='🔥'));assert.ok(!observed.messages.some(m=>m.kind==='emote'));
 console.log('Passed: SQLite persistence, separate sessions, concurrent guesses, CAS scoring, early reveal, refresh recovery, leave, idle rooms and restart; profile edits preserve score and propagate avatar, blank names refused.');

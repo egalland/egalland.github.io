@@ -10,7 +10,7 @@ Le bouton « Sans voyelles » figure dans l’en-tête du calendrier, à côté 
 
 ## Règles
 
-5 salons, 10 manches, 15 secondes de recherche puis 5 secondes de révélation illustrée. Si tous les joueurs présents ont trouvé, la révélation commence immédiatement. Une réponse rapporte de 1 000 à 100 points selon la rapidité. Les arrivées en cours sont autorisées. Un salon vide ne déclenche aucune boucle serveur ni tâche planifiée.
+5 salons, 10 manches, 20 secondes de recherche puis 5 secondes de révélation illustrée. Si tous les joueurs présents ont trouvé, la révélation commence immédiatement. Un indice apparaît lorsqu’il reste 10 secondes. Le podium final dure une minute. Le vainqueur conserve une couronne pendant la partie suivante tant qu’il reste dans le salon. Une réponse rapporte de 1 000 à 100 points selon la rapidité. Les arrivées en cours sont autorisées. Un salon vide ne déclenche aucune boucle serveur ni tâche planifiée.
 
 ## Banque de réponses
 
@@ -18,9 +18,9 @@ Le bouton « Sans voyelles » figure dans l’en-tête du calendrier, à côté 
 
 ## Réponses et chat
 
-Les propositions apparaissent dans un fil commun. Les bonnes réponses sont remplacées par une annonce de réussite, sans révéler le mot. Dès qu’un joueur a trouvé, son champ devient un chat réservé aux joueurs ayant trouvé ; la révélation ouvre ces messages à tous. Les essais faux sont affichés en rouge et les essais proches en jaune, avec leur texte et un verdict public. Six émotes publiques sont disponibles depuis le panneau des joueurs et apparaissent en bulles près des avatars. Sur ordinateur, trois panneaux de hauteur fixe placent le classement à gauche, le mot et l’affiche au centre, et le chat avec sa saisie à droite. Sur mobile, ces panneaux sont empilés avec des hauteurs réservées pour éviter les déplacements à la révélation. La saisie reste montée et active pendant les requêtes ; le texte est vidé à l’envoi et les réponses réseau ne suppriment pas le brouillon suivant. Le fil conserve les 100 derniers événements du salon, jusqu’à ce qu’il se vide.
+Les propositions apparaissent dans un fil commun. Les bonnes réponses sont remplacées par une annonce de réussite, sans révéler le mot. Dès qu’un joueur a trouvé, son champ devient un chat réservé aux joueurs ayant trouvé ; la révélation ouvre ces messages à tous. Les essais faux sont affichés en rouge et les essais proches en jaune, avec leur texte et un verdict public. Dix émotes publiques sont disponibles depuis le panneau des joueurs et apparaissent uniquement en bulles près des avatars : 👏 😂 🤔 🔥 🎉 ❤️ 👍 👎 🦆 🐶. Chaque émote possède un son synthétisé distinct, désactivable avec le bouton haut-parleur. Aucun délai ne limite les envois. Seule la réaction actuelle est conservée par personnage, sans historique ni message dans le chat. Les messages du chat portent une heure à la seconde. Sur ordinateur, trois panneaux de hauteur fixe placent le classement à gauche, le mot et l’affiche au centre, et le chat avec sa saisie à droite. Sur mobile, ces panneaux sont empilés avec des hauteurs réservées pour éviter les déplacements à la révélation. La saisie reste montée et active pendant les requêtes ; le texte est vidé à l’envoi et les réponses réseau ne suppriment pas le brouillon suivant. Le fil conserve les 100 derniers événements du salon, jusqu’à ce qu’il se vide.
 
-Accents, espaces, ponctuation et ligatures œ/æ sont normalisés. Une faute (y compris une inversion) est tolérée à partir de 5 caractères normalisés, deux à partir de 12 ; les mots courts restent stricts. Une réponse voisine déclenche un indice privé « Tu es proche ». Un autre nom exact de la même catégorie n’est pas validé comme faute de frappe.
+Accents, espaces, ponctuation et ligatures œ/æ sont normalisés. Une faute (y compris une inversion) est tolérée à partir de 5 caractères normalisés, deux à partir de 12 ; les mots courts restent stricts. Une réponse voisine déclenche un signal public « Tu es proche ». Un autre nom exact de la même catégorie n’est pas validé comme faute de frappe.
 
 ## Profils
 
@@ -30,7 +30,7 @@ Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Visage, chev
 
 TypeScript, React, Vinext / Vite, Cloudflare Workers et D1. Validation des réponses, chronomètre et points côté serveur ; écritures concurrentes protégées par un numéro de révision. Les réponses ne sont pas envoyées au navigateur avant la révélation. Illustrations depuis Wikipédia / Wikimedia Commons, avec lien vers les crédits et affichage de secours.
 
-Les sources publiées correspondent à la version déployée `859c2e41585be3240ad6b219cb68d25969f37fbe`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
+Les sources publiées correspondent à la version déployée `6bfda44d73b13623d56ff99833ea745786cd03d4`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
 
 ## Développement
 
@@ -51,6 +51,8 @@ node tests/api.test.mjs
 node tests/profile.test.mjs
 node tests/countdown.test.mjs
 node tests/chat.test.mjs
+node tests/rounds.test.mjs
+node tests/emote-sound.test.mjs
 node tests/bank.test.mjs
 node tests/illustration.test.mjs
 ```

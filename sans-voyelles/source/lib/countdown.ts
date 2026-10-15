@@ -1,7 +1,7 @@
 /** A monotonic browser clock: server snapshots may shorten, never refill, a phase. */
 export type CountdownSnapshot={game:string;round:number;phase:string;deadline:number;serverNow:number};
 export type CountdownClock={key:string;endsAt:number;durationMs:number};
-export function phaseDuration(phase:string){return phase==='guess'?15000:phase==='podium'?12000:phase==='countdown'||phase==='reveal'?5000:0;}
+export function phaseDuration(phase:string){return phase==='guess'?20000:phase==='podium'?60000:phase==='countdown'||phase==='reveal'?5000:0;}
 export function synchronizeCountdown(previous:CountdownClock|null,snapshot:CountdownSnapshot,now:number):CountdownClock{
  const durationMs=phaseDuration(snapshot.phase);
  const key=[snapshot.game,snapshot.round,snapshot.phase,snapshot.deadline].join(':');

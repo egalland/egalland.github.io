@@ -9,12 +9,12 @@ assert.equal(s.deck.length,10);assert.equal(new Set(s.deck).size,10);assert.ok(s
 now+=5000;s=advance(s,now);assert.equal(s.round,1);assert.equal(s.phase,'guess');assert.ok(!JSON.stringify(view(s,'alice',now)).includes('"answer"'));
 const correct=QUESTIONS[s.deck[0]].answer;
 assert.equal(submit(s,'alice','wrong',now),'incorrect');assert.equal(s.players[0].score,0);
-assert.equal(submit(s,'alice',correct,now+1000),'correct');assert.equal(s.players[0].score,940);assert.equal(submit(s,'alice',correct,now+2000),'wait');
+assert.equal(submit(s,'alice',correct,now+1000),'correct');assert.equal(s.players[0].score,955);assert.equal(submit(s,'alice',correct,now+2000),'wait');
 s=advance(s,now+1000);assert.equal(s.phase,'guess');
 assert.equal(submit(s,'bob',correct,now+2000),'correct');s=advance(s,now+2000);assert.equal(s.phase,'reveal');assert.equal(s.deadline,now+7000);assert.equal(view(s,'alice',now).question.answer,correct);
 s.players.push(player('carol',now+2000));assert.equal(s.players[2].score,0);
 now+=7000;s.players.forEach(p=>p.seen=now);s=advance(s,now);assert.equal(s.round,2);assert.equal(s.phase,'guess');assert.ok(s.players.every(p=>!p.solved));
-for(let round=2;round<=10;round++){now+=15000;s.players.forEach(p=>p.seen=now);s=advance(s,now);assert.equal(s.phase,'reveal');assert.equal(s.round,round);now+=5000;s.players.forEach(p=>p.seen=now);s=advance(s,now);assert.equal(s.phase,round===10?'podium':'guess');}
+for(let round=2;round<=10;round++){now+=20000;s.players.forEach(p=>p.seen=now);s=advance(s,now);assert.equal(s.phase,'reveal');assert.equal(s.round,round);now+=5000;s.players.forEach(p=>p.seen=now);s=advance(s,now);assert.equal(s.phase,round===10?'podium':'guess');}
 assert.equal(s.round,10);s.players=[];s=advance(s,now);assert.equal(s.phase,'empty');assert.equal(s.round,0);
 s=fresh();s.players=[player('disconnected',now-12001)];begin(s,'general',now);assert.equal(advance(s,now).phase,'empty');
 assert.equal(normalize('Léonard DE Vinci !'),normalize('Leonard de Vinci'));assert.equal(mask('Bonjour à vous !'),'BNJR  VS !');
