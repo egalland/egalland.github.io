@@ -24,13 +24,13 @@ Accents, espaces, ponctuation et ligatures œ/æ sont normalisés. Une faute (y 
 
 ## Profils
 
-Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Marionnettes en feutre composées de six catégories : visage, coiffure, yeux, bouche, accessoires et vêtements, plus dix couleurs. Choix visuels par vignettes et prévisualisation animée ; aléatoire pour chaque élément, pour le pseudo et pour tout mélanger. Les modifications en partie conservent le score. Les anciens profils sont migrés avec une tenue par défaut. Les yeux, les bouches et les poses du buste sont des images de sprite distinctes, assemblées en couches et animées sans transformation CSS du personnage. Les vignettes restent statiques ; les animations respectent le mouvement réduit et s’arrêtent lorsque l’onglet est caché. L’interface reprend le papier, le tissu et les coutures de l’atelier. Les affiches de réponse remplissent la place disponible sans déformation ni déplacement du chat. Détails dans [`source/data/PUPPET_ASSETS.md`](source/data/PUPPET_ASSETS.md).
+Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Marionnettes en feutre composées de six catégories : visage, coiffure, yeux, bouche, accessoires et vêtements, plus dix couleurs. Choix visuels par vignettes et prévisualisation animée ; aléatoire pour chaque élément, pour le pseudo et pour tout mélanger. Les modifications en partie conservent le score. Les anciens profils sont migrés avec une tenue par défaut. Les yeux, les bouches et les poses du buste sont des images de sprite distinctes, assemblées en couches et animées sans transformation CSS du personnage. Les vignettes restent statiques ; les animations respectent le mouvement réduit et s’arrêtent lorsque l’onglet est caché. L’interface reprend le papier, le tissu et les coutures de l’atelier. Les affiches de réponse remplissent la place disponible sans déformation ni déplacement du chat. Les pièces sont recalées sur le même ancrage du nez pour toutes les poses, sans fragments de cellules voisines ; le nez repasse devant les yeux et le buste reste derrière la tête. Les rangées de choix partagent sept colonnes et des vignettes carrées. Détails dans [`source/data/PUPPET_ASSETS.md`](source/data/PUPPET_ASSETS.md).
 
 ## Architecture
 
 TypeScript, React, Vinext / Vite, Cloudflare Workers et D1. Validation des réponses, chronomètre et points côté serveur ; écritures concurrentes protégées par un numéro de révision. Les réponses ne sont pas envoyées au navigateur avant la révélation. Illustrations depuis Wikipédia / Wikimedia Commons, avec lien vers les crédits et affichage de secours.
 
-Les sources publiées correspondent à la version déployée `5b77d6559da4dca60d22173fd64d2309a50b627c`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
+Les sources publiées correspondent à la version déployée `07110513cf9c4a9b24f113a4e088e1645ba8930a`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
 
 ## Développement
 

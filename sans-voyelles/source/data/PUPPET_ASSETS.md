@@ -18,3 +18,7 @@ Les images générées ont été découpées, enregistrées sur leur repère et 
 Contrôle des atlas : `node tests/puppet.test.mjs` vérifie les dimensions, la transparence, les images réellement distinctes et la sélection des poses. La sauvegarde et la migration des vêtements sont contrôlées dans les tests de profils et d’API.
 
 Les illustrations de réponse utilisent la place disponible du panneau central avec `object-fit: contain`. L’affiche et le texte disposent de zones indépendantes et le chat garde sa hauteur réservée.
+
+## Recalage des pièces
+
+Les zones source des trois rangées de pièces sont mesurées séparément : les dessins générés débordaient d’une division mathématique en tiers. Les petits fragments provenant d’un élément voisin sont retirés avant la mesure. Chaque silhouette et pose partage désormais un ancrage du nez à (128, 128) ; la jonction du cou est repérée avant de séparer la tête du buste. Les vêtements sont placés derrière la tête et le nez repasse devant les yeux. Les rangées du créateur réservent toutes sept cases et les vignettes gardent un canevas carré. Un test vérifie l’ancrage des dix-huit poses.
