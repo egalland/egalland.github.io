@@ -211,11 +211,28 @@
       "vibeMinutes": 28,
       "vibeBasis": "session_elapsed",
       "vibeObservedSeconds": 1664
+    },
+    {
+      "day": 15,
+      "opened": true,
+      "done": true,
+      "appTitle": "Petites victoires",
+      "note": "Hall de trophées : compteurs et paliers personnalisés, six formes de médailles, cinq emblèmes, animations et particules. Démo séparée ; sauvegarde locale, import/export JSON. Jira en saisie manuelle. Temps Vibe Coding : sessions de réalisation retrouvées avant publication GitHub, hors pauses entre échanges.",
+      "appUrl": "https://egalland.github.io/petites-victoires/",
+      "repoUrl": "https://github.com/egalland/petites-victoires",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": 13,
+      "vibeBasis": "session_elapsed",
+      "vibeObservedSeconds": 792,
+      "devMinutes": 960,
+      "devMinMinutes": 720,
+      "devMaxMinutes": 1200
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-14T19:28:09.558Z"
+  "updatedAt": "2026-10-15T05:18:58.502Z"
 }
