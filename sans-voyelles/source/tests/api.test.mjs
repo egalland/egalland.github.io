@@ -24,4 +24,16 @@ const refresh=await post('join',a.cookie,{name:'KiwiCosmique',avatar});assert.de
 await post('leave',a.cookie);const empty=await post('leave',b.cookie);assert.equal(empty.body.phase,'empty');assert.equal(empty.body.players.length,0);
 const list=await GET();assert.equal((await list.json()).rooms.find(r=>r.id==='cinema').count,0);
 now+=100000;const restart=await post('join',a.cookie,{name:'Alice'});assert.equal(restart.body.phase,'countdown');assert.equal(restart.body.players.find(p=>p.id==='me').score,0);
+// Chat visibility is enforced by the server, survives DB reloads and keeps late joiners out.
+const third=await post('join','',{name:'Carol'});now+=5000;const start=(await post('sync',a.cookie)).body;
+const stored=JSON.parse(sql.prepare('SELECT state FROM rooms WHERE id=?').get('cinema').state);
+const target=QUESTIONS[stored.deck[0]].answer;
+await post('answer',a.cookie,{answer:target,game:start.game,round:start.round});
+const sent=await post('chat',a.cookie,{message:'secret-answer '+target,game:start.game,round:start.round});assert.equal(sent.body.result,'sent');
+const outsider=await post('sync',third.cookie);assert.ok(!JSON.stringify(outsider.body).includes('secret-answer'));
+const winner=await post('sync',a.cookie);assert.ok(JSON.stringify(winner.body).includes('secret-answer'));
+const rejected=await post('chat',third.cookie,{message:'public shortcut',game:start.game,round:start.round});assert.equal(rejected.body.result,'wait');
+const stale=await post('chat',a.cookie,{message:'stale',game:start.game,round:99});assert.equal(stale.status,409);
+const emote=await post('emote',third.cookie,{message:'🔥',game:start.game,round:start.round});assert.equal(emote.body.result,'sent');
+assert.ok((await post('sync',a.cookie)).body.messages.some(m=>m.text==='🔥'));
 console.log('Passed: SQLite persistence, separate sessions, concurrent guesses, CAS scoring, early reveal, refresh recovery, leave, idle rooms and restart; profile edits preserve score and propagate avatar, blank names refused.');

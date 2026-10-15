@@ -16,6 +16,12 @@ Le bouton « Sans voyelles » figure dans l’en-tête du calendrier, à côté 
 
 2 000 réponses : 500 films, 500 personnalités, 500 lieux et 500 animaux. Le salon généraliste mélange les quatre thèmes. La sélection privilégie les références populaires et noms familiers ; méthode et sources dans [`source/data/BANK_SOURCES.md`](source/data/BANK_SOURCES.md). Les variantes usuelles sont acceptées et les illustrations disponibles sont préparées à l’avance.
 
+## Réponses et chat
+
+Les propositions apparaissent dans un fil commun. Les bonnes réponses sont remplacées par une annonce de réussite, sans révéler le mot. Dès qu’un joueur a trouvé, son champ devient un chat réservé aux joueurs ayant trouvé ; la révélation ouvre ces messages à tous. Six émotes publiques sont disponibles avec limitation de fréquence. Le classement se met à jour en direct, à droite sur ordinateur et en panneau compact sur mobile. Le fil conserve les 100 derniers événements du salon, jusqu’à ce qu’il se vide.
+
+Accents, espaces, ponctuation et ligatures œ/æ sont normalisés. Une faute (y compris une inversion) est tolérée à partir de 5 caractères normalisés, deux à partir de 12 ; les mots courts restent stricts. Une réponse voisine déclenche un indice privé « Tu es proche ». Un autre nom exact de la même catégorie n’est pas validé comme faute de frappe.
+
 ## Profils
 
 Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Visage, cheveux, yeux, bouche, accessoire et couleur ; aléatoire pour chaque élément, pour le pseudo et pour tout mélanger. Les modifications en partie conservent le score.
@@ -24,7 +30,7 @@ Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Visage, chev
 
 TypeScript, React, Vinext / Vite, Cloudflare Workers et D1. Validation des réponses, chronomètre et points côté serveur ; écritures concurrentes protégées par un numéro de révision. Les réponses ne sont pas envoyées au navigateur avant la révélation. Illustrations depuis Wikipédia / Wikimedia Commons, avec lien vers les crédits et affichage de secours.
 
-Les sources publiées correspondent à la version déployée `5ff78265dea90fa5d6b602a72fe152fb9caa6bca`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
+Les sources publiées correspondent à la version déployée `b994bdce9f2765aeb436337232d18c8ab627716e`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
 
 ## Développement
 
@@ -44,6 +50,7 @@ node tests/game.test.mjs
 node tests/api.test.mjs
 node tests/profile.test.mjs
 node tests/countdown.test.mjs
+node tests/chat.test.mjs
 node tests/bank.test.mjs
 node tests/illustration.test.mjs
 ```
