@@ -18,7 +18,7 @@ Le bouton « Sans voyelles » figure dans l’en-tête du calendrier, à côté 
 
 ## Réponses et chat
 
-Les propositions apparaissent dans un fil commun. Les bonnes réponses sont remplacées par une annonce de réussite, sans révéler le mot. Dès qu’un joueur a trouvé, son champ devient un chat réservé aux joueurs ayant trouvé ; la révélation ouvre ces messages à tous. Six émotes publiques sont disponibles avec limitation de fréquence. Le classement se met à jour en direct, à droite sur ordinateur et en panneau compact sur mobile. Le fil conserve les 100 derniers événements du salon, jusqu’à ce qu’il se vide.
+Les propositions apparaissent dans un fil commun. Les bonnes réponses sont remplacées par une annonce de réussite, sans révéler le mot. Dès qu’un joueur a trouvé, son champ devient un chat réservé aux joueurs ayant trouvé ; la révélation ouvre ces messages à tous. Les essais faux sont affichés en rouge et les essais proches en jaune, avec leur texte et un verdict public. Six émotes publiques sont disponibles depuis le panneau des joueurs et apparaissent en bulles près des avatars. Sur ordinateur, trois panneaux de hauteur fixe placent le classement à gauche, le mot et l’affiche au centre, et le chat avec sa saisie à droite. Sur mobile, ces panneaux sont empilés avec des hauteurs réservées pour éviter les déplacements à la révélation. La saisie reste montée et active pendant les requêtes ; le texte est vidé à l’envoi et les réponses réseau ne suppriment pas le brouillon suivant. Le fil conserve les 100 derniers événements du salon, jusqu’à ce qu’il se vide.
 
 Accents, espaces, ponctuation et ligatures œ/æ sont normalisés. Une faute (y compris une inversion) est tolérée à partir de 5 caractères normalisés, deux à partir de 12 ; les mots courts restent stricts. Une réponse voisine déclenche un indice privé « Tu es proche ». Un autre nom exact de la même catégorie n’est pas validé comme faute de frappe.
 
@@ -30,7 +30,7 @@ Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Visage, chev
 
 TypeScript, React, Vinext / Vite, Cloudflare Workers et D1. Validation des réponses, chronomètre et points côté serveur ; écritures concurrentes protégées par un numéro de révision. Les réponses ne sont pas envoyées au navigateur avant la révélation. Illustrations depuis Wikipédia / Wikimedia Commons, avec lien vers les crédits et affichage de secours.
 
-Les sources publiées correspondent à la version déployée `b994bdce9f2765aeb436337232d18c8ab627716e`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
+Les sources publiées correspondent à la version déployée `859c2e41585be3240ad6b219cb68d25969f37fbe`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
 
 ## Développement
 
