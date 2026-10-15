@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
-const js=ts.transpileModule(readFileSync('lib/game.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
+const js=ts.transpileModule(readFileSync('lib/game.ts','utf8').replace("import questionBank from './question-bank.json';",'const questionBank='+readFileSync('lib/question-bank.json','utf8')+';'),{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
 const {fresh,begin,advance,submit,view,QUESTIONS,mask,normalize}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
 const player=(id,t)=>({id,name:id,score:0,seen:t,solved:false,gain:0,tries:0});
 let now=100000,s=fresh();s.players=[player('alice',now),player('bob',now)];begin(s,'cinema',now);

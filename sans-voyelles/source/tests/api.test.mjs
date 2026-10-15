@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 const compile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
 const uri=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
 const profile=uri(compile(readFileSync('lib/profile.ts','utf8')));
-const game=uri(compile(readFileSync('lib/game.ts','utf8'))),themes=uri(compile(readFileSync('lib/themes.ts','utf8')));
+const game=uri(compile(readFileSync('lib/game.ts','utf8').replace("import questionBank from './question-bank.json';",'const questionBank='+readFileSync('lib/question-bank.json','utf8')+';'))),themes=uri(compile(readFileSync('lib/themes.ts','utf8')));
 const sql=new DatabaseSync(':memory:');sql.exec(readFileSync('drizzle/0000_polite_next_avengers.sql','utf8'));
 globalThis.__testDB={prepare(query){let values=[];return {bind(...v){values=v;return this},async first(){return sql.prepare(query).get(...values)||null},async all(){return {results:sql.prepare(query).all(...values)}},async run(){const r=sql.prepare(query).run(...values);return {meta:{changes:Number(r.changes)}}}}}};
 let source=readFileSync('app/api/game/route.ts','utf8').replace("import {env} from 'cloudflare:workers';",'const env={DB:globalThis.__testDB};').replace("'../../../lib/game'",JSON.stringify(game)).replace("'../../../lib/themes'",JSON.stringify(themes)).replace("'../../../lib/profile'",JSON.stringify(profile));

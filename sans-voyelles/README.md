@@ -12,6 +12,10 @@ Le bouton « Sans voyelles » figure dans l’en-tête du calendrier, à côté 
 
 5 salons, 10 manches, 15 secondes de recherche puis 5 secondes de révélation illustrée. Si tous les joueurs présents ont trouvé, la révélation commence immédiatement. Une réponse rapporte de 1 000 à 100 points selon la rapidité. Les arrivées en cours sont autorisées. Un salon vide ne déclenche aucune boucle serveur ni tâche planifiée.
 
+## Banque de réponses
+
+2 000 réponses : 500 films, 500 personnalités, 500 lieux et 500 animaux. Le salon généraliste mélange les quatre thèmes. La sélection privilégie les références populaires et noms familiers ; méthode et sources dans [`source/data/BANK_SOURCES.md`](source/data/BANK_SOURCES.md). Les variantes usuelles sont acceptées et les illustrations disponibles sont préparées à l’avance.
+
 ## Profils
 
 Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Visage, cheveux, yeux, bouche, accessoire et couleur ; aléatoire pour chaque élément, pour le pseudo et pour tout mélanger. Les modifications en partie conservent le score.
@@ -20,7 +24,7 @@ Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Visage, chev
 
 TypeScript, React, Vinext / Vite, Cloudflare Workers et D1. Validation des réponses, chronomètre et points côté serveur ; écritures concurrentes protégées par un numéro de révision. Les réponses ne sont pas envoyées au navigateur avant la révélation. Illustrations depuis Wikipédia / Wikimedia Commons, avec lien vers les crédits et affichage de secours.
 
-Les sources publiées correspondent à la version déployée `60ccad7864d2e666116f16e134c9483bbcacfb68`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
+Les sources publiées correspondent à la version déployée `5ff78265dea90fa5d6b602a72fe152fb9caa6bca`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
 
 ## Développement
 
@@ -40,6 +44,8 @@ node tests/game.test.mjs
 node tests/api.test.mjs
 node tests/profile.test.mjs
 node tests/countdown.test.mjs
+node tests/bank.test.mjs
+node tests/illustration.test.mjs
 ```
 
 L’en-tête principal et la redirection sont hébergés dans le dépôt public `egalland/egalland.github.io`.
