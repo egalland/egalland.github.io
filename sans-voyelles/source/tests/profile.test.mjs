@@ -1,0 +1,10 @@
+import ts from 'typescript';
+import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+const js=ts.transpileModule(readFileSync('lib/profile.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
+const {PROFILE_KEY,COLORS,PARTS,DEFAULT_AVATAR,cleanAvatar,parseProfile,shufflePart,shuffleColor,randomAvatar,randomName}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
+for(let i=0;i<200;i++){const a=randomAvatar();for(const p of PARTS){assert.ok(a[p.key]>=0&&a[p.key]<p.options.length);assert.notEqual(a[p.key],DEFAULT_AVATAR[p.key]);const next=shufflePart(a,p.key);assert.notEqual(next[p.key],a[p.key]);for(const other of PARTS.filter(x=>x.key!==p.key))assert.equal(next[other.key],a[other.key]);assert.equal(next.color,a.color);}assert.notEqual(shuffleColor(a).color,a.color);const name=randomName('KiwiCosmique');assert.notEqual(name,'KiwiCosmique');assert.ok(name.length<=20);assert.ok(COLORS.includes(a.color));}
+assert.deepEqual(cleanAvatar({shape:999,hair:-1,eyes:1.5,mouth:'2',accessory:null,color:'url(fake)'}),DEFAULT_AVATAR);
+assert.equal(parseProfile('bad json'),null);assert.equal(parseProfile(null),null);assert.equal(parseProfile(JSON.stringify({version:1,name:' ',avatar:{}})),null);assert.equal(parseProfile(JSON.stringify({version:7,name:'Kiwi',avatar:{}})),null);
+const storage=new Map();const expected={version:1,name:randomName(),avatar:randomAvatar()};storage.set(PROFILE_KEY,JSON.stringify(expected));assert.deepEqual(parseProfile(storage.get(PROFILE_KEY)),expected);assert.equal(parseProfile(JSON.stringify({...expected,name:'a'.repeat(21)})),null);
+console.log('Passed: all avatar parts, independent randomizers, guaranteed change, colors, pseudo limits, malformed profiles, round-trip serialization and restored profile.');
