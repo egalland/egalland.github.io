@@ -20,7 +20,7 @@ Pseudo et avatar personnalisables, sauvegardés dans le navigateur. Visage, chev
 
 TypeScript, React, Vinext / Vite, Cloudflare Workers et D1. Validation des réponses, chronomètre et points côté serveur ; écritures concurrentes protégées par un numéro de révision. Les réponses ne sont pas envoyées au navigateur avant la révélation. Illustrations depuis Wikipédia / Wikimedia Commons, avec lien vers les crédits et affichage de secours.
 
-Les sources publiées correspondent à la version déployée `e827b085d84f0c1daa71fa5744583ed75d1945c9`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
+Les sources publiées correspondent à la version déployée `60ccad7864d2e666116f16e134c9483bbcacfb68`. Aucun identifiant de déploiement, secret ou état de base de données n’est inclus.
 
 ## Développement
 
@@ -39,6 +39,7 @@ Tests du moteur, des accès simultanés et des profils :
 node tests/game.test.mjs
 node tests/api.test.mjs
 node tests/profile.test.mjs
+node tests/countdown.test.mjs
 ```
 
 L’en-tête principal et la redirection sont hébergés dans le dépôt public `egalland/egalland.github.io`.
