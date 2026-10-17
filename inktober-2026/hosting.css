@@ -6,3 +6,6 @@
 
 /* Allow tool links to wrap on small screens. */
 .header-tools{flex-wrap:wrap}
+
+/* Kikalmo uses the approved stitched wordmark instead of a text label. */
+.header-tools a.kikalmo-link{padding:5px 10px;line-height:0}.header-tools .kikalmo-logo{display:block;width:116px;height:auto;object-fit:contain}@media(max-width:400px){.header-tools .kikalmo-logo{width:100px}}
