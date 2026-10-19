@@ -81,6 +81,14 @@
       "title": "Dames de porcelaine",
       "description": "Dames roguelite : campagne IA, pouvoirs, atelier de mémoire et salons par code. Lancement de la version serveur hébergée.",
       "hostedUrl": "https://dames-de-porcelaine.emmanuel-galland117.chatgpt.site"
+    },
+    {
+      "day": 16,
+      "path": "pas-maladroits",
+      "repository": "egalland/pas-maladroits",
+      "sourceCommit": "2da2af3125001a15eb69b9c3be9dbc27e5858100",
+      "title": "Pas maladroits",
+      "description": "Un jeu de coordination aux longues jambes : trois parcours, alternance des pieds, amplitude réglable et sauvegarde locale de la partie et des records."
     }
   ]
 }

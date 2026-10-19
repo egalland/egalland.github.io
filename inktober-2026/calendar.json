@@ -228,11 +228,24 @@
       "devMinutes": 960,
       "devMinMinutes": 720,
       "devMaxMinutes": 1200
+    },
+    {
+      "day": 16,
+      "opened": true,
+      "done": true,
+      "appTitle": "Pas maladroits",
+      "note": "Un jeu de coordination aux longues jambes : trois parcours, alternance des pieds, amplitude réglable et sauvegarde locale de la partie et des records.",
+      "appUrl": "https://egalland.github.io/pas-maladroits/",
+      "repoUrl": "https://github.com/egalland/pas-maladroits",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": null,
+      "devMinutes": null
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-15T05:18:58.502Z"
+  "updatedAt": "2026-10-19T21:11:03.911Z"
 }
