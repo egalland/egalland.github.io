@@ -241,11 +241,24 @@
       "chatgptMinutes": null,
       "vibeMinutes": null,
       "devMinutes": null
+    },
+    {
+      "day": 19,
+      "opened": true,
+      "done": true,
+      "appTitle": "Labyrinthe mouvant",
+      "note": "Un puzzle de cinq labyrinthes : trois fragments à collecter, portes alternantes à chaque pas, indices expliqués et sauvegarde locale.",
+      "appUrl": "https://egalland.github.io/labyrinthe-mouvant/",
+      "repoUrl": "https://github.com/egalland/labyrinthe-mouvant",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": null,
+      "devMinutes": null
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-19T21:11:03.911Z"
+  "updatedAt": "2026-10-20T04:16:16.041Z"
 }

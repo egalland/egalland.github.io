@@ -89,6 +89,14 @@
       "sourceCommit": "2da2af3125001a15eb69b9c3be9dbc27e5858100",
       "title": "Pas maladroits",
       "description": "Un jeu de coordination aux longues jambes : trois parcours, alternance des pieds, amplitude réglable et sauvegarde locale de la partie et des records."
+    },
+    {
+      "day": 19,
+      "path": "labyrinthe-mouvant",
+      "repository": "egalland/labyrinthe-mouvant",
+      "sourceCommit": "358b8502cdb0aa172b9262ef8a6aade9d7d65cd4",
+      "title": "Labyrinthe mouvant",
+      "description": "Un puzzle de cinq labyrinthes : trois fragments à collecter, portes alternantes à chaque pas, indices expliqués et sauvegarde locale."
     }
   ]
 }
