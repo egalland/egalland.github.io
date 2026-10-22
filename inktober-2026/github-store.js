@@ -21,7 +21,7 @@
   if(['opened','done'].includes(key)){if(typeof value!=='boolean')throw new Error('Statut invalide.');return;}
   if(['promptMinutes','chatgptMinutes','devMinutes','vibeMinutes','devMinMinutes','devMaxMinutes'].includes(key)){if(value!==null&&(!Number.isInteger(value)||value<0||value>100000))throw new Error('Durée invalide.');return;}
   const max=key==='appTitle'?120:2000;if(typeof value!=='string'||value.length>max)throw new Error('Texte invalide.');
-  if(['appUrl','repoUrl'].includes(key)&&value){let url;try{url=new URL(value);}catch{throw new Error('Lien invalide.');}if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw new Error('Lien invalide.');if(key==='repoUrl'&&(url.origin!=='https://github.com'||!/^\/egalland\/[a-z0-9_.-]+\/?$/i.test(url.pathname)||url.search||url.hash))throw new Error('Dépôt invalide.');}
+  if(['appUrl','repoUrl'].includes(key)&&value){let url;try{url=new URL(value);}catch{throw new Error('Lien invalide.');}if(!['https:','http:'].includes(url.protocol)||url.username||url.password)throw new Error('Lien invalide.');if(key==='repoUrl'&&(url.origin!=='https://github.com'||!/^\/egalland\/[a-z0-9_.-]+(?:\/tree\/(?:master|main)\/[a-z0-9_.-]+)?\/?$/i.test(url.pathname)||url.search||url.hash))throw new Error('Dépôt invalide.');}
  }
  window.githubCalendarStore={parse};
 })();

@@ -267,11 +267,24 @@
       "chatgptMinutes": null,
       "vibeMinutes": null,
       "devMinutes": null
+    },
+    {
+      "day": 22,
+      "opened": true,
+      "done": true,
+      "appTitle": "Innsmouth — Le port oublié",
+      "note": "Un port lovecraftien en HD : phare pilotable à la souris ou au doigt, lettres gothiques lumineuses, vagues et reflets animés, lumières des habitations et cadrage mobile dédié.",
+      "appUrl": "https://egalland.github.io/phare/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/phare",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": null,
+      "devMinutes": null
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-22T03:28:29.042Z"
+  "updatedAt": "2026-10-22T11:04:01.790Z"
 }

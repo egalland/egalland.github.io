@@ -97,6 +97,15 @@
       "sourceCommit": "358b8502cdb0aa172b9262ef8a6aade9d7d65cd4",
       "title": "Labyrinthe mouvant",
       "description": "Un puzzle de cinq labyrinthes : trois fragments à collecter, portes alternantes à chaque pas, indices expliqués et sauvegarde locale."
+    },
+    {
+      "day": 22,
+      "path": "phare",
+      "repository": "egalland/egalland.github.io",
+      "sourcePath": "phare",
+      "sourceSiteCommit": "29c31fc0170189d6d83ac4eb5fe7c6cc1aa9d770",
+      "title": "Innsmouth — Le port oublié",
+      "description": "Un port lovecraftien en HD : phare pilotable à la souris ou au doigt, lettres gothiques lumineuses, vagues et reflets animés, lumières des habitations et cadrage mobile dédié."
     }
   ]
 }
