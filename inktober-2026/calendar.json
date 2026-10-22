@@ -254,11 +254,24 @@
       "chatgptMinutes": null,
       "vibeMinutes": null,
       "devMinutes": null
+    },
+    {
+      "day": 21,
+      "opened": true,
+      "done": true,
+      "appTitle": "Atelier Héros",
+      "note": "Créez un super-héros en feutrine dans le style des avatars de Kikalmo : sept silhouettes distinctes, cinq vues, deux tenues, coiffures et accessoires personnalisables. Collection locale et exports PNG, GIF et ZIP.",
+      "appUrl": "https://atelier-heros.emmanuel-galland117.chatgpt.site",
+      "repoUrl": "https://github.com/egalland/atelier-heros",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": null,
+      "devMinutes": null
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-20T04:16:16.041Z"
+  "updatedAt": "2026-10-22T03:28:29.042Z"
 }
