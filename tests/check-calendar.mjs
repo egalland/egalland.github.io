@@ -30,7 +30,8 @@ assert.equal(availability().availableDays,8);assert.deepEqual(plain(availability
 assert(door(2).className.includes('opened'));assert(door(8).className.includes('today'));assert(!door(9).className.includes('opened'));assert(door(9).disabled);
 const count=calls.length;await a.registry.get('open_inktober_day').execute({day:2});assert.equal(calls.length,count);assert.equal(a.get('prompt-name').textContent,'Relique');assert(a.get('prompt-dialog').open);
 assert.match((await a.registry.get('open_inktober_day').execute({day:9})).error,/disponible/);
-await a.registry.get('open_inktober_day').execute({day:1});assert.equal(a.get('project-launch').href,'https://egalland.github.io/pomme/');assert.equal(a.get('project-code').href,'https://github.com/egalland/one-more-thing');
+await a.registry.get('open_inktober_day').execute({day:1});assert.equal(a.get('project-launch').href,'https://egalland.github.io/one-more-thing/');assert.equal(a.get('project-code').href,'https://github.com/egalland/one-more-thing');
+assert(a.get('project-hosting').textContent.includes('GitHub Pages'));
 const initial=a.registry.get('read_inktober_statistics').execute();
 assert.equal(initial.doneCount,6);assert.equal(initial.vibeTime.value,641);assert.equal(initial.dev.value,13530);assert.equal(initial.vibeCost.value,37392);assert.equal(initial.devCost.value,902000);
 assert.equal(initial.vibeMin,undefined);assert.equal(initial.vibeMax,undefined);assert.equal(initial.devMin.value,9720);assert.equal(initial.devMax.value,17340);
@@ -41,9 +42,17 @@ const historical=a.win.inktoberMetrics.calculate([{day:1,done:true,promptMinutes
 const explicit=a.win.inktoberMetrics.calculate([{day:1,done:true,vibeMinutes:10,promptMinutes:30,chatgptMinutes:60,devMinutes:null},{day:2,done:true,vibeMinutes:null,promptMinutes:null,chatgptMinutes:2,devMinutes:0}],{vibeRateCents:3500,devRateCents:4000});assert.equal(explicit.vibeTime.value,10);assert.equal(explicit.vibeTime.count,1);assert.equal(explicit.vibeCost.value,583);assert.equal(explicit.devCost.value,0);
 const published=JSON.parse(fs.readFileSync(root+'calendar.json','utf8'));
 assert(published.days.every(row=>!('vibeMinMinutes' in row)&&!('vibeMaxMinutes' in row)));
-const all=a.win.inktoberMetrics.calculate(published.days,published.settings);assert.equal(all.vibeTime.value,1181);assert.equal(all.dev.value,27210);assert.equal(all.vibeCost.value,68892);assert.equal(all.devCost.value,1814000);
+// Integration totals include every published project, with no missing duration treated as zero.
+const all=a.win.inktoberMetrics.calculate(published.days,published.settings);
+assert.equal(all.rows.length,published.days.length);
+assert.equal(all.vibeTime.count,published.days.length);
+assert.equal(all.dev.count,published.days.length);
+assert.equal(all.vibeTime.value,published.days.reduce((sum,row)=>sum+row.vibeMinutes,0));
+assert.equal(all.dev.value,published.days.reduce((sum,row)=>sum+row.devMinutes,0));
+assert.equal(all.vibeCost.value,published.days.reduce((sum,row)=>sum+Math.round(row.vibeMinutes*3500/60),0));
+assert.equal(all.devCost.value,published.days.reduce((sum,row)=>sum+Math.round(row.devMinutes*4000/60),0));
 for(const day of [2,8])remote.days.push(published.days.find(row=>row.day===day));await a.get('retry-load').click();
-await a.registry.get('open_inktober_day').execute({day:2});assert.equal(a.get('project-vibe-time').textContent,'59 min');assert.equal(a.get('project-dev-time').textContent,'120 h');assert(a.get('project-vibe-basis').textContent.includes('Sessions retrouvées'));assert(!a.get('project-vibe-basis').textContent.includes('Fourchette'));assert(a.get('project-dev-range').textContent.includes('80 h à 160 h'));
+await a.registry.get('open_inktober_day').execute({day:2});assert(a.get('project-hosting').textContent.includes('serveur externe'));assert.equal(a.get('project-vibe-time').textContent,'59 min');assert.equal(a.get('project-dev-time').textContent,'120 h');assert(a.get('project-vibe-basis').textContent.includes('Sessions retrouvées'));assert(!a.get('project-vibe-basis').textContent.includes('Fourchette'));assert(a.get('project-dev-range').textContent.includes('80 h à 160 h'));
 await a.registry.get('open_inktober_day').execute({day:8});assert.equal(a.get('project-vibe-time').textContent,'31 min');assert.equal(a.get('project-dev-time').textContent,'12 h');assert(a.get('kpi-vibe-detail').textContent.includes('2 durées de sessions'));
 for(const tr of a.get('stats-rows').children){const cells=[...tr.innerHTML.matchAll(/<td>(.*?)<\/td>/g)].map(m=>m[1]);assert(!cells[0].includes(' à '));assert(cells[1].includes(' à '));}
 for(const name of ['save_inktober_note','save_inktober_progress','save_inktober_rates'])assert(!a.registry.has(name));

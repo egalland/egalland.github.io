@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-10-23",
+  "method": "Estimations explicites, aucune mesure de temps actif. Les coûts valorisent les minutes affichées ; ils ne sont pas des dépenses réelles.",
+  "projects": [
+    {
+      "day": 16,
+      "vibeMinutes": 38,
+      "basis": "estimated",
+      "evidence": "Estimation antérieure retrouvée du 20 octobre : 30–45 min ; valeur centrale arrondie à 38 min. Une enveloppe commune de 1 h à 1 h 30 concernait les deux puzzles ; ce ne sont pas des sessions chronométrées séparées.",
+      "developerHours": 8,
+      "developerRangeHours": [
+        6,
+        10
+      ],
+      "scope": "Jeu de coordination, trois parcours, réglages, sauvegarde locale, adaptation mobile."
+    },
+    {
+      "day": 19,
+      "vibeMinutes": 38,
+      "basis": "estimated",
+      "evidence": "Estimation antérieure retrouvée du 20 octobre : 30–45 min ; valeur centrale arrondie à 38 min. Même enveloppe commune que Pas maladroits ; aucune déduction depuis les écarts entre commits.",
+      "developerHours": 8,
+      "developerRangeHours": [
+        6,
+        10
+      ],
+      "scope": "Cinq labyrinthes, portes alternantes, fragments, indices expliqués, sauvegarde locale."
+    },
+    {
+      "day": 21,
+      "vibeMinutes": 120,
+      "basis": "estimated",
+      "evidence": "Nouvelle estimation de 2 h pour la version publiée. La session initiale retrouvée du 21 octobre, 08:25:57Z–09:26:38Z, ne couvre que 60 min 41 s et exclut des évolutions et la publication. Elle ne permet pas de mesurer le total actif. Confiance faible ; scénario de 1 à 4 h.",
+      "developerHours": 40,
+      "developerRangeHours": [
+        24,
+        64
+      ],
+      "scope": "Personnalisation de sept silhouettes, vues, composition des sprites, collection et sauvegarde, import, exports PNG/GIF/ZIP. Réutilisation des images fournies ; dessin original des 70 corps exclu."
+    },
+    {
+      "day": 22,
+      "vibeMinutes": 180,
+      "basis": "estimated",
+      "evidence": "Nouvelle estimation de 3 h pour les itérations de la version publiée, confiance faible ; scénario de 2 à 5 h. La fenêtre retrouvée du 22 octobre, 05:00:42Z–10:13:39Z (5 h 12 min 57 s), inclut des interruptions et ne constitue pas une mesure du travail actif.",
+      "developerHours": 32,
+      "developerRangeHours": [
+        16,
+        48
+      ],
+      "scope": "Phare interactif, lettres lumineuses, animations du port et reflets, souris/tactile/clavier, options, repli 2D, adaptation mobile. Illustration HD fournie ; sa création artistique originale exclue."
+    }
+  ]
+}

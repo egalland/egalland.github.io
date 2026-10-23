@@ -3,43 +3,56 @@
   "projects": [
     {
       "day": 1,
-      "path": "pomme",
+      "path": "one-more-thing",
       "repository": "egalland/one-more-thing",
       "sourceCommit": "56bad2d8b41cd2a8534032c2fe721509572afcc3",
       "title": "One More Thing",
-      "description": "Un jeu incrémental autour de l’histoire d’Apple : recherches, produits, améliorations et prestige."
+      "description": "Un jeu incrémental autour de l’histoire d’Apple : recherches, produits, améliorations et prestige.",
+      "hosting": "github-pages"
+    },
+    {
+      "day": 2,
+      "title": "Le Reliquaire",
+      "repository": "egalland/le-reliquaire",
+      "hosting": "server",
+      "hostedUrl": "https://inktober-2026.emmanuel-galland117.chatgpt.site/reliquaire/",
+      "hostingReason": "Équipes, autorisations, GPS et données partagées du jeu."
     },
     {
       "day": 3,
-      "path": "miniature",
+      "path": "micro-habitudes",
       "repository": "egalland/micro-habitudes",
       "sourceCommit": "20a497d68726e12665b16b671abb5913612689c6",
       "title": "Micro · Habitudes",
-      "description": "Un journal de petites actions avec grilles annuelles, séries et exports. Sauvegarde dans ce navigateur ; import JSON disponible."
+      "description": "Un journal de petites actions avec grilles annuelles, séries et exports. Sauvegarde dans ce navigateur ; import JSON disponible.",
+      "hosting": "github-pages"
     },
     {
       "day": 4,
-      "path": "cactus",
+      "path": "cactocalypse",
       "repository": "egalland/cactocalypse",
       "sourceCommit": "7ae6a05a2682a4cf1dd839e11daa0609803cc46b",
       "title": "Cactocalypse",
-      "description": "Un jeu de survie 2D : mutations de cactus, monstres, objets et terrains variés."
+      "description": "Un jeu de survie 2D : mutations de cactus, monstres, objets et terrains variés.",
+      "hosting": "github-pages"
     },
     {
       "day": 5,
-      "path": "claque",
+      "path": "ghost-slap",
       "repository": "egalland/ghost-slap",
       "sourceCommit": "6244ef28eeb2cabda1861bb71c151f448678094e",
       "title": "Ghost Slap",
-      "description": "Une chasse aux fantômes de 45 secondes, au toucher ou avec la caméra et la détection des gestes."
+      "description": "Une chasse aux fantômes de 45 secondes, au toucher ou avec la caméra et la détection des gestes.",
+      "hosting": "github-pages"
     },
     {
       "day": 6,
-      "path": "ogre",
+      "path": "le-garde-du-pont",
       "repository": "egalland/le-garde-du-pont",
       "sourceCommit": "df1be91ef537e1640eae72ca9705eb9741936d90",
       "title": "Le garde du pont",
-      "description": "Négociez avec l’ogre Bröm pour traverser son pont ; cinq fins et sauvegarde de la progression."
+      "description": "Négociez avec l’ogre Bröm pour traverser son pont ; cinq fins et sauvegarde de la progression.",
+      "hosting": "github-pages"
     },
     {
       "day": 7,
@@ -47,23 +60,33 @@
       "repository": "egalland/panique",
       "sourceCommit": "90d129ec19c3ff16e198147fec7ead7b8c0d9617",
       "title": "Panique",
-      "description": "Un bouton rouge déclenche des scénarios et des effets de panique fictifs."
+      "description": "Un bouton rouge déclenche des scénarios et des effets de panique fictifs.",
+      "hosting": "github-pages"
     },
     {
       "day": 8,
-      "path": "compost",
+      "path": "carnet-du-compost",
       "repository": "egalland/carnet-du-compost",
       "sourceCommit": "d7912bbd1dc1cd722f312a82b74e74b9884fa715",
       "title": "Carnet du compost",
-      "description": "Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles."
+      "description": "Un journal des apports au compost, avec observations, contrôles datés et sauvegarde dans ce navigateur. Export et import JSON disponibles.",
+      "hosting": "github-pages"
+    },
+    {
+      "day": 9,
+      "title": "ASTRE BRUT",
+      "repository": "egalland/astre-brut",
+      "path": "astre-brut",
+      "hosting": "github-pages"
     },
     {
       "day": 10,
-      "path": "mystique",
+      "path": "archives-du-voile",
       "repository": "egalland/archives-du-voile",
       "sourceCommit": "491873bbf792305ac67946796568b258dcfbb121",
       "title": "Archives du Voile",
-      "description": "Un bestiaire immersif de Lovecraft : 30 dossiers illustrés, reliques, glyphes animés, ambiances sonores et notes de lecture."
+      "description": "Un bestiaire immersif de Lovecraft : 30 dossiers illustrés, reliques, glyphes animés, ambiances sonores et notes de lecture.",
+      "hosting": "github-pages"
     },
     {
       "day": 12,
@@ -71,7 +94,16 @@
       "repository": "egalland/la-fronde-de-cthulhu",
       "sourceCommit": "07e2865f9cafa3d4f952ca3d9f6eee854775c0b6",
       "title": "La fronde de Cthulhu",
-      "description": "Jeu de fronde Lovecraftien : sprites animés, ricochets, structures destructibles et cinq missions. Jouable à la souris sur PC et au doigt sur mobile."
+      "description": "Jeu de fronde Lovecraftien : sprites animés, ricochets, structures destructibles et cinq missions. Jouable à la souris sur PC et au doigt sur mobile.",
+      "hosting": "github-pages"
+    },
+    {
+      "day": 13,
+      "title": "Priorités fragiles",
+      "repository": "egalland/priorites-fragiles",
+      "path": "priorites-fragiles",
+      "hosting": "github-pages",
+      "sourceCommit": "e074708d8b7ad78607d4dcff939e9d1d846816c4"
     },
     {
       "day": 14,
@@ -80,7 +112,16 @@
       "sourceCommit": "236769199601e19f16763b90dbb5cc6262f1ddb4",
       "title": "Dames de porcelaine",
       "description": "Dames roguelite : campagne IA, pouvoirs, atelier de mémoire et salons par code. Lancement de la version serveur hébergée.",
-      "hostedUrl": "https://dames-de-porcelaine.emmanuel-galland117.chatgpt.site"
+      "hosting": "server",
+      "hostedUrl": "https://dames-de-porcelaine.emmanuel-galland117.chatgpt.site",
+      "hostingReason": "Salons à code et synchronisation de la version serveur."
+    },
+    {
+      "day": 15,
+      "title": "Petites victoires",
+      "repository": "egalland/petites-victoires",
+      "path": "petites-victoires",
+      "hosting": "github-pages"
     },
     {
       "day": 16,
@@ -88,7 +129,8 @@
       "repository": "egalland/pas-maladroits",
       "sourceCommit": "2da2af3125001a15eb69b9c3be9dbc27e5858100",
       "title": "Pas maladroits",
-      "description": "Un jeu de coordination aux longues jambes : trois parcours, alternance des pieds, amplitude réglable et sauvegarde locale de la partie et des records."
+      "description": "Un jeu de coordination aux longues jambes : trois parcours, alternance des pieds, amplitude réglable et sauvegarde locale de la partie et des records.",
+      "hosting": "github-pages"
     },
     {
       "day": 19,
@@ -96,7 +138,16 @@
       "repository": "egalland/labyrinthe-mouvant",
       "sourceCommit": "358b8502cdb0aa172b9262ef8a6aade9d7d65cd4",
       "title": "Labyrinthe mouvant",
-      "description": "Un puzzle de cinq labyrinthes : trois fragments à collecter, portes alternantes à chaque pas, indices expliqués et sauvegarde locale."
+      "description": "Un puzzle de cinq labyrinthes : trois fragments à collecter, portes alternantes à chaque pas, indices expliqués et sauvegarde locale.",
+      "hosting": "github-pages"
+    },
+    {
+      "day": 21,
+      "title": "Atelier Héros",
+      "repository": "egalland/atelier-heros",
+      "path": "atelier-heros",
+      "hosting": "github-pages",
+      "sourceCommit": "f642e6e8172b37e527734a3b8dedca2de9a40e1c"
     },
     {
       "day": 22,
@@ -105,7 +156,8 @@
       "sourcePath": "phare",
       "sourceSiteCommit": "29c31fc0170189d6d83ac4eb5fe7c6cc1aa9d770",
       "title": "Innsmouth — Le port oublié",
-      "description": "Un port lovecraftien en HD : phare pilotable à la souris ou au doigt, lettres gothiques lumineuses, vagues et reflets animés, lumières des habitations et cadrage mobile dédié."
+      "description": "Un port lovecraftien en HD : phare pilotable à la souris ou au doigt, lettres gothiques lumineuses, vagues et reflets animés, lumières des habitations et cadrage mobile dédié.",
+      "hosting": "github-pages"
     }
   ]
 }

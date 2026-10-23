@@ -26,9 +26,9 @@ Les tests vérifient l’ouverture automatique aux limites de date parisiennes, 
 
 ## Projets intégrés
 
-Les six projets des jours 1, 3, 4, 5, 6 et 7 sont publiés directement sous `/pomme/`, `/miniature/`, `/cactus/`, `/claque/`, `/ogre/` et `/panique/`. Les liens « Ouvrir l’app » et « Voir le code » sont publics dans les cases et leurs fenêtres. `projects.json` précise le dépôt et le commit source de chaque version. Les apps sont des copies statiques ; leurs dépôts gardent leurs sources et leur historique. Les futures mises à jour doivent être construites et recopiées ici avant publication.
+Les six projets des jours 1, 3, 4, 5, 6 et 7 sont publiés directement sous `/one-more-thing/`, `/micro-habitudes/`, `/cactocalypse/`, `/ghost-slap/`, `/le-garde-du-pont/` et `/panique/`. Les liens « Ouvrir l’app » et « Voir le code » sont publics dans les cases et leurs fenêtres. `projects.json` précise le dépôt et le commit source de chaque version. Les apps sont des copies statiques ; leurs dépôts gardent leurs sources et leur historique. Les futures mises à jour doivent être construites et recopiées ici avant publication.
 
-Micro · Habitudes utilise sa version Pages avec stockage local vérifié, export/import JSON et aucun serveur. Une sauvegarde Sites existante peut être exportée puis importée ; elle n’est pas copiée automatiquement. Les temps des six apps sont des estimations ajoutées le 8 octobre ; les durées inconnues des autres cases restent vides. Les dossiers `/redim/` et `/livre/` sont conservés sans modification.
+Micro · Habitudes utilise sa version Pages avec stockage local vérifié, export/import JSON et aucun serveur. Une sauvegarde Sites existante peut être exportée puis importée ; elle n’est pas copiée automatiquement. Les temps des six apps sont des estimations ajoutées le 8 octobre ; les compléments du 23 octobre et leurs sources sont détaillés plus bas. Les dossiers `/redim/` et `/livre/` sont conservés sans modification.
 
 ## Durées et coûts
 
@@ -62,4 +62,21 @@ Reliquaire : valeur centrale de 120 h pour une réalisation manuelle du même p�
 
 Compost : valeur centrale de 12 h, fourchette de 8–16 h, pour le journal CRUD, contrôles datés et cas limites, sauvegarde locale vérifiée, import/export, adaptation mobile, accessibilité, build autonome et tests du carnet. La version serveur optionnelle ne fait pas partie de la publication Pages.
 
-Total des valeurs affichées : 19 h 41 en Vibe Coding, 453 h 30 en dev équivalent ; 688,92 € et 18 140 €. Le total Vibe Coding combine 2 durées de sessions retrouvées et 8 estimations. Les fourchettes développeur restent des scénarios, pas des devis ; création artistique originale, abonnements et hébergement exclus.
+## Revue du 23 octobre 2026
+
+Les quatre statistiques auparavant absentes sont renseignées comme **estimations** dans `calendar.json`. `metrics-sources.json` conserve leur origine, leur périmètre et les limites des horodatages retrouvés. Aucune durée de commit ni fenêtre entre deux messages n’est présentée comme du temps actif. Atelier Héros et Innsmouth ont de nouvelles estimations de confiance faible ; leurs coûts restent indicatifs.
+
+| Projet | Vibe Coding estimé | Dev manuel estimé |
+|---|---:|---:|
+| Pas maladroits | 38 min (ancienne fourchette 30–45 min) | 8 h · 6–10 h |
+| Labyrinthe mouvant | 38 min (ancienne fourchette 30–45 min) | 8 h · 6–10 h |
+| Atelier Héros | 2 h, confiance faible | 40 h · 24–64 h |
+| Innsmouth | 3 h, confiance faible | 32 h · 16–48 h |
+
+Les totaux sont calculés depuis l’ensemble du calendrier et sont contrôlés par les tests. Ils combinent des estimations et des durées de sessions partielles ; ils ne mesurent ni une dépense, ni un gain de productivité, ni un temps actif total.
+
+Atelier Héros et Priorités fragiles sont publiés en statique, sans dépendance au serveur ChatGPT. Le stockage reste local au navigateur et à l’origine : l’export/import JSON est nécessaire pour transférer les données de l’ancienne adresse. Les versions Sites existantes restent disponibles.
+
+Les noms des dossiers correspondent désormais aux dépôts sources. Les anciens noms (`pomme`, `miniature`, etc.) et les numéros des jours publiés sont des redirections conservant les paramètres et l’ancre. `projects.json` répertorie tous les projets publiés et indique leur hébergement. Le Reliquaire, Dames de porcelaine et Kikalmo restent sur leur serveur pour leurs fonctions partagées.
+
+Les historiques des deux dépôts nouvellement intégrés sont conservés comme parents de fusion dans le dépôt Pages, avec leurs commits, dates et auteurs d’origine. Les builds statiques sont copiés dans leurs dossiers nommés ; les dépôts sources restent les références pour les évolutions.

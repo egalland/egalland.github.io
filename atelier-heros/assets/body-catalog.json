@@ -1,0 +1,632 @@
+[
+  {
+    "file": "body-0-0.webp",
+    "neckX": 163.25035161744023,
+    "w": 326,
+    "h": 429,
+    "kind": "bodybuilder",
+    "outfit": "hero",
+    "angle": 0
+  },
+  {
+    "file": "body-0-1.webp",
+    "neckX": 132.39367816091954,
+    "w": 267,
+    "h": 431,
+    "kind": "bodybuilder",
+    "outfit": "hero",
+    "angle": 1
+  },
+  {
+    "file": "body-0-2.webp",
+    "neckX": 65.6895104895105,
+    "w": 140,
+    "h": 431,
+    "kind": "bodybuilder",
+    "outfit": "hero",
+    "angle": 2
+  },
+  {
+    "file": "body-0-3.webp",
+    "neckX": 129.24694708276797,
+    "w": 268,
+    "h": 431,
+    "kind": "bodybuilder",
+    "outfit": "hero",
+    "angle": 3
+  },
+  {
+    "file": "body-0-4.webp",
+    "neckX": 161.75207756232686,
+    "w": 322,
+    "h": 431,
+    "kind": "bodybuilder",
+    "outfit": "hero",
+    "angle": 4
+  },
+  {
+    "file": "body-1-0.webp",
+    "neckX": 175.2218045112782,
+    "w": 350,
+    "h": 428,
+    "kind": "bodybuilder",
+    "outfit": "suit",
+    "angle": 0
+  },
+  {
+    "file": "body-1-1.webp",
+    "neckX": 143.24474660074165,
+    "w": 287,
+    "h": 430,
+    "kind": "bodybuilder",
+    "outfit": "suit",
+    "angle": 1
+  },
+  {
+    "file": "body-1-2.webp",
+    "neckX": 71.70802005012531,
+    "w": 160,
+    "h": 429,
+    "kind": "bodybuilder",
+    "outfit": "suit",
+    "angle": 2
+  },
+  {
+    "file": "body-1-3.webp",
+    "neckX": 137.52094240837695,
+    "w": 287,
+    "h": 429,
+    "kind": "bodybuilder",
+    "outfit": "suit",
+    "angle": 3
+  },
+  {
+    "file": "body-1-4.webp",
+    "neckX": 164.31225806451613,
+    "w": 329,
+    "h": 428,
+    "kind": "bodybuilder",
+    "outfit": "suit",
+    "angle": 4
+  },
+  {
+    "file": "bodies/slim/hero-0.webp",
+    "neckX": 123.0,
+    "w": 241,
+    "h": 481,
+    "kind": "slim",
+    "outfit": "hero",
+    "angle": 0
+  },
+  {
+    "file": "bodies/slim/hero-1.webp",
+    "neckX": 99.0,
+    "w": 192,
+    "h": 482,
+    "kind": "slim",
+    "outfit": "hero",
+    "angle": 1
+  },
+  {
+    "file": "bodies/slim/hero-2.webp",
+    "neckX": 42.0,
+    "w": 111,
+    "h": 481,
+    "kind": "slim",
+    "outfit": "hero",
+    "angle": 2
+  },
+  {
+    "file": "bodies/slim/hero-3.webp",
+    "neckX": 87.0,
+    "w": 183,
+    "h": 482,
+    "kind": "slim",
+    "outfit": "hero",
+    "angle": 3
+  },
+  {
+    "file": "bodies/slim/hero-4.webp",
+    "neckX": 114.5,
+    "w": 227,
+    "h": 481,
+    "kind": "slim",
+    "outfit": "hero",
+    "angle": 4
+  },
+  {
+    "file": "bodies/slim/suit-0.webp",
+    "neckX": 122.0,
+    "w": 239,
+    "h": 491,
+    "kind": "slim",
+    "outfit": "suit",
+    "angle": 0
+  },
+  {
+    "file": "bodies/slim/suit-1.webp",
+    "neckX": 96.0,
+    "w": 190,
+    "h": 494,
+    "kind": "slim",
+    "outfit": "suit",
+    "angle": 1
+  },
+  {
+    "file": "bodies/slim/suit-2.webp",
+    "neckX": 46.0,
+    "w": 117,
+    "h": 493,
+    "kind": "slim",
+    "outfit": "suit",
+    "angle": 2
+  },
+  {
+    "file": "bodies/slim/suit-3.webp",
+    "neckX": 87.0,
+    "w": 185,
+    "h": 492,
+    "kind": "slim",
+    "outfit": "suit",
+    "angle": 3
+  },
+  {
+    "file": "bodies/slim/suit-4.webp",
+    "neckX": 116.0,
+    "w": 232,
+    "h": 492,
+    "kind": "slim",
+    "outfit": "suit",
+    "angle": 4
+  },
+  {
+    "file": "bodies/regular/hero-0.webp",
+    "neckX": 141.0,
+    "w": 280,
+    "h": 461,
+    "kind": "regular",
+    "outfit": "hero",
+    "angle": 0
+  },
+  {
+    "file": "bodies/regular/hero-1.webp",
+    "neckX": 109.0,
+    "w": 226,
+    "h": 465,
+    "kind": "regular",
+    "outfit": "hero",
+    "angle": 1
+  },
+  {
+    "file": "bodies/regular/hero-2.webp",
+    "neckX": 55.0,
+    "w": 125,
+    "h": 465,
+    "kind": "regular",
+    "outfit": "hero",
+    "angle": 2
+  },
+  {
+    "file": "bodies/regular/hero-3.webp",
+    "neckX": 125.0,
+    "w": 236,
+    "h": 461,
+    "kind": "regular",
+    "outfit": "hero",
+    "angle": 3
+  },
+  {
+    "file": "bodies/regular/hero-4.webp",
+    "neckX": 135.0,
+    "w": 272,
+    "h": 460,
+    "kind": "regular",
+    "outfit": "hero",
+    "angle": 4
+  },
+  {
+    "file": "bodies/regular/suit-0.webp",
+    "neckX": 141.0,
+    "w": 279,
+    "h": 478,
+    "kind": "regular",
+    "outfit": "suit",
+    "angle": 0
+  },
+  {
+    "file": "bodies/regular/suit-1.webp",
+    "neckX": 113.5,
+    "w": 233,
+    "h": 479,
+    "kind": "regular",
+    "outfit": "suit",
+    "angle": 1
+  },
+  {
+    "file": "bodies/regular/suit-2.webp",
+    "neckX": 64.0,
+    "w": 136,
+    "h": 480,
+    "kind": "regular",
+    "outfit": "suit",
+    "angle": 2
+  },
+  {
+    "file": "bodies/regular/suit-3.webp",
+    "neckX": 120.0,
+    "w": 238,
+    "h": 478,
+    "kind": "regular",
+    "outfit": "suit",
+    "angle": 3
+  },
+  {
+    "file": "bodies/regular/suit-4.webp",
+    "neckX": 137.0,
+    "w": 273,
+    "h": 475,
+    "kind": "regular",
+    "outfit": "suit",
+    "angle": 4
+  },
+  {
+    "file": "bodies/round/hero-0.webp",
+    "neckX": 164.0,
+    "w": 326,
+    "h": 410,
+    "kind": "round",
+    "outfit": "hero",
+    "angle": 0
+  },
+  {
+    "file": "bodies/round/hero-1.webp",
+    "neckX": 117.0,
+    "w": 265,
+    "h": 414,
+    "kind": "round",
+    "outfit": "hero",
+    "angle": 1
+  },
+  {
+    "file": "bodies/round/hero-2.webp",
+    "neckX": 100.0,
+    "w": 220,
+    "h": 414,
+    "kind": "round",
+    "outfit": "hero",
+    "angle": 2
+  },
+  {
+    "file": "bodies/round/hero-3.webp",
+    "neckX": 149.0,
+    "w": 272,
+    "h": 413,
+    "kind": "round",
+    "outfit": "hero",
+    "angle": 3
+  },
+  {
+    "file": "bodies/round/hero-4.webp",
+    "neckX": 156.0,
+    "w": 312,
+    "h": 412,
+    "kind": "round",
+    "outfit": "hero",
+    "angle": 4
+  },
+  {
+    "file": "bodies/round/suit-0.webp",
+    "neckX": 168.0,
+    "w": 336,
+    "h": 424,
+    "kind": "round",
+    "outfit": "suit",
+    "angle": 0
+  },
+  {
+    "file": "bodies/round/suit-1.webp",
+    "neckX": 117.0,
+    "w": 276,
+    "h": 427,
+    "kind": "round",
+    "outfit": "suit",
+    "angle": 1
+  },
+  {
+    "file": "bodies/round/suit-2.webp",
+    "neckX": 108.0,
+    "w": 235,
+    "h": 430,
+    "kind": "round",
+    "outfit": "suit",
+    "angle": 2
+  },
+  {
+    "file": "bodies/round/suit-3.webp",
+    "neckX": 150.0,
+    "w": 279,
+    "h": 428,
+    "kind": "round",
+    "outfit": "suit",
+    "angle": 3
+  },
+  {
+    "file": "bodies/round/suit-4.webp",
+    "neckX": 157.0,
+    "w": 317,
+    "h": 426,
+    "kind": "round",
+    "outfit": "suit",
+    "angle": 4
+  },
+  {
+    "file": "bodies/athletic/hero-0.webp",
+    "neckX": 151.0,
+    "w": 300,
+    "h": 463,
+    "kind": "athletic",
+    "outfit": "hero",
+    "angle": 0
+  },
+  {
+    "file": "bodies/athletic/hero-1.webp",
+    "neckX": 130.0,
+    "w": 263,
+    "h": 466,
+    "kind": "athletic",
+    "outfit": "hero",
+    "angle": 1
+  },
+  {
+    "file": "bodies/athletic/hero-2.webp",
+    "neckX": 63.0,
+    "w": 122,
+    "h": 466,
+    "kind": "athletic",
+    "outfit": "hero",
+    "angle": 2
+  },
+  {
+    "file": "bodies/athletic/hero-3.webp",
+    "neckX": 112.0,
+    "w": 244,
+    "h": 465,
+    "kind": "athletic",
+    "outfit": "hero",
+    "angle": 3
+  },
+  {
+    "file": "bodies/athletic/hero-4.webp",
+    "neckX": 148.0,
+    "w": 296,
+    "h": 463,
+    "kind": "athletic",
+    "outfit": "hero",
+    "angle": 4
+  },
+  {
+    "file": "bodies/athletic/suit-0.webp",
+    "neckX": 150.0,
+    "w": 301,
+    "h": 457,
+    "kind": "athletic",
+    "outfit": "suit",
+    "angle": 0
+  },
+  {
+    "file": "bodies/athletic/suit-1.webp",
+    "neckX": 131.0,
+    "w": 268,
+    "h": 465,
+    "kind": "athletic",
+    "outfit": "suit",
+    "angle": 1
+  },
+  {
+    "file": "bodies/athletic/suit-2.webp",
+    "neckX": 56.0,
+    "w": 129,
+    "h": 465,
+    "kind": "athletic",
+    "outfit": "suit",
+    "angle": 2
+  },
+  {
+    "file": "bodies/athletic/suit-3.webp",
+    "neckX": 113.0,
+    "w": 244,
+    "h": 462,
+    "kind": "athletic",
+    "outfit": "suit",
+    "angle": 3
+  },
+  {
+    "file": "bodies/athletic/suit-4.webp",
+    "neckX": 147.0,
+    "w": 294,
+    "h": 458,
+    "kind": "athletic",
+    "outfit": "suit",
+    "angle": 4
+  },
+  {
+    "file": "bodies/compact/hero-0.webp",
+    "neckX": 191.0,
+    "w": 381,
+    "h": 393,
+    "kind": "compact",
+    "outfit": "hero",
+    "angle": 0
+  },
+  {
+    "file": "bodies/compact/hero-1.webp",
+    "neckX": 159.0,
+    "w": 310,
+    "h": 397,
+    "kind": "compact",
+    "outfit": "hero",
+    "angle": 1
+  },
+  {
+    "file": "bodies/compact/hero-2.webp",
+    "neckX": 105.0,
+    "w": 206,
+    "h": 398,
+    "kind": "compact",
+    "outfit": "hero",
+    "angle": 2
+  },
+  {
+    "file": "bodies/compact/hero-3.webp",
+    "neckX": 165.0,
+    "w": 331,
+    "h": 393,
+    "kind": "compact",
+    "outfit": "hero",
+    "angle": 3
+  },
+  {
+    "file": "bodies/compact/hero-4.webp",
+    "neckX": 182.0,
+    "w": 362,
+    "h": 391,
+    "kind": "compact",
+    "outfit": "hero",
+    "angle": 4
+  },
+  {
+    "file": "bodies/compact/suit-0.webp",
+    "neckX": 192.0,
+    "w": 386,
+    "h": 394,
+    "kind": "compact",
+    "outfit": "suit",
+    "angle": 0
+  },
+  {
+    "file": "bodies/compact/suit-1.webp",
+    "neckX": 159.0,
+    "w": 313,
+    "h": 399,
+    "kind": "compact",
+    "outfit": "suit",
+    "angle": 1
+  },
+  {
+    "file": "bodies/compact/suit-2.webp",
+    "neckX": 112.0,
+    "w": 215,
+    "h": 400,
+    "kind": "compact",
+    "outfit": "suit",
+    "angle": 2
+  },
+  {
+    "file": "bodies/compact/suit-3.webp",
+    "neckX": 169.0,
+    "w": 337,
+    "h": 394,
+    "kind": "compact",
+    "outfit": "suit",
+    "angle": 3
+  },
+  {
+    "file": "bodies/compact/suit-4.webp",
+    "neckX": 181.0,
+    "w": 362,
+    "h": 395,
+    "kind": "compact",
+    "outfit": "suit",
+    "angle": 4
+  },
+  {
+    "file": "bodies/tall/hero-0.webp",
+    "neckX": 94.0,
+    "w": 190,
+    "h": 475,
+    "kind": "tall",
+    "outfit": "hero",
+    "angle": 0
+  },
+  {
+    "file": "bodies/tall/hero-1.webp",
+    "neckX": 87.0,
+    "w": 161,
+    "h": 476,
+    "kind": "tall",
+    "outfit": "hero",
+    "angle": 1
+  },
+  {
+    "file": "bodies/tall/hero-2.webp",
+    "neckX": 40.0,
+    "w": 90,
+    "h": 475,
+    "kind": "tall",
+    "outfit": "hero",
+    "angle": 2
+  },
+  {
+    "file": "bodies/tall/hero-3.webp",
+    "neckX": 79.0,
+    "w": 165,
+    "h": 476,
+    "kind": "tall",
+    "outfit": "hero",
+    "angle": 3
+  },
+  {
+    "file": "bodies/tall/hero-4.webp",
+    "neckX": 92.0,
+    "w": 189,
+    "h": 474,
+    "kind": "tall",
+    "outfit": "hero",
+    "angle": 4
+  },
+  {
+    "file": "bodies/tall/suit-0.webp",
+    "neckX": 95.0,
+    "w": 190,
+    "h": 510,
+    "kind": "tall",
+    "outfit": "suit",
+    "angle": 0
+  },
+  {
+    "file": "bodies/tall/suit-1.webp",
+    "neckX": 86.0,
+    "w": 163,
+    "h": 512,
+    "kind": "tall",
+    "outfit": "suit",
+    "angle": 1
+  },
+  {
+    "file": "bodies/tall/suit-2.webp",
+    "neckX": 39.0,
+    "w": 104,
+    "h": 508,
+    "kind": "tall",
+    "outfit": "suit",
+    "angle": 2
+  },
+  {
+    "file": "bodies/tall/suit-3.webp",
+    "neckX": 84.0,
+    "w": 173,
+    "h": 508,
+    "kind": "tall",
+    "outfit": "suit",
+    "angle": 3
+  },
+  {
+    "file": "bodies/tall/suit-4.webp",
+    "neckX": 97.0,
+    "w": 196,
+    "h": 506,
+    "kind": "tall",
+    "outfit": "suit",
+    "angle": 4
+  }
+]
