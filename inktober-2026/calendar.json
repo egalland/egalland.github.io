@@ -296,6 +296,23 @@
       "devMaxMinutes": 2880,
       "vibeBasis": "estimated",
       "vibeObservedSeconds": null
+    },
+    {
+      "day": 23,
+      "opened": true,
+      "done": true,
+      "appTitle": "Élégant — Sculptures de données",
+      "note": "Atelier de visualisation 3D en pixels : filaments souples, colonnes isométriques, ruban, radar, anneau et constellation X/Y/Z. Import CSV/TSV, Excel collé, JSON et API HTTPS ; association des colonnes, rotation, zoom, valeurs au survol/toucher/clavier, sauvegarde locale et export PNG. HTML autonome, favicon intégrée et graphique visible dès l’accueil sur PC. Jusqu’à 200 observations. Conception/prompt : 15 min estimées ; réalisation assistée, corrections UX et publication : 75 min estimées ; Vibe Coding : 90 min estimées. Développement manuel équivalent : 32 h estimées (24–48 h). Confiance faible, sans chronométrage du temps actif. Cinq versions source réimportées dans l’ordre sous egalland ; dates et identifiants source documentés dans le dépôt.",
+      "appUrl": "https://egalland.github.io/elegant/",
+      "repoUrl": "https://github.com/egalland/elegant",
+      "promptMinutes": 15,
+      "chatgptMinutes": 75,
+      "vibeMinutes": 90,
+      "vibeBasis": "estimated",
+      "vibeObservedSeconds": null,
+      "devMinutes": 1920,
+      "devMinMinutes": 1440,
+      "devMaxMinutes": 2880
     }
   ],
   "settings": {

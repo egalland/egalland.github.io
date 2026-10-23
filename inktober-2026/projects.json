@@ -158,6 +158,15 @@
       "title": "Innsmouth — Le port oublié",
       "description": "Un port lovecraftien en HD : phare pilotable à la souris ou au doigt, lettres gothiques lumineuses, vagues et reflets animés, lumières des habitations et cadrage mobile dédié.",
       "hosting": "github-pages"
+    },
+    {
+      "day": 23,
+      "path": "elegant",
+      "repository": "egalland/elegant",
+      "sourceCommit": "31c9828d0317ab2c455fcc29a63151372f7b55db",
+      "title": "Élégant — Sculptures de données",
+      "description": "Six représentations 3D en pixels, dont des filaments souples. Import de données, rotation, zoom et export PNG. HTML autonome hébergé directement dans le dossier elegant du site GitHub.",
+      "hosting": "github-pages"
     }
   ]
 }

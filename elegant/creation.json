@@ -1,0 +1,71 @@
+{
+  "title": "Élégant — Sculptures de données",
+  "inktober": {
+    "year": 2026,
+    "day": 23,
+    "prompt": "Élégant",
+    "englishPrompt": "Dapper"
+  },
+  "author": "egalland",
+  "createdOn": "2026-10-23",
+  "repository": "https://github.com/egalland/elegant",
+  "appUrl": "https://egalland.github.io/elegant/",
+  "sourceCommit": "a9c3381695a8118cdf40708a6806798ca732a992",
+  "sourceStages": 5,
+  "format": "HTML autonome",
+  "technologies": [
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "WebGL",
+    "Canvas 2D (repli)"
+  ],
+  "features": [
+    "6 représentations 3D",
+    "particules et filaments souples",
+    "import CSV, TSV, Excel collé, JSON et API HTTPS",
+    "association des colonnes",
+    "rotation et zoom",
+    "valeurs au survol, toucher et clavier",
+    "sauvegarde locale",
+    "export PNG",
+    "vue PC sans défilement pour le graphique",
+    "favicon intégrée"
+  ],
+  "limits": {
+    "maxObservations": 200,
+    "maxImportBytes": 2000000,
+    "negativeIntensity": false,
+    "negativeCoordinates": true
+  },
+  "timing": {
+    "basis": "estimated",
+    "promptMinutes": 15,
+    "chatgptMinutes": 75,
+    "vibeMinutes": 90,
+    "devMinutes": 1920,
+    "devMinMinutes": 1440,
+    "devMaxMinutes": 2880,
+    "confidence": "low",
+    "method": "Estimation rétrospective du cadrage, de la réalisation, des corrections UX et de la publication. Aucun chronométrage du temps actif. Équivalent manuel fondé sur le périmètre livré, pas sur un devis."
+  },
+  "costModel": {
+    "vibeRateEurPerHour": 35,
+    "devRateEurPerHour": 40,
+    "vibeCostEur": 52.5,
+    "devEquivalentCostEur": 1280,
+    "note": "Modèle indicatif du calendrier, pas une dépense ni une facture."
+  },
+  "validation": [
+    "Import multi-colonnes et décimales françaises",
+    "Coordonnées X/Y/Z et lecture des valeurs",
+    "Persistance après actualisation",
+    "Six représentations",
+    "Erreur sur valeur négative",
+    "Export PNG",
+    "Cadrage mobile 390 px",
+    "Vue PC 1366 × 768",
+    "Présence de la favicon"
+  ],
+  "standaloneSha256": "374c0aa9c900e17009d96faf2832bfb48d39e1304a9d80a1a2af4290b600643a"
+}
