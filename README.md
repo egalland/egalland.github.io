@@ -50,4 +50,4 @@ node tests/check-calendar.mjs
 node tests/check-routes.mjs
 ```
 
-Les dépôts sources conservent leur historique ; les deux nouveaux imports statiques préservent également les commits sources par fusion dans ce dépôt.
+Les dépôts sources conservent leur historique. Les archives `source-history/atelier-heros.bundle` et `source-history/priorites-fragiles.bundle` contiennent aussi tous leurs commits, auteurs et dates, récupérables avec `git clone <archive.bundle>`. La publication du contenu Pages passe par un commit d’intégration via la connexion GitHub ; le push Git natif n’était pas authentifié.
