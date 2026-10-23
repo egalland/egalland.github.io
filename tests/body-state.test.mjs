@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {validate,DEFAULT,BODY_TYPES,PRESETS} from '../dist/render.js';
+assert.equal(BODY_TYPES.length,7);
+for(const [silhouette] of BODY_TYPES)assert.equal(validate({...DEFAULT,silhouette}).silhouette,silhouette);
+assert.equal(validate({...DEFAULT,silhouette:'invalid'}).silhouette,'bodybuilder');
+assert.equal(validate({...DEFAULT,version:1,silhouette:undefined,muscle:90,legs:100,size:105}).silhouette,'bodybuilder');
+assert.equal(validate({...DEFAULT,version:1,silhouette:undefined,muscle:10,legs:66,size:70}).silhouette,'compact');
+assert.equal(validate({...DEFAULT,version:1,silhouette:undefined,muscle:10,legs:100,width:70,size:100}).silhouette,'slim');
+assert.equal(validate(PRESETS[1]).silhouette,'compact');
+assert.equal(validate({...DEFAULT,size:999}).size,140);
+assert.equal(validate({...DEFAULT,head:0}).head,75);
+assert.equal(validate({...DEFAULT,version:1}).version,2);
+assert.throws(()=>validate({version:3}));
+console.log('7 silhouettes and legacy-state migration verified');

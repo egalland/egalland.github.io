@@ -1,4 +1,4 @@
-import{render,EMOTES}from'./render.js';
+import{render,EMOTES}from'./render.js?v=2';
 export const canvas=(w,h=Math.round(w*1.25))=>{let c=document.createElement('canvas');c.width=w;c.height=h;return c};
 export const png=c=>new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(Error('Création de l’image impossible.')),'image/png'));
 let previousDownload;
