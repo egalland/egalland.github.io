@@ -1,0 +1,1600 @@
+{
+  "version": 2,
+  "atlas": {
+    "body": [
+      [
+        {
+          "center": {
+            "x": 125.5,
+            "y": 143.5
+          },
+          "bottom": 247,
+          "crop": {
+            "x": 33,
+            "y": 38,
+            "width": 186,
+            "height": 212
+          },
+          "nose": {
+            "x": 127.6,
+            "y": 127.66323529411764
+          },
+          "forehead": 40,
+          "neck": 188,
+          "temple": 173,
+          "brow": {
+            "left": 81,
+            "right": 173,
+            "width": 93
+          },
+          "cheek": {
+            "left": 65,
+            "right": 187,
+            "width": 123
+          },
+          "jaw": {
+            "left": 76,
+            "right": 175,
+            "width": 100
+          },
+          "neckWidth": 46
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 144.5
+          },
+          "bottom": 248,
+          "crop": {
+            "x": 33,
+            "y": 39,
+            "width": 186,
+            "height": 212
+          },
+          "nose": {
+            "x": 128.23667711598745,
+            "y": 127.9858934169279
+          },
+          "forehead": 42,
+          "neck": 192,
+          "temple": 174,
+          "brow": {
+            "left": 79,
+            "right": 174,
+            "width": 96
+          },
+          "cheek": {
+            "left": 65,
+            "right": 187,
+            "width": 123
+          },
+          "jaw": {
+            "left": 76,
+            "right": 177,
+            "width": 102
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 125,
+            "y": 145.5
+          },
+          "bottom": 249,
+          "crop": {
+            "x": 32,
+            "y": 40,
+            "width": 187,
+            "height": 212
+          },
+          "nose": {
+            "x": 127.7155477031802,
+            "y": 128.14487632508835
+          },
+          "forehead": 43,
+          "neck": 191,
+          "temple": 173,
+          "brow": {
+            "left": 78,
+            "right": 173,
+            "width": 96
+          },
+          "cheek": {
+            "left": 64,
+            "right": 187,
+            "width": 124
+          },
+          "jaw": {
+            "left": 74,
+            "right": 177,
+            "width": 104
+          },
+          "neckWidth": 45
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 125.5,
+            "y": 148.5
+          },
+          "bottom": 252,
+          "crop": {
+            "x": 31,
+            "y": 43,
+            "width": 190,
+            "height": 212
+          },
+          "nose": {
+            "x": 127.81771720613288,
+            "y": 127.48722316865417
+          },
+          "forehead": 46,
+          "neck": 194,
+          "temple": 184,
+          "brow": {
+            "left": 68,
+            "right": 184,
+            "width": 117
+          },
+          "cheek": {
+            "left": 63,
+            "right": 188,
+            "width": 126
+          },
+          "jaw": {
+            "left": 68,
+            "right": 184,
+            "width": 117
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 148.5
+          },
+          "bottom": 252,
+          "crop": {
+            "x": 31,
+            "y": 43,
+            "width": 190,
+            "height": 212
+          },
+          "nose": {
+            "x": 128.0093023255814,
+            "y": 127.33488372093024
+          },
+          "forehead": 46,
+          "neck": 197,
+          "temple": 185,
+          "brow": {
+            "left": 67,
+            "right": 185,
+            "width": 119
+          },
+          "cheek": {
+            "left": 63,
+            "right": 189,
+            "width": 127
+          },
+          "jaw": {
+            "left": 67,
+            "right": 185,
+            "width": 119
+          },
+          "neckWidth": 46
+        },
+        {
+          "center": {
+            "x": 124.5,
+            "y": 148.5
+          },
+          "bottom": 252,
+          "crop": {
+            "x": 30,
+            "y": 43,
+            "width": 190,
+            "height": 212
+          },
+          "nose": {
+            "x": 128.90387858347387,
+            "y": 127.36424957841484
+          },
+          "forehead": 46,
+          "neck": 195,
+          "temple": 184,
+          "brow": {
+            "left": 67,
+            "right": 184,
+            "width": 118
+          },
+          "cheek": {
+            "left": 63,
+            "right": 189,
+            "width": 127
+          },
+          "jaw": {
+            "left": 67,
+            "right": 184,
+            "width": 118
+          },
+          "neckWidth": 45
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 126.5,
+            "y": 142
+          },
+          "bottom": 247,
+          "crop": {
+            "x": 43,
+            "y": 35,
+            "width": 168,
+            "height": 215
+          },
+          "nose": {
+            "x": 128.57534246575344,
+            "y": 127.22700587084148
+          },
+          "forehead": 37,
+          "neck": 191,
+          "temple": 166,
+          "brow": {
+            "left": 88,
+            "right": 166,
+            "width": 79
+          },
+          "cheek": {
+            "left": 75,
+            "right": 178,
+            "width": 104
+          },
+          "jaw": {
+            "left": 82,
+            "right": 171,
+            "width": 90
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 126.5,
+            "y": 142.5
+          },
+          "bottom": 247,
+          "crop": {
+            "x": 41,
+            "y": 36,
+            "width": 172,
+            "height": 214
+          },
+          "nose": {
+            "x": 128.84469696969697,
+            "y": 127.51136363636364
+          },
+          "forehead": 38,
+          "neck": 191,
+          "temple": 168,
+          "brow": {
+            "left": 86,
+            "right": 168,
+            "width": 83
+          },
+          "cheek": {
+            "left": 74,
+            "right": 180,
+            "width": 107
+          },
+          "jaw": {
+            "left": 81,
+            "right": 173,
+            "width": 93
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 143
+          },
+          "bottom": 248,
+          "crop": {
+            "x": 41,
+            "y": 36,
+            "width": 170,
+            "height": 215
+          },
+          "nose": {
+            "x": 128.25155925155926,
+            "y": 127.56756756756756
+          },
+          "forehead": 39,
+          "neck": 193,
+          "temple": 167,
+          "brow": {
+            "left": 86,
+            "right": 167,
+            "width": 82
+          },
+          "cheek": {
+            "left": 73,
+            "right": 178,
+            "width": 106
+          },
+          "jaw": {
+            "left": 80,
+            "right": 172,
+            "width": 93
+          },
+          "neckWidth": 45
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 126.5,
+            "y": 139.5
+          },
+          "bottom": 244,
+          "crop": {
+            "x": 37,
+            "y": 33,
+            "width": 180,
+            "height": 214
+          },
+          "nose": {
+            "x": 128.22413793103448,
+            "y": 127.85249042145594
+          },
+          "forehead": 36,
+          "neck": 200,
+          "temple": 168,
+          "brow": {
+            "left": 86,
+            "right": 168,
+            "width": 83
+          },
+          "cheek": {
+            "left": 54,
+            "right": 199,
+            "width": 146
+          },
+          "jaw": {
+            "left": 60,
+            "right": 193,
+            "width": 134
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 126.5,
+            "y": 140.5
+          },
+          "bottom": 245,
+          "crop": {
+            "x": 37,
+            "y": 34,
+            "width": 180,
+            "height": 214
+          },
+          "nose": {
+            "x": 128.35262206148283,
+            "y": 127.55877034358048
+          },
+          "forehead": 36,
+          "neck": 193,
+          "temple": 166,
+          "brow": {
+            "left": 87,
+            "right": 166,
+            "width": 80
+          },
+          "cheek": {
+            "left": 56,
+            "right": 197,
+            "width": 142
+          },
+          "jaw": {
+            "left": 63,
+            "right": 190,
+            "width": 128
+          },
+          "neckWidth": 44
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 139.5
+          },
+          "bottom": 243,
+          "crop": {
+            "x": 36,
+            "y": 34,
+            "width": 180,
+            "height": 212
+          },
+          "nose": {
+            "x": 128.3314606741573,
+            "y": 127.43258426966293
+          },
+          "forehead": 37,
+          "neck": 200,
+          "temple": 166,
+          "brow": {
+            "left": 87,
+            "right": 166,
+            "width": 80
+          },
+          "cheek": {
+            "left": 56,
+            "right": 196,
+            "width": 141
+          },
+          "jaw": {
+            "left": 62,
+            "right": 190,
+            "width": 129
+          },
+          "neckWidth": 45
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 126,
+            "y": 145.5
+          },
+          "bottom": 248,
+          "crop": {
+            "x": 32,
+            "y": 41,
+            "width": 189,
+            "height": 210
+          },
+          "nose": {
+            "x": 128.7573385518591,
+            "y": 127.133072407045
+          },
+          "forehead": 44,
+          "neck": 201,
+          "temple": 174,
+          "brow": {
+            "left": 78,
+            "right": 174,
+            "width": 97
+          },
+          "cheek": {
+            "left": 52,
+            "right": 201,
+            "width": 150
+          },
+          "jaw": {
+            "left": 59,
+            "right": 193,
+            "width": 135
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 145
+          },
+          "bottom": 248,
+          "crop": {
+            "x": 31,
+            "y": 40,
+            "width": 190,
+            "height": 211
+          },
+          "nose": {
+            "x": 128.361328125,
+            "y": 127.107421875
+          },
+          "forehead": 43,
+          "neck": 195,
+          "temple": 173,
+          "brow": {
+            "left": 79,
+            "right": 173,
+            "width": 95
+          },
+          "cheek": {
+            "left": 50,
+            "right": 201,
+            "width": 152
+          },
+          "jaw": {
+            "left": 59,
+            "right": 193,
+            "width": 135
+          },
+          "neckWidth": 44
+        },
+        {
+          "center": {
+            "x": 125,
+            "y": 144.5
+          },
+          "bottom": 247,
+          "crop": {
+            "x": 31,
+            "y": 40,
+            "width": 189,
+            "height": 210
+          },
+          "nose": {
+            "x": 127.93486590038314,
+            "y": 127.97509578544062
+          },
+          "forehead": 43,
+          "neck": 204,
+          "temple": 172,
+          "brow": {
+            "left": 78,
+            "right": 172,
+            "width": 95
+          },
+          "cheek": {
+            "left": 51,
+            "right": 200,
+            "width": 150
+          },
+          "jaw": {
+            "left": 58,
+            "right": 193,
+            "width": 136
+          },
+          "neckWidth": 45
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 125.5,
+            "y": 155
+          },
+          "bottom": 255,
+          "crop": {
+            "x": 29,
+            "y": 53,
+            "width": 194,
+            "height": 203
+          },
+          "nose": {
+            "x": 127.88661202185793,
+            "y": 127.49863387978142
+          },
+          "forehead": 55,
+          "neck": 197,
+          "temple": 186,
+          "brow": {
+            "left": 67,
+            "right": 186,
+            "width": 120
+          },
+          "cheek": {
+            "left": 61,
+            "right": 191,
+            "width": 131
+          },
+          "jaw": {
+            "left": 69,
+            "right": 184,
+            "width": 116
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 126.5,
+            "y": 155
+          },
+          "bottom": 255,
+          "crop": {
+            "x": 29,
+            "y": 53,
+            "width": 196,
+            "height": 203
+          },
+          "nose": {
+            "x": 128.5203488372093,
+            "y": 127.1875
+          },
+          "forehead": 55,
+          "neck": 201,
+          "temple": 187,
+          "brow": {
+            "left": 66,
+            "right": 187,
+            "width": 122
+          },
+          "cheek": {
+            "left": 60,
+            "right": 192,
+            "width": 133
+          },
+          "jaw": {
+            "left": 68,
+            "right": 185,
+            "width": 118
+          },
+          "neckWidth": 45
+        },
+        {
+          "center": {
+            "x": 126,
+            "y": 155
+          },
+          "bottom": 255,
+          "crop": {
+            "x": 29,
+            "y": 53,
+            "width": 195,
+            "height": 203
+          },
+          "nose": {
+            "x": 128.83572567783094,
+            "y": 127.14673046251994
+          },
+          "forehead": 55,
+          "neck": 201,
+          "temple": 186,
+          "brow": {
+            "left": 66,
+            "right": 186,
+            "width": 121
+          },
+          "cheek": {
+            "left": 60,
+            "right": 192,
+            "width": 133
+          },
+          "jaw": {
+            "left": 67,
+            "right": 185,
+            "width": 119
+          },
+          "neckWidth": 45
+        }
+      ]
+    ],
+    "eyes": [
+      [
+        {
+          "center": {
+            "x": 131,
+            "y": 99.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 85,
+            "y": 67,
+            "width": 93,
+            "height": 66
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 129,
+            "y": 99
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 83,
+            "y": 66,
+            "width": 93,
+            "height": 67
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 125,
+            "y": 100
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 80,
+            "y": 68,
+            "width": 91,
+            "height": 65
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 124,
+            "y": 99.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 79,
+            "y": 67,
+            "width": 91,
+            "height": 66
+          },
+          "scale": 1.0158730158730158
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 131.5,
+            "y": 100
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 88,
+            "y": 68,
+            "width": 88,
+            "height": 65
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 130.5,
+            "y": 99
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 87,
+            "y": 66,
+            "width": 88,
+            "height": 67
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 126.5,
+            "y": 100
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 83,
+            "y": 68,
+            "width": 88,
+            "height": 65
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 123.5,
+            "y": 99.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 80,
+            "y": 67,
+            "width": 88,
+            "height": 66
+          },
+          "scale": 1.0158730158730158
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 131.5,
+            "y": 99
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 89,
+            "y": 66,
+            "width": 86,
+            "height": 67
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 129.5,
+            "y": 99.5
+          },
+          "bottom": 129,
+          "crop": {
+            "x": 87,
+            "y": 68,
+            "width": 86,
+            "height": 64
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 126.5,
+            "y": 101.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 85,
+            "y": 71,
+            "width": 84,
+            "height": 62
+          },
+          "scale": 1.0158730158730158
+        },
+        {
+          "center": {
+            "x": 123.5,
+            "y": 99
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 82,
+            "y": 66,
+            "width": 84,
+            "height": 67
+          },
+          "scale": 1.0158730158730158
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 131.5,
+            "y": 97.5
+          },
+          "bottom": 127,
+          "crop": {
+            "x": 85,
+            "y": 66,
+            "width": 94,
+            "height": 64
+          },
+          "scale": 1.032258064516129
+        },
+        {
+          "center": {
+            "x": 130,
+            "y": 97.5
+          },
+          "bottom": 127,
+          "crop": {
+            "x": 84,
+            "y": 66,
+            "width": 93,
+            "height": 64
+          },
+          "scale": 1.032258064516129
+        },
+        {
+          "center": {
+            "x": 127,
+            "y": 99.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 83,
+            "y": 67,
+            "width": 89,
+            "height": 66
+          },
+          "scale": 1.032258064516129
+        },
+        {
+          "center": {
+            "x": 124,
+            "y": 97.5
+          },
+          "bottom": 127,
+          "crop": {
+            "x": 78,
+            "y": 66,
+            "width": 93,
+            "height": 64
+          },
+          "scale": 1.032258064516129
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 130,
+            "y": 85.5
+          },
+          "bottom": 103,
+          "crop": {
+            "x": 101,
+            "y": 66,
+            "width": 59,
+            "height": 40
+          },
+          "scale": 1.7297297297297298
+        },
+        {
+          "center": {
+            "x": 128.5,
+            "y": 85.5
+          },
+          "bottom": 103,
+          "crop": {
+            "x": 100,
+            "y": 66,
+            "width": 58,
+            "height": 40
+          },
+          "scale": 1.7297297297297298
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 85.5
+          },
+          "bottom": 103,
+          "crop": {
+            "x": 97,
+            "y": 66,
+            "width": 58,
+            "height": 40
+          },
+          "scale": 1.7297297297297298
+        },
+        {
+          "center": {
+            "x": 125,
+            "y": 85
+          },
+          "bottom": 103,
+          "crop": {
+            "x": 96,
+            "y": 65,
+            "width": 59,
+            "height": 41
+          },
+          "scale": 1.7297297297297298
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 132,
+            "y": 98.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 84,
+            "y": 65,
+            "width": 97,
+            "height": 68
+          },
+          "scale": 1
+        },
+        {
+          "center": {
+            "x": 129.5,
+            "y": 98
+          },
+          "bottom": 129,
+          "crop": {
+            "x": 83,
+            "y": 65,
+            "width": 94,
+            "height": 67
+          },
+          "scale": 1
+        },
+        {
+          "center": {
+            "x": 126.5,
+            "y": 98.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 80,
+            "y": 65,
+            "width": 94,
+            "height": 68
+          },
+          "scale": 1
+        },
+        {
+          "center": {
+            "x": 123,
+            "y": 98.5
+          },
+          "bottom": 130,
+          "crop": {
+            "x": 75,
+            "y": 65,
+            "width": 97,
+            "height": 68
+          },
+          "scale": 1
+        }
+      ]
+    ],
+    "mouth": [
+      [
+        {
+          "center": {
+            "x": 129.5,
+            "y": 172
+          },
+          "bottom": 190,
+          "crop": {
+            "x": 89,
+            "y": 152,
+            "width": 82,
+            "height": 41
+          }
+        },
+        {
+          "center": {
+            "x": 129,
+            "y": 170.5
+          },
+          "bottom": 190,
+          "crop": {
+            "x": 89,
+            "y": 149,
+            "width": 81,
+            "height": 44
+          }
+        },
+        {
+          "center": {
+            "x": 128,
+            "y": 168.5
+          },
+          "bottom": 193,
+          "crop": {
+            "x": 87,
+            "y": 142,
+            "width": 83,
+            "height": 54
+          }
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 171.5
+          },
+          "bottom": 190,
+          "crop": {
+            "x": 86,
+            "y": 151,
+            "width": 80,
+            "height": 42
+          }
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 128.5,
+            "y": 171.5
+          },
+          "bottom": 188,
+          "crop": {
+            "x": 90,
+            "y": 153,
+            "width": 78,
+            "height": 38
+          }
+        },
+        {
+          "center": {
+            "x": 129,
+            "y": 170
+          },
+          "bottom": 190,
+          "crop": {
+            "x": 91,
+            "y": 148,
+            "width": 77,
+            "height": 45
+          }
+        },
+        {
+          "center": {
+            "x": 127,
+            "y": 168.5
+          },
+          "bottom": 193,
+          "crop": {
+            "x": 89,
+            "y": 142,
+            "width": 77,
+            "height": 54
+          }
+        },
+        {
+          "center": {
+            "x": 125,
+            "y": 171.5
+          },
+          "bottom": 189,
+          "crop": {
+            "x": 88,
+            "y": 152,
+            "width": 75,
+            "height": 40
+          }
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 128.5,
+            "y": 170
+          },
+          "bottom": 185,
+          "crop": {
+            "x": 108,
+            "y": 153,
+            "width": 42,
+            "height": 35
+          }
+        },
+        {
+          "center": {
+            "x": 128,
+            "y": 169.5
+          },
+          "bottom": 186,
+          "crop": {
+            "x": 107,
+            "y": 151,
+            "width": 43,
+            "height": 38
+          }
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 168.5
+          },
+          "bottom": 193,
+          "crop": {
+            "x": 102,
+            "y": 142,
+            "width": 52,
+            "height": 54
+          }
+        },
+        {
+          "center": {
+            "x": 124.5,
+            "y": 170
+          },
+          "bottom": 186,
+          "crop": {
+            "x": 106,
+            "y": 152,
+            "width": 38,
+            "height": 37
+          }
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 129,
+            "y": 170
+          },
+          "bottom": 189,
+          "crop": {
+            "x": 89,
+            "y": 149,
+            "width": 81,
+            "height": 43
+          }
+        },
+        {
+          "center": {
+            "x": 130,
+            "y": 168.5
+          },
+          "bottom": 189,
+          "crop": {
+            "x": 92,
+            "y": 146,
+            "width": 77,
+            "height": 46
+          }
+        },
+        {
+          "center": {
+            "x": 129,
+            "y": 168.5
+          },
+          "bottom": 193,
+          "crop": {
+            "x": 90,
+            "y": 142,
+            "width": 79,
+            "height": 54
+          }
+        },
+        {
+          "center": {
+            "x": 124,
+            "y": 170.5
+          },
+          "bottom": 190,
+          "crop": {
+            "x": 87,
+            "y": 149,
+            "width": 75,
+            "height": 44
+          }
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 129,
+            "y": 170.5
+          },
+          "bottom": 186,
+          "crop": {
+            "x": 95,
+            "y": 153,
+            "width": 69,
+            "height": 36
+          }
+        },
+        {
+          "center": {
+            "x": 129.5,
+            "y": 168.5
+          },
+          "bottom": 187,
+          "crop": {
+            "x": 95,
+            "y": 148,
+            "width": 70,
+            "height": 42
+          }
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 168.5
+          },
+          "bottom": 193,
+          "crop": {
+            "x": 91,
+            "y": 142,
+            "width": 74,
+            "height": 54
+          }
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 170
+          },
+          "bottom": 186,
+          "crop": {
+            "x": 91,
+            "y": 152,
+            "width": 70,
+            "height": 37
+          }
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 128,
+            "y": 170
+          },
+          "bottom": 186,
+          "crop": {
+            "x": 93,
+            "y": 152,
+            "width": 71,
+            "height": 37
+          }
+        },
+        {
+          "center": {
+            "x": 128.5,
+            "y": 166
+          },
+          "bottom": 185,
+          "crop": {
+            "x": 94,
+            "y": 145,
+            "width": 70,
+            "height": 43
+          }
+        },
+        {
+          "center": {
+            "x": 127,
+            "y": 168.5
+          },
+          "bottom": 193,
+          "crop": {
+            "x": 92,
+            "y": 142,
+            "width": 71,
+            "height": 54
+          }
+        },
+        {
+          "center": {
+            "x": 125.5,
+            "y": 168
+          },
+          "bottom": 184,
+          "crop": {
+            "x": 92,
+            "y": 150,
+            "width": 68,
+            "height": 37
+          }
+        }
+      ]
+    ],
+    "parts": [
+      [
+        null,
+        {
+          "center": {
+            "x": 127,
+            "y": 53.5
+          },
+          "bottom": 105,
+          "crop": {
+            "x": 19,
+            "y": 0,
+            "width": 217,
+            "height": 108
+          },
+          "hairline": 60
+        },
+        {
+          "center": {
+            "x": 129,
+            "y": 54.5
+          },
+          "bottom": 107,
+          "crop": {
+            "x": 19,
+            "y": 0,
+            "width": 221,
+            "height": 110
+          },
+          "hairline": 74
+        },
+        {
+          "center": {
+            "x": 128,
+            "y": 54
+          },
+          "bottom": 106,
+          "crop": {
+            "x": 20,
+            "y": 0,
+            "width": 217,
+            "height": 109
+          },
+          "hairline": 59
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 54
+          },
+          "bottom": 107,
+          "crop": {
+            "x": 19,
+            "y": 0,
+            "width": 218,
+            "height": 110
+          },
+          "hairline": 67
+        },
+        {
+          "center": {
+            "x": 126,
+            "y": 55
+          },
+          "bottom": 107,
+          "crop": {
+            "x": 16,
+            "y": 1,
+            "width": 221,
+            "height": 109
+          },
+          "hairline": 61
+        },
+        {
+          "center": {
+            "x": 127,
+            "y": 64.5
+          },
+          "bottom": 127,
+          "crop": {
+            "x": 17,
+            "y": 0,
+            "width": 221,
+            "height": 130
+          },
+          "hairline": 65
+        }
+      ],
+      [
+        null,
+        {
+          "center": {
+            "x": 128.5,
+            "y": 109
+          },
+          "bottom": 139,
+          "crop": {
+            "x": 55,
+            "y": 77,
+            "width": 148,
+            "height": 65
+          }
+        },
+        {
+          "center": {
+            "x": 128.5,
+            "y": 109
+          },
+          "bottom": 137,
+          "crop": {
+            "x": 50,
+            "y": 79,
+            "width": 158,
+            "height": 61
+          }
+        },
+        {
+          "center": {
+            "x": 204,
+            "y": 65.5
+          },
+          "bottom": 88,
+          "crop": {
+            "x": 180,
+            "y": 41,
+            "width": 49,
+            "height": 50
+          }
+        },
+        {
+          "center": {
+            "x": 128,
+            "y": 143
+          },
+          "bottom": 159,
+          "crop": {
+            "x": 82,
+            "y": 125,
+            "width": 93,
+            "height": 37
+          }
+        },
+        {
+          "center": {
+            "x": 128,
+            "y": 145
+          },
+          "bottom": 159,
+          "crop": {
+            "x": 82,
+            "y": 129,
+            "width": 93,
+            "height": 33
+          }
+        },
+        {
+          "center": {
+            "x": 128,
+            "y": 204
+          },
+          "bottom": 239,
+          "crop": {
+            "x": 78,
+            "y": 167,
+            "width": 101,
+            "height": 75
+          }
+        }
+      ],
+      [
+        {
+          "center": {
+            "x": 127.5,
+            "y": 213.5
+          },
+          "bottom": 254,
+          "crop": {
+            "x": 7,
+            "y": 171,
+            "width": 242,
+            "height": 85
+          },
+          "collar": 174
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 213.5
+          },
+          "bottom": 254,
+          "crop": {
+            "x": 7,
+            "y": 171,
+            "width": 242,
+            "height": 85
+          },
+          "collar": 175
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 213.5
+          },
+          "bottom": 254,
+          "crop": {
+            "x": 7,
+            "y": 171,
+            "width": 242,
+            "height": 85
+          },
+          "collar": 174
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 213.5
+          },
+          "bottom": 254,
+          "crop": {
+            "x": 7,
+            "y": 171,
+            "width": 242,
+            "height": 85
+          },
+          "collar": 173
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 213.5
+          },
+          "bottom": 254,
+          "crop": {
+            "x": 7,
+            "y": 171,
+            "width": 242,
+            "height": 85
+          },
+          "collar": 176
+        },
+        {
+          "center": {
+            "x": 127.5,
+            "y": 213.5
+          },
+          "bottom": 254,
+          "crop": {
+            "x": 7,
+            "y": 171,
+            "width": 242,
+            "height": 85
+          },
+          "collar": 176
+        },
+        null
+      ]
+    ]
+  }
+}
