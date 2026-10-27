@@ -313,11 +313,28 @@
       "devMinutes": 1920,
       "devMinMinutes": 1440,
       "devMaxMinutes": 2880
+    },
+    {
+      "day": 25,
+      "opened": true,
+      "done": true,
+      "appTitle": "Fracture — L’atelier des petits éclats",
+      "note": "Atelier d’images en laine : import local, fractures irrégulières, rubans, relief sculpté, accordéon, portail, ondes et constellation. Vues 2D/3D, rotation, souris et clavier, pelote animée et exports PNG/JPEG. Vibe Coding estimé : 60 min, sans chronométrage du travail actif. Développement manuel équivalent estimé : 32 h (24–48 h), illustrations générées exclues. Trois versions de réalisation republiées sous egalland.",
+      "appUrl": "https://egalland.github.io/fracture/",
+      "repoUrl": "https://github.com/egalland/fracture",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": 60,
+      "vibeBasis": "estimated",
+      "vibeObservedSeconds": null,
+      "devMinutes": 1920,
+      "devMinMinutes": 1440,
+      "devMaxMinutes": 2880
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-23"
+  "updatedAt": "2026-10-27"
 }
