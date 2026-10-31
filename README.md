@@ -8,6 +8,7 @@ Le [calendrier Inktober 2026](https://egalland.github.io/) donne accès aux appl
 - Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
 - Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.
 - `arrival/` : introduction du calendrier ; `tests/` : contrôles du calendrier et des routes.
+- `elec/` : configurateur pédagogique de tableau électrique en 3D ([démo](https://egalland.github.io/elec/), [sources et historique](https://github.com/egalland/elec)).
 - `redim/` et `livre/` : outils autonomes ; `kikalmo/` : accès au jeu multijoueur hébergé ; `sans-voyelles/` : ancienne adresse conservée.
 
 ## Applications
