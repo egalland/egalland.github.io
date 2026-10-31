@@ -133,6 +133,16 @@
       "hosting": "github-pages"
     },
     {
+      "day": 17,
+      "path": "engin-dispano",
+      "repository": "egalland/engin-dispano",
+      "sourceCommit": "7722ca77b43c30beb892c5f90147390563d62738",
+      "title": "ENGIN — Dispano Tycoon",
+      "description": "Simulation isométrique de négoce bois : stocks, racks, commandes, équipes, expansion et incidents Atlas fictifs ; circulation animée des engins et des personnes.",
+      "hosting": "github-pages",
+      "hostedUrl": "https://egalland.github.io/engin-dispano/"
+    },
+    {
       "day": 19,
       "path": "labyrinthe-mouvant",
       "repository": "egalland/labyrinthe-mouvant",

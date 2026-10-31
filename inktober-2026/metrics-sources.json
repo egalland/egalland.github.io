@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedAt": "2026-10-23",
+  "reviewedAt": "2026-10-31",
   "method": "Estimations explicites, aucune mesure de temps actif. Les coûts valorisent les minutes affichées ; ils ne sont pas des dépenses réelles.",
   "projects": [
     {
@@ -14,6 +14,42 @@
         10
       ],
       "scope": "Jeu de coordination, trois parcours, réglages, sauvegarde locale, adaptation mobile."
+    },
+    {
+      "day": 17,
+      "vibeMinutes": 35,
+      "basis": "estimated",
+      "evidence": "Estimation éditoriale de 35 min fondée sur les quatre étapes visibles du fil : création jouable, ajout des animations, transfert GitHub/Pages, puis intégration des statistiques. Aucun suivi du temps actif ni horodatage complet des tours ; les pauses entre demandes et les écarts entre commits sont exclus de toute mesure. Les commits source du 31 octobre à 12:17:58Z et 14:42:01Z attestent deux versions, pas une durée de travail. Confiance faible.",
+      "developerHours": 64,
+      "developerRangeHours": [
+        48,
+        96
+      ],
+      "developerBreakdownHours": {
+        "simulationEconomiqueEtCommandes": 18,
+        "stocksEquipesEtMultiagences": 14,
+        "sceneIsometriqueEtAnimations": 16,
+        "interfaceSauvegardesEtResponsive": 10,
+        "verificationEtPublication": 6
+      },
+      "scope": "Prototype local publié : moteur de commandes, stock réservé, approvisionnement, capacité partagée des racks, 7 métiers, automatisation, 4 incidents Atlas fictifs et support, 53 noms d’agences publics, transferts, finances, rendu Canvas isométrique, navigation des acteurs évitant les racks, sauvegarde/import/export, tests et GitHub Pages. Sans backend, comptes, synchronisation, données tarifaires internes ni plans réels.",
+      "sourceRepository": "https://github.com/egalland/engin-dispano",
+      "publishedCommit": "7722ca77b43c30beb892c5f90147390563d62738",
+      "originalSourceCommits": [
+        "0f4ab524908b2f92632e7d4b0234e71902654da4",
+        "ffc0466c9d2fe9056fca39961b5d58f7af9f87bf"
+      ],
+      "valuation": {
+        "vibeRateEurPerHour": 35,
+        "developerRateEurPerHour": 40,
+        "vibeCostEur": 20.42,
+        "developerCostEur": 2560,
+        "developerRangeCostEur": [
+          1920,
+          3840
+        ]
+      },
+      "limits": "Valorisation de durées estimées, pas dépenses réellement payées ni gain démontré. Ne pas déduire le temps de développement du nombre de lignes compactées ou des écarts entre commits."
     },
     {
       "day": 19,

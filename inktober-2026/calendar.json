@@ -247,6 +247,23 @@
       "vibeObservedSeconds": null
     },
     {
+      "day": 17,
+      "opened": true,
+      "done": true,
+      "appTitle": "ENGIN — Dispano Tycoon",
+      "note": "Simulation de négoce bois en 2D isométrique : 53 implantations Dispano référencées, stocks physiques et réservés, racks, achats fournisseurs, commandes, livraisons, transferts, sept métiers et délégation par tâche. Chariots, agents, clients et camions animés ; incidents Atlas fictifs et support mutualisé. Sauvegarde locale et import/export JSON. Prix, budgets et surfaces non documentées sont des hypothèses de jeu. Vibe Coding estimé : 35 min, création, animations, vérifications et publication comprises, sans chronométrage du travail actif. Développement manuel équivalent estimé : 64 h (48–96 h) pour ce prototype local ; confiance faible.",
+      "appUrl": "https://egalland.github.io/engin-dispano/",
+      "repoUrl": "https://github.com/egalland/engin-dispano",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": 35,
+      "vibeBasis": "estimated",
+      "vibeObservedSeconds": null,
+      "devMinutes": 3840,
+      "devMinMinutes": 2880,
+      "devMaxMinutes": 5760
+    },
+    {
       "day": 19,
       "opened": true,
       "done": true,
@@ -336,5 +353,5 @@
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-27"
+  "updatedAt": "2026-10-31"
 }

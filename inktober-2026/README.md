@@ -80,3 +80,9 @@ Atelier Héros et Priorités fragiles sont publiés en statique, sans dépendanc
 Les noms des dossiers correspondent désormais aux dépôts sources. Les anciens noms (`pomme`, `miniature`, etc.) et les numéros des jours publiés sont des redirections conservant les paramètres et l’ancre. `projects.json` répertorie tous les projets publiés et indique leur hébergement. Le Reliquaire, Dames de porcelaine et Kikalmo restent sur leur serveur pour leurs fonctions partagées.
 
 Les historiques complets des deux dépôts nouvellement intégrés sont conservés dans `source-history/*.bundle`, avec leurs commits, dates et auteurs d’origine. Le contenu Pages est publié par un commit d’intégration via la connexion GitHub, car le push Git natif n’est pas authentifié dans cet environnement. Les archives permettent de retrouver exactement les graphes sources ; elles ne sont pas une reconstruction de commits. Les builds statiques sont copiés dans leurs dossiers nommés ; les dépôts sources restent les références pour les évolutions.
+
+## Jour 17 · ENGIN — Dispano Tycoon (31 octobre 2026)
+
+Le jour 17 est renseigné dans le calendrier et les totaux : 35 min de Vibe Coding estimées (valorisation 20,42 € à 35 €/h), 64 h de développement manuel équivalent estimées (48–96 h ; valorisation centrale 2 560 € à 40 €/h). Ces chiffres ne sont pas des mesures de temps actif ni des dépenses réelles. La provenance et le périmètre sont détaillés dans `metrics-sources.json`.
+
+Le jeu et son code complet sont hébergés par le dépôt public `egalland/engin-dispano`, avec GitHub Pages à `/engin-dispano/`. La route `/17/` redirige vers le jeu. Les deux versions de développement sont reprises séparément sur GitHub et l’historique original exact est conservé dans le bundle du dépôt source.
