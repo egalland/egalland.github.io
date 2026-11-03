@@ -177,6 +177,16 @@
       "title": "Élégant — Sculptures de données",
       "description": "Six représentations 3D en pixels, dont des filaments souples. Import de données, rotation, zoom et export PNG. HTML autonome hébergé directement dans le dossier elegant du site GitHub.",
       "hosting": "github-pages"
+    },
+    {
+      "day": 30,
+      "path": "biscuit-du-jour",
+      "repository": "egalland/egalland.github.io",
+      "title": "Biscuit du jour",
+      "description": "Biscuit surprise interactif, style cartoon années 1920–1930 / tatouage traditionnel, mots personnalisables, tirage et sauvegarde locale.",
+      "hosting": "github-pages",
+      "hostingPath": "biscuit-du-jour",
+      "history": "Deux instantanés V1/V2 retrouvés, historique Git initial absent. Publication dans le dépôt principal."
     }
   ]
 }
