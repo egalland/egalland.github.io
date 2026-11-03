@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedAt": "2026-10-31",
+  "reviewedAt": "2026-11-03",
   "method": "Estimations explicites, aucune mesure de temps actif. Les coûts valorisent les minutes affichées ; ils ne sont pas des dépenses réelles.",
   "projects": [
     {
@@ -86,6 +86,51 @@
         48
       ],
       "scope": "Phare interactif, lettres lumineuses, animations du port et reflets, souris/tactile/clavier, options, repli 2D, adaptation mobile. Illustration HD fournie ; sa création artistique originale exclue."
+    },
+    {
+      "day": 30,
+      "vibeMinutes": 90,
+      "basis": "estimated",
+      "evidence": "Estimation éditoriale de 90 min pour les étapes de cette conversation (V1 TypeScript, retouche graphique V2, correctif de chargement, essais, publication). Aucun suivi continu de l'activité ni horodatage de session; ne constitue pas une durée mesurée. Confiance faible.",
+      "developerHours": 24,
+      "developerRangeHours": [
+        16,
+        36
+      ],
+      "scope": "Interface et dessin SVG vectoriel flash tattoo, animations du biscuit, gestion de 12 billets initiaux et messages personnels, tirage sans répétition, import/export JSON, sauvegarde localStorage et erreurs, responsive, accessibilité, tests et déploiement. Hors production d'illustrations raster, serveur, comptes et synchronisation.",
+      "sourceRepository": "https://github.com/egalland/egalland.github.io/tree/master/biscuit-du-jour",
+      "sourceSnapshots": [
+        "V1 autonome",
+        "V2 autonome"
+      ],
+      "publishedCommit": "94f4f5e16094f643621d4e11e493c0b0a5237af4",
+      "sourceHistoryNote": "Deux livraisons disponibles, pas de dépôt Git de travail original. Commits archivés lors de la publication, dates d'origine non inventées.",
+      "sourceLines": {
+        "typescript": 464,
+        "html": 216,
+        "cssMinified": 46,
+        "tests": 141,
+        "build": 20,
+        "server": 15,
+        "total": 902
+      },
+      "tests": {
+        "nodePassed": 5,
+        "nodeTotal": 5,
+        "typecheckPassed": true,
+        "buildPassed": true
+      },
+      "valuation": {
+        "vibeRateEurPerHour": 35,
+        "developerRateEurPerHour": 40,
+        "vibeCostEur": 52.5,
+        "developerCostEur": 960,
+        "developerRangeCostEur": [
+          640,
+          1440
+        ]
+      },
+      "limits": "Estimations non chronométrées, lignes de CSS minifiées comptées physiquement, absence de benchmark de productivité et de transfert des SHA Git originaux."
     }
   ]
 }
