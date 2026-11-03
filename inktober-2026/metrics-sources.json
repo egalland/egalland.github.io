@@ -88,6 +88,35 @@
       "scope": "Phare interactif, lettres lumineuses, animations du port et reflets, souris/tactile/clavier, options, repli 2D, adaptation mobile. Illustration HD fournie ; sa création artistique originale exclue."
     },
     {
+      "day": 24,
+      "vibeMinutes": 25,
+      "basis": "estimated",
+      "evidence": "Nouvelle estimation éditoriale de 25 min fondée sur le périmètre et les étapes visibles : création, animations, vérifications, publication GitHub et statistiques. Temps actif non chronométré, confiance faible. Les écarts entre commits ne sont pas une mesure de travail.",
+      "developerHours": 8,
+      "developerRangeHours": [
+        6,
+        10
+      ],
+      "scope": "Minuteurs indépendants, échéances absolues, pause/reprise, sauvegarde locale, validation, alerte sonore activable, proportions avec arrondis, interface responsive, animations CSS et réduction de mouvement, publication statique.",
+      "sourceRepository": "https://github.com/egalland/four-en-route",
+      "publishedCommit": "8809b0ff8ca824720854cac641e8f1e122542c3d",
+      "originalSourceCommits": [
+        "4737ec913c0e09bcac9738d25b90abd4c0b9118c",
+        "c734ae6f5c05f3dd0633288e6c961ae44c73b657"
+      ],
+      "valuation": {
+        "vibeRateEurPerHour": 35,
+        "developerRateEurPerHour": 40,
+        "vibeCostEur": 14.58,
+        "developerCostEur": 320,
+        "developerRangeCostEur": [
+          240,
+          400
+        ]
+      },
+      "limits": "Estimations et valorisations aux tarifs fixes du calendrier, non dépenses réelles. La page stats de l'app donne une autre hypothèse tarifaire explicitée (50–70 €/h). Aucune synchronisation entre appareils ni alerte garantie page fermée."
+    },
+    {
       "day": 30,
       "vibeMinutes": 90,
       "basis": "estimated",

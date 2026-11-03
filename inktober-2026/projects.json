@@ -179,6 +179,16 @@
       "hosting": "github-pages"
     },
     {
+      "day": 24,
+      "path": "four-en-route",
+      "repository": "egalland/four-en-route",
+      "sourceCommit": "8809b0ff8ca824720854cac641e8f1e122542c3d",
+      "title": "Four en route",
+      "description": "Minuteurs de cuisson indépendants, sauvegarde locale, cuisine animée et proportions.",
+      "hosting": "github-pages",
+      "hostedUrl": "https://egalland.github.io/four-en-route/"
+    },
+    {
       "day": 30,
       "path": "biscuit-du-jour",
       "repository": "egalland/egalland.github.io",

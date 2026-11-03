@@ -332,6 +332,23 @@
       "devMaxMinutes": 2880
     },
     {
+      "day": 24,
+      "opened": true,
+      "done": true,
+      "appTitle": "Four en route",
+      "note": "Tableau de minuteurs de cuisson nommés et indépendants : pause, reprise, +1 minute, réinitialisation, alerte sonore activable et sauvegarde locale restaurée après actualisation. Cuisine animée, vapeur, progression circulaire, mouvement réduit et calculateur de proportions. Statistiques : https://egalland.github.io/four-en-route/stats.html. Vibe Coding nouvellement estimé : 25 min, confiance faible, sans chronométrage du travail actif ; équivalent développeur estimé : 8 h (6–10 h).",
+      "appUrl": "https://egalland.github.io/four-en-route/",
+      "repoUrl": "https://github.com/egalland/four-en-route",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "vibeMinutes": 25,
+      "vibeBasis": "estimated",
+      "vibeObservedSeconds": null,
+      "devMinutes": 480,
+      "devMinMinutes": 360,
+      "devMaxMinutes": 600
+    },
+    {
       "day": 25,
       "opened": true,
       "done": true,
