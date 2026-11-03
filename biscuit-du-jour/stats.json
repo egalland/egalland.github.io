@@ -1,0 +1,46 @@
+{
+  "project": "Biscuit du jour",
+  "inktoberDay": 30,
+  "sourceSnapshots": 2,
+  "sourceFiles": 6,
+  "sourcePhysicalLines": 902,
+  "linesDetail": {
+    "typescript": 464,
+    "html": 216,
+    "cssMinified": 46,
+    "tests": 141,
+    "buildScript": 20,
+    "serverScript": 15
+  },
+  "sourceMethod": "Lignes physiques des 6 fichiers source V2. Exclut les doublons générés du dossier site, la version HTML autonome et le README.",
+  "vibeCoding": {
+    "minutes": 90,
+    "basis": "estimated_not_measured",
+    "confidence": "low",
+    "eurPerHour": 35,
+    "costEur": 52.5
+  },
+  "manualDevelopmentEquivalent": {
+    "hours": 24,
+    "rangeHours": [
+      16,
+      36
+    ],
+    "eurPerHour": 40,
+    "costEur": 960,
+    "rangeCostEur": [
+      640,
+      1440
+    ]
+  },
+  "tests": {
+    "node": 5,
+    "passed": 5,
+    "typescriptBuild": true,
+    "typecheck": true
+  },
+  "site": "https://egalland.github.io/biscuit-du-jour/",
+  "repository": "https://github.com/egalland/egalland.github.io/tree/master/biscuit-du-jour",
+  "historyNote": "Snapshots V1/V2 republiés le 3 novembre 2026; absence de dépôt Git d'origine.",
+  "dataUpdatedAt": "2026-11-03"
+}
