@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#f5edd7" />
+  <meta name="description" content="Un biscuit surprise à ouvrir, rempli de petits mots. Composez votre boîte à messages et tirez un billet au hasard." />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+  <title>Biscuit du jour — La fabrique des sourires</title>
+  <script type="module" src="./main.js"></script>
+</head>
+<body>
+  <div class="page-film" aria-hidden="true"></div>
+  <header class="site-header" id="accueil">
+    <a class="brand" href="#accueil" aria-label="Biscuit du jour, accueil">
+      <span class="brand-illustration" aria-hidden="true">✳</span>
+      <span>LA FABRIQUE <strong>DES SOURIRES</strong></span>
+    </a>
+    <div class="header-side">
+      <span class="issue-stamp">N° 001 <span>•</span> ÉDITION BONHEUR</span>
+      <button type="button" class="button-outline header-manage" id="openManager">
+        <span aria-hidden="true">✎</span> Ma boîte <span id="headerCount" class="button-count">12</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="ornament-line" aria-hidden="true"><span>✳</span><i></i><span>✦</span><i></i><span>✳</span></div>
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="hero-eyebrow"><span class="eyebrow-stars" aria-hidden="true">✦</span> UNE SURPRISE À CROQUER <span class="eyebrow-stars" aria-hidden="true">✦</span></div>
+      <h1 id="pageTitle"><span>Biscuit</span> <em>du jour</em><span class="h1-spark" aria-hidden="true">✳</span></h1>
+      <p>Des petits mots, un soupçon de hasard <span aria-hidden="true">&amp;</span> beaucoup de bonne humeur.</p>
+      <div class="header-ribbon" aria-hidden="true"><span>OUVREZ • SOURIEZ • RECOMMENCEZ</span></div>
+    </section>
+
+    <div id="storageAlert" class="alert-banner" role="alert" hidden>
+      <strong>La sauvegarde locale est indisponible.</strong>
+      <span id="storageAlertText">Vos modifications peuvent disparaître après actualisation.</span>
+    </div>
+
+    <div class="play-grid">
+      <section class="play-card" aria-labelledby="cookieTitle">
+        <div class="panel-kicker"><span>01</span> LE COMPTOIR DES BISCUITS <span class="kicker-end">✳ ✳ ✳</span></div>
+        <h2 id="cookieTitle" class="sr-only">Ouvrir un biscuit</h2>
+        <div class="cookie-theatre" id="cookieTheatre">
+          <div class="theatre-sign top-sign" aria-hidden="true">LE BISCUIT EXTRA-CHANCEUX</div>
+          <div class="theatre-burst" aria-hidden="true">✦</div>
+          <button type="button" class="cookie-tap" id="cookieTap" aria-label="Ouvrir un biscuit surprise">
+            <svg class="mascot-svg" viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Biscuit surprise vintage à l’encre noire, souriant et prêt à révéler son billet" focusable="false">
+              <defs>
+                <pattern id="cookieDots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="4" cy="5" r="1.25" fill="#7c4b2d" opacity=".5"/><circle cx="11" cy="12" r=".7" fill="#7c4b2d" opacity=".35"/></pattern>
+                <linearGradient id="shellLight" x1="0" x2=".8" y1=".2" y2="1"><stop stop-color="#ffe1a0"/><stop offset=".52" stop-color="#edb66f"/><stop offset="1" stop-color="#ca7f41"/></linearGradient>
+                <linearGradient id="shellWarm" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ffe2a0"/><stop offset=".5" stop-color="#d9954d"/><stop offset="1" stop-color="#b87538"/></linearGradient>
+              </defs>
+              <!-- Tattoo flash-style ornamental rays -->
+              <g fill="none" stroke="#382720" stroke-width="3.4" stroke-linecap="round" opacity=".85">
+                <path d="M244 40V17 M204 47l-9-22 M172 62l-17-16 M145 86l-20-10 M300 48l9-23 M334 62l18-16 M359 90l21-9 M385 170l24 2 M93 166l-21 1"/>
+              </g>
+              <g fill="#b9473d" stroke="#32241f" stroke-width="2.6">
+                <path d="M105 62l5 11 11 5-11 4-5 12-5-12-12-4 12-5Z"/>
+                <path d="M396 74l4 10 11 4-11 5-4 11-5-11-11-5 11-4Z"/>
+                <path d="M361 39l3 8 8 3-8 3-3 9-4-9-8-3 8-3Z"/>
+              </g>
+              <!-- Tattoo-inspired rose ornaments -->
+              <g transform="translate(70 87) scale(.78)">
+                <path d="M-6 27Q-26 12-35 21Q-24 44-2 38M10 27Q29 8 42 14Q35 37 14 38" fill="#60765d" stroke="#30241e" stroke-width="4" stroke-linejoin="round"/>
+                <path d="M0 36q0 13 4 24" stroke="#30241e" stroke-width="4" fill="none"/>
+                <path d="M-22-3q-4-19 16-18Q4-38 19-18q19-2 13 19 17 13-1 27-11 17-28 8-23 12-27-12-17-14 2-27Z" fill="#c04c40" stroke="#30241e" stroke-width="5"/>
+                <path d="M-12-5q7-14 21-8 15 7 9 20-3 12-18 11-13-2-10-15 3-12 14-8 9 3 4 11-6 6-12 1" fill="none" stroke="#30241e" stroke-width="4.5" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="251" cy="301" rx="146" ry="15" fill="#35251e" opacity=".15"/>
+              <!-- Legs with classic rubber-hose cartoon footwear -->
+              <g stroke="#30221d" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M194 226q-13 29-31 46 M311 225q12 31 30 47" fill="none" stroke-width="10"/>
+                <path d="M162 262q-33-3-36 24-1 11 18 12l42-1q12-5 3-18l-27-17Z" fill="#fff1d5" stroke-width="5"/>
+                <path d="M337 263q34-4 38 21 2 14-19 14l-41-1q-12-5-3-17l25-17Z" fill="#fff1d5" stroke-width="5"/>
+                <path d="M137 284q22 10 45-1 M322 284q25 9 43-3" fill="none" stroke-width="3"/>
+              </g>
+              <!-- Gloved arms -->
+              <g stroke="#30221d" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M151 170q-41-13-67-2l-21-17" fill="none" stroke-width="10"/>
+                <path d="M63 151q-12-19-19-15-6 5 1 15-17-10-21-2-3 8 13 17-18-1-16 8 6 12 26 13 24-2 28-20Z" fill="#fff6df" stroke-width="5"/>
+                <path d="M349 166q43-16 71-1l13-26" fill="none" stroke-width="10"/>
+                <path d="M431 137q-3-17 5-19 8-2 11 16 8 11 22 7 13-1 13 10-2 10-23 15 10 7 1 14-12 11-30-4-14-12-9-25Z" fill="#fff6df" stroke-width="5"/>
+                <path d="M40 169q12 9 26 8M442 151q10 5 18 2" fill="none" stroke-width="3"/>
+              </g>
+              <!-- The fortune slip appears when the cookie cracks -->
+              <g class="fortune-slip" aria-hidden="true">
+                <path d="M232 161l-3-89q22-12 44 0l-4 89Z" fill="#fffaea" stroke="#30221d" stroke-width="5" stroke-linejoin="round"/>
+                <path d="M239 95h25 M239 108h25 M244 123h15" stroke="#b8473c" stroke-width="4" stroke-linecap="round"/>
+                <path d="M251 76l3 5 5 2-5 2-3 5-3-5-5-2 5-2Z" fill="#be493d"/>
+              </g>
+              <!-- Fortune cookie's dark inner fold -->
+              <path d="M248 126Q209 72 164 96q-28 15-42 47 30 27 78 22L248 126Q290 68 335 97q32 17 42 46-27 28-74 20Z" fill="#6b3e2b" stroke="#30221d" stroke-width="8" stroke-linejoin="round"/>
+              <g class="cookie-half cookie-left">
+                <path d="M249 132Q222 96 180 100q-39 0-59 44-18 43-4 71 37 37 113 29 18-12 19-37Z" fill="url(#shellLight)" stroke="#30221d" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M249 132Q222 96 180 100q-39 0-59 44-18 43-4 71 37 37 113 29 18-12 19-37Z" fill="url(#cookieDots)"/>
+                <path d="M222 130q-40-34-70-2-22 25-18 54" fill="none" stroke="#ffe4aa" stroke-width="9" stroke-linecap="round"/>
+                <path d="M126 202q35 26 97 20" stroke="#a46234" stroke-width="4" fill="none" stroke-linecap="round"/>
+                <ellipse cx="192" cy="169" rx="10" ry="15" fill="#30221d"/><ellipse cx="195" cy="163" rx="3" ry="5" fill="#fff8e8"/>
+                <ellipse cx="172" cy="203" rx="9" ry="5" fill="#c16752" opacity=".55"/>
+              </g>
+              <g class="cookie-half cookie-right">
+                <path d="M250 132q28-35 68-32 43 3 59 44 19 43 2 72-41 38-112 28-19-12-17-37Z" fill="url(#shellWarm)" stroke="#30221d" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M250 132q28-35 68-32 43 3 59 44 19 43 2 72-41 38-112 28-19-12-17-37Z" fill="url(#cookieDots)"/>
+                <path d="M281 129q40-30 73 6 19 22 15 46" fill="none" stroke="#ffe2a0" stroke-width="9" stroke-linecap="round"/>
+                <ellipse cx="308" cy="170" rx="10" ry="15" fill="#30221d"/><ellipse cx="311" cy="164" rx="3" ry="5" fill="#fff8e8"/>
+                <path d="M260 194q21 18 44-1" fill="none" stroke="#30221d" stroke-width="6" stroke-linecap="round"/>
+                <ellipse cx="327" cy="204" rx="9" ry="5" fill="#bc624c" opacity=".55"/>
+              </g>
+              <g class="cookie-crack" aria-hidden="true"><path d="M249 139l-9 22 9 17-8 20 9 20" fill="none" stroke="#6c3e29" stroke-width="5.5" stroke-linecap="round" opacity=".7"/></g>
+              <g class="mascot-hat" aria-hidden="true">
+                <path d="M208 104l10-45 52-1 18 46Z" fill="#342622" stroke="#2d211c" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M214 88h67" stroke="#b9473d" stroke-width="10" stroke-linecap="round"/>
+                <path d="M192 105q58 14 111-1" stroke="#2d211c" stroke-width="13" fill="none" stroke-linecap="round"/>
+                <path d="M221 68q17-5 30 0" stroke="#fae6b9" stroke-width="3" fill="none" opacity=".65"/>
+              </g>
+              <g class="spark-crumbs" aria-hidden="true" fill="#c68a4a" stroke="#35231d" stroke-width="3"><path d="M226 264l10-7 10 9-12 8Z"/><path d="M268 270l11-4 6 8-11 6Z"/></g>
+              <g class="tiny-tattoo-rose" transform="translate(399 235) scale(.55)" aria-hidden="true">
+                <path d="M0 32q-22 8-39-5 19-17 35-5 M3 30q25 5 42-13-17-12-34 2" fill="#657860" stroke="#30221d" stroke-width="6"/>
+                <path d="M-24-12q-3-22 18-24 18-21 30 0 24 0 23 22 13 23-9 34-13 22-34 10-24 10-30-15-15-18 2-27Z" fill="#b9473d" stroke="#30221d" stroke-width="7"/>
+                <path d="M-9-17q14-14 30-1 12 15-2 27-15 11-26-3-8-14 4-18 12-4 15 7 2 10-8 11" fill="none" stroke="#30221d" stroke-width="5" stroke-linecap="round"/>
+              </g>
+            </svg>
+            <span class="speech-pop" aria-hidden="true">CRAC !</span>
+          </button>
+          <div class="theatre-bottom" aria-hidden="true"><span>✦</span><span>LA CHANCE SOURIT AUX CURIEUX</span><span>✦</span></div>
+        </div>
+        <div class="play-action">
+          <button type="button" class="button-primary" id="drawButton">
+            <span aria-hidden="true">✦</span> OUVRIR UN BISCUIT <span class="button-arrow" aria-hidden="true">↗</span>
+          </button>
+          <p class="microcopy" id="drawHint">Appuyez, découvrez votre petit mot, souriez.</p>
+        </div>
+      </section>
+
+      <section class="ticket-card" aria-label="Votre billet surprise">
+        <div class="panel-kicker ticket-kicker"><span>02</span> VOTRE PETIT MOT <span class="kicker-end">★</span></div>
+        <div class="ticket-wrapper">
+          <div class="ticket-paper" id="fortuneTicket" aria-live="polite" aria-atomic="true">
+            <div class="ticket-topline"><span>✳</span><span>LA FABRIQUE DES SOURIRES</span><span>✳</span></div>
+            <div class="ticket-arch" aria-hidden="true">✦</div>
+            <div class="ticket-content" id="ticketContent">
+              <div class="ticket-placeholder" id="ticketPlaceholder">
+                <div class="ticket-illustration" aria-hidden="true">?</div>
+                <div class="ticket-overline">VOTRE DESTIN ATTEND...</div>
+                <h2 id="ticketTitle">Un petit bonheur<br /><em>est en route !</em></h2>
+                <p>Un message se cache dans le biscuit. À vous de jouer !</p>
+              </div>
+              <div class="ticket-reveal" id="ticketReveal" hidden>
+                <div class="ticket-overline">LE MOT DU JOUR <span>✦</span></div>
+                <blockquote id="fortuneText"></blockquote>
+                <div class="fortune-recipient" id="fortuneRecipient" hidden></div>
+                <div class="fortune-meta" id="fortuneMeta"></div>
+              </div>
+            </div>
+            <div class="ticket-bottomline"><span>★ ★ ★</span><span>BON POUR UN SOURIRE</span><span>★ ★ ★</span></div>
+          </div>
+          <div class="ticket-shadow" aria-hidden="true"></div>
+        </div>
+        <div class="ticket-actions">
+          <button type="button" id="copyButton" class="button-secondary" disabled><span aria-hidden="true">⧉</span> Copier le petit mot</button>
+          <span class="ticket-number" id="ticketNumber">BILLET N° —</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="control-strip" aria-label="État et réglages du tirage">
+      <div class="stat-item"><span class="stat-icon" aria-hidden="true">◉</span><div><strong id="availableCount">12 <small>/ 12</small></strong><span>BISCUITS DISPONIBLES</span></div></div>
+      <div class="stat-divider" aria-hidden="true"></div>
+      <div class="stat-item"><span class="stat-icon" aria-hidden="true">✩</span><div><strong id="drawnCount">0</strong><span>TIRAGES EFFECTUÉS</span></div></div>
+      <div class="stat-divider" aria-hidden="true"></div>
+      <label class="repeat-toggle"><span class="toggle-text"><strong>Biscuits à volonté ?</strong><small id="repeatDescription">Sans répétition, jusqu'à épuisement.</small></span><input type="checkbox" id="repeatToggle" role="switch"/><span class="switch-ui" aria-hidden="true"></span></label>
+      <button type="button" class="button-reset" id="resetDraws" hidden>↺ Nouvelle tournée</button>
+    </section>
+
+    <p class="demo-notice" id="demoNotice">✳ Les 12 messages présents au départ sont des exemples à personnaliser.</p>
+
+    <section class="bottom-banner" aria-label="Personnaliser votre boîte">
+      <div class="banner-star" aria-hidden="true">✳</div>
+      <div><span class="bottom-kicker">LE SECRET DES BONS BISCUITS ?</span><h2>Vos mots, votre magie.</h2><p>Ajoutez une pensée, un défi ou un compliment à votre collection.</p></div>
+      <button type="button" class="button-dark" id="openManagerBottom">✎ Personnaliser la boîte <span aria-hidden="true">↗</span></button>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>FAIT AVEC UNE PINCÉE DE FANTAISIE</span><span class="footer-mid">✳ 1932 — ET DEMAIN ENCORE ✳</span><span>SAUVEGARDÉ SUR CET APPAREIL, SANS COMPTE</span></footer>
+
+  <dialog id="managerDialog" class="manager-dialog" aria-labelledby="managerTitle">
+    <div class="dialog-header"><div><span class="dialog-overline">LE PETIT LABORATOIRE</span><h2 id="managerTitle">La boîte à <em>messages</em></h2><p>Écrivez les mots que votre prochain biscuit pourra révéler.</p></div><button id="closeManager" class="dialog-close" type="button" aria-label="Fermer la boîte à messages">×</button></div>
+    <div class="dialog-main">
+      <section class="write-zone" aria-labelledby="writeTitle"><h3 id="writeTitle">✦ Un nouveau message</h3>
+        <form id="noteForm" novalidate>
+          <label for="noteText">Votre petit mot <span class="required">*</span></label>
+          <textarea id="noteText" name="message" maxlength="160" minlength="3" rows="5" placeholder="Ex. : Aujourd'hui, ose le pas de danse ridicule. C'est le plus beau !" required></textarea>
+          <div class="field-row"><span id="charCount">0 / 160 caractères</span><span>3 caractères minimum</span></div>
+          <label for="noteRecipient">Destinataire <small>(facultatif)</small></label>
+          <input type="text" id="noteRecipient" maxlength="40" placeholder="Ex. : Camille, Mamie, toi..." />
+          <p id="formError" class="form-error" role="alert" hidden></p>
+          <div class="form-buttons"><button class="button-primary form-submit" type="submit" id="submitNote">+ Ajouter à la boîte</button><button class="button-outline" type="button" id="cancelEdit" hidden>Annuler</button></div>
+        </form>
+        <div class="local-tip"><strong>✳ Vos secrets restent chez vous.</strong><p>Les messages sont conservés dans le stockage local de ce navigateur. Aucun compte ni serveur externe. Exportez un fichier JSON pour en garder une copie.</p></div>
+      </section>
+      <section class="collection-zone" aria-labelledby="collectionTitle">
+        <div class="collection-head"><h3 id="collectionTitle">✳ Dans votre boîte <span id="managerCount">(12)</span></h3><span id="demoBadge" class="demo-tag">EXEMPLES</span></div>
+        <div class="collection-list" id="collectionList" aria-live="polite"></div>
+        <div class="collection-empty" id="collectionEmpty" hidden>Votre boîte est vide. Écrivez le premier mot juste à côté !</div>
+      </section>
+    </div>
+    <div class="dialog-footer"><div class="file-controls"><button class="button-outline button-small" id="exportNotes" type="button">↓ Exporter JSON</button><label class="button-outline button-small import-label" for="importNotes">↑ Importer JSON</label><input class="visually-hidden-input" type="file" id="importNotes" accept="application/json,.json" aria-label="Importer un fichier de messages JSON" /></div><button id="restoreDemo" class="text-action" type="button">Restaurer les exemples</button></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="no-script">Activez JavaScript pour ouvrir les biscuits et enregistrer vos messages.</p></noscript>
+</body>
+</html>
