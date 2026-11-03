@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#f5edd7" />
+  <meta name="description" content="Un biscuit surprise à ouvrir, rempli de petits mots. Composez votre boîte à messages et tirez un billet au hasard." />
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTUiIGZpbGw9IiNmMWRjYWEiLz48cGF0aCBkPSJNMzEgN2M5IDIgNiA2IDE3IDggNyAyIDExIDkgNiAxNiA1IDkgMCAxOC04IDE5LTUgOC0xNiA4LTIzIDUtOSAyLTE3LTUtMTgtMTUtNS03LTEtMTUgNC0xOUM5IDEzIDIxIDYgMzEgN1oiIGZpbGw9IiNkMzkyNGEiIHN0cm9rZT0iIzMxMjYxZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGVsbGlwc2UgY3g9IjI0IiBjeT0iMjYiIHJ4PSIzLjUiIHJ5PSI1IiBmaWxsPSIjMzAyNTFlIi8+PGVsbGlwc2UgY3g9IjM5IiBjeT0iMjYiIHJ4PSIzLjUiIHJ5PSI1IiBmaWxsPSIjMzAyNTFlIi8+PHBhdGggZD0iTTI2IDM4cTcgOSAxNCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMzMDI1MWUiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIxNyIgY3k9IjM2IiByPSIzIiBmaWxsPSIjYTU1YjMyIi8+PGNpcmNsZSBjeD0iNDYiIGN5PSIzOCIgcj0iMi43IiBmaWxsPSIjYTU1YjMyIi8+PC9zdmc+Cg==" type="image/svg+xml" />
+  <style>
+:root{color-scheme:light;--ink:#32271f;--ink-deep:#251c17;--cream:#f6efdf;--paper:#fffaeb;--sand:#e9d7b2;--gold:#dda35e;--gold-dark:#98602c;--red:#b94336;--red-deep:#8f302b;--line:#392d23;--muted:#746453;--shadow:7px 7px 0 #32271f;--radius:10px;font-family:'Trebuchet MS',Verdana,sans-serif;font-synthesis:none}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{min-width:320px;margin:0;background:#f5ecd9;color:var(--ink);position:relative;min-height:100vh}body:before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 15% 20%,#fff9e8,transparent 55%),radial-gradient(ellipse at 90% 80%,#e9d4b2,transparent 60%)}.page-film{position:fixed;z-index:12;inset:0;pointer-events:none;opacity:.24;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.87' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' opacity='.21' filter='url(%23n)'/%3E%3C/svg%3E")}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.visually-hidden-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip-path:inset(50%)}[hidden]{display:none!important}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,label.import-label:focus-within{outline:4px solid #1267a3;outline-offset:3px}a{color:inherit}
+.site-header{max-width:1330px;margin:auto;padding:23px 32px;display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:2px solid #3c2f26}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.18em;line-height:1.45}.brand strong{display:block;font-family:Georgia,serif;font-size:14px;letter-spacing:.05em}.brand-illustration{display:grid;place-items:center;background:var(--red);border:2px solid var(--line);width:43px;height:43px;border-radius:50%;font-size:28px;color:#ffedb3;box-shadow:2px 2px 0 var(--line)}.header-side{display:flex;align-items:center;gap:26px}.issue-stamp{font-size:11px;letter-spacing:.14em;font-weight:bold}.issue-stamp span{padding:0 5px;color:var(--red)}.button-outline{border:2px solid var(--line);background:transparent;padding:10px 16px;border-radius:5px;color:var(--ink);font-weight:900;box-shadow:3px 3px 0 var(--line);transition:transform .16s,box-shadow .16s}.button-outline:hover:not(:disabled){transform:translate(1px,1px);box-shadow:2px 2px 0 var(--line)}.header-manage{display:flex;align-items:center;gap:11px;font-size:13px}.header-manage>span:first-child{font-size:21px;line-height:.7}.button-count{font-size:12px;background:var(--ink);border-radius:30px;color:#fff1db;padding:3px 7px;min-width:23px;text-align:center}
+main{width:min(1250px,calc(100% - 64px));margin:0 auto}.ornament-line{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:21px;font-family:Georgia,serif;font-size:17px}.ornament-line i{height:1px;background:#84705c;width:82px}.ornament-line span:nth-child(3){color:var(--red);font-size:13px}.hero{text-align:center;padding:14px 0 30px}.hero-eyebrow{font-size:12px;letter-spacing:.34em;font-weight:900;color:var(--red-deep)}.eyebrow-stars{font-size:17px;vertical-align:middle;margin:0 10px}.hero h1{position:relative;display:table;margin:6px auto 5px;font:900 clamp(55px,7.2vw,104px)/.97 Georgia,'Times New Roman',serif;letter-spacing:-.075em;text-shadow:2px 3px 0 #d9b67b}.hero h1 em{font-weight:700;color:var(--red);font-style:italic;letter-spacing:-.085em}.h1-spark{position:absolute;color:var(--red);right:-49px;top:-16px;font:50px Georgia,serif;letter-spacing:0;text-shadow:none;transform:rotate(15deg)}.hero p{font-size:14px;letter-spacing:.03em;margin:16px 0 18px}.header-ribbon{display:flex;align-items:center;justify-content:center;gap:10px;color:#463329}.header-ribbon:before,.header-ribbon:after{content:'';height:1px;background:#756250;width:47px}.header-ribbon span{border:1.5px solid #695540;padding:6px 17px;font-size:9px;font-weight:900;letter-spacing:.21em;transform:rotate(-1deg)}
+.alert-banner{border:2px solid #a63228;background:#ffe5cc;border-radius:6px;margin:0 0 20px;padding:13px 16px;line-height:1.45;display:flex;gap:10px;flex-wrap:wrap;font-size:13px}.alert-banner strong{color:#902c26}
+.play-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:stretch}.play-card,.ticket-card{border:3px solid var(--ink);border-radius:10px;background:#f1dfba;box-shadow:var(--shadow);min-width:0;overflow:hidden}.play-card{display:flex;flex-direction:column}.panel-kicker{display:flex;gap:12px;align-items:center;padding:14px 18px;font-size:11px;letter-spacing:.15em;font-weight:900;border-bottom:2px solid var(--ink)}.panel-kicker>span:first-child{background:var(--ink);color:#fff2dc;display:inline-grid;place-items:center;width:26px;height:23px;font-size:10px;border-radius:2px}.kicker-end{margin-left:auto;white-space:nowrap;letter-spacing:.3em;color:var(--red)}.cookie-theatre{position:relative;flex:1;min-height:324px;overflow:hidden;background-color:#e2c697;background-image:radial-gradient(#ab8552 1.2px,transparent 1.2px),repeating-radial-gradient(ellipse at 50% 45%,transparent 0,transparent 30px,#d6b783 31px,#d6b783 32px,transparent 33px,transparent 65px);background-size:18px 18px,100% 100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:14px}.cookie-theatre:before{content:'';position:absolute;inset:15px;border:2px dashed #9c784d;border-radius:50% 50% 11% 11% / 46% 46% 12% 12%;pointer-events:none}.cookie-theatre:after{content:'';position:absolute;bottom:25px;left:-8%;right:-8%;height:11px;background:var(--ink);border-top:6px solid #f8e7c1;border-bottom:4px solid var(--ink);transform:rotate(-.5deg);pointer-events:none}.top-sign{position:absolute;top:25px;border-top:3px double var(--ink);border-bottom:3px double var(--ink);padding:6px 12px;font:900 11px Georgia,serif;letter-spacing:.16em;background:#f5e4bf;transform:rotate(-2deg);z-index:1}.theatre-burst{position:absolute;font-size:60px;right:11%;top:24%;color:#be4e3a;transform:rotate(13deg)}.cookie-tap{display:block;z-index:2;width:min(100%,520px);height:310px;border:0;background:transparent;padding:12px 8px 0;position:relative;outline-offset:-4px;filter:drop-shadow(0 5px 0 #b28a57)}.mascot-svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(3px 5px 0 #a78050);transition:transform .2s}.cookie-tap:hover .mascot-svg{transform:translateY(-5px) rotate(-1deg)}.cookie-half{transform-box:fill-box;transform-origin:center;transition:transform .44s cubic-bezier(.17,.89,.32,1.35)}.cookie-tap.cracked .cookie-left{transform:translate(-17px,-8px) rotate(-15deg)}.cookie-tap.cracked .cookie-right{transform:translate(17px,-6px) rotate(15deg)}.cookie-tap.cracked .mascot-hat{transform:translateY(-22px) rotate(6deg);transform-origin:50% 50%;transition:transform .38s}.cookie-tap.cracked .cookie-crack{opacity:0}.speech-pop{position:absolute;display:block;right:8%;top:30%;background:#fff6dd;color:var(--red);border:3px solid var(--ink);border-radius:50%;padding:13px 10px;font:900 18px Georgia,serif;transform:rotate(13deg) scale(.5);opacity:0;pointer-events:none}.cookie-tap.cracked .speech-pop{animation:pop .48s .10s both}.theatre-bottom{position:absolute;z-index:1;bottom:13px;width:100%;display:flex;justify-content:space-between;padding:0 20px;gap:4px;color:#332820;font:900 10px Georgia,serif;letter-spacing:.07em}.theatre-bottom span:nth-child(2){z-index:2;background:#ead1a2;padding:0 5px}.play-action{padding:25px 25px 19px;background:#f1dfba;display:flex;align-items:center;flex-direction:column;border-top:2px solid var(--line)}.button-primary{border:3px solid var(--ink);border-radius:6px;background:var(--red);color:#fff9e8;font-size:15px;letter-spacing:.07em;font-weight:900;min-height:57px;padding:14px 21px;box-shadow:4px 5px 0 var(--ink);transition:transform .17s,box-shadow .17s,background .17s;display:flex;justify-content:center;align-items:center;gap:13px;text-align:center}.button-primary:hover:not(:disabled){background:var(--red-deep);transform:translateY(-2px)}.button-primary:active:not(:disabled){transform:translate(3px,4px);box-shadow:1px 1px 0 var(--ink)}.play-action .button-primary{width:min(100%,345px)}.button-arrow{font-size:19px}.microcopy{font-size:11px;letter-spacing:.04em;margin:12px 0 0;color:#685138;text-align:center}
+.ticket-card{background:#f6ebd2;display:flex;flex-direction:column}.ticket-kicker{background:#eee0c2}.ticket-wrapper{flex:1;min-height:369px;display:flex;align-items:center;justify-content:center;padding:25px 37px 13px;position:relative;isolation:isolate}.ticket-wrapper:before{content:'✳';position:absolute;left:14px;top:35%;font:38px Georgia,serif;color:#d3b88d;transform:rotate(30deg)}.ticket-wrapper:after{content:'✳';position:absolute;right:11px;top:25%;font:28px Georgia,serif;color:#d5bb91;transform:rotate(20deg)}.ticket-paper{position:relative;width:100%;max-width:434px;min-height:317px;background:#fff9e6;border:2px solid var(--ink);box-shadow:5px 6px 0 #a68b6a;display:flex;flex-direction:column;align-items:center;transform:rotate(-1.5deg);clip-path:polygon(0 0,100% 0,100% 17%,97.5% 20%,100% 23%,100% 100%,0 100%,0 23%,2.5% 20%,0 17%)}.ticket-paper:before{content:'';position:absolute;inset:9px;border:1.5px solid #aa9372;pointer-events:none}.ticket-topline,.ticket-bottomline{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:9px;width:calc(100% - 44px);font-weight:bold;letter-spacing:.14em;font-size:9px;padding-top:20px;border-bottom:1px solid #bba781;padding-bottom:12px}.ticket-topline span:first-child,.ticket-topline span:last-child{font-size:16px;color:var(--red)}.ticket-arch{color:var(--red);background:var(--paper);border:1px solid var(--ink);border-radius:50%;width:31px;height:31px;display:grid;place-items:center;margin-top:-16px;z-index:2;transform:rotate(1.5deg)}.ticket-content{width:100%;flex:1;display:grid;place-items:center;text-align:center;padding:8px 22px}.ticket-placeholder,.ticket-reveal{max-width:100%;width:100%;display:flex;flex-direction:column;align-items:center}.ticket-illustration{font:900 69px/1 Georgia,serif;color:var(--red);width:70px;height:70px;border:3px double var(--red);border-radius:50%;display:grid;place-items:center;transform:rotate(-10deg);margin:2px 0 14px}.ticket-overline{font-size:10px;letter-spacing:.18em;color:var(--red-deep);font-weight:900;margin-bottom:7px}.ticket-placeholder h2{font:900 clamp(24px,2.9vw,39px)/1.15 Georgia,serif;letter-spacing:-.04em;margin:8px 0}.ticket-placeholder h2 em{color:var(--red);font-style:italic}.ticket-placeholder p{font-size:12px;line-height:1.6;max-width:255px;color:var(--muted);margin:7px 0 13px}.ticket-reveal{animation:reveal .46s both}.ticket-reveal blockquote{font:700 clamp(22px,2.4vw,32px)/1.26 Georgia,serif;letter-spacing:-.035em;margin:12px 0 18px;overflow-wrap:anywhere;max-height:214px;overflow:auto}.ticket-reveal blockquote:before{content:'“';display:block;font:70px/.65 Georgia,serif;color:var(--red);height:30px}.fortune-recipient{font-size:13px;font-weight:900;margin-bottom:8px;color:var(--red-deep)}.fortune-meta{color:#73624e;font:900 9px Georgia,serif;letter-spacing:.13em}.ticket-bottomline{border-bottom:0;border-top:1px solid #bba781;padding-top:10px;padding-bottom:18px;margin-top:9px}.ticket-bottomline span:first-child,.ticket-bottomline span:last-child{color:var(--red);font-size:10px}.ticket-actions{padding:0 25px 19px;display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:80px}.button-secondary{background:var(--ink);border:2px solid var(--ink);border-radius:5px;color:#fff8e4;font-size:12px;font-weight:900;padding:13px 17px;transition:background .2s}.button-secondary:hover:not(:disabled){background:#594335}.button-secondary span{font-size:15px;margin-right:8px}.ticket-number{font:900 10px Georgia,serif;letter-spacing:.11em;text-align:right}
+.control-strip{margin:25px 7px 29px;border:2px solid var(--ink);background:#fff7e4;box-shadow:3px 4px 0 var(--ink);border-radius:6px;display:flex;align-items:center;justify-content:space-between;gap:17px;padding:20px 24px;min-height:99px}.stat-item{display:flex;align-items:center;gap:15px;min-width:130px}.stat-item>div{display:flex;flex-direction:column;gap:4px}.stat-icon{background:#f1dcad;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;width:41px;height:41px;font-size:23px;color:var(--red);flex:0 0 auto}.stat-item strong{font:900 28px/.95 Georgia,serif}.stat-item small{font-size:15px;font-weight:400}.stat-item div>span{font-size:9px;font-weight:bold;letter-spacing:.12em;margin-top:4px;white-space:nowrap}.stat-divider{align-self:stretch;width:1px;background:#d5c29f}.repeat-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;min-width:222px}.toggle-text{display:flex;flex-direction:column;gap:6px}.toggle-text strong{font-size:13px}.toggle-text small{color:#695844;font-size:10px;max-width:190px;line-height:1.45}.repeat-toggle input{position:absolute;opacity:0;width:1px;height:1px}.switch-ui{flex:0 0 auto;width:51px;height:28px;background:#cfbaa0;border:2px solid var(--ink);border-radius:20px;position:relative;transition:background .2s}.switch-ui:before{content:'';position:absolute;width:19px;height:19px;left:3px;top:3px;border:2px solid var(--ink);border-radius:50%;background:#fff6e4;transition:transform .2s}.repeat-toggle input:checked+.switch-ui{background:var(--red)}.repeat-toggle input:checked+.switch-ui:before{transform:translateX(22px)}.repeat-toggle input:focus-visible+.switch-ui{outline:4px solid #1267a3;outline-offset:3px}.button-reset{font-size:11px;border:2px solid var(--ink);border-radius:4px;background:var(--sand);padding:9px 11px;min-width:116px;font-weight:900}
+.demo-notice{margin:-11px 10px 24px;font-size:11px;color:#77624b;text-align:center;font-weight:700;letter-spacing:.015em}.bottom-banner{margin:0 7px 39px;padding:27px 30px;border-radius:9px;background:#dd9c59;border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:flex;align-items:center;gap:26px;position:relative;overflow:hidden}.bottom-banner:after{content:'✳';position:absolute;font:240px/.7 Georgia,serif;right:10%;bottom:-80px;color:#eab279;opacity:.6;pointer-events:none}.banner-star{font:65px/1 Georgia,serif;color:#fbe4b6;text-shadow:3px 4px 0 var(--ink);z-index:1;transform:rotate(-15deg)}.bottom-banner>div:nth-child(2){flex:1;z-index:1}.bottom-kicker{font-size:10px;letter-spacing:.18em;font-weight:900}.bottom-banner h2{font:900 35px/1.1 Georgia,serif;letter-spacing:-.04em;margin:4px 0 7px}.bottom-banner p{font-size:12px;margin:0}.button-dark{flex:0 0 auto;z-index:1;background:var(--ink);border:2px solid #211b16;border-radius:5px;color:#fff5de;font-size:12px;font-weight:900;padding:15px 18px;box-shadow:3px 3px 0 #ae7139}.button-dark:hover{background:#503c2d}.button-dark span{margin-left:7px}.site-footer{max-width:1330px;margin:auto;border-top:2px solid var(--ink);padding:20px 32px 26px;display:flex;justify-content:space-between;gap:14px;color:#776650;font-size:10px;font-weight:900;letter-spacing:.10em}.footer-mid{font-family:Georgia,serif;color:var(--red)}
+.manager-dialog{border:3px solid var(--ink);border-radius:10px;padding:0;background:#f8edda;color:var(--ink);box-shadow:10px 10px 0 var(--ink);width:min(950px,calc(100vw - 28px));max-height:min(92vh,900px);overflow:auto;overscroll-behavior:contain}.manager-dialog::backdrop{background:#241b17ad;backdrop-filter:blur(3px)}.dialog-header{background:#e8c996;border-bottom:3px solid var(--ink);padding:24px 28px;display:flex;justify-content:space-between;gap:20px}.dialog-overline{font-size:10px;letter-spacing:.2em;font-weight:900;color:var(--red-deep)}.dialog-header h2{font:900 42px/1.15 Georgia,serif;letter-spacing:-.06em;margin:7px 0}.dialog-header h2 em{color:var(--red)}.dialog-header p{font-size:12px;margin:5px 0 0}.dialog-close{align-self:flex-start;width:40px;height:40px;border:2px solid var(--ink);background:#f7e5c3;font-size:30px;line-height:1;border-radius:4px;font-weight:bold}.dialog-close:hover{background:#fff9e6}.dialog-main{display:grid;grid-template-columns:.92fr 1.08fr;min-height:405px}.write-zone{padding:23px 24px;border-right:2px solid var(--ink)}.dialog-main h3{font:900 19px Georgia,serif;margin:0 0 20px}.write-zone form{display:flex;flex-direction:column;gap:9px}.write-zone label{font-size:12px;font-weight:900}.write-zone label small{font-weight:normal;color:#776555}.required{color:var(--red)}.write-zone textarea,.write-zone input{background:#fff9eb;border:2px solid #897661;border-radius:5px;padding:13px;color:var(--ink);width:100%;outline-offset:2px;resize:vertical}.write-zone textarea{min-height:111px;max-height:250px;line-height:1.5}.write-zone textarea::placeholder,.write-zone input::placeholder{color:#948473}.field-row{display:flex;justify-content:space-between;gap:5px;margin:-1px 0 12px;font-size:10px;color:#685846}.form-error{color:#a63228;font-size:12px;border-left:3px solid #a63228;padding-left:10px;margin:6px 0}.form-buttons{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:11px}.form-submit{font-size:12px;min-height:44px;padding:9px 13px;box-shadow:3px 3px 0 var(--ink)}.form-buttons .button-outline{padding:10px 13px;font-size:12px}.local-tip{margin-top:27px;border-top:1px dashed #99836a;padding-top:18px;font-size:11px;line-height:1.55}.local-tip strong{font-size:12px}.local-tip p{color:#6d5a47;margin:7px 0 0}.collection-zone{padding:23px 22px;min-width:0}.collection-head{display:flex;align-items:center;justify-content:space-between;gap:9px}.collection-head h3{margin-bottom:19px}.demo-tag{background:#eacb94;color:#553e25;border:1px solid var(--ink);border-radius:3px;font:900 9px Georgia,serif;letter-spacing:.1em;padding:5px 8px}.collection-list{display:flex;flex-direction:column;gap:9px;max-height:420px;overflow:auto;padding-right:4px}.collection-item{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px;background:#fff8e9;border:1.5px solid #baa283;border-left:4px solid var(--red);border-radius:4px}.collection-item.example{border-left-color:#bd905b}.collection-copy{min-width:0;flex:1}.collection-copy p{margin:0 0 7px;font-size:12px;line-height:1.5;overflow-wrap:anywhere}.collection-copy small{font-size:9px;color:#846f57;font-weight:900;letter-spacing:.07em;text-transform:uppercase}.collection-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}.collection-actions button{background:#f3e6ca;border:1px solid #715945;border-radius:3px;min-width:40px;min-height:40px;font-size:15px;line-height:1}.collection-actions button:hover{background:#dfc797}.collection-actions .remove-button:hover{background:#e9b5a0}.collection-empty{font-size:14px;line-height:1.55;padding:30px 20px;text-align:center;color:#78634b;border:1px dashed #aa9271}.dialog-footer{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:17px 24px;border-top:2px solid var(--ink);background:#efe0c1;flex-wrap:wrap}.file-controls{display:flex;gap:9px;flex-wrap:wrap}.button-small{font-size:11px;padding:8px 10px;box-shadow:2px 2px 0 var(--ink)}.import-label{display:inline-flex;align-items:center;cursor:pointer}.text-action{font-size:11px;border:0;background:transparent;color:var(--red-deep);text-decoration:underline;text-underline-offset:3px;font-weight:900}.text-action:hover{color:var(--ink)}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:100;background:var(--ink);color:#fff9e6;padding:13px 20px;border:2px solid #fff2d2;box-shadow:4px 4px 0 #aa6c3e;font-size:12px;line-height:1.5;text-align:center;max-width:min(550px,calc(100vw - 30px));border-radius:5px}.no-script{margin:16px;text-align:center;padding:15px;border:2px solid var(--red);background:#fff0dc}
+@keyframes pop{0%{opacity:0;transform:rotate(13deg) scale(.5)}50%{opacity:1;transform:rotate(13deg) scale(1.25)}100%{opacity:1;transform:rotate(13deg) scale(1)}}@keyframes reveal{from{opacity:0;transform:translateY(12px) rotate(-2deg)}to{opacity:1;transform:translateY(0) rotate(0)}}
+@media(max-width:1050px){.control-strip{flex-wrap:wrap;justify-content:space-around}.stat-divider{display:none}.bottom-banner h2{font-size:28px}.banner-star{font-size:47px}.ticket-wrapper{padding:24px 18px 12px}.ticket-reveal blockquote{font-size:25px}}
+@media(max-width:760px){.site-header{padding:14px 17px}.issue-stamp{display:none}main{width:calc(100% - 28px)}.hero{padding:21px 0 25px}.hero h1{font-size:clamp(51px,10vw,76px)}.h1-spark{right:-27px;top:-15px;font-size:34px}.hero-eyebrow{font-size:10px;letter-spacing:.18em}.hero p{font-size:13px;padding:0 12px}.play-grid{grid-template-columns:1fr;gap:21px}.play-card,.ticket-card{box-shadow:5px 5px 0 var(--ink)}.cookie-theatre{min-height:300px}.cookie-tap{max-width:500px;height:300px}.ticket-wrapper{min-height:345px}.ticket-reveal blockquote{font-size:clamp(22px,5vw,32px)}.control-strip{margin:23px 3px 26px;justify-content:space-between;padding:16px}.repeat-toggle{width:100%;border-top:1px dashed #c6ad87;padding-top:14px}.button-reset{width:100%;padding:12px}.bottom-banner{margin:0 3px 26px;padding:23px;flex-wrap:wrap;gap:9px 17px}.bottom-banner>div:nth-child(2){flex-basis:75%}.bottom-banner .button-dark{margin:12px 0 0 auto}.site-footer{padding:19px 18px;flex-wrap:wrap;justify-content:center;text-align:center}.dialog-main{grid-template-columns:1fr}.write-zone{border-right:0;border-bottom:2px solid var(--ink)}.collection-list{max-height:300px}.manager-dialog{max-height:95vh}.dialog-header{padding:20px}.dialog-header h2{font-size:35px}}
+@media(max-width:420px){.brand{font-size:9px;letter-spacing:.1em}.brand strong{font-size:11px}.brand-illustration{width:34px;height:34px;font-size:23px}.header-manage{font-size:11px;padding:9px;gap:5px}.site-header{gap:6px}.hero h1{font-size:48px}.hero p{font-size:12px}.h1-spark{right:-19px}.panel-kicker{font-size:9px;padding:12px}.cookie-theatre{min-height:265px}.cookie-tap{height:265px}.theatre-bottom{font-size:8px}.top-sign{font-size:9px}.play-action{padding:20px 10px}.button-primary{font-size:12px}.ticket-wrapper{padding:16px 14px 12px}.ticket-topline,.ticket-bottomline{font-size:7.5px}.ticket-placeholder h2{font-size:27px}.ticket-actions{padding:0 15px 15px}.button-secondary{font-size:11px;padding:12px}.ticket-number{font-size:9px}.stat-item{min-width:110px;gap:8px}.stat-item strong{font-size:23px}.stat-icon{width:34px;height:34px}.stat-item div>span{font-size:8px}.banner-star{font-size:38px}.bottom-banner h2{font-size:25px}.bottom-banner p{font-size:11px}.dialog-header h2{font-size:29px}.dialog-header{padding:16px}.write-zone,.collection-zone{padding:19px 15px}.dialog-footer{padding:14px 12px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.cookie-tap:hover .mascot-svg{transform:none}.cookie-tap.cracked .speech-pop{opacity:1;transform:rotate(13deg) scale(1)}}
+
+</style>
+  <title>Biscuit du jour — La fabrique des sourires</title>
+  <script>
+"use strict";
+// Biscuit du jour — application TypeScript, sans framework ni service externe.
+// Les données persistantes sont stockées dans localStorage sous STORAGE_KEY.
+const STORAGE_KEY = 'biscuit-du-jour:v1';
+const MAX_NOTES = 100;
+const MAX_MESSAGE_LENGTH = 160;
+const examples = [
+    'Aujourd’hui, votre sourire est une excellente idée.',
+    'Une aventure minuscule peut devenir une grande histoire.',
+    'Votre bonne étoile a mis son chapeau du dimanche.',
+    'Faites un compliment inattendu : il pourrait changer une journée.',
+    'La chance adore ceux qui osent demander un second biscuit.',
+    'Le secret du bonheur ? Un peu plus de danse et un peu moins de sérieux.',
+    'Il se pourrait bien que cette journée vous réserve un joli détour.',
+    'Même les nuages ont parfois une doublure dorée.',
+    'Vous avez le droit de vous offrir une minute de gloire.',
+    'Votre prochaine grande idée commencera peut-être par « et si… ».',
+    'Quelqu’un sera heureux de recevoir de vos nouvelles.',
+    'La vie est un film : aujourd’hui, improvisez la plus belle scène.'
+];
+function makeDefaults() {
+    const now = '2026-01-01T00:00:00.000Z';
+    return {
+        schema: 1,
+        notes: examples.map((text, i) => ({ id: `demo-${String(i + 1).padStart(2, '0')}`, text, recipient: '', source: 'demo', createdAt: now })),
+        drawnIds: [], repeatMode: false, lastDraw: null, totalDraws: 0
+    };
+}
+const el = (id) => {
+    const node = document.getElementById(id);
+    if (!node)
+        throw new Error(`Élément d’interface introuvable : ${id}`);
+    return node;
+};
+const ui = {
+    manager: el('managerDialog'),
+    openManager: el('openManager'),
+    openManagerBottom: el('openManagerBottom'),
+    closeManager: el('closeManager'),
+    cookieTap: el('cookieTap'),
+    drawButton: el('drawButton'),
+    drawHint: el('drawHint'),
+    ticketPlaceholder: el('ticketPlaceholder'),
+    ticketReveal: el('ticketReveal'),
+    fortuneText: el('fortuneText'),
+    fortuneRecipient: el('fortuneRecipient'),
+    fortuneMeta: el('fortuneMeta'),
+    ticketNumber: el('ticketNumber'),
+    copyButton: el('copyButton'),
+    repeatToggle: el('repeatToggle'),
+    repeatDescription: el('repeatDescription'),
+    resetDraws: el('resetDraws'),
+    availableCount: el('availableCount'),
+    drawnCount: el('drawnCount'),
+    headerCount: el('headerCount'),
+    managerCount: el('managerCount'),
+    demoBadge: el('demoBadge'),
+    demoNotice: el('demoNotice'),
+    noteForm: el('noteForm'),
+    noteText: el('noteText'),
+    noteRecipient: el('noteRecipient'),
+    charCount: el('charCount'),
+    formError: el('formError'),
+    submitNote: el('submitNote'),
+    cancelEdit: el('cancelEdit'),
+    collectionList: el('collectionList'),
+    collectionEmpty: el('collectionEmpty'),
+    exportNotes: el('exportNotes'),
+    importNotes: el('importNotes'),
+    restoreDemo: el('restoreDemo'),
+    storageAlert: el('storageAlert'),
+    storageAlertText: el('storageAlertText'),
+    toast: el('toast')
+};
+let editingId = null;
+let storageError = '';
+let blockedByCorruptData = false;
+let toastTimer;
+let animationTimer;
+function parseNote(raw) {
+    if (!raw || typeof raw !== 'object')
+        throw new Error('Message invalide.');
+    const n = raw;
+    if (typeof n.id !== 'string' || !n.id.trim() || n.id.length > 120 ||
+        typeof n.text !== 'string' || n.text.trim().length < 3 || n.text.length > MAX_MESSAGE_LENGTH ||
+        typeof n.recipient !== 'string' || n.recipient.length > 40 ||
+        (n.source !== 'demo' && n.source !== 'perso') ||
+        typeof n.createdAt !== 'string') {
+        throw new Error('Le fichier contient un message mal formé.');
+    }
+    return { id: n.id, text: n.text, recipient: n.recipient, source: n.source, createdAt: n.createdAt };
+}
+function parseNotes(raw) {
+    if (!Array.isArray(raw) || raw.length > MAX_NOTES)
+        throw new Error('La boîte doit contenir au plus 100 messages.');
+    const notes = raw.map(parseNote);
+    if (new Set(notes.map(n => n.id)).size !== notes.length)
+        throw new Error('Identifiants de message en double.');
+    return notes;
+}
+function parseData(raw) {
+    if (!raw || typeof raw !== 'object')
+        throw new Error('Fichier de sauvegarde invalide.');
+    const d = raw;
+    if (d.schema !== 1 || typeof d.repeatMode !== 'boolean' ||
+        typeof d.totalDraws !== 'number' || !Number.isSafeInteger(d.totalDraws) || d.totalDraws < 0 ||
+        !Array.isArray(d.drawnIds) || d.drawnIds.some(id => typeof id !== 'string')) {
+        throw new Error('Format de sauvegarde non reconnu.');
+    }
+    const notes = parseNotes(d.notes);
+    const known = new Set(notes.map(n => n.id));
+    const drawnIds = [...new Set(d.drawnIds)].filter(id => known.has(id));
+    let lastDraw = null;
+    if (d.lastDraw !== null && d.lastDraw !== undefined) {
+        if (typeof d.lastDraw !== 'object')
+            throw new Error('Dernier billet invalide.');
+        const last = d.lastDraw;
+        if (typeof last.noteId !== 'string' || typeof last.text !== 'string' || last.text.length > MAX_MESSAGE_LENGTH ||
+            typeof last.recipient !== 'string' || last.recipient.length > 40 ||
+            typeof last.at !== 'string' || typeof last.number !== 'number' || !Number.isSafeInteger(last.number) || last.number < 1) {
+            throw new Error('Dernier billet invalide.');
+        }
+        lastDraw = { noteId: last.noteId, text: last.text, recipient: last.recipient, at: last.at, number: last.number };
+    }
+    return { schema: 1, notes, drawnIds, repeatMode: d.repeatMode, lastDraw, totalDraws: d.totalDraws };
+}
+function load() {
+    try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        return raw === null ? makeDefaults() : parseData(JSON.parse(raw));
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : 'Erreur inconnue';
+        // Si le stockage contient une sauvegarde corrompue, elle n'est jamais écrasée silencieusement.
+        try {
+            if (window.localStorage.getItem(STORAGE_KEY) !== null)
+                blockedByCorruptData = true;
+        }
+        catch { /* stockage entièrement bloqué */ }
+        storageError = blockedByCorruptData
+            ? `Sauvegarde illisible (${message}). Aucune écriture ne sera effectuée avant restauration explicite.`
+            : `Stockage indisponible (${message}). Les changements risquent d’être perdus après rechargement.`;
+        return makeDefaults();
+    }
+}
+let state = load();
+function save() {
+    if (blockedByCorruptData) {
+        showStorageAlert();
+        return false;
+    }
+    try {
+        const serialized = JSON.stringify(state);
+        window.localStorage.setItem(STORAGE_KEY, serialized);
+        // Vérification après écriture. Le rechargement est testé séparément avec un navigateur.
+        if (window.localStorage.getItem(STORAGE_KEY) !== serialized)
+            throw new Error('La relecture ne correspond pas.');
+        storageError = '';
+        showStorageAlert();
+        return true;
+    }
+    catch (error) {
+        storageError = `Écriture non confirmée (${error instanceof Error ? error.message : 'erreur inconnue'}). Les changements restent temporaires.`;
+        showStorageAlert();
+        return false;
+    }
+}
+function showStorageAlert() {
+    ui.storageAlert.hidden = !storageError;
+    ui.storageAlertText.textContent = storageError;
+}
+function toast(message) {
+    window.clearTimeout(toastTimer);
+    ui.toast.textContent = message;
+    ui.toast.hidden = false;
+    toastTimer = window.setTimeout(() => { ui.toast.hidden = true; }, 3500);
+}
+function commit(success) {
+    const saved = save();
+    render();
+    toast(saved ? success : 'Modification temporaire : sauvegarde NON confirmée.');
+}
+function available() {
+    if (state.repeatMode)
+        return [...state.notes];
+    const used = new Set(state.drawnIds);
+    return state.notes.filter(note => !used.has(note.id));
+}
+function formatDate(iso) {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime()))
+        return 'Date inconnue';
+    return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+}
+function render() {
+    const notes = state.notes;
+    const left = available().length;
+    const none = notes.length === 0;
+    const exhausted = !state.repeatMode && !none && left === 0;
+    const inactive = none || exhausted;
+    ui.drawButton.disabled = inactive;
+    ui.cookieTap.disabled = inactive;
+    ui.cookieTap.setAttribute('aria-label', exhausted ? 'Boîte épuisée : nouvelle tournée nécessaire' : none ? 'Aucun message : ajoutez-en un' : 'Ouvrir un biscuit surprise');
+    ui.drawButton.innerHTML = exhausted ? '✳ &nbsp; PLUS DE BISCUITS' : none ? '✎ &nbsp; BOÎTE VIDE' : '<span aria-hidden="true">✦</span> OUVRIR UN BISCUIT <span class="button-arrow" aria-hidden="true">↗</span>';
+    ui.drawHint.textContent = exhausted ? 'Vous avez tout lu. Lancez une nouvelle tournée !'
+        : none ? 'Ouvrez « Ma boîte » pour écrire votre premier message.'
+            : state.repeatMode ? 'Tirage avec répétitions : tous les mots sont dans la boîte.'
+                : 'Tirage sans répétition : chaque message sort une seule fois.';
+    ui.headerCount.textContent = String(notes.length);
+    ui.managerCount.textContent = `(${notes.length})`;
+    const demoCount = notes.filter(n => n.source === 'demo').length;
+    ui.demoBadge.hidden = demoCount === 0;
+    ui.demoNotice.hidden = demoCount === 0;
+    ui.demoNotice.textContent = `✳ ${demoCount} message${demoCount > 1 ? 's' : ''} d’exemple encore présent${demoCount > 1 ? 's' : ''} dans votre boîte (données de démonstration).`;
+    ui.availableCount.innerHTML = `${left} <small>/ ${notes.length}</small>`;
+    ui.drawnCount.textContent = String(state.totalDraws);
+    ui.repeatToggle.checked = state.repeatMode;
+    ui.repeatDescription.textContent = state.repeatMode ? 'Avec répétitions : un mot peut revenir.' : 'Sans répétition, jusqu’à épuisement.';
+    ui.resetDraws.hidden = state.drawnIds.length === 0;
+    const last = state.lastDraw;
+    ui.ticketPlaceholder.hidden = Boolean(last);
+    ui.ticketReveal.hidden = !last;
+    ui.copyButton.disabled = !last;
+    if (last) {
+        ui.fortuneText.textContent = last.text;
+        ui.fortuneRecipient.textContent = `Pour ${last.recipient}`;
+        ui.fortuneRecipient.hidden = last.recipient.trim().length === 0;
+        ui.fortuneMeta.textContent = `TIRÉ LE ${formatDate(last.at).toLocaleUpperCase('fr-FR')}`;
+        ui.ticketNumber.textContent = `BILLET N° ${String(last.number).padStart(3, '0')}`;
+    }
+    else {
+        ui.ticketNumber.textContent = 'BILLET N° —';
+    }
+    renderCollection();
+    showStorageAlert();
+}
+function createAction(text, aria, className, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = text;
+    button.className = className;
+    button.setAttribute('aria-label', aria);
+    button.addEventListener('click', onClick);
+    return button;
+}
+function renderCollection() {
+    ui.collectionList.replaceChildren();
+    ui.collectionEmpty.hidden = state.notes.length !== 0;
+    for (const note of state.notes) {
+        const row = document.createElement('article');
+        row.className = `collection-item${note.source === 'demo' ? ' example' : ''}`;
+        const textBlock = document.createElement('div');
+        textBlock.className = 'collection-copy';
+        const quote = document.createElement('p');
+        quote.textContent = `“${note.text}”`;
+        const meta = document.createElement('small');
+        meta.textContent = `${note.source === 'demo' ? 'Exemple' : 'Personnel'}${note.recipient ? ` · Pour ${note.recipient}` : ''}`;
+        textBlock.append(quote, meta);
+        const controls = document.createElement('div');
+        controls.className = 'collection-actions';
+        controls.append(createAction('✎', `Modifier : ${note.text}`, 'edit-button', () => editNote(note.id)), createAction('×', `Supprimer : ${note.text}`, 'remove-button', () => removeNote(note.id)));
+        row.append(textBlock, controls);
+        ui.collectionList.append(row);
+    }
+}
+function draw() {
+    const choices = available();
+    if (choices.length === 0) {
+        toast(state.notes.length ? 'Tous les biscuits ont été ouverts.' : 'Ajoutez d’abord un message à votre boîte.');
+        return;
+    }
+    let index = Math.floor(Math.random() * choices.length);
+    if (window.crypto?.getRandomValues) {
+        const array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        index = (array[0] ?? 0) % choices.length;
+    }
+    const note = choices[index];
+    if (!note)
+        return;
+    state.totalDraws += 1;
+    state.lastDraw = { noteId: note.id, text: note.text, recipient: note.recipient, at: new Date().toISOString(), number: state.totalDraws };
+    if (!state.drawnIds.includes(note.id))
+        state.drawnIds.push(note.id);
+    // La révélation est immédiate ; l'animation n'est que décorative.
+    ui.cookieTap.classList.remove('cracked');
+    void ui.cookieTap.offsetWidth;
+    ui.cookieTap.classList.add('cracked');
+    window.clearTimeout(animationTimer);
+    animationTimer = window.setTimeout(() => ui.cookieTap.classList.remove('cracked'), 920);
+    commit('Petit mot révélé et tirage enregistré.');
+}
+function updateCharCount() {
+    ui.charCount.textContent = `${ui.noteText.value.length} / ${MAX_MESSAGE_LENGTH} caractères`;
+}
+function resetForm() {
+    editingId = null;
+    ui.noteForm.reset();
+    ui.formError.hidden = true;
+    ui.formError.textContent = '';
+    ui.submitNote.textContent = '+ Ajouter à la boîte';
+    ui.cancelEdit.hidden = true;
+    updateCharCount();
+}
+function formError(message) {
+    ui.formError.textContent = message;
+    ui.formError.hidden = false;
+    ui.noteText.focus();
+}
+function makeId() {
+    return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `note-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+function submitNote(e) {
+    e.preventDefault();
+    const text = ui.noteText.value.trim();
+    const recipient = ui.noteRecipient.value.trim();
+    if (text.length < 3)
+        return formError('Écrivez un message de 3 caractères au minimum.');
+    if (text.length > MAX_MESSAGE_LENGTH)
+        return formError('Le message ne peut pas dépasser 160 caractères.');
+    if (recipient.length > 40)
+        return formError('Le destinataire est limité à 40 caractères.');
+    if (!editingId && state.notes.length >= MAX_NOTES)
+        return formError('La boîte est pleine (100 messages maximum).');
+    const existing = state.notes.find(n => n.id === editingId);
+    if (editingId && !existing)
+        return formError('Ce message n’existe plus.');
+    if (existing) {
+        // Toute édition transforme un exemple en message personnel.
+        state.notes = state.notes.map(n => n.id === editingId ? { ...n, text, recipient, source: 'perso' } : n);
+        resetForm();
+        commit('Message modifié et sauvegardé.');
+    }
+    else {
+        state.notes.unshift({ id: makeId(), text, recipient, source: 'perso', createdAt: new Date().toISOString() });
+        resetForm();
+        commit('Message ajouté et sauvegardé.');
+    }
+}
+function editNote(id) {
+    const note = state.notes.find(n => n.id === id);
+    if (!note)
+        return;
+    editingId = id;
+    ui.noteText.value = note.text;
+    ui.noteRecipient.value = note.recipient;
+    ui.submitNote.textContent = '✓ Enregistrer la modification';
+    ui.cancelEdit.hidden = false;
+    ui.formError.hidden = true;
+    updateCharCount();
+    ui.noteText.focus();
+}
+function removeNote(id) {
+    const note = state.notes.find(n => n.id === id);
+    if (!note || !window.confirm(`Supprimer définitivement ce message ?\n\n« ${note.text} »`))
+        return;
+    state.notes = state.notes.filter(n => n.id !== id);
+    state.drawnIds = state.drawnIds.filter(other => other !== id);
+    if (editingId === id)
+        resetForm();
+    commit('Message supprimé et changement sauvegardé.');
+}
+function openManager() {
+    ui.manager.showModal();
+    ui.noteText.focus();
+}
+function resetDraws() {
+    state.drawnIds = [];
+    state.lastDraw = null;
+    commit('Nouvelle tournée : tous les messages sont disponibles.');
+}
+function exportNotes() {
+    try {
+        const content = JSON.stringify({ format: 'biscuit-du-jour', version: 1, exportedAt: new Date().toISOString(), notes: state.notes }, null, 2);
+        const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = `biscuit-du-jour-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        window.setTimeout(() => URL.revokeObjectURL(href), 1000);
+        toast('Export JSON déclenché. Vérifiez les téléchargements du navigateur.');
+    }
+    catch {
+        toast('Impossible de préparer le fichier JSON.');
+    }
+}
+async function importNotes() {
+    const file = ui.importNotes.files?.[0];
+    if (!file)
+        return;
+    ui.importNotes.value = '';
+    if (file.size > 500_000)
+        return toast('Fichier trop volumineux (limite : 500 Ko).');
+    try {
+        const payload = JSON.parse(await file.text());
+        if (!payload || typeof payload !== 'object')
+            throw new Error('Structure invalide.');
+        const data = payload;
+        if (data.format !== 'biscuit-du-jour' || data.version !== 1)
+            throw new Error('Ce fichier n’est pas un export de Biscuit du jour.');
+        const notes = parseNotes(data.notes);
+        if (!window.confirm(`Importer ${notes.length} messages ? Cela remplacera les ${state.notes.length} messages actuels.`))
+            return;
+        state.notes = notes;
+        state.drawnIds = [];
+        state.lastDraw = null;
+        // Le mode de tirage et le compteur total sont conservés.
+        blockedByCorruptData = false;
+        commit('Import validé : les messages ont été enregistrés.');
+        resetForm();
+    }
+    catch (error) {
+        toast(`Import refusé : ${error instanceof Error ? error.message : 'fichier invalide'}`);
+    }
+}
+async function copyFortune() {
+    const last = state.lastDraw;
+    if (!last)
+        return;
+    const text = `“${last.text}”${last.recipient ? ` — Pour ${last.recipient}` : ''}`;
+    try {
+        await navigator.clipboard.writeText(text);
+        toast('Petit mot copié dans le presse-papiers.');
+    }
+    catch {
+        toast('Copie impossible : vérifiez les permissions du navigateur.');
+    }
+}
+ui.drawButton.addEventListener('click', draw);
+ui.cookieTap.addEventListener('click', draw);
+ui.repeatToggle.addEventListener('change', () => { state.repeatMode = ui.repeatToggle.checked; commit(state.repeatMode ? 'Répétitions autorisées et préférence sauvegardée.' : 'Répétitions désactivées et préférence sauvegardée.'); });
+ui.resetDraws.addEventListener('click', resetDraws);
+ui.copyButton.addEventListener('click', () => { void copyFortune(); });
+ui.openManager.addEventListener('click', openManager);
+ui.openManagerBottom.addEventListener('click', openManager);
+ui.closeManager.addEventListener('click', () => ui.manager.close());
+ui.manager.addEventListener('close', resetForm);
+ui.manager.addEventListener('click', e => { if (e.target === ui.manager)
+    ui.manager.close(); });
+ui.noteForm.addEventListener('submit', submitNote);
+ui.noteText.addEventListener('input', updateCharCount);
+ui.cancelEdit.addEventListener('click', resetForm);
+ui.exportNotes.addEventListener('click', exportNotes);
+ui.importNotes.addEventListener('change', () => { void importNotes(); });
+ui.restoreDemo.addEventListener('click', () => {
+    if (!window.confirm('Restaurer les 12 messages d’exemple ? Vos messages personnels seront remplacés, et la progression réinitialisée.'))
+        return;
+    const repeat = state.repeatMode;
+    state = makeDefaults();
+    state.repeatMode = repeat;
+    blockedByCorruptData = false;
+    resetForm();
+    commit('Exemples restaurés et sauvegardés.');
+});
+window.addEventListener('storage', e => {
+    if (e.key !== STORAGE_KEY)
+        return;
+    // Les changements d'un autre onglet sont rechargés ; aucun écrasement automatique.
+    state = load();
+    resetForm();
+    render();
+    toast('Boîte actualisée depuis un autre onglet.');
+});
+render();
+
+</script>
+</head>
+<body>
+  <div class="page-film" aria-hidden="true"></div>
+  <header class="site-header" id="accueil">
+    <a class="brand" href="#accueil" aria-label="Biscuit du jour, accueil">
+      <span class="brand-illustration" aria-hidden="true">✳</span>
+      <span>LA FABRIQUE <strong>DES SOURIRES</strong></span>
+    </a>
+    <div class="header-side">
+      <span class="issue-stamp">N° 001 <span>•</span> ÉDITION BONHEUR</span>
+      <button type="button" class="button-outline header-manage" id="openManager">
+        <span aria-hidden="true">✎</span> Ma boîte <span id="headerCount" class="button-count">12</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="ornament-line" aria-hidden="true"><span>✳</span><i></i><span>✦</span><i></i><span>✳</span></div>
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="hero-eyebrow"><span class="eyebrow-stars" aria-hidden="true">✦</span> UNE SURPRISE À CROQUER <span class="eyebrow-stars" aria-hidden="true">✦</span></div>
+      <h1 id="pageTitle"><span>Biscuit</span> <em>du jour</em><span class="h1-spark" aria-hidden="true">✳</span></h1>
+      <p>Des petits mots, un soupçon de hasard <span aria-hidden="true">&amp;</span> beaucoup de bonne humeur.</p>
+      <div class="header-ribbon" aria-hidden="true"><span>OUVREZ • SOURIEZ • RECOMMENCEZ</span></div>
+    </section>
+
+    <div id="storageAlert" class="alert-banner" role="alert" hidden>
+      <strong>La sauvegarde locale est indisponible.</strong>
+      <span id="storageAlertText">Vos modifications peuvent disparaître après actualisation.</span>
+    </div>
+
+    <div class="play-grid">
+      <section class="play-card" aria-labelledby="cookieTitle">
+        <div class="panel-kicker"><span>01</span> LE COMPTOIR DES BISCUITS <span class="kicker-end">✳ ✳ ✳</span></div>
+        <h2 id="cookieTitle" class="sr-only">Ouvrir un biscuit</h2>
+        <div class="cookie-theatre" id="cookieTheatre">
+          <div class="theatre-sign top-sign" aria-hidden="true">LE BISCUIT EXTRA-CHANCEUX</div>
+          <div class="theatre-burst" aria-hidden="true">✦</div>
+          <button type="button" class="cookie-tap" id="cookieTap" aria-label="Ouvrir un biscuit surprise">
+            <svg class="mascot-svg" viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un biscuit souriant de dessin animé, avec des bras et des chaussures">
+              <ellipse cx="247" cy="310" rx="153" ry="14" fill="#2e241e" opacity=".17"/>
+              <path d="M201 252Q190 279 174 296" fill="none" stroke="#302720" stroke-width="9" stroke-linecap="round"/>
+              <path d="M294 251Q302 280 319 297" fill="none" stroke="#302720" stroke-width="9" stroke-linecap="round"/>
+              <path d="M174 287q-24-4-32 12-4 13 14 14h37q12-5 4-15l-23-11Z" fill="#312821" stroke="#211b18" stroke-width="4"/>
+              <path d="M317 287q24-4 33 12 4 13-14 14h-37q-13-5-5-15l23-11Z" fill="#312821" stroke="#211b18" stroke-width="4"/>
+              <g class="mascot-arm mascot-arm-left">
+                <path d="M156 176q-59-36-80-12-11 16-29 9" fill="none" stroke="#332922" stroke-width="10" stroke-linecap="round"/>
+                <path d="M49 171q-10-17-20-17-5 2-2 11-17-13-21-4-4 7 16 20-16-2-15 6 5 13 31 12 18-1 22-15Z" fill="#fff9e9" stroke="#342a22" stroke-width="5" stroke-linejoin="round"/>
+                <path d="M23 180l22 8" stroke="#342a22" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <g class="mascot-arm mascot-arm-right">
+                <path d="M334 175q54-40 77-12 14 13 32 7" fill="none" stroke="#332922" stroke-width="10" stroke-linecap="round"/>
+                <path d="M447 166q11-23 20-21 7 4-2 17 14-12 19-5 4 6-10 17 19-2 18 6-3 13-24 16-19 2-28-15Z" fill="#fff9e9" stroke="#342a22" stroke-width="5" stroke-linejoin="round"/>
+                <path d="M446 181l20 6" stroke="#342a22" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <g class="cookie-half cookie-left">
+                <path d="M244 74q-26-18-53-5-16-7-29 9-22-2-32 19-24 8-22 33-15 19 1 36-9 20 8 39-2 27 23 33 3 24 28 24 13 24 39 17 17 12 41 1l-9-38 9-38-10-39 11-44-10-47Z" fill="#dda45f" stroke="#392b21" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M227 89q-53-24-86 22-25 39-5 84" fill="none" stroke="#fae2a0" stroke-width="8" stroke-linecap="round" opacity=".75"/>
+                <path d="M212 105l7 8M154 171l8-3M190 237l-6 8" stroke="#a7743d" stroke-width="6" stroke-linecap="round"/>
+                <ellipse cx="188" cy="158" rx="12" ry="17" fill="#32261f"/><ellipse cx="192" cy="151" rx="3" ry="5" fill="#fff4da"/>
+                <circle cx="163" cy="206" r="9" fill="#bd7147" opacity=".55"/>
+                <circle cx="168" cy="122" r="5" fill="#a56a35"/><circle cx="210" cy="215" r="7" fill="#a56a35"/><circle cx="134" cy="163" r="4" fill="#a56a35"/>
+              </g>
+              <g class="cookie-half cookie-right">
+                <path d="M244 74q23-16 49-5 21-7 36 10 23-1 30 20 28 9 24 33 18 22 0 37 9 24-10 38 4 25-20 33-2 27-30 27-11 24-37 15-24 13-47-2l10-34-12-42 11-38-9-43 5-49Z" fill="#e6b171" stroke="#392b21" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M263 90q62-24 90 29 18 37-5 74" fill="none" stroke="#ffe1a6" stroke-width="9" stroke-linecap="round" opacity=".8"/>
+                <ellipse cx="295" cy="158" rx="12" ry="17" fill="#32261f"/><ellipse cx="299" cy="151" rx="3" ry="5" fill="#fff4da"/>
+                <path d="M253 198q30 27 59-1" fill="none" stroke="#392b21" stroke-width="7" stroke-linecap="round"/>
+                <circle cx="320" cy="205" r="9" fill="#c2774c" opacity=".55"/>
+                <circle cx="326" cy="120" r="6" fill="#a56a35"/><circle cx="271" cy="241" r="6" fill="#a56a35"/><circle cx="356" cy="164" r="4" fill="#a56a35"/>
+                <path d="M268 115l5-8M328 241l7-3" stroke="#a7743d" stroke-width="6" stroke-linecap="round"/>
+              </g>
+              <g class="cookie-crack" aria-hidden="true"><path d="M245 84l-12 42 14 38-12 38 16 41-12 29" fill="none" stroke="#493025" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" opacity=".4"/></g>
+              <g class="mascot-hat" aria-hidden="true"><path d="M196 73q44-20 91-1" fill="none" stroke="#332923" stroke-width="11" stroke-linecap="round"/><path d="M213 68l7-35 44-1 9 39Z" fill="#29241f" stroke="#29241f" stroke-width="6"/><path d="M217 57h55" stroke="#c6533f" stroke-width="10"/><path d="M212 70q27 7 60 1" fill="none" stroke="#30231c" stroke-width="8"/></g>
+            </svg>
+            <span class="speech-pop" aria-hidden="true">CRAC !</span>
+          </button>
+          <div class="theatre-bottom" aria-hidden="true"><span>✦</span><span>LA CHANCE SOURIT AUX CURIEUX</span><span>✦</span></div>
+        </div>
+        <div class="play-action">
+          <button type="button" class="button-primary" id="drawButton">
+            <span aria-hidden="true">✦</span> OUVRIR UN BISCUIT <span class="button-arrow" aria-hidden="true">↗</span>
+          </button>
+          <p class="microcopy" id="drawHint">Appuyez, découvrez votre petit mot, souriez.</p>
+        </div>
+      </section>
+
+      <section class="ticket-card" aria-label="Votre billet surprise">
+        <div class="panel-kicker ticket-kicker"><span>02</span> VOTRE PETIT MOT <span class="kicker-end">★</span></div>
+        <div class="ticket-wrapper">
+          <div class="ticket-paper" id="fortuneTicket" aria-live="polite" aria-atomic="true">
+            <div class="ticket-topline"><span>✳</span><span>LA FABRIQUE DES SOURIRES</span><span>✳</span></div>
+            <div class="ticket-arch" aria-hidden="true">✦</div>
+            <div class="ticket-content" id="ticketContent">
+              <div class="ticket-placeholder" id="ticketPlaceholder">
+                <div class="ticket-illustration" aria-hidden="true">?</div>
+                <div class="ticket-overline">VOTRE DESTIN ATTEND...</div>
+                <h2 id="ticketTitle">Un petit bonheur<br /><em>est en route !</em></h2>
+                <p>Un message se cache dans le biscuit. À vous de jouer !</p>
+              </div>
+              <div class="ticket-reveal" id="ticketReveal" hidden>
+                <div class="ticket-overline">LE MOT DU JOUR <span>✦</span></div>
+                <blockquote id="fortuneText"></blockquote>
+                <div class="fortune-recipient" id="fortuneRecipient" hidden></div>
+                <div class="fortune-meta" id="fortuneMeta"></div>
+              </div>
+            </div>
+            <div class="ticket-bottomline"><span>★ ★ ★</span><span>BON POUR UN SOURIRE</span><span>★ ★ ★</span></div>
+          </div>
+          <div class="ticket-shadow" aria-hidden="true"></div>
+        </div>
+        <div class="ticket-actions">
+          <button type="button" id="copyButton" class="button-secondary" disabled><span aria-hidden="true">⧉</span> Copier le petit mot</button>
+          <span class="ticket-number" id="ticketNumber">BILLET N° —</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="control-strip" aria-label="État et réglages du tirage">
+      <div class="stat-item"><span class="stat-icon" aria-hidden="true">◉</span><div><strong id="availableCount">12 <small>/ 12</small></strong><span>BISCUITS DISPONIBLES</span></div></div>
+      <div class="stat-divider" aria-hidden="true"></div>
+      <div class="stat-item"><span class="stat-icon" aria-hidden="true">✩</span><div><strong id="drawnCount">0</strong><span>TIRAGES EFFECTUÉS</span></div></div>
+      <div class="stat-divider" aria-hidden="true"></div>
+      <label class="repeat-toggle"><span class="toggle-text"><strong>Biscuits à volonté ?</strong><small id="repeatDescription">Sans répétition, jusqu'à épuisement.</small></span><input type="checkbox" id="repeatToggle" role="switch"/><span class="switch-ui" aria-hidden="true"></span></label>
+      <button type="button" class="button-reset" id="resetDraws" hidden>↺ Nouvelle tournée</button>
+    </section>
+
+    <p class="demo-notice" id="demoNotice">✳ Les 12 messages présents au départ sont des exemples à personnaliser.</p>
+
+    <section class="bottom-banner" aria-label="Personnaliser votre boîte">
+      <div class="banner-star" aria-hidden="true">✳</div>
+      <div><span class="bottom-kicker">LE SECRET DES BONS BISCUITS ?</span><h2>Vos mots, votre magie.</h2><p>Ajoutez une pensée, un défi ou un compliment à votre collection.</p></div>
+      <button type="button" class="button-dark" id="openManagerBottom">✎ Personnaliser la boîte <span aria-hidden="true">↗</span></button>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>FAIT AVEC UNE PINCÉE DE FANTAISIE</span><span class="footer-mid">✳ 1932 — ET DEMAIN ENCORE ✳</span><span>SAUVEGARDÉ SUR CET APPAREIL, SANS COMPTE</span></footer>
+
+  <dialog id="managerDialog" class="manager-dialog" aria-labelledby="managerTitle">
+    <div class="dialog-header"><div><span class="dialog-overline">LE PETIT LABORATOIRE</span><h2 id="managerTitle">La boîte à <em>messages</em></h2><p>Écrivez les mots que votre prochain biscuit pourra révéler.</p></div><button id="closeManager" class="dialog-close" type="button" aria-label="Fermer la boîte à messages">×</button></div>
+    <div class="dialog-main">
+      <section class="write-zone" aria-labelledby="writeTitle"><h3 id="writeTitle">✦ Un nouveau message</h3>
+        <form id="noteForm" novalidate>
+          <label for="noteText">Votre petit mot <span class="required">*</span></label>
+          <textarea id="noteText" name="message" maxlength="160" minlength="3" rows="5" placeholder="Ex. : Aujourd'hui, ose le pas de danse ridicule. C'est le plus beau !" required></textarea>
+          <div class="field-row"><span id="charCount">0 / 160 caractères</span><span>3 caractères minimum</span></div>
+          <label for="noteRecipient">Destinataire <small>(facultatif)</small></label>
+          <input type="text" id="noteRecipient" maxlength="40" placeholder="Ex. : Camille, Mamie, toi..." />
+          <p id="formError" class="form-error" role="alert" hidden></p>
+          <div class="form-buttons"><button class="button-primary form-submit" type="submit" id="submitNote">+ Ajouter à la boîte</button><button class="button-outline" type="button" id="cancelEdit" hidden>Annuler</button></div>
+        </form>
+        <div class="local-tip"><strong>✳ Vos secrets restent chez vous.</strong><p>Les messages sont conservés dans le stockage local de ce navigateur. Aucun compte ni serveur externe. Exportez un fichier JSON pour en garder une copie.</p></div>
+      </section>
+      <section class="collection-zone" aria-labelledby="collectionTitle">
+        <div class="collection-head"><h3 id="collectionTitle">✳ Dans votre boîte <span id="managerCount">(12)</span></h3><span id="demoBadge" class="demo-tag">EXEMPLES</span></div>
+        <div class="collection-list" id="collectionList" aria-live="polite"></div>
+        <div class="collection-empty" id="collectionEmpty" hidden>Votre boîte est vide. Écrivez le premier mot juste à côté !</div>
+      </section>
+    </div>
+    <div class="dialog-footer"><div class="file-controls"><button class="button-outline button-small" id="exportNotes" type="button">↓ Exporter JSON</button><label class="button-outline button-small import-label" for="importNotes">↑ Importer JSON</label><input class="visually-hidden-input" type="file" id="importNotes" accept="application/json,.json" aria-label="Importer un fichier de messages JSON" /></div><button id="restoreDemo" class="text-action" type="button">Restaurer les exemples</button></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="no-script">Activez JavaScript pour ouvrir les biscuits et enregistrer vos messages.</p></noscript>
+</body>
+</html>
