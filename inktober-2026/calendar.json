@@ -347,11 +347,28 @@
       "devMinutes": 1920,
       "devMinMinutes": 1440,
       "devMaxMinutes": 2880
+    },
+    {
+      "day": 30,
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": 1440,
+      "devMinMinutes": 960,
+      "devMaxMinutes": 2160,
+      "opened": true,
+      "done": true,
+      "appTitle": "Biscuit du jour",
+      "note": "Boîte de messages surprise dans un biscuit cartoon vintage inspiré du flash tattoo : animation d’ouverture, 12 messages de démonstration modifiables, tirages sans répétition par défaut, option doublons, historique, sauvegarde locale et import/export JSON. V1 et V2 documentées, original Git non disponible. Vibe Coding : ~90 min estimées (non chronométrées) ; équivalent développeur : ~24 h (16–36 h), valeurs indicatives.",
+      "appUrl": "https://egalland.github.io/biscuit-du-jour/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/biscuit-du-jour",
+      "vibeMinutes": 90,
+      "vibeBasis": "estimated",
+      "vibeObservedSeconds": null
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-10-31"
+  "updatedAt": "2026-11-03"
 }
