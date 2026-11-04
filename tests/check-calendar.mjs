@@ -45,8 +45,8 @@ assert(published.days.every(row=>!('vibeMinMinutes' in row)&&!('vibeMaxMinutes' 
 // Integration totals include every published project, with no missing duration treated as zero.
 const all=a.win.inktoberMetrics.calculate(published.days,published.settings);
 assert.equal(all.rows.length,published.days.length);
-assert.equal(all.vibeTime.count,published.days.length);
-assert.equal(all.dev.count,published.days.length);
+assert.equal(all.vibeTime.count,published.days.filter(row=>row.done&&Number.isInteger(row.vibeMinutes)).length);
+assert.equal(all.dev.count,published.days.filter(row=>row.done&&Number.isInteger(row.devMinutes)).length);
 assert.equal(all.vibeTime.value,published.days.reduce((sum,row)=>sum+row.vibeMinutes,0));
 assert.equal(all.dev.value,published.days.reduce((sum,row)=>sum+row.devMinutes,0));
 assert.equal(all.vibeCost.value,published.days.reduce((sum,row)=>sum+Math.round(row.vibeMinutes*3500/60),0));

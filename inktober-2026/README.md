@@ -86,3 +86,22 @@ Les historiques complets des deux dépôts nouvellement intégrés sont conserv�
 Le jour 17 est renseigné dans le calendrier et les totaux : 35 min de Vibe Coding estimées (valorisation 20,42 € à 35 €/h), 64 h de développement manuel équivalent estimées (48–96 h ; valorisation centrale 2 560 € à 40 €/h). Ces chiffres ne sont pas des mesures de temps actif ni des dépenses réelles. La provenance et le périmètre sont détaillés dans `metrics-sources.json`.
 
 Le jeu et son code complet sont hébergés par le dépôt public `egalland/engin-dispano`, avec GitHub Pages à `/engin-dispano/`. La route `/17/` redirige vers le jeu. Les deux versions de développement sont reprises séparément sur GitHub et l’historique original exact est conservé dans le bundle du dépôt source.
+
+## Le Cabinet des impossibles · huit thèmes (4 novembre 2026)
+
+Les jours **11, 18, 20, 26, 27, 28, 29 et 31** sont réalisés et reliés à [la même application](https://egalland.github.io/cabinet-des-impossibles/). Le calendrier compte **31 thèmes réalisés sur 31**. Leurs fiches décrivent maintenant les modèles enrichis et leur interaction propre.
+
+| Jour | Thème | Pièce |
+|---|---|---|
+| 11 | Sauvetage | Ce qui reste |
+| 18 | Incapable de voler | Le rêve d’Icare |
+| 20 | Salon | Une place pour l’absence |
+| 26 | Fermeture éclair | De l’autre côté |
+| 27 | Stupide | Le gardien distrait |
+| 28 | Trophée | La petite victoire |
+| 29 | Défense | Le dernier printemps |
+| 31 | Fléchir | L’élégance de céder |
+
+La version référencée est le commit `f619527c831a8baee48dfd9842d871b8367617c1` : sept sculptures originales détaillées, géométrie CC0 Sheen Chair adaptée pour la chaise, matières distinctes et observation isolée à 360°. Compilation et seize tests réussis ; silhouettes contrôlées hors GPU. Le rendu WebGL n’a pas pu être inspecté dans le navigateur de contrôle.
+
+Les durées restent inconnues pour ce projet partagé. Les huit cases n’ajoutent donc aucun temps ni coût aux totaux : une absence de mesure n’est pas zéro heure, et le même travail ne doit pas être compté huit fois.
