@@ -164,6 +164,23 @@
       "vibeBasis": "estimated"
     },
     {
+      "day": 11,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Sauvetage : Sphère fragmentée qui se reconstitue. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
+    },
+    {
       "day": 12,
       "promptMinutes": null,
       "chatgptMinutes": null,
@@ -264,6 +281,23 @@
       "devMaxMinutes": 5760
     },
     {
+      "day": 18,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Incapable de voler : Oiseau de cuivre aux ailes animées, envol suivi d’une retombée. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
+    },
+    {
       "day": 19,
       "opened": true,
       "done": true,
@@ -279,6 +313,23 @@
       "devMaxMinutes": 600,
       "vibeBasis": "estimated",
       "vibeObservedSeconds": null
+    },
+    {
+      "day": 20,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Salon : Pièce 3D aménageable, fauteuil et halo animé. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
     },
     {
       "day": 21,
@@ -366,6 +417,74 @@
       "devMaxMinutes": 2880
     },
     {
+      "day": 26,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Fermeture éclair : Rideaux à fermeture éclair qui révèlent un souvenir personnel. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
+    },
+    {
+      "day": 27,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Stupide : Gardien distrait, mouvement absurde et message personnalisable. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
+    },
+    {
+      "day": 28,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Trophée : Astre couronné et célébration de la pièce choisie. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
+    },
+    {
+      "day": 29,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Défense : Graine entourée de deux défenses sculptées et protection de verre. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
+    },
+    {
       "day": 30,
       "promptMinutes": null,
       "chatgptMinutes": null,
@@ -381,11 +500,28 @@
       "vibeMinutes": 90,
       "vibeBasis": "estimated",
       "vibeObservedSeconds": null
+    },
+    {
+      "day": 31,
+      "opened": true,
+      "done": true,
+      "appTitle": "Le Cabinet des impossibles",
+      "note": "Projet unique réunissant les jours 11, 18, 20, 26, 27, 28, 29 et 31. Fléchir : Ruban de métal qui se courbe sans rompre. Atelier de curiosités Three.js : objets personnalisables, comportements combinables, images, histoires, disposition, trois ambiances, son facultatif, sauvegarde locale IndexedDB et import/export JSON. Compilation, tests d’import et parcours de création/persistance vérifiés ; rendu 3D non contrôlé visuellement dans le navigateur de test, dépourvu de WebGL. Temps non renseignés pour éviter de compter huit fois le même projet.",
+      "appUrl": "https://egalland.github.io/cabinet-des-impossibles/",
+      "repoUrl": "https://github.com/egalland/egalland.github.io/tree/master/cabinet-des-impossibles",
+      "promptMinutes": null,
+      "chatgptMinutes": null,
+      "devMinutes": null,
+      "vibeMinutes": null,
+      "devMinMinutes": null,
+      "devMaxMinutes": null,
+      "vibeObservedSeconds": null,
+      "vibeBasis": "estimated"
     }
   ],
   "settings": {
     "vibeRateCents": 3500,
     "devRateCents": 4000
   },
-  "updatedAt": "2026-11-03"
+  "updatedAt": "2026-11-04"
 }
