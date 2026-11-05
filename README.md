@@ -6,7 +6,7 @@ Le [portfolio d’Emmanuel](https://egalland.github.io/) présente un seul docum
 
 - `index.html` : document unique, contenu actuel et switch de thème dans l’en-tête. Les descriptions, formulaires, états et ancres restent les mêmes pendant les changements.
 - `portfolio-assets/portfolio.mjs` et `theme-manager.mjs` : choix mémorisé, chargement à la demande, composition Glitch et cycle de vie des moteurs.
-- `portfolio-assets/themes/` : moteurs Points et Curseurs, construction, formations et nettoyage des animations/écouteurs/éléments temporaires.
+- `portfolio-assets/themes/` : moteurs Points, Curseurs et Glitch, construction, formations et nettoyage des animations/écouteurs/éléments temporaires.
 - `portfolio-assets/portfolio-content.mjs` : interactions communes, mini-démo Kikalmo, onglets, modale et copie du profil, initialisés une seule fois.
 - `points/assets/` : ressources et polices du modèle original, conservées sans altération. `/points/` et `/curseurs/` redirigent vers le document commun, en préservant le thème et la section.
 - `portfolio/content.json` : source commune des textes et liens extraits du commit `8e4a64746f8fd3e1354867cc92fdcb24292e6902`. `scripts/build-portfolio.mjs` génère la page commune depuis `portfolio/page.template.html`, les modules de contenu et les deux redirections de compatibilité.
@@ -81,12 +81,21 @@ node --test tests/portfolio-*.test.mjs
 
 Le switch conserve le document, la saisie, les états des démonstrations et la position de lecture. Le choix est mémorisé et partageable avec `?theme=points`, `?theme=curseurs` ou `?theme=glitch`. Sans JavaScript, le document reste lisible et ses liens restent accessibles.
 
-Points dessine les formations dans les emplacements des aperçus et conserve le déplacement continu de la matière. Curseurs assemble les fenêtres, écrit puis positionne le contenu au défilement. Glitch lance les deux moteurs sur les mêmes aperçus, avec des distorsions locales et espacées. Les thèmes déclarés compatibles dans le registre rejoignent le mélange ; de nouveaux moteurs peuvent être ajoutés sans dupliquer le contenu HTML.
+Points dessine les formations dans les emplacements des aperçus et conserve le déplacement continu de la matière. Curseurs assemble les fenêtres, écrit puis positionne le contenu au défilement. Glitch dispose de sa propre composition : une fracture oblique irrégulière révèle le monde clair des points à travers le monde sombre des curseurs. Onze objets partagent une géométrie unique, rendue en tracés continus d’un côté et en particules de l’autre. Les petites fenêtres entrent après l’ouverture ; un décalage de fragments de l’image accompagne brièvement la déchirure, sans texture de papier, secousse globale ni clignotement répété. Le registre charge ce moteur seul ; ses sources visuelles sont Points et Curseurs. Ajouter un futur univers à la fusion demande un adaptateur de rendu explicite, sans dupliquer le contenu HTML.
 
-Chaque moteur fournit une fonction d’arrêt : boucle d’animation, écouteurs, sélections, transformations et éléments temporaires sont nettoyés. Un chargement devenu obsolète ne lance aucun moteur. La préférence de mouvement réduit est respectée ; les animations s’arrêtent lorsque l’onglet est masqué. Les unités déjà construites restent mémorisées et les fenêtres contenant une saisie ne recommencent pas leur agrandissement.
+Chaque moteur fournit une fonction d’arrêt : boucle d’animation, écouteurs, sélections, transformations et éléments temporaires sont nettoyés. Un chargement devenu obsolète ne lance aucun moteur. La préférence de mouvement réduit est respectée ; les animations s’arrêtent lorsque l’onglet est masqué. Les unités déjà construites restent mémorisées et les fenêtres contenant une saisie ne recommencent pas leur agrandissement. Glitch garde également les apparitions déjà vues : revenir en arrière ne déclenche pas à nouveau la déchirure. Les aperçus Market Plus et la mini-démo Kikalmo restent accessibles par un bouton sur leurs scènes ; ouvrir ou fermer la fusion conserve leur état et leur saisie.
 
 Aucune application existante n’est déplacée : les arbres Git de `/inktober/`, `/inktober-2026/`, `/livre/`, `/redim/`, `/elec/`, `/map/` et de tous les autres sous-sites sont conservés. L’accès à l’outil Market Plus interne demeure absent ; son bouton ouvre uniquement la carte publique des composants.
 
 Les huit commits disponibles du modèle Points sont conservés dans les parties `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. Leur intégrité est testée. La publication conserve l’historique GitHub existant ; aucun commit passé n’est reconstruit. Voir `source-history/portfolio-points.md`.
 
-Validation : quinze tests de contenu, routes, composition des thèmes, courses entre chargements, nettoyage, réduction des mouvements, animation bornée et intégrité des ressources. Contrôle visuel bureau des trois modes, absence de débordement horizontal, coexistence puis arrêt des moteurs, conservation d’une saisie et fonctionnement de la mini-démo après les bascules. Un téléphone réel reste à contrôler.
+Validation : dix-huit tests de contenu, routes, sélection des moteurs, courses entre chargements, nettoyage, réduction des mouvements, géométrie de la fracture, durée bornée de la rupture et intégrité des ressources. Contrôle navigateur bureau et vues mobiles de 390 et 320 px : absence de débordement, bascule entre les trois modes, saisie conservée et mini-démo fonctionnelle sur petit écran. Contrôle du moteur à mouvement réduit : un rendu initial puis arrêt de la boucle. Un téléphone physique reste à contrôler.
+
+### Moteur de fusion
+
+- `portfolio-assets/themes/fracture.mjs` : frontière irrégulière déterministe, interpolation de la coupe, projection et phases d’arrivée.
+- `portfolio-assets/themes/fusion-shapes.mjs` : géométries communes des onze objets et échantillonnage sur leurs segments.
+- `portfolio-assets/themes/glitch.mjs` : masque partagé, construction, points, curseurs, découpes locales de l’image, interactions et nettoyage.
+- `portfolio-assets/glitch.css` : composition dédiée, grille mobile, contrôle des aperçus et conservation des interfaces interactives.
+
+Le rendu vise 30 images/s, limite la densité à 2 800 points par objet sur petit écran (4 400 sur bureau) et ne dessine que les scènes visibles. Le navigateur arrête la boucle dans un onglet masqué et lorsqu’aucune scène n’est visible. Aucun nouveau service, image distante ou bibliothèque n’est nécessaire pour Glitch.

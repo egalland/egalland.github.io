@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {THEMES,engineNames,normalizeTheme,createThemeManager,glitchEnvelope} from '../portfolio-assets/theme-manager.mjs';
-test('Glitch réunit les moteurs et inclura les futurs thèmes compatibles sans doublon',()=>{
- assert.deepEqual(engineNames('points'),['points']);assert.deepEqual(engineNames('glitch'),['points','curseurs']);assert.equal(normalizeTheme('invalid'),'curseurs');
- assert.deepEqual(engineNames('glitch',{...THEMES,extra:{mixable:true,engines:['points','extra']}}),['points','curseurs','extra']);
+test('Glitch possède son propre moteur de fusion et les deux vues conservent les leurs',()=>{
+ assert.deepEqual(engineNames('points'),['points']);assert.deepEqual(engineNames('curseurs'),['curseurs']);assert.deepEqual(engineNames('glitch'),['glitch']);assert.equal(normalizeTheme('invalid'),'curseurs');
+ assert.deepEqual(THEMES.glitch.sources,['points','curseurs']);
 });
 test('une sélection rapide annule le lancement différé du moteur précédent',async()=>{
  let finish;const calls=[],reports=[];
@@ -14,10 +14,10 @@ test('une sélection rapide annule le lancement différé du moteur précédent'
 test('chaque moteur est arrêté une seule fois et reçoit la préférence de mouvement réduit',async()=>{
  const events=[];const m=createThemeManager({apply(){},load:async name=>({start:o=>{events.push(['start',name,o.reduced,o.mode]);return{stop:()=>events.push(['stop',name])};}})});
  await m.select('glitch',{reduced:true});await m.select('points',{reduced:false});m.stop();m.stop();
- assert.deepEqual(events,[['start','points',true,'glitch'],['start','curseurs',true,'glitch'],['stop','curseurs'],['stop','points'],['start','points',false,'points'],['stop','points']]);
+ assert.deepEqual(events,[['start','glitch',true,'glitch'],['stop','glitch'],['start','points',false,'points'],['stop','points']]);
 });
 test('une erreur de démarrage nettoie le mélange et conserve le contenu lisible',async()=>{
- let stopped=0;const appearances=[],reports=[];const m=createThemeManager({apply:t=>appearances.push(t),report:e=>reports.push(e),load:async name=>({start:()=>{if(name==='curseurs')throw Error('failure');return{stop:()=>stopped++};}})});
+ let stopped=0;const appearances=[],reports=[];const m=createThemeManager({registry:{...THEMES,glitch:{engines:['points','broken']}},apply:t=>appearances.push(t),report:e=>reports.push(e),load:async name=>({start:()=>{if(name==='broken')throw Error('failure');return{stop:()=>stopped++};}})});
  assert.equal(await m.select('glitch'),false);assert.equal(stopped,1);assert.equal(m.current,null);assert.deepEqual(appearances,['glitch','curseurs']);assert.equal(reports.at(-1).status,'error');
 });
 test('les distorsions Glitch sont locales, bornées et espacées',()=>{
