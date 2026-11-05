@@ -79,11 +79,8 @@ $('#word-next').addEventListener('click',()=>{
   $('#word-letters').textContent=words[wordIndex].consonants;$('#word-clue').textContent='Indice : '+words[wordIndex].clue;
   $('#word-answer').value='';$('#word-feedback').textContent='À toi de trouver.';$('#word-feedback').classList.remove('success');$('#word-next').hidden=true;
 });
-$('#copy-profile').addEventListener('click',async()=>{try{await navigator.clipboard.writeText('https://github.com/egalland');toast('Lien GitHub copié.')}catch{toast('Copie indisponible. Le lien GitHub est accessible juste à côté.')}});
-const projectDetails={
-  market:{category:'OUTIL MÉTIER / INTERNE',title:'Market Plus',description:'Un outil pour préparer et présenter les points marché. La présentation du portfolio reste schématique.',features:['Points marché composés en blocs.','Tickets Jira, simulations et suivi des promotions.','Variations fournisseurs et imports de données.','Exports et présentation des informations utiles.'],url:null},
-  bodyos:{category:'APPLICATION PERSONNELLE / PRIVÉ',title:'BodyOS',description:'Un espace personnel pour réunir les séances, les objectifs et la progression. Seule l’approche du projet est présentée ici.',features:['Organisation du suivi dans une même interface.','Historique et visualisation de la progression.','Lecture simple des informations utiles.'],url:null}
-};
+$('#copy-profile').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(window.PORTFOLIO_CONTENT.profile.github);toast('Lien GitHub copié.')}catch{toast('Copie indisponible. Le lien GitHub est accessible juste à côté.')}});
+const projectDetails=window.PORTFOLIO_CONTENT.details;
 const projectDialog=$('#project-dialog');
 $$('[data-project]').forEach(button=>button.addEventListener('click',()=>{
   const detail=projectDetails[button.dataset.project];

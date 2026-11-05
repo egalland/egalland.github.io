@@ -1,0 +1,15 @@
+import logo0 from "./logo-00.mjs";
+import logo1 from "./logo-01.mjs";
+import logo2 from "./logo-02.mjs";
+import logo3 from "./logo-03.mjs";
+import logo4 from "./logo-04.mjs";
+import puppet0 from "./puppet-00.mjs";
+import puppet1 from "./puppet-01.mjs";
+import puppet2 from "./puppet-02.mjs";
+import puppet3 from "./puppet-03.mjs";
+import puppet4 from "./puppet-04.mjs";
+import puppet5 from "./puppet-05.mjs";
+import puppet6 from "./puppet-06.mjs";
+import puppet7 from "./puppet-07.mjs";
+import puppet8 from "./puppet-08.mjs";
+export default {logo:"data:image/webp;base64,"+[logo0,logo1,logo2,logo3,logo4].join(""),puppet:"data:image/png;base64,"+[puppet0,puppet1,puppet2,puppet3,puppet4,puppet5,puppet6,puppet7,puppet8].join("")};
