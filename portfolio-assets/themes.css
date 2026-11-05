@@ -1,0 +1,47 @@
+@import url('/points/assets/fonts.css');
+.theme-switch{display:flex;gap:2px;padding:3px;border:1px solid #3f4b62;border-radius:5px;background:#121721;white-space:nowrap}
+.theme-switch button{min-height:33px;padding:7px 11px;font:10px/1.2 var(--mono);background:transparent;color:#aab9d0;border-radius:2px;transition:color .2s,background .2s}
+.theme-switch button[aria-pressed=true]{background:#a6c0ee;color:#13233c}.theme-switch button[data-theme-choice=glitch][aria-pressed=true]{background:#d4afd9;color:#321735}
+.theme-switch button:disabled{opacity:.6;cursor:default}.theme-switch button[aria-busy=true]:after{content:' ·';animation:theme-loading 1s ease-in-out infinite}.nav .nav-right{gap:12px}
+#point-motion{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:19}
+html[data-theme=points]{--bg:#eeece5;--fg:#222d29;--muted:#65766b;--line:#c6ccc1;--blue:#187d73;--green:#34705d}
+html[data-theme=points] body{font-family:RedlineText,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+html[data-theme=points] body:before{background-image:linear-gradient(#62735d09 1px,transparent 1px),linear-gradient(90deg,#62735d09 1px,transparent 1px)}
+html[data-theme=points] .nav{background:#eeece5eb;border-bottom-color:#6b7b5e26}
+html[data-theme=points] .theme-switch{background:#e0e5d9;border-color:#9dab97}html[data-theme=points] .theme-switch button{color:#4b624b}html[data-theme=points] .theme-switch button[aria-pressed=true]{background:#315c4a;color:#fff}
+html[data-theme=points] .nav nav{color:#50634f}html[data-theme=points] .nav nav a:hover{color:#253c2b}html[data-theme=points] .personal-mark{color:#293e2f;border-color:#7b9078}html[data-theme=points] .personal-mark>span{color:#d25039}
+html[data-theme=points] .github{background:#315c4a;color:#fff}html[data-theme=points] .dim{color:#6a7b66}
+html[data-theme=points] .hero h1,html[data-theme=points] h2,html[data-theme=points] .project h3,html[data-theme=points] .lab-card h3{font-family:Redline,Arial,sans-serif;letter-spacing:-.06em}
+html[data-theme=points] .hero h1 .muted,html[data-theme=points] h2 .muted{color:#b45036}
+html[data-theme=points] .intro,html[data-theme=points] .section-heading>p,html[data-theme=points] .project-copy>p,html[data-theme=points] .about-grid p:not(.eyebrow),html[data-theme=points] .contact-row p{color:#4e6253}
+html[data-theme=points] .eyebrow,html[data-theme=points] .project-meta,html[data-theme=points] .section-marker,html[data-theme=points] .hero-bottom,html[data-theme=points] .metrics span,html[data-theme=points] .lab-card p,html[data-theme=points] .lab-card-top,html[data-theme=points] .lab-type,html[data-theme=points] .skill-line,html[data-theme=points] .timeline-item small{color:#5a6e59}
+html[data-theme=points] .section-marker>span{color:#ab5134}html[data-theme=points] .live{color:#2e7259}html[data-theme=points] .alpha{color:#916132}html[data-theme=points] .private-label{color:#68694c}
+html[data-theme=points] .section{border-color:#63775318}html[data-theme=points] .hero{min-height:calc(100svh - 74px);padding-top:100px}
+html[data-theme=points] .project{min-height:82svh;margin-top:30px;padding-top:65px;padding-bottom:65px;gap:70px}
+html[data-theme=points] .project h3{font-size:clamp(42px,5.6vw,76px)}html[data-theme=points] .project-copy>p{font-size:15px;line-height:1.7}
+html[data-theme=points] .tags>span{color:#546b55;border-color:#a8b5a0}html[data-theme=points] .personal-interests>span{color:#546b55;border-color:#a8b5a0}
+html[data-theme=points] .button{border-color:#84957c}html[data-theme=points] .button.primary{background:#315c4a;border-color:#315c4a;color:#fff}html[data-theme=points] .button:hover{background:#dbe2d3}
+html[data-theme=points] .button.primary:hover{background:#214735}html[data-theme=points] .text-link{border-color:#87987e}html[data-theme=points] .text-link:hover{color:#a54e31}
+html[data-theme=points] .hero-art,html[data-theme=points] .project-window{border:1px solid #9da98f;background:#e8ecdf;box-shadow:none;min-height:350px;opacity:1;position:relative}
+html[data-theme=points] .hero-art{margin-top:15px;min-height:380px;background:transparent;border-color:transparent}
+html[data-theme=points] .hero-art>*,html[data-theme=points] .project-window>*{visibility:hidden;pointer-events:none}
+html[data-theme=points] .kikalmo-window{background:#13151c;border-color:#555462}html[data-theme=points] .body-window{background:#10171b;border-color:#4a6251}
+html[data-theme=points] .maison-window{background:#ece9e1}
+html[data-theme=points] .lab-grid{display:block}html[data-theme=points] .lab-card{display:grid;grid-template-columns:1fr 1.15fr;column-gap:55px;align-content:center;min-height:74svh;padding:55px 20px;border-width:1px 0 0;background:none;box-shadow:none}
+html[data-theme=points] .lab-card>*{grid-column:1}html[data-theme=points] .lab-card .lab-art{grid-column:2;grid-row:1 / span 5;height:320px;margin:0;background:#e5e9dc;border:1px solid #adb69f;position:relative}
+html[data-theme=points] .lab-card .lab-art>*{visibility:hidden}html[data-theme=points] .lab-card h3{font-size:38px;min-height:0;margin:22px 0 14px}html[data-theme=points] .lab-card p{min-height:0;font-size:14px;line-height:1.6;max-width:360px;margin:0 0 25px}
+html[data-theme=points] .lab-card:hover{background:#dce2d338;transform:none}html[data-theme=points] .lab-type{border-color:#a8b5a0}
+html[data-theme=points] .timeline-item,html[data-theme=points] .skill-line{border-color:#9cae93}html[data-theme=points] .timeline-item>span{color:#ab5134}html[data-theme=points] .about-grid .manifesto{color:#405b44!important}
+html[data-theme=points] .mouse-glow{display:none}html[data-theme=points] footer p,html[data-theme=points] footer>span,html[data-theme=points] footer>a:not(.brand){color:#5c715b}
+/* In Glitch, builders and particle formations occupy the same preview windows. */
+html[data-theme=glitch]{--blue:#bb9fec;--glitch-burst:0}
+html[data-theme=glitch] .nav{border-bottom-color:#9474ad40}html[data-theme=glitch] #point-motion{mix-blend-mode:screen}
+html[data-theme=glitch] .project-window,html[data-theme=glitch] .hero-art,html[data-theme=glitch] .lab-art{isolation:isolate;box-shadow:calc(var(--glitch-burst)*2px) 0 0 #76c8d2,calc(var(--glitch-burst)*-2px) 0 0 #dd91b3}
+html[data-theme=glitch] .project-window>.market-content,html[data-theme=glitch] .project-window>.word-demo,html[data-theme=glitch] .project-window>.maison-drawing,html[data-theme=glitch] .project-window>.body-preview{opacity:calc(.58 - var(--glitch-burst)*.24)}
+html[data-theme=glitch] .project-window:focus-within>*{opacity:1!important}html[data-theme=glitch] .hero-art .system-map{opacity:.4}
+html[data-theme=glitch] .lab-art>*{opacity:.4}html[data-theme=glitch] .personal-mark{border-color:#bd98db;color:#dcc7ed}html[data-theme=glitch] .progress{background:linear-gradient(90deg,#8ab7e9,#d995c2)}
+@keyframes theme-loading{50%{opacity:.25}}
+@media(max-width:1050px){.nav{gap:22px}.nav nav{gap:18px}.nav .github{display:none}.nav .nav-right{gap:10px}}
+@media(max-width:700px){.theme-switch{padding:2px;gap:1px}.theme-switch button{font-size:9px;min-height:35px;padding:7px 8px}.nav .nav-right{gap:8px}.nav .brand{font-size:11px}.nav nav{z-index:40}html[data-theme=points] .nav nav{background:#e8ecdf;border-color:#9cae93}html[data-theme=points] .hero{padding-top:50px;min-height:0}html[data-theme=points] .hero h1{font-size:64px}html[data-theme=points] .hero-art{min-height:280px;max-width:100%;margin-top:35px}html[data-theme=points] .project{min-height:0;padding-top:35px;padding-bottom:35px;gap:25px}html[data-theme=points] .project-copy>p{font-size:13px}html[data-theme=points] .project-window{min-height:290px}html[data-theme=points] .project h3{font-size:48px}html[data-theme=points] .lab-card{min-height:0;grid-template-columns:1fr;padding:35px 0;gap:0}html[data-theme=points] .lab-card .lab-art{grid-column:1;grid-row:auto;height:260px;margin:0 0 20px}html[data-theme=points] .lab-card .lab-card-top{margin-bottom:18px}html[data-theme=points] .lab-card h3{font-size:31px;margin-top:6px}html[data-theme=points] .lab-card p{font-size:13px;max-width:100%}html[data-theme=points] .lab-type{min-height:0}}
+@media(max-width:420px){.nav .brand>span:last-child{display:none}.nav{gap:9px}.nav .nav-right{gap:10px}.theme-switch button{font-size:10px;padding:7px 9px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}html[data-theme=glitch] .project-window{box-shadow:none}}

@@ -1,13 +1,15 @@
 # Projets d’Emmanuel
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) propose à l’accueil une [vue Points](https://egalland.github.io/points/) et une [vue Curseurs](https://egalland.github.io/curseurs/). Les deux présentations utilisent le contenu actuel de la page GitHub : mêmes projets, descriptions, liens, dates et compétences. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+Le [portfolio d’Emmanuel](https://egalland.github.io/) présente un seul document HTML et un switch permanent Points / Curseurs / Glitch. Le choix active les moteurs d’animation correspondants sans rechargement ni remplacement du contenu. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
 
 ## Organisation
 
-- `index.html` : choix entre les deux expériences. Les anciennes ancres de l’accueil ouvrent leur section dans la vue Curseurs.
-- `curseurs/` et `portfolio-assets/` : présentation existante, construction automatique au défilement, mini-démo Kikalmo et animations des curseurs.
-- `points/` : dix projets, parcours et compétences en dix-neuf tableaux animés, entièrement en particules.
-- `portfolio/content.json` : source commune des textes et liens extraits du commit `8e4a64746f8fd3e1354867cc92fdcb24292e6902`. `scripts/build-portfolio.mjs` régénère les trois pages statiques à partir de ces données et des deux modèles HTML.
+- `index.html` : document unique, contenu actuel et switch de thème dans l’en-tête. Les descriptions, formulaires, états et ancres restent les mêmes pendant les changements.
+- `portfolio-assets/portfolio.mjs` et `theme-manager.mjs` : choix mémorisé, chargement à la demande, composition Glitch et cycle de vie des moteurs.
+- `portfolio-assets/themes/` : moteurs Points et Curseurs, construction, formations et nettoyage des animations/écouteurs/éléments temporaires.
+- `portfolio-assets/portfolio-content.mjs` : interactions communes, mini-démo Kikalmo, onglets, modale et copie du profil, initialisés une seule fois.
+- `points/assets/` : ressources et polices du modèle original, conservées sans altération. `/points/` et `/curseurs/` redirigent vers le document commun, en préservant le thème et la section.
+- `portfolio/content.json` : source commune des textes et liens extraits du commit `8e4a64746f8fd3e1354867cc92fdcb24292e6902`. `scripts/build-portfolio.mjs` génère la page commune depuis `portfolio/page.template.html`, les modules de contenu et les deux redirections de compatibilité.
 - `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
 - Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
 - Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.
@@ -68,7 +70,7 @@ La carte réelle des composants et de leurs dépendances est disponible à part 
 
 L’accueil conserve la présentation de Market Plus et son aperçu schématique, sans carte embarquée ni lien vers l’outil interne. Les dates du parcours et les autres sous-sites sont préservés.
 
-## Deux vues du portfolio
+## Thèmes du portfolio
 
 Pour changer le contenu, modifier `portfolio/content.json`, puis exécuter :
 
@@ -77,10 +79,14 @@ node scripts/build-portfolio.mjs
 node --test tests/portfolio-*.test.mjs
 ```
 
-Le bouton de changement de vue conserve le projet ou la section consultés. Les pages restent lisibles sans JavaScript ; le choix de vue reste un lien normal. L’accueil propose toujours les deux entrées, même après une visite. Le rendu Points respecte la réduction des mouvements et suspend son animation quand l’onglet est masqué.
+Le switch conserve le document, la saisie, les états des démonstrations et la position de lecture. Le choix est mémorisé et partageable avec `?theme=points`, `?theme=curseurs` ou `?theme=glitch`. Sans JavaScript, le document reste lisible et ses liens restent accessibles.
+
+Points dessine les formations dans les emplacements des aperçus et conserve le déplacement continu de la matière. Curseurs assemble les fenêtres, écrit puis positionne le contenu au défilement. Glitch lance les deux moteurs sur les mêmes aperçus, avec des distorsions locales et espacées. Les thèmes déclarés compatibles dans le registre rejoignent le mélange ; de nouveaux moteurs peuvent être ajoutés sans dupliquer le contenu HTML.
+
+Chaque moteur fournit une fonction d’arrêt : boucle d’animation, écouteurs, sélections, transformations et éléments temporaires sont nettoyés. Un chargement devenu obsolète ne lance aucun moteur. La préférence de mouvement réduit est respectée ; les animations s’arrêtent lorsque l’onglet est masqué. Les unités déjà construites restent mémorisées et les fenêtres contenant une saisie ne recommencent pas leur agrandissement.
 
 Aucune application existante n’est déplacée : les arbres Git de `/inktober/`, `/inktober-2026/`, `/livre/`, `/redim/`, `/elec/`, `/map/` et de tous les autres sous-sites sont conservés. L’accès à l’outil Market Plus interne demeure absent ; son bouton ouvre uniquement la carte publique des composants.
 
-Les huit commits disponibles du modèle Points sont conservés dans les parties `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. La publication passe par un commit d’intégration GitHub ; l’historique d’origine n’est ni réécrit ni reconstruit. Voir `source-history/portfolio-points.md`.
+Les huit commits disponibles du modèle Points sont conservés dans les parties `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. Leur intégrité est testée. La publication conserve l’historique GitHub existant ; aucun commit passé n’est reconstruit. Voir `source-history/portfolio-points.md`.
 
-Validation de cette intégration : dix tests de contenu/navigation/mouvement et d’intégrité des ressources, calcul des dix-huit géométries sources en 2 800 et 6 200 points, contrôle des dix-neuf tableaux, vérification visuelle bureau de l’accueil et des deux présentations, mini-démo Kikalmo et changement de vue. Le contrôle visuel final après intégration des ressources a été bloqué par la sécurité du navigateur de test (protocole non autorisé). Les octets des images et polices sont vérifiés par les tests d’intégrité. Le rendu WebGL et un téléphone réel restent à contrôler.
+Validation : quinze tests de contenu, routes, composition des thèmes, courses entre chargements, nettoyage, réduction des mouvements, animation bornée et intégrité des ressources. Contrôle visuel bureau des trois modes, absence de débordement horizontal, coexistence puis arrêt des moteurs, conservation d’une saisie et fonctionnement de la mini-démo après les bascules. Un téléphone réel reste à contrôler.
