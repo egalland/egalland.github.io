@@ -58,3 +58,7 @@ Les dépôts sources conservent leur historique. Les archives `source-history/at
 
 Les huit commits disponibles du portfolio d’origine sont conservés exactement dans `source-history/portfolio-cursors.bundle`, avec leurs auteurs, dates, parents et identifiants Git. Le détail et les commandes de restauration figurent dans `source-history/portfolio-cursors.md`. La publication Pages est un commit d’intégration via la connexion GitHub, car le push Git natif n’est pas authentifié. Aucun commit antérieur n’a été reconstruit ou inventé.
 
+
+## Cartographie Market Plus
+
+La section Market Plus intègre directement une cartographie Three.js adaptée de la vue fonctionnelle V150 : 11 modules, 10 connexions et trois parcours (Jira, simulations, fournisseurs). Les fiches décrivent uniquement les rôles et les flux ; aucune donnée métier n’est embarquée et aucun lien n’ouvre l’outil interne. Le moteur 3D est chargé à l’approche de la carte, ses animations s’arrêtent hors écran et une vue à plat reste disponible sans WebGL. Les dépendances Three.js et OrbitControls existantes sous `elec/` sont réutilisées sans modifier ce dossier.

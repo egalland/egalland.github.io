@@ -45,7 +45,7 @@ class ScrollConstruction {
     const nodes=[];
     while(walker.nextNode()){
       const text=walker.currentNode;
-      if(text.textContent.trim()&&!text.parentElement.closest('svg,script,style,input,textarea,.sr-only,.construction-run'))nodes.push(text);
+      if(text.textContent.trim()&&!text.parentElement.closest('svg,script,style,input,textarea,.sr-only,.construction-run,[data-construction-static]'))nodes.push(text);
     }
     for(const text of nodes){
       const run=document.createElement('span');run.className='construction-run';
