@@ -1,10 +1,11 @@
 # Projets d’Emmanuel
 
-Le [calendrier Inktober 2026](https://egalland.github.io/) donne accès aux applications et à leurs dépôts sources.
+Le [portfolio d’Emmanuel](https://egalland.github.io/) présente ses projets avec une construction progressive animée par des curseurs au défilement. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
 
 ## Organisation
 
-- `index.html` et `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources.
+- `index.html` et `portfolio-assets/` : portfolio, construction automatique au défilement et animations des curseurs.
+- `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
 - Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
 - Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.
 - `arrival/` : introduction du calendrier ; `tests/` : contrôles du calendrier et des routes.
@@ -52,3 +53,8 @@ node tests/check-routes.mjs
 ```
 
 Les dépôts sources conservent leur historique. Les archives `source-history/atelier-heros.bundle` et `source-history/priorites-fragiles.bundle` contiennent aussi tous leurs commits, auteurs et dates, récupérables avec `git clone <archive.bundle>`. La publication du contenu Pages passe par un commit d’intégration via la connexion GitHub ; le push Git natif n’était pas authentifié.
+
+## Historique du portfolio
+
+Les huit commits disponibles du portfolio d’origine sont conservés exactement dans `source-history/portfolio-cursors.bundle`, avec leurs auteurs, dates, parents et identifiants Git. Le détail et les commandes de restauration figurent dans `source-history/portfolio-cursors.md`. La publication Pages est un commit d’intégration via la connexion GitHub, car le push Git natif n’est pas authentifié. Aucun commit antérieur n’a été reconstruit ou inventé.
+
