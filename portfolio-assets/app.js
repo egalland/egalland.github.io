@@ -81,7 +81,7 @@ $('#word-next').addEventListener('click',()=>{
 });
 $('#copy-profile').addEventListener('click',async()=>{try{await navigator.clipboard.writeText('https://github.com/egalland');toast('Lien GitHub copié.')}catch{toast('Copie indisponible. Le lien GitHub est accessible juste à côté.')}});
 const projectDetails={
-  market:{category:'OUTIL MÉTIER / INTERNE',title:'Market Plus',description:'Un outil pour préparer et présenter les points marché. La présentation du portfolio reste schématique.',features:['Points marché composés en blocs.','Tickets Jira, simulations et suivi des promotions.','Variations fournisseurs et imports de données.','Exports et présentation des informations utiles.'],url:'https://market-plus.emmanuel-galland117.chatgpt.site'},
+  market:{category:'OUTIL MÉTIER / INTERNE',title:'Market Plus',description:'Un outil pour préparer et présenter les points marché. La présentation du portfolio reste schématique.',features:['Points marché composés en blocs.','Tickets Jira, simulations et suivi des promotions.','Variations fournisseurs et imports de données.','Exports et présentation des informations utiles.'],url:null},
   bodyos:{category:'APPLICATION PERSONNELLE / PRIVÉ',title:'BodyOS',description:'Un espace personnel pour réunir les séances, les objectifs et la progression. Seule l’approche du projet est présentée ici.',features:['Organisation du suivi dans une même interface.','Historique et visualisation de la progression.','Lecture simple des informations utiles.'],url:null}
 };
 const projectDialog=$('#project-dialog');
