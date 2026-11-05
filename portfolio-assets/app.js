@@ -48,16 +48,16 @@ const marketViews={
 };
 function selectMarketView(button){
   const view=marketViews[button.dataset.market];
-  $('[data-market]').forEach(b=>{const active=b===button;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1});
+  $$('[data-market]').forEach(b=>{const active=b===button;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1});
   $('#market-preview').setAttribute('aria-labelledby',button.id);
   $('#market-chart-label').textContent=view.label;
   ['one','two','three'].forEach((name,i)=>$('#market-label-'+name).firstChild.textContent=view.labels[i]);
-  $('.market-chart>span').forEach((bar,i)=>bar.style.setProperty('--bar',view.bars[i]+'%'));
+  $$('.market-chart>span').forEach((bar,i)=>bar.style.setProperty('--bar',view.bars[i]+'%'));
 }
-$('[data-market]').forEach((button,index)=>{
+$$('[data-market]').forEach((button,index)=>{
   button.addEventListener('click',()=>selectMarketView(button));
   button.addEventListener('keydown',event=>{
-    const tabs=$('[data-market]');let next;
+    const tabs=$$('[data-market]');let next;
     if(event.key==='ArrowRight')next=(index+1)%tabs.length;
     if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;
     if(event.key==='Home')next=0;
