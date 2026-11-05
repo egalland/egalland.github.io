@@ -1,5 +1,5 @@
 import './portfolio-content.mjs';
-import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=fracture2';
+import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=page-rifts3';
 
 const root=document.documentElement,buttons=[...document.querySelectorAll('[data-theme-choice]')],status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');
@@ -20,7 +20,7 @@ const manager=createThemeManager({
  apply:setAppearance,
  async load(name,options){
   if(name==='curseurs')return import('./themes/cursors.mjs');
-  if(name==='glitch')return import('./themes/glitch.mjs');
+  if(name==='glitch')return import('./themes/glitch.mjs?v=page-rifts3');
   if(name==='points'){
    const module=await import('./themes/points.mjs');const forms=await module.prepare(options.count);
    return {start:settings=>module.start({...settings,forms})};

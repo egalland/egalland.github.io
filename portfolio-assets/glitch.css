@@ -1,69 +1,71 @@
-/* The shared document becomes a third composition; one renderer owns the seam. */
-html[data-theme=glitch]{--bg:#0b1018;--fg:#edeef1;--muted:#8491a5;--line:#303a49;--blue:#b0a3d9}
-html[data-theme=glitch] body{background:var(--bg)}
-html[data-theme=glitch] body:before{background-image:linear-gradient(#61759a08 1px,transparent 1px),linear-gradient(90deg,#61759a08 1px,transparent 1px)}
-#fusion-motion{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;contain:strict}
+/* Whole portions of the shared page belong to different worlds. */
+html[data-theme=glitch]{--bg:#0b1018;--fg:#edeef1;--muted:#9297a2;--line:#344151;--blue:#b0b6df}
+html[data-theme=glitch] body{position:relative;background:var(--bg);isolation:isolate}
+html[data-theme=glitch] body:before{display:none}
 html[data-theme=glitch] main,html[data-theme=glitch] footer{position:relative;z-index:2}
-html[data-theme=glitch] .nav{background:#0b1018ed;border-bottom-color:#a3b2ce25}
+html[data-theme=glitch] .nav{background:#0b1018f5;border-bottom-color:#92a4ba30;backdrop-filter:none}
+html[data-theme=glitch] .nav nav{background:#0b1018}
 html[data-theme=glitch] .mouse-glow{display:none}
-html[data-theme=glitch] .section{max-width:1280px;border-left:0;border-right:0}
-html[data-theme=glitch] .hero{grid-template-columns:1fr 1.1fr;gap:30px;align-items:center;padding-top:64px;min-height:calc(100svh - 74px)}
-html[data-theme=glitch] .hero-copy{position:relative;z-index:3}
-html[data-theme=glitch] .hero h1{font-size:clamp(64px,6.8vw,100px);letter-spacing:-.065em;line-height:1.03}
-html[data-theme=glitch] .hero h1 .muted{color:#a39caf}
-html[data-theme=glitch] .hero .intro{color:#a4aebb;max-width:440px}
-html[data-theme=glitch] .hero-art{min-height:460px;width:100%;max-width:none;margin:0;transform:none;opacity:1}
-html[data-theme=glitch] .hero .metrics{margin-top:28px;grid-column:1/-1;position:relative}
-html[data-theme=glitch] .hero .hero-bottom{margin-top:0}
-html[data-theme=glitch] .metrics>div{border-color:#334155}
-html[data-theme=glitch] .metrics strong{font-family:Redline,Inter,Arial,sans-serif}
-html[data-theme=glitch] .project{grid-template-columns:1fr 1.12fr;min-height:580px;gap:64px;padding:66px 0;margin-top:28px}
-html[data-theme=glitch] .project h3{font-family:Redline,Inter,Arial,sans-serif;font-size:clamp(42px,5.5vw,72px);letter-spacing:-.055em}
-html[data-theme=glitch] .project-copy>p{color:#a4aebb;font-size:14px;line-height:1.85;max-width:470px}
-html[data-theme=glitch] .project-window{height:440px;overflow:visible;border:0;box-shadow:none;background:transparent}
-html[data-theme=glitch] [data-fusion-slot]>*:not(.fusion-control){visibility:hidden;pointer-events:none}
-html[data-theme=glitch] .project-window.fusion-live{background:#111720;border:1px solid #71839c;overflow:hidden;box-shadow:0 20px 60px #0005}
-html[data-theme=glitch] .project-window.fusion-live>*:not(.fusion-control){visibility:visible;pointer-events:auto}
-.fusion-control{position:absolute;z-index:4;right:14px;bottom:15px;min-height:36px;padding:9px 12px;border:1px solid #6e7f77;border-radius:2px;color:#dfe9e3;background:#122722;font:10px/1.4 var(--mono);cursor:pointer;box-shadow:0 3px 14px #0002}
-.fusion-control:hover{background:#254c40}.fusion-control:focus-visible{outline:3px solid #cf8b54;outline-offset:4px}
-html[data-theme=glitch] .project-window.fusion-live .fusion-control{color:#d4c3ec;border-color:#76638a;background:#211a2c}
-html[data-theme=glitch] .project-window.fusion-live .word-demo{padding-bottom:50px}
-html[data-theme=glitch] .project-window.fusion-live .window-footnote{display:none}
-html[data-theme=glitch] .lab-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin-top:60px}
-html[data-theme=glitch] .lab-card{background:transparent;border:0;border-top:1px solid #364150;padding:26px 12px 30px;display:flex;flex-direction:column;position:relative}
-html[data-theme=glitch] .lab-card:hover{transform:none;background:#b6c6db05}
-html[data-theme=glitch] .lab-card h3{font-size:28px;letter-spacing:-.04em;min-height:0;margin-top:18px}
-html[data-theme=glitch] .lab-card .lab-art{height:260px;margin-top:28px;margin-bottom:8px;order:1}
-html[data-theme=glitch] .lab-card .lab-type{order:2;margin-top:16px}
-html[data-theme=glitch] .lab-card p{min-height:0;max-width:370px;color:#a4aebb;font-size:12px}
-html[data-theme=glitch] .lab-card-top{color:#9aabba}
-html[data-theme=glitch] .tags>span,html[data-theme=glitch] .personal-interests>span{border-color:#455269;color:#b5c3d1}
-html[data-theme=glitch] .button.primary{background:#b9c8e1;color:#142137;border-color:#b9c8e1}
-html[data-theme=glitch] .button.primary:hover{background:#d3def0}
-html[data-theme=glitch] .progress{background:linear-gradient(90deg,#91b8e8 0%,#cb9da8 50%,#6ca999 100%)}
-html[data-theme=glitch] .personal-mark{border-color:#b2aac4;color:#f0e9f5}
-html[data-theme=glitch] .about-grid .manifesto{color:#c7c1d1!important}
-@media(max-width:1000px){html[data-theme=glitch] .hero{gap:20px}html[data-theme=glitch] .hero-art{min-height:400px}html[data-theme=glitch] .hero h1{font-size:74px}html[data-theme=glitch] .project{gap:35px}html[data-theme=glitch] .project-window{height:380px}}
+html[data-theme=glitch] .section{max-width:1240px;border-left:0;border-right:0;padding-left:45px;padding-right:45px}
+html[data-theme=glitch] .hero{grid-template-columns:1.12fr 1fr;gap:38px;align-items:center;min-height:calc(100svh - 74px);padding-top:65px;padding-bottom:32px}
+html[data-theme=glitch] .hero-copy{position:relative;z-index:2}
+html[data-theme=glitch] .hero h1{font-size:clamp(62px,6.7vw,94px);line-height:1.02;letter-spacing:-.065em}
+html[data-theme=glitch] .hero-art{height:390px;min-height:390px;max-width:none;width:100%;margin:0;opacity:1;transform:none;background:transparent;border:0;box-shadow:none}
+html[data-theme=glitch] .hero .metrics{grid-column:1/-1;margin-top:55px}
+html[data-theme=glitch] .hero .hero-bottom{grid-column:1/-1;margin-top:4px}
+html[data-theme=glitch] .project{grid-template-columns:1fr 1.12fr;min-height:560px;padding-top:70px;padding-bottom:70px;gap:58px;margin-top:25px}
+html[data-theme=glitch] .project h3{font-size:clamp(42px,5vw,68px);letter-spacing:-.055em}
+html[data-theme=glitch] .project-copy>p{font-size:14px;line-height:1.8;max-width:430px}
+html[data-theme=glitch] .project-window{height:350px;min-height:350px;box-shadow:none}
+html[data-theme=glitch] .lab-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:55px 45px;margin-top:50px}
+html[data-theme=glitch] .lab-card{background:transparent;border:0;border-top:1px solid var(--line);padding:22px 10px 35px;min-width:0;box-shadow:none}
+html[data-theme=glitch] .lab-card:hover{transform:none;background:transparent}
+html[data-theme=glitch] .lab-card .lab-art{height:180px;margin-top:20px;margin-bottom:16px;background:transparent}
+html[data-theme=glitch] .lab-card h3{font-size:29px;min-height:0;margin-top:16px}
+html[data-theme=glitch] .lab-card p{min-height:0;font-size:13px;line-height:1.7;max-width:430px}
+html[data-theme=glitch] .lab-type{min-height:0}
+html[data-theme=glitch] .project-window>.market-content,html[data-theme=glitch] .project-window>.word-demo,html[data-theme=glitch] .project-window>.maison-drawing,html[data-theme=glitch] .project-window>.body-preview{opacity:1}
+html[data-theme=glitch] .hero-art .system-map,html[data-theme=glitch] .lab-art>*{opacity:1}
+html[data-theme=glitch] [data-rift-stage=points]{background:transparent!important;border:0!important;box-shadow:none!important}
+html[data-theme=glitch] [data-rift-stage=points]>*{visibility:hidden;pointer-events:none}
+html[data-theme=glitch] [data-rift-stage=mixed]{background:#111116;border:1px solid #535a6b;overflow:hidden}
+html[data-theme=glitch] [data-rift-world=points]{--fg:#20372d;--muted:#5d7463;--line:#aebcae;--blue:#247d6c;color:var(--fg);font-family:RedlineText,Inter,Arial,sans-serif}
+html[data-theme=glitch] [data-rift-world=points] h2,html[data-theme=glitch] [data-rift-world=points] h3{font-family:Redline,Inter,Arial,sans-serif;font-weight:700;letter-spacing:-.065em}
+html[data-theme=glitch] [data-rift-world=points] .muted{color:#a55137}
+html[data-theme=glitch] [data-rift-world=points] p,html[data-theme=glitch] [data-rift-world=points] .project-copy>p,html[data-theme=glitch] [data-rift-world=points] .contact-row p{color:#4c6554}
+html[data-theme=glitch] [data-rift-world=points] .tags>span,html[data-theme=glitch] [data-rift-world=points] .personal-interests>span{border-color:#a7b7a7;color:#4c6a52}
+html[data-theme=glitch] [data-rift-world=points] .project-meta,html[data-theme=glitch] [data-rift-world=points] .lab-card-top,html[data-theme=glitch] [data-rift-world=points] .lab-type{color:#57745d}
+html[data-theme=glitch] [data-rift-world=points] .alpha{color:#88602e}
+html[data-theme=glitch] [data-rift-world=points] .button{border-color:#7c947f;color:#284f3d}
+html[data-theme=glitch] [data-rift-world=points] .button.primary{background:#315c4a;border-color:#315c4a;color:#fff}
+html[data-theme=glitch] [data-rift-world=points] .text-link{color:#2f6150;border-color:#698c73}
+html[data-theme=glitch] [data-rift-world=points] .metrics strong,html[data-theme=glitch] .metrics[data-rift-world=points] strong{font-family:RedlineText,Arial,sans-serif;color:#284c36}
+html[data-theme=glitch] .metrics[data-rift-world=points],html[data-theme=glitch] .metrics[data-rift-world=points]>div{border-color:#a7b7a7}
+html[data-theme=glitch] .metrics[data-rift-world=points] span{color:#5f7561}
+html[data-theme=glitch] .hero-bottom[data-rift-world=points]{color:#607663}
+html[data-theme=glitch] [data-rift-world=points].section-marker,html[data-theme=glitch] [data-rift-world=points].section-marker>span{color:#9f5937}
+html[data-theme=glitch] footer[data-rift-world=points] p,html[data-theme=glitch] footer[data-rift-world=points]>a:not(.brand),html[data-theme=glitch] footer[data-rift-world=points]>span{color:#536c58}
+html[data-theme=glitch] footer[data-rift-world=points] .personal-mark{color:#264e36;border-color:#899f87}
+html[data-theme=glitch] footer[data-rift-world=points] .dim{color:#63745e}
+#rift-page{position:absolute;left:0;top:0;width:100%;z-index:0;pointer-events:none;overflow:clip}
+#rift-points{position:fixed;inset:0;width:100%;height:100%;z-index:19;pointer-events:none;contain:strict}
+.rift-edge{fill:none;stroke:#769185;stroke-width:1.25;vector-effect:non-scaling-stroke}
+.rift-edge-echo{fill:none;stroke:#ba826e;stroke-width:.65;stroke-dasharray:7 23 2 41;opacity:.7;vector-effect:non-scaling-stroke}
+.rift-enter .rift-edge-echo{animation:rift-fault .3s steps(2,end) both}
+@keyframes rift-fault{0%{transform:translateX(-3px);stroke:#b789c8;stroke-width:2}45%{transform:translateX(2px);stroke:#64a6aa}100%{transform:none;stroke:#ba826e;stroke-width:.65}}
+@media(max-width:1000px){html[data-theme=glitch] .section{padding-left:28px;padding-right:28px}html[data-theme=glitch] .project{gap:35px}html[data-theme=glitch] .hero{gap:24px}html[data-theme=glitch] .hero-art{height:350px;min-height:350px}}
 @media(max-width:700px){
- html[data-theme=glitch] .nav nav{background:#0b1018;border-color:#38465b}
  html[data-theme=glitch] .section{padding-left:22px;padding-right:22px}
- html[data-theme=glitch] .hero{display:block;min-height:0;padding-top:50px}
- html[data-theme=glitch] .hero h1{font-size:clamp(60px,16vw,82px)}
- html[data-theme=glitch] .hero-art{min-height:330px;margin:25px 0 5px}
- html[data-theme=glitch] .hero .metrics{margin-top:15px}
- html[data-theme=glitch] .hero .hero-bottom{margin-top:22px;gap:15px}
- html[data-theme=glitch] .project{min-height:0;padding:40px 0;gap:35px;margin-top:24px;display:flex;flex-direction:column}
- html[data-theme=glitch] .project-copy>p{font-size:13px;line-height:1.8}
- html[data-theme=glitch] .project h3{font-size:48px}
- html[data-theme=glitch] .project-window{height:345px;min-height:345px;flex-shrink:0}
- html[data-theme=glitch] .project-window.fusion-live{height:auto;min-height:385px}
+ html[data-theme=glitch] .hero{display:block;min-height:0;padding-top:45px}
+ html[data-theme=glitch] .hero h1{font-size:clamp(58px,16vw,78px)}
+ html[data-theme=glitch] .hero-art{height:285px;min-height:285px;margin:32px 0 12px}
+ html[data-theme=glitch] .hero .metrics{margin-top:36px}html[data-theme=glitch] .hero .hero-bottom{margin-top:25px}
+ html[data-theme=glitch] .project{display:flex;flex-direction:column;min-height:0;gap:30px;padding:42px 0;margin-top:24px}
+ html[data-theme=glitch] .project h3{font-size:46px}html[data-theme=glitch] .project-copy>p{font-size:13px}
+ html[data-theme=glitch] .project-window{height:335px;min-height:335px}
  html[data-theme=glitch] .word-demo input{font-size:16px}
- html[data-theme=glitch] .lab-grid{grid-template-columns:1fr;gap:30px;margin-top:35px}
- html[data-theme=glitch] .lab-card{padding:24px 0 10px}
- html[data-theme=glitch] .lab-card h3{font-size:29px;margin-top:20px}
- html[data-theme=glitch] .lab-card p{font-size:12px;max-width:100%}
- html[data-theme=glitch] .lab-card .lab-art{height:245px;margin-top:22px}
- html[data-theme=glitch] .lab-card .lab-type{min-height:0}
- .fusion-control{right:8px;bottom:10px;font-size:9px;min-height:44px;padding:10px}
+ html[data-theme=glitch] .lab-grid{grid-template-columns:1fr;gap:45px}
+ html[data-theme=glitch] .lab-card{padding:22px 0 30px}html[data-theme=glitch] .lab-card .lab-art{height:205px}
+ html[data-theme=glitch] .lab-card h3{font-size:29px}html[data-theme=glitch] .lab-card p{font-size:13px}
 }
-@media(prefers-reduced-motion:reduce){html[data-theme=glitch] *{scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){.rift-enter .rift-edge-echo{animation:none!important}}

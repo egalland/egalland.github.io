@@ -3,21 +3,21 @@
 // A staged workshop: one cursor draws, another types, another positions the result.
 // Original text nodes are restored after typing, so controls keep their own data.
 export class ScrollConstruction {
-  constructor({cursors,reduced,onReveal,completed=new WeakSet()}) {
+  constructor({cursors,reduced,onReveal,completed=new WeakSet(),accept=()=>true,maxWorkers=6}) {
     this.cursors=cursors;this.reduced=reduced;this.onReveal=onReveal;this.abort=new AbortController();
     this.clock=0;this.delay=0;this.measuredAt=-1;this.units=[];this.team=[];
     this.scrollY=window.scrollY;this.scrollingUp=false;this.upwardPass=0;this.adjustmentsLeft=0;
     this.overlay=document.createElement('div');this.overlay.className='construction-team';
     this.overlay.setAttribute('aria-hidden','true');document.body.append(this.overlay);
     const elements=[...document.querySelectorAll('main .editable,main .hero-art,main .section-marker,main .hero-bottom')];
-    elements.filter(el=>!el.parentElement.closest('.editable')).forEach((el,index)=>{
+    elements.filter(el=>accept(el)&&!el.parentElement.closest('.editable')).forEach((el,index)=>{
       const category=el.matches('h1,h2,h3')?'TITRE':el.matches('.project-window,.hero-art')?'FENÊTRE':el.matches('.lab-card')?'PROJET':el.matches('p')?'TEXTE':el.matches('.actions,.project-links,.text-link')?'ACTION':'BLOC';
       const parts=el.matches('.project-window,.hero-art')?[...el.children]:[];
       parts.forEach(part=>part.classList.add('construction-detail'));el.classList.add('construction-unit');
       this.units.push({el,index,category,parts,dx:0,dy:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
     });
     const roles=[['Cadres','create','#89afff'],['Texte','write','#ed9fbe'],['Placement','place','#8ad2b5'],['Structure','create','#e6bb77'],['Contenu','write','#b7a3ee'],['Alignement','place','#8acbd7']];
-    roles.forEach(([name,role,color],i)=>{
+    roles.slice(0,maxWorkers).forEach(([name,role,color],i)=>{
       const node=document.createElement('div');node.className='construction-worker';node.dataset.role=role;
       node.style.setProperty('--worker-color',color);node.hidden=true;
       node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span></div>`;

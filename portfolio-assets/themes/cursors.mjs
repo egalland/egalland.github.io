@@ -1,27 +1,28 @@
 import {ScrollConstruction} from './construction.mjs';
 const completed=new WeakSet();
-export function start({reduced=false,resume=false}={}){
+export function start({reduced=false,resume=false,accept=()=>true,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
 const abort=new AbortController();const on=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:abort.signal});
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const canvas=document.createElement('canvas');canvas.id='motion';canvas.dataset.engine='curseurs';canvas.setAttribute('aria-hidden','true');document.body.append(canvas);const ctx=canvas.getContext('2d');
-const paused=reduced,count=12,showOutlines=true,showTrails=true;
+const paused=reduced,count=cursorCount,showOutlines=true,showTrails=true;
 let width=innerWidth,height=innerHeight,last=0,clock=0,raf=0,hidden=false;
 const colors=['#7faaff','#ec8aaa','#a59af2','#7bc9af','#e7bd74','#8dd2ef','#d49feb'];
 const names=['Interface','Données','Code','Automatisation','Idées','Mouvement','Projets'];
-const items=$$('.editable');
+const items=$$('.editable').filter(accept);
 const cursors=Array.from({length:24},(_,i)=>({x:Math.random()*width,y:Math.random()*height,tx:0,ty:0,phase:Math.random()*6.28,speed:.6+Math.random()*.4,target:i%items.length,timer:0,trail:[],color:colors[i%colors.length]}));
-function resize(){width=innerWidth;height=innerHeight;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}resize();on(window,'resize',resize);
+function resize(){width=innerWidth;height=innerHeight;const dpr=Math.min(devicePixelRatio||1,maxDpr);canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}resize();on(window,'resize',resize);
 function visibleItems(){return items.map((el,i)=>({el,i,r:el.getBoundingClientRect()})).filter(o=>o.r.bottom>100&&o.r.top<height-100&&o.r.width>0&&!o.el.closest('.construction-unit:not([data-construction="done"])'))}
 function pathCursor(c,i){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.sin(clock*.3+c.phase)*.08);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3.2,15);ctx.lineTo(7,10.6);ctx.lineTo(12.4,10.5);ctx.closePath();ctx.fillStyle=c.color;ctx.strokeStyle='#09090b';ctx.lineWidth=1.1;ctx.fill();ctx.stroke();if(i<3&&width>700){ctx.font='8px Inter,Arial';const name=names[i];const tw=ctx.measureText(name).width;ctx.fillStyle=c.color;ctx.fillRect(12,15,tw+12,16);ctx.fillStyle='#101018';ctx.fillText(name,18,26)}ctx.restore()}
 function outline(r,color,i){if(r.top<75||r.bottom>height-55)return;ctx.strokeStyle=color;ctx.globalAlpha=.4;ctx.lineWidth=.75;ctx.strokeRect(r.x-3,r.y-3,r.width+6,r.height+6);ctx.globalAlpha=.8;for(const [x,y] of [[r.x-5,r.y-5],[r.right+1,r.y-5],[r.x-5,r.bottom+1],[r.right+1,r.bottom+1]]){ctx.fillStyle='#0c0c10';ctx.fillRect(x,y,4,4);ctx.strokeRect(x,y,4,4)}if(width>700&&i<2){ctx.fillStyle=color;ctx.fillRect(r.x-3,r.y-17,80,14);ctx.fillStyle='#0b0b11';ctx.font='7px monospace';ctx.fillText(Math.round(r.width)+' × '+Math.round(r.height),r.x+3,r.y-7)}ctx.globalAlpha=1}
-let visibleCache=[],nextMeasure=0;
+let visibleCache=[],nextMeasure=0,lastPaint=0;
 function frame(ts){
   if(paused||hidden){raf=0;return}
+  if(frameInterval&&ts-lastPaint<frameInterval){raf=requestAnimationFrame(frame);return;}lastPaint=ts;
   const elapsed=Math.min((ts-last)/1000||.016,1),dt=Math.min(elapsed,.05);last=ts;clock+=elapsed;
-  ctx.clearRect(0,0,width,height);
+  ctx.clearRect(0,0,width,height);ctx.save();if(clipFrame)clipFrame(ctx,width,height);
   construction.update(elapsed,{width,height,count,showOutlines,enabled:true});
-  updateCursorResize(elapsed);
+  if(resizeWindows)updateCursorResize(elapsed);
   if(clock>nextMeasure){visibleCache=visibleItems();nextMeasure=clock+.12}
   const n=width<700?Math.min(count,7):count;
   for(let i=0;i<n;i++){
@@ -39,12 +40,14 @@ function frame(ts){
     if(showOutlines&&o&&i<4&&c.timer<3.4&&!(resizeJob&&(resizeJob.panel.el===o.el||resizeJob.panel.el.contains(o.el))))outline(o.r,c.color,i);
     pathCursor(c,i);
   }
+  ctx.restore();
+  if(idleWhenEmpty&&!visibleCache.length&&!construction.team.some(w=>w.job)&&!construction.units.some(u=>u.eligible)){raf=0;return;}
   raf=requestAnimationFrame(frame);
 }
 function start(){if(!raf&&!paused&&!hidden){last=performance.now();raf=requestAnimationFrame(frame)}}
 // Scrolling reveals a window; the builders then resize it on their own timeline.
 // Its size is written ONLY during a held drag, never as a function of scroll progress.
-const cursorWindows=$$('.hero-art, .project-window, .lab-card').map(el=>{
+const cursorWindows=$$('.hero-art, .project-window, .lab-card').filter(accept).map(el=>{
   el.classList.add('cursor-window');
   return {el,scale:1,done:reduced,outsideSince:null,eligible:false};
 });
@@ -62,7 +65,7 @@ function resetCursorResize(rebuild=false,preserve=false){
   const interrupted=resizeJob?.panel;
   resizeJob=null;resizeOverlay.hidden=true;resizeCooldown=rebuild?1.7:.45;
   cursorWindows.forEach(panel=>{
-    panel.done=reduced||completed.has(panel.el)||[...panel.el.querySelectorAll('input')].some(input=>input.value.trim())||(preserve&&(panel.done||panel===interrupted));
+    panel.done=!resizeWindows||reduced||completed.has(panel.el)||[...panel.el.querySelectorAll('input')].some(input=>input.value.trim())||(preserve&&(panel.done||panel===interrupted));
     panel.el.dataset.resizeState=panel.done?'done':'waiting';
     panel.el.classList.remove('window-resizing');
     setWindowScale(panel,panel.done?1:smallWindowScale());
@@ -148,9 +151,10 @@ on(window,'resize',()=>{
   if(paused)construction.revealAll();
 },{passive:true});
 on(window,'scroll',()=>{
+  nextMeasure=0;start();
   if(paused){ctx.clearRect(0,0,width,height);resizeOverlay.hidden=true;construction.hideCursors()}
 },{passive:true});
-const construction=new ScrollConstruction({cursors,reduced,completed,onReveal(el){const panel=cursorWindows.find(panel=>panel.el===el);if(panel){if(resizeJob?.panel===panel)finishCursorResize();setWindowScale(panel,1);panel.done=true;panel.el.dataset.resizeState='done'}}});
+const construction=new ScrollConstruction({cursors,reduced,completed,accept,maxWorkers,onReveal(el){const panel=cursorWindows.find(panel=>panel.el===el);if(panel){if(resizeJob?.panel===panel)finishCursorResize();setWindowScale(panel,1);panel.done=true;panel.el.dataset.resizeState='done'}}});
 resetCursorResize();
 if(resume)for(const unit of construction.units)if(unit.el.getBoundingClientRect().top<innerHeight||[...unit.el.querySelectorAll('input')].some(input=>input.value.trim()))construction.reveal(unit,true);
 if(paused)construction.revealAll();else start();
