@@ -61,4 +61,6 @@ Les huit commits disponibles du portfolio d’origine sont conservés exactement
 
 ## Cartographie Market Plus
 
-La section Market Plus intègre directement une cartographie Three.js adaptée de la vue fonctionnelle V150 : 11 modules, 10 connexions et trois parcours (Jira, simulations, fournisseurs). Les fiches décrivent uniquement les rôles et les flux ; aucune donnée métier n’est embarquée et aucun lien n’ouvre l’outil interne. Le moteur 3D est chargé à l’approche de la carte, ses animations s’arrêtent hors écran et une vue à plat reste disponible sans WebGL. Les dépendances Three.js et OrbitControls existantes sous `elec/` sont réutilisées sans modifier ce dossier.
+La carte réelle des composants et de leurs dépendances est disponible à part sur [/map/](https://egalland.github.io/map/) : 259 composants, 925 liaisons, filtres par famille, recherche et fiches de dépendances. Elle reprend la vue « Explorer le code » de Point marché, avec son moteur Three.js et une projection 2D de secours. Les références et les quatre étapes de source disponibles sont conservées dans `map/SOURCE.md` et `map/source-history.patch`.
+
+L’accueil conserve la présentation de Market Plus et son aperçu schématique, sans carte embarquée ni lien vers l’outil interne. Les dates du parcours et les autres sous-sites sont préservés.
