@@ -1,12 +1,19 @@
 import {ScrollConstruction} from './construction.mjs';
 const completed=new WeakSet();
-export function start({reduced=false,resume=false,accept=()=>true,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
+export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
 const abort=new AbortController();const on=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:abort.signal});
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const routes=!clipFrame&&$('.cursor-routes');
+let routesVisible=false;
+const updateRoutes=()=>{if(routes)routes.classList.toggle('routes-live',routesVisible&&!reduced&&!document.hidden);};
+const routeObserver=routes&&!reduced?new IntersectionObserver(([entry])=>{
+  routesVisible=entry.isIntersecting;updateRoutes();
+}):null;
+if(routeObserver)routeObserver.observe(routes);
 const canvas=document.createElement('canvas');canvas.id='motion';canvas.dataset.engine='curseurs';canvas.setAttribute('aria-hidden','true');document.body.append(canvas);const ctx=canvas.getContext('2d');
 const paused=reduced,count=cursorCount,showOutlines=true,showTrails=true;
-let width=innerWidth,height=innerHeight,last=0,clock=0,raf=0,hidden=false;
+let width=innerWidth,height=innerHeight,last=0,clock=0,raf=0,hidden=document.hidden;
 const colors=['#7faaff','#ec8aaa','#a59af2','#7bc9af','#e7bd74','#8dd2ef','#d49feb'];
 const names=['Interface','Données','Code','Automatisation','Idées','Mouvement','Projets'];
 const items=$$('.editable').filter(accept);
@@ -19,7 +26,8 @@ let visibleCache=[],nextMeasure=0,lastPaint=0;
 function frame(ts){
   if(paused||hidden){raf=0;return}
   if(frameInterval&&ts-lastPaint<frameInterval){raf=requestAnimationFrame(frame);return;}lastPaint=ts;
-  const elapsed=Math.min((ts-last)/1000||.016,1),dt=Math.min(elapsed,.05);last=ts;clock+=elapsed;
+  // The first callback can carry a frame timestamp just before start().
+  const elapsed=Math.max(0,Math.min((ts-last)/1000,1)),dt=Math.min(elapsed,.05);last=ts;clock+=elapsed;
   ctx.clearRect(0,0,width,height);ctx.save();if(clipFrame)clipFrame(ctx,width,height);
   construction.update(elapsed,{width,height,count,showOutlines,enabled:true});
   if(resizeWindows)updateCursorResize(elapsed);
@@ -41,7 +49,7 @@ function frame(ts){
     pathCursor(c,i);
   }
   ctx.restore();
-  if(idleWhenEmpty&&!visibleCache.length&&!construction.team.some(w=>w.job)&&!construction.units.some(u=>u.eligible)){raf=0;return;}
+  if(idleWhenEmpty&&construction.measuredAt>=0&&!visibleCache.length&&!construction.team.some(w=>w.job)&&!construction.units.some(u=>u.eligible)){raf=0;return;}
   raf=requestAnimationFrame(frame);
 }
 function start(){if(!raf&&!paused&&!hidden){last=performance.now();raf=requestAnimationFrame(frame)}}
@@ -151,19 +159,21 @@ on(window,'resize',()=>{
   if(paused)construction.revealAll();
 },{passive:true});
 on(window,'scroll',()=>{
-  nextMeasure=0;start();
+  nextMeasure=0;if(!raf)construction.measuredAt=-1;start();
   if(paused){ctx.clearRect(0,0,width,height);resizeOverlay.hidden=true;construction.hideCursors()}
 },{passive:true});
 const construction=new ScrollConstruction({cursors,reduced,completed,accept,maxWorkers,onReveal(el){const panel=cursorWindows.find(panel=>panel.el===el);if(panel){if(resizeJob?.panel===panel)finishCursorResize();setWindowScale(panel,1);panel.done=true;panel.el.dataset.resizeState='done'}}});
 resetCursorResize();
-if(resume)for(const unit of construction.units)if(unit.el.getBoundingClientRect().top<innerHeight||[...unit.el.querySelectorAll('input')].some(input=>input.value.trim()))construction.reveal(unit,true);
+for(const unit of construction.units){
+  if(readableOnEntry(unit.el)||(resume&&(unit.el.getBoundingClientRect().top<innerHeight||[...unit.el.querySelectorAll('input')].some(input=>input.value.trim()))))construction.reveal(unit,true);
+}
 if(paused)construction.revealAll();else start();
 
- on(document,'visibilitychange',()=>{hidden=document.hidden;if(hidden){cancelAnimationFrame(raf);raf=0}else start()});
+ on(document,'visibilitychange',()=>{hidden=document.hidden;updateRoutes();if(hidden){cancelAnimationFrame(raf);raf=0}else start()});
  on(document,'pointermove',e=>{if(!reduced){const glow=$('.mouse-glow');glow.style.left=e.clientX+'px';glow.style.top=e.clientY+'px';}},{passive:true});
  document.documentElement.dataset.cursorEngine='active';
  return {stop(){
-  abort.abort();cancelAnimationFrame(raf);raf=0;
+  abort.abort();cancelAnimationFrame(raf);raf=0;routeObserver?.disconnect();if(routes)routes.classList.remove('routes-live');
   for(const unit of construction.units)if(unit.state==='done')completed.add(unit.el);
   construction.destroy();resizeOverlay.remove();canvas.remove();
   for(const panel of cursorWindows){panel.el.classList.remove('cursor-window','window-resizing');panel.el.style.removeProperty('--window-scale');delete panel.el.dataset.resizeState;}

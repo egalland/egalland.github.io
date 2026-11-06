@@ -1,4 +1,14 @@
 @import url('/points/assets/fonts.css');
+.cursor-routes{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cursor-routes path{vector-effect:non-scaling-stroke}
+.route-rails{stroke:#586783;stroke-width:1;opacity:.56}
+.route-packets{display:none;stroke:#9dbfff;stroke-width:2.5;stroke-linecap:round;stroke-dasharray:9 91}
+html[data-theme=curseurs][data-motion=active] .routes-live .route-packets{display:inline}
+.routes-live .route-packets use{animation:route-packet 2.8s linear infinite}
+.routes-live .route-packets use:nth-child(2){stroke:#dc9dc5;animation-delay:-1.3s;animation-direction:reverse}
+.routes-live .route-packets use:nth-child(3){stroke:#8ad5bc;animation-duration:3.6s;animation-delay:-.8s}
+.routes-live .route-packets use:nth-child(4){stroke:#e5ba83;animation-delay:-2s;animation-direction:reverse}
+@keyframes route-packet{to{stroke-dashoffset:-100}}
 .theme-switch{display:flex;gap:2px;padding:3px;border:1px solid #3f4b62;border-radius:5px;background:#121721;white-space:nowrap}
 .theme-switch button{min-height:33px;padding:7px 11px;font:10px/1.2 var(--mono);background:transparent;color:#aab9d0;border-radius:2px;transition:color .2s,background .2s}
 .theme-switch button[aria-pressed=true]{background:#a6c0ee;color:#13233c}.theme-switch button[data-theme-choice=glitch][aria-pressed=true]{background:#d4afd9;color:#321735}

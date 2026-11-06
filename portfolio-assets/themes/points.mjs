@@ -1,7 +1,7 @@
-import {createCloud,clamp} from './point-cloud.mjs';
-import {createPointRenderer} from './point-renderer.mjs';
-import {createPointInteraction} from './point-interaction.mjs';
-export {prepare} from './formations.mjs?v=signal5';
+import {createCloud,clamp} from './point-cloud.mjs?v=kinetic1';
+import {createPointRenderer} from './point-renderer.mjs?v=kinetic1';
+import {createPointInteraction} from './point-interaction.mjs?v=kinetic1';
+export {prepare} from './formations.mjs?v=kinetic1';
 
 const configuration=[
  ['.hero-art',[0],'hero'],['#market-plus .project-window',[4,5],'market'],['#kikalmo .project-window',[2,3,1],'kikalmo'],
@@ -34,24 +34,25 @@ export function start({forms,reduced=false}={}){
   raf=0;if(hidden||stopped)return;
   const interval=renderer.backend==='webgl-3d'?(width<=700?33:16):(width<=700?50:42);
   if(!reduced&&stamp-lastDraw<interval){wake();return;}lastDraw=stamp;
-  const dt=last?Math.min((stamp-last)/1000,.08):0;last=stamp;if(!reduced)time+=dt;
+  const dt=last?Math.min((stamp-last)/1000,.25):0;last=stamp;if(!reduced)time+=dt;
   if(reduced&&!dirty)return;dirty=false;
   const began=performance.now();renderer.begin();
   const visible=slots.filter(s=>s.rect?.width&&s.rect.bottom-scrollY>65&&s.rect.top-scrollY<height).sort((a,b)=>Math.abs(a.rect.top+a.rect.height/2-scrollY-height/2)-Math.abs(b.rect.top+b.rect.height/2-scrollY-height/2)).slice(0,2);
   let vertices=0;
   for(const s of visible){
-   const r=s.rect,index=s.indices[reduced?0:Math.floor(time/11)%s.indices.length];
+   const r=s.rect,camera=interaction.camera(s,time);
+   const age=time-(s.enteredAt??time),index=s.indices[reduced?0:Math.floor(age/7.6)%s.indices.length];
    const limit=renderer.backend==='webgl-3d'?Math.min(forms[index].length,width<=700?1680:2800):width<=700?700:1100;
    if(s.index!==index||s.cloudLimit!==limit){
-    const from=s.index<0?forms[index].map(p=>({...p,x:p.x*.025,y:p.y*.025,z:p.z*.025})):forms[s.index];
-    s.cloud=createCloud(forms[index],{from,limit});s.cloudLimit=limit;s.index=index;s.changed=time;s.el.dataset.pointForm=String(index);
+    const from=s.index>=0&&s.index!==index?forms[s.index]:null;
+    s.cloud=createCloud(forms[index],{from,fromTime:time,limit});s.cloudLimit=limit;s.index=index;s.changed=from?time:null;s.el.dataset.pointForm=String(index);
    }
-   const camera=interaction.camera(s,time),t=reduced?1:clamp((time-s.changed)/1.15,0,1);
+   const t=reduced||s.changed===null?1:clamp((time-s.changed)/1.15,0,1);
    renderer.draw(s.cloud,{...camera,cx:r.left+r.width/2,cy:r.top-scrollY+r.height/2,scale:Math.min(r.width/4.7,r.height/3.5),rect:{left:r.left,top:r.top-scrollY,width:r.width,height:r.height},blend:t*t*(3-2*t),dotSize:2.25},time,reduced);
    vertices+=s.cloud.count;root.dataset.pointYaw=camera.yaw.toFixed(3);
   }
   root.dataset.pointVertices=String(vertices);root.dataset.pointRenderer=renderer.backend;root.dataset.pointGeometry='xyz';root.dataset.pointPaintMs=(performance.now()-began).toFixed(2);root.dataset.pointFrames=String(Number(root.dataset.pointFrames||0)+1);
-  if(!reduced&&visible.length)wake();
+  if(!reduced&&visible.length)wake();else last=0;
  }
  const observer=new ResizeObserver(schedule);observer.observe(document.querySelector('main'));for(const s of slots)observer.observe(s.el);
  on(window,'resize',schedule);on(window,'scroll',()=>{dirty=true;wake();});

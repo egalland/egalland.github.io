@@ -1,4 +1,4 @@
-import {createCloud} from './point-cloud.mjs';
+import {createCloud} from './point-cloud.mjs?v=kinetic1';
 const random=(n,seed)=>{const x=Math.sin(n*127.1+seed*311.7)*43758.5453;return x-Math.floor(x);};
 
 /** Stepped data blocks, with horizontal/vertical edges instead of paper teeth. */

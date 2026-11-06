@@ -1,5 +1,5 @@
 import {boundedSamples} from './page-rifts.mjs';
-import {createCloud} from './point-cloud.mjs';
+import {createCloud} from './point-cloud.mjs?v=kinetic1';
 
 export function wordCloud(el,budget=800){
  const rect=el.getBoundingClientRect(),canvas=document.createElement('canvas');canvas.width=Math.ceil(rect.width);canvas.height=Math.ceil(rect.height);

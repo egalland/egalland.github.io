@@ -22,13 +22,13 @@ function setAppearance(theme){
 const manager=createThemeManager({
  apply:setAppearance,
  async load(name,options){
-  if(name==='curseurs')return import('./themes/cursors.mjs');
+  if(name==='curseurs')return import('./themes/cursors.mjs?v=kinetic1');
   if(name==='glitch'){
-   const [module,geometry]=await Promise.all([import('./themes/glitch.mjs?v=signal5'),import('./themes/formations.mjs?v=signal5')]);const forms=await geometry.prepare(options.count);
+   const [module,geometry]=await Promise.all([import('./themes/glitch.mjs?v=kinetic1'),import('./themes/formations.mjs?v=kinetic1')]);const forms=await geometry.prepare(options.count);
    return {start:settings=>module.start({...settings,forms})};
   }
   if(name==='points'){
-   const module=await import('./themes/points.mjs?v=signal5');const forms=await module.prepare(options.count);
+   const module=await import('./themes/points.mjs?v=kinetic1');const forms=await module.prepare(options.count);
    return {start:settings=>module.start({...settings,forms})};
   }
   throw new Error('Moteur inconnu : '+name);

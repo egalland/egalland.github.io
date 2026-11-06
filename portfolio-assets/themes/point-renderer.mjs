@@ -1,16 +1,25 @@
-import {STRIDE,projectParticle} from './point-cloud.mjs';
+import {STRIDE,projectParticle} from './point-cloud.mjs?v=kinetic1';
 
 const vertex=[
  'attribute vec3 a_position,a_from,a_color,a_fromColor,a_flow;',
- 'attribute vec4 a_meta;',
+ 'attribute vec4 a_meta,a_sine,a_cosine;',
  'uniform vec2 u_viewport,u_center,u_pointer;',
  'uniform vec4 u_rotation;',
- 'uniform float u_scale,u_time,u_motion,u_blend,u_dpr,u_screen,u_force,u_hover,u_fault,u_dot,u_opacity;',
+ 'uniform float u_scale,u_time,u_motion,u_blend,u_dpr,u_screen,u_force,u_hover,u_fault,u_dot,u_opacity,u_scatter;',
  'uniform mediump float u_packet;varying mediump vec3 v_color;varying mediump float v_alpha;',
  'float hash(float n){return fract(sin(n)*43758.5453);}',
  'void main(){',
  ' float flow=fract(a_meta.w+u_time*a_meta.z)-a_meta.w;',
  ' vec3 p=mix(a_from,a_position+a_flow*flow,u_blend);',
+ ' if(a_sine.w!=0. && u_motion>0.){',
+ '   float phase=u_time*a_sine.w;',
+ '   float angle=a_cosine.w==0.?phase:a_cosine.w*(1.-cos(phase))*.5;',
+ '   p+=u_blend*(a_sine.xyz*sin(angle)+a_cosine.xyz*(cos(angle)-1.));',
+ ' }',
+ ' if(u_scatter>0.){',
+ '   float weight=u_scatter*smoothstep(.22,.77,a_meta.y),angle=a_meta.y*21.+u_scatter*2.8;',
+ '   p+=weight*vec3(1.4*cos(angle),.18+.88*sin(angle),1.28*sin(angle*.8));',
+ ' }',
  ' float drift=mix(.012,.17,u_screen)*u_motion;',
  ' p.x+=sin(u_time*.72+a_meta.y*23.)*drift;p.y+=cos(u_time*.61+a_meta.y*31.)*drift;',
  ' p.z+=sin(u_time*.57+a_meta.y*19.)*.024*u_motion*(1.-u_screen);',
@@ -53,8 +62,8 @@ export function createPointRenderer(canvas,{masked=false,onFallback=()=>{}}={}){
   if(!gl||masked&&!gl.getParameter(gl.STENCIL_BITS))compatible();
   else{
    program=link(vertex,fragment);
-   for(const name of ['viewport','center','pointer','rotation','scale','time','motion','blend','dpr','screen','force','hover','fault','dot','opacity','packet'])uniforms[name]=gl.getUniformLocation(program,'u_'+name);
-   for(const name of ['position','from','color','fromColor','meta','flow'])attributes[name]=gl.getAttribLocation(program,'a_'+name);
+   for(const name of ['viewport','center','pointer','rotation','scale','time','motion','blend','dpr','screen','force','hover','fault','dot','opacity','packet','scatter'])uniforms[name]=gl.getUniformLocation(program,'u_'+name);
+   for(const name of ['position','from','color','fromColor','meta','flow','sine','cosine'])attributes[name]=gl.getAttribLocation(program,'a_'+name);
    if(masked){maskProgram=link(maskVertex,maskFragment);maskBuffer=gl.createBuffer();maskAt=gl.getAttribLocation(maskProgram,'a_position');for(const name of ['viewport','scroll'])maskUniforms[name]=gl.getUniformLocation(maskProgram,'u_'+name);}
    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);canvas.dataset.renderer='webgl-3d';
   }
@@ -88,10 +97,10 @@ export function createPointRenderer(canvas,{masked=false,onFallback=()=>{}}={}){
   gl.enable(gl.SCISSOR_TEST);gl.scissor(Math.max(0,Math.floor(r.left*dpr)),Math.max(0,Math.floor((height-r.top-r.height)*dpr)),Math.ceil(Math.min(width-r.left,r.width)*dpr),Math.ceil(Math.min(height,Math.max(0,r.top+r.height))-Math.max(0,r.top))*dpr);
   gl.useProgram(program);
   let buffer=buffers.get(cloud);if(!buffer){buffer=gl.createBuffer();buffers.set(cloud,buffer);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,cloud.data,gl.STATIC_DRAW);if(buffers.size>18){const [old,oldBuffer]=buffers.entries().next().value;gl.deleteBuffer(oldBuffer);buffers.delete(old);}}else gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
-  for(const [name,size,offset] of [['position',3,0],['from',3,3],['color',3,6],['fromColor',3,9],['meta',4,12],['flow',3,16]]){const at=attributes[name];gl.enableVertexAttribArray(at);gl.vertexAttribPointer(at,size,gl.FLOAT,false,STRIDE*4,offset*4);}
+  for(const [name,size,offset] of [['position',3,0],['from',3,3],['color',3,6],['fromColor',3,9],['meta',4,12],['flow',3,16],['sine',4,19],['cosine',4,23]]){const at=attributes[name];gl.enableVertexAttribArray(at);gl.vertexAttribPointer(at,size,gl.FLOAT,false,STRIDE*4,offset*4);}
   gl.uniform2f(uniforms.viewport,width,height);gl.uniform2f(uniforms.center,view.cx,view.cy);gl.uniform2f(uniforms.pointer,view.pointer?.x??-1000,view.pointer?.y??-1000);
   gl.uniform4f(uniforms.rotation,Math.cos(view.yaw||0),Math.sin(view.yaw||0),Math.cos(view.pitch||0),Math.sin(view.pitch||0));
-  const values={scale:view.scale,time:reduced?0:time,motion:reduced?0:1,blend:view.blend??1,dpr,screen:cloud.space==='world'?0:1,force:view.attraction?1:0,hover:view.pointer?1:0,fault:reduced?0:view.fault||0,dot:view.dotSize||2,opacity:view.opacity??1,packet:view.packet?1:0};
+  const values={scale:view.scale,time:reduced?0:time,motion:reduced?0:1,blend:view.blend??1,dpr,screen:cloud.space==='world'?0:1,force:view.attraction?1:0,hover:view.pointer?1:0,fault:reduced?0:view.fault||0,dot:view.dotSize||2,opacity:view.opacity??1,packet:view.packet?1:0,scatter:reduced||cloud.space!=='world'?0:view.scatter||0};
   for(const [key,value] of Object.entries(values))gl.uniform1f(uniforms[key],value);
   gl.drawArrays(gl.POINTS,0,cloud.count);
  }
@@ -102,7 +111,12 @@ export function createPointRenderer(canvas,{masked=false,onFallback=()=>{}}={}){
   for(let i=0;i<cloud.count;i++){projectParticle(cloud,i,view,time,reduced,out);p.set(out,i*4);}
   for(const group of cloud.groups)for(let depth=0;depth<2;depth++){
    ctx.fillStyle=group.color;ctx.globalAlpha=(view.opacity??1)*(depth?.98:.55);ctx.beginPath();
-   for(const index of group.indices){const n=index*4;if(Number(p[n+2]>=0)!==depth)continue;const size=p[n+3];ctx.rect(p[n]-size/2,p[n+1]-size/2,size,view.packet?Math.max(1,size*.28):size);}
+   for(const index of group.indices){
+    const n=index*4;if(Number(p[n+2]>=0)!==depth)continue;
+    const x=p[n],y=p[n+1],size=p[n+3],radius=size/2;
+    if(!view.packet&&size>=2.8){ctx.moveTo(x+radius,y);ctx.arc(x,y,radius,0,Math.PI*2);}
+    else ctx.rect(x-radius,y-radius,size,view.packet?Math.max(1,size*.28):size);
+   }
    ctx.fill();
   }ctx.restore();
  }

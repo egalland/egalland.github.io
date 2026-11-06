@@ -1,4 +1,5 @@
-import {clamp,sceneCamera} from './point-cloud.mjs';
+import {clamp,sceneCamera} from './point-cloud.mjs?v=kinetic1';
+import {arrivalScatter} from './kinetics.mjs?v=kinetic1';
 
 export function createPointInteraction(slots,{signal,wake,reduced=false}){
  const pointer={x:-1000,y:-1000,active:false,down:false},attributes=[];
@@ -32,8 +33,12 @@ export function createPointInteraction(slots,{signal,wake,reduced=false}){
  return {
   camera(slot,time){
    const r=slot.rect,hover=pointer.active&&r&&hit(pointer.x,pointer.y)===slot;
-   const local=hover?{x:clamp((pointer.x-r.left-r.width/2)/(r.width/2),-1,1),y:clamp((pointer.y-(r.top-scrollY)-r.height/2)/(r.height/2),-1,1)}:{x:0,y:0};
-   return {...sceneCamera(slot.kind,time,local,slot.orbit,reduced),pointer:hover&&!reduced?pointer:null,attraction:pointer.down&&hover};
+   const top=r.top-scrollY,centerY=top+r.height/2,nav=innerWidth<=700?65:74;
+   const local=hover?{x:clamp((pointer.x-r.left-r.width/2)/(r.width/2),-1,1),y:clamp((pointer.y-centerY)/(r.height/2),-1,1)}:{x:0,y:0};
+   const visible=Math.min(innerHeight,top+r.height)-Math.max(nav,top);
+   const fraction=visible/Math.max(1,Math.min(r.height,innerHeight-nav));
+   const scatter=arrivalScatter(slot,time,fraction,reduced),scrollTilt=(innerHeight/2-centerY)/(innerHeight/2);
+   return {...sceneCamera(slot.kind,time,local,slot.orbit,reduced,scrollTilt),scatter,pointer:hover&&!reduced?pointer:null,attraction:pointer.down&&hover};
   },
   stop(){for(const [el,key,value] of attributes.reverse())if(value===null)el.removeAttribute(key);else el.setAttribute(key,value);}
  };

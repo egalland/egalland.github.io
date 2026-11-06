@@ -1,4 +1,5 @@
 import {resamplePoints} from '../../points/point-motion.mjs';
+import {orbit,wave} from './kinetics.mjs?v=kinetic1';
 const cache=new Map();
 export function prepare(count=3600){
  if(!cache.has(count))cache.set(count,build(count));
@@ -23,11 +24,44 @@ function ellipsoid(x,y,z,rx,ry,rz,c,count=900){
  for(let i=0;i<count;i++){const h=1-2*(i+.5)/count,r=Math.sqrt(1-h*h),a=i*2.399963229728653;points.push(point(x+Math.cos(a)*r*rx,y+h*ry,z+Math.sin(a)*r*rz,c,.9));}
 }
 function finish(){forms.push(resamplePoints(points.splice(0),N,random));}
+function poseSince(start,pose){for(let i=start;i<points.length;i++)pose(points[i]);}
 async function buildForms(){
  await document.fonts.ready;
- // A dense suspended sphere, surrounded by three offset orbital filaments.
- for(let i=0;i<N;i++){const u=random()*Math.PI*2,z=random()*2-1,r=Math.sqrt(1-z*z),R=i%7===0?.78:.9;points.push(point(Math.cos(u)*r*R,z*R,Math.sin(u)*r*R,i%11===0?'#e7a293':'#f23625',1.15));}
- for(let ring=0;ring<3;ring++)for(let i=0;i<700;i++){const a=i/700*Math.PI*2,R=1.4+ring*.23;points.push(point(Math.cos(a)*R,Math.sin(a)*R*.4,Math.sin(a)*R*.85+Math.cos(a)*ring*.08,ring===1?'#f23625':'#4a4541',.68));}finish();
+ // Slanted bands make the rolling wave visible even with the camera at rest.
+ for(let i=0;i<2400;i++){
+  const y=1-2*(i+.5)/2400,r=Math.sqrt(1-y*y),lon=i*2.39996323;
+  const x=Math.cos(lon)*r,z=Math.sin(lon)*r,phase=2*lon+5*y,band=Math.sin(phase);
+  const color=band>.82?'#ffad76':band>.45?'#eb5c38':band<-.66?'#973225':'#ce412d';
+  const radius=.82+.045*band,p=point(x*radius,y*radius,z*radius,color,band>.7?1.48:1.12);
+  wave(p,[.085*x,.085*y,.085*z],1.65,phase);
+  points.push(p);
+ }
+ // Tilted orbits with gaps and tapered comets. The head and tail follow the
+ // same 3D rail at different angular speeds on each plane.
+ const orbits=[
+  {radius:1.61,heading:-.25,tilt:1.15,speed:.91,start:.32,rail:'#436963',comet:'#087d73'},
+  {radius:1.38,heading:.76,tilt:1.02,speed:-1.23,start:2.3,rail:'#a75c43',comet:'#d54023'},
+  {radius:1.52,heading:-.96,tilt:1.22,speed:.73,start:4.8,rail:'#526064',comet:'#a8681c'}
+ ];
+ for(const {radius,heading,tilt,speed,start,rail,comet} of orbits){
+  const u=[Math.cos(heading),Math.sin(heading),0];
+  const v=[-u[1]*Math.cos(tilt),u[0]*Math.cos(tilt),Math.sin(tilt)];
+  const axis=[u[1]*v[2],-u[0]*v[2],Math.cos(tilt)];
+  function orbitDot(angle,r,offset,color,size){
+   const a=r*Math.cos(angle),b=r*Math.sin(angle);
+   const p=point(a*u[0]+b*v[0]+offset*axis[0],a*u[1]+b*v[1]+offset*axis[1],b*v[2]+offset*axis[2],color,size);
+   orbit(p,[0,0,0],axis,speed);points.push(p);
+  }
+  for(let i=0;i<540;i++){
+   if(i%108>99)continue;
+   orbitDot(i/540*Math.PI*2,radius,0,rail,i%18===0?1.35:.88);
+  }
+  for(let i=0;i<245;i++){
+   const along=(i+.5)/245,head=1-along,spread=.008+.037*head;
+   orbitDot(start-Math.sign(speed)*along*1.05,radius+(random()-.5)*spread,(random()-.5)*spread,comet,.76+head*head*2.55);
+  }
+ }
+ finish();
  // The word and puppet are actual XYZ geometry, not point-filtered pictures.
  textCloud('KIKALMO',0,.24,160,'#416977','Redline',2);
  for(const z of [-.35,.32])rect(-1.9,-.62,3.8,1.28,z,'#8d6eaa',500);
@@ -57,8 +91,24 @@ async function buildForms(){
  finish();
  // Four solid, connected module outlines at slightly different depths.
  const modules=[[-1.65,.1,1.45,1,.15,'#137f76'],[.05,.2,1.4,.9,-.12,'#c56e45'],[-1.45,-1.15,1.5,.94,-.22,'#6596a0'],[.3,-1.1,1.35,.9,.3,'#137f76']];
- for(const [x,y,w,h,z,c] of modules){rect(x,y,w,h,z,c,420);rect(x+.12,y+.12,w-.24,h-.24,z-.1,c,230);line([x+.1,y+.68,z],[x+w-.1,y+.68,z],60,c);}
- for(let k=0;k<modules.length;k++){const m=modules[k],n=modules[(k+1)%modules.length];line([m[0]+m[2]/2,m[1]+m[3]/2,m[4]],[n[0]+n[2]/2,n[1]+n[3]/2,n[4]],120,'#7b8e86');}finish();
+ for(const [x,y,w,h,z,c] of modules){
+  const start=points.length;
+  rect(x,y,w,h,z,c,420);rect(x+.12,y+.12,w-.24,h-.24,z-.1,c,230);line([x+.1,y+.68,z],[x+w-.1,y+.68,z],60,c);
+  poseSince(start,p=>wave(p,[x*.025,y*.025,.23],1.25,x+y));
+ }
+ for(let k=0;k<modules.length;k++){
+  const m=modules[k],n=modules[(k+1)%modules.length],start=points.length;
+  line([m[0]+m[2]/2,m[1]+m[3]/2,m[4]],[n[0]+n[2]/2,n[1]+n[3]/2,n[4]],120,'#7b8e86');
+  // Interpolate the end displacements so connectors stay attached as panels rise.
+  poseSince(start,p=>{
+   const t=p.phase,ma=m[0]+m[1],na=n[0]+n[1];
+   const offsets=[0,1].map(j=>[m[j]*.025,n[j]*.025]);offsets.push([.23,.23]);
+   p.motion=[...offsets.map(([a,b])=>lerp(a*Math.cos(ma),b*Math.cos(na),t)),1.25,
+    ...offsets.map(([a,b])=>lerp(a*Math.sin(ma),b*Math.sin(na),t)),0];
+   delete p.track;
+  });
+ }
+ finish();
  // Draw the information structure directly in points. Pale raster fills hid the
  // dashboard on the light theme and consumed most of its particle budget.
  const ink='#20574f',mutedInk='#46685f',chartInk='#087c75',warmInk='#a74e2c';
@@ -77,8 +127,10 @@ async function buildForms(){
  rect(-1.14,-.84,1.91,.82,.03,ink,320);
  for(let row=0;row<3;row++)line([-1.02,-.68+row*.24,.02],[.65,-.68+row*.24,.02],65,mutedInk);
  const trend=[[-1.01,-.69],[-.75,-.55],[-.49,-.6],[-.23,-.3],[.03,-.39],[.29,-.16],[.59,-.08]];
+ const trendStart=points.length;
  for(let k=1;k<trend.length;k++)line([...trend[k-1],.08],[...trend[k],.08],90,chartInk,.012);
  for(const [x,y] of trend)for(let k=0;k<32;k++){const t=k/32*Math.PI*2;points.push(point(x+Math.cos(t)*.035,y+Math.sin(t)*.035,.09,chartInk,1.12));}
+ poseSince(trendStart,p=>{wave(p,[0,(p.y+.73)*.34,0],1.7,1.5-p.x*.9);delete p.track;});
  rect(.93,-.84,.97,.82,.03,ink,230);
  for(let row=0;row<5;row++)line([1.05,-.17-row*.125,.05],[1.72-(row%2)*.18,-.17-row*.125,.05],65,row===0?warmInk:mutedInk);
  line([-1.14,-1.02,.02],[1.89,-1.02,.02],230,ink);
@@ -87,10 +139,24 @@ async function buildForms(){
  // A genuine volumetric plan, with walls lifted from the ground plane.
  const walls=[[[-1.8,-1,-1],[1.6,-1,-1]],[[-1.8,-1,-1],[-1.8,-1,1.2]],[[1.6,-1,-1],[1.6,-1,1.2]],[[-1.8,-1,1.2],[1.6,-1,1.2]],[[-.3,-1,-1],[-.3,-1,.2]],[[-1.8,-1,.2],[.3,-1,.2]],[[.3,-1,.2],[.3,-1,1.2]]];
  for(const [a,b] of walls){line(a,b,130,'#d54b29');line([a[0],.6,a[2]],[b[0],.6,b[2]],100,'#2c4847');line(a,[a[0],.6,a[2]],80,'#2c4847');line(b,[b[0],.6,b[2]],80,'#2c4847');for(let j=0;j<320;j++){let t=random(),h=random();points.push(point(lerp(a[0],b[0],t),lerp(-1,.6,h),lerp(a[2],b[2],t),random()>.8?'#c9ad89':'#6c7a72',.6));}}
+ // The footprint stays grounded while the point-built walls lift and settle.
+ poseSince(0,p=>{
+  if(p.y<=-.99)return;
+  wave(p,[0,(p.y+1)*.24,0],.98,Math.PI/2);
+  if(p.track?.a[1]!==p.track?.b[1])delete p.track;
+ });
  for(let x=-1.8;x<=1.61;x+=.24)line([x,-1,-1],[x,-1,1.2],50,'#9c9f91');finish();
  rect(-1.5,-1.15,2.8,2.45,0,'#294a49',480);for(let row=0;row<3;row++){line([-1.35,.98-row*.72,.04],[1.15,.98-row*.72,.04],140,'#7e9185');for(let col=0;col<7;col++){rect(-1.25+col*.34,.52-row*.72,.25,.42,.15,col<2?'#d54b29':'#456a66',80);line([-1.13+col*.34,.6-row*.72,.2],[-1.13+col*.34,.76-row*.72,.2],25,'#bd8b44');}}
  for(let j=0;j<6;j++){const x=-1.13+j*.34;line([x,-1,.05],[x,-1.5-j*.08,.1],75,j%2?'#cd6c47':'#437b7b');line([x,-1.5-j*.08,.1],[2.0,-1.5-j*.08,-.3],85,j%2?'#cd6c47':'#437b7b');}finish();
- for(let ring=0;ring<3;ring++){let R=1.5-ring*.37;for(let i=0;i<1800;i++){let t=random()*Math.PI*2*(.73+ring*.07),q=random()*Math.PI*2,rad=R+.065*Math.cos(q);points.push(point(rad*Math.cos(t),rad*Math.sin(t),.065*Math.sin(q)+ring*.1,['#a3ec9d','#8dbed3','#dfa0a8'][ring],1.05));}}finish();
+ for(let ring=0;ring<3;ring++){
+  const R=1.5-ring*.37,center=[0,0,ring*.1],speed=[.44,-.63,.84][ring];
+  for(let i=0;i<1800;i++){
+   const t=random()*Math.PI*2*(.73+ring*.07),q=random()*Math.PI*2,rad=R+.065*Math.cos(q);
+   const p=point(rad*Math.cos(t),rad*Math.sin(t),.065*Math.sin(q)+center[2],['#a3ec9d','#8dbed3','#dfa0a8'][ring],1.05);
+   orbit(p,center,[0,0,1],speed);points.push(p);
+  }
+ }
+ finish();
  for(let k=0;k<3;k++){const c=['#a3ec9d','#8dbed3','#dfa0a8'][k];for(let i=0;i<2200;i++){let x=(random()-.5)*4.4,y=Math.sin(x*2+k*.8)*(.3+k*.1)+Math.sin(x*4.5)*.14+(k-1)*.6;points.push(point(x,y+(random()-.5)*.04,(k-1)*.4,c));}}for(let k=0;k<9;k++)line([-2+k*.5,-1.4,-.5],[-2+k*.5,1.4,-.5],60,'#38524e');finish();
  // An open book: layered page edges, a curved spread and a central binding.
  const bookPoint=(side,u,y,page=0)=>[side*(.035+1.62*u),y,.16+Math.sin(u*Math.PI)*.36-page*.025];
@@ -103,7 +169,15 @@ async function buildForms(){
    const u=.14+k/99*(row%4===3?.6:.72),[x,y,z]=bookPoint(side,u,.83-row*.15);points.push(point(x,y,z+.012,row<2?'#8e532c':'#5d665f',row<2?1.05:.8));
   }
  }
- line([0,-1.1,.17],[0,1.1,.17],340,'#283c4b',.006);finish();
+ line([0,-1.1,.17],[0,1.1,.17],340,'#283c4b',.006);
+ const pageStart=points.length;
+ for(const side of [-1,1])for(let i=0;i<190;i++)points.push(point(...bookPoint(1,i/189,side*1.04),'#ad703f',1.2));
+ for(let row=0;row<10;row++)for(let i=0;i<84;i++){
+  points.push(point(...bookPoint(1,.10+i/100,.80-row*.17),'#637a6a',.9));
+ }
+ line([1.655,-1.04,.16],[1.655,1.04,.16],190,'#ad703f');
+ poseSince(pageStart,p=>orbit(p,[0,0,.16],[0,-1,0],.95,Math.PI*.98));
+ finish();
  // Nested image frames and corner handles describe resizing without a bitmap.
  rect(-1.72,-1.1,3.44,2.2,-.2,'#50646c',980);rect(-1.11,-.71,2.22,1.42,.18,'#156e82',1000);
  for(const side of [-1,1])for(const vertical of [-1,1]){
@@ -123,7 +197,13 @@ async function buildForms(){
  for(let dial=0;dial<3;dial++){const x=(dial-1)*1.28,y=dial===1?.27:-.25,z=(dial-1)*.18,c=['#8e532c','#c06b39','#5e786b'][dial];
   for(let ring=0;ring<2;ring++)for(let i=0;i<700;i++){const a=i/700*Math.PI*2,r=.54-ring*.04;points.push(point(x+Math.cos(a)*r,y+Math.sin(a)*r,z,c,.95));}
   for(let tick=0;tick<12;tick++){const a=tick/12*Math.PI*2;line([x+Math.cos(a)*.43,y+Math.sin(a)*.43,z],[x+Math.cos(a)*.48,y+Math.sin(a)*.48,z],25,c);}
-  line([x,y,z+.02],[x+.26*Math.sin(dial+1),y+.26*Math.cos(dial+1),z+.02],120,'#283c4b');line([x,y,z+.02],[x-.15,y+.07,z+.02],80,'#283c4b');rect(x-.43,y-.85,.86,.2,z,c,200);
+  const center=[x,y,z+.02],longHand=points.length;
+  line(center,[x+.36*Math.sin(dial+1),y+.36*Math.cos(dial+1),z+.02],150,'#283c4b');
+  poseSince(longHand,p=>orbit(p,center,[0,0,1],-(.92+dial*.4)));
+  const shortHand=points.length;
+  line(center,[x-.18,y+.09,z+.02],90,c);
+  poseSince(shortHand,p=>orbit(p,center,[0,0,1],-(.15+dial*.08)));
+  rect(x-.43,y-.85,.86,.2,z,c,200);
  }finish();
  // A biscuit, its fold and a short paper fortune: no bitmap layer.
  for(let i=0;i<6200;i++){const a=random()*Math.PI*2,r=Math.sqrt(random()),x=Math.cos(a)*r*1.5,y=Math.sin(a)*r*.95,z=Math.sqrt(1-r*r)*.38;points.push(point(x,y,z,i%13===0?'#704c33':i%3?'#a76b39':'#bc8c50',.85));}

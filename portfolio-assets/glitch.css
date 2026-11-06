@@ -50,6 +50,10 @@ html[data-theme=glitch] footer[data-rift-world=points] .dim{color:#63745e}
 #rift-page{position:absolute;left:0;top:0;width:100%;z-index:0;pointer-events:none;overflow:clip}
 #rift-points{position:fixed;inset:0;width:100%;height:100%;z-index:19;pointer-events:none;contain:strict}
 .signal-edge{fill:none;stroke:#4396a0;stroke-width:1;stroke-dasharray:21 93 3 47;opacity:.32;vector-effect:non-scaling-stroke}
+.signal-traffic{display:none;fill:none;stroke:#198c94;stroke-width:2.5;stroke-dasharray:3 5 10 6 24 224;vector-effect:non-scaling-stroke}
+.signal-running .signal-in-view .signal-traffic{display:inline;animation:signal-traffic 2.5s linear infinite}
+.signal-running .signal-in-view:nth-of-type(even) .signal-traffic{stroke:#b25a8b;animation-direction:reverse;animation-duration:3.2s}
+@keyframes signal-traffic{to{stroke-dashoffset:-272}}
 .signal-channel{fill:none;stroke:#c75c97;stroke-width:2;stroke-dasharray:42 81 7 139;opacity:0;vector-effect:non-scaling-stroke}
 .signal-active .signal-channel{animation:signal-channel .62s steps(2,end) both}
 .signal-host{position:relative}
@@ -71,4 +75,4 @@ html[data-theme=glitch] footer[data-rift-world=points] .dim{color:#63745e}
  html[data-theme=glitch] .lab-card{padding:22px 0 30px}html[data-theme=glitch] .lab-card .lab-art{height:205px}
  html[data-theme=glitch] .lab-card h3{font-size:29px}html[data-theme=glitch] .lab-card p{font-size:13px}
 }
-@media(prefers-reduced-motion:reduce){.signal-channel,.signal-echo{display:none!important}}
+@media(prefers-reduced-motion:reduce){.signal-channel,.signal-echo,.signal-traffic{display:none!important}}

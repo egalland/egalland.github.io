@@ -1,10 +1,10 @@
-import {start as startCursors} from './cursors.mjs';
+import {start as startCursors} from './cursors.mjs?v=kinetic1';
 import {bandPolygon,svgPath,clipToRect} from './page-rifts.mjs';
-import {wordCloud} from './rift-points.mjs?v=signal5';
-import {createCloud} from './point-cloud.mjs';
-import {createPointRenderer} from './point-renderer.mjs';
-import {createPointInteraction} from './point-interaction.mjs';
-import {signalEdge,edgePackets,faultPower} from './digital-signal.mjs';
+import {wordCloud} from './rift-points.mjs?v=kinetic1';
+import {createCloud} from './point-cloud.mjs?v=kinetic1';
+import {createPointRenderer} from './point-renderer.mjs?v=kinetic1';
+import {createPointInteraction} from './point-interaction.mjs?v=kinetic1';
+import {signalEdge,edgePackets,faultPower} from './digital-signal.mjs?v=kinetic1';
 
 const arrived=new WeakSet(),SVG='http://www.w3.org/2000/svg';
 const worlds=[
@@ -18,7 +18,7 @@ const worlds=[
 const pointSlots=[['.hero-art','hero',0],['#market-plus .project-window','market',5],['#kikalmo .project-window','word',-1],['#maison .project-window','maison',6],['#atlas .lab-art','atlas',13],['#four-en-route .lab-art','timer',14]];
 const pathFor=polygon=>{const path=new Path2D();polygon.forEach((p,i)=>i?path.lineTo(...p):path.moveTo(...p));path.closePath();return path;};
 
-export function start({forms,reduced=false}={}){
+export function start({forms,reduced=false,resume=false}={}){
  const root=document.documentElement,abort=new AbortController(),timers=new Set(),attributes=[];
  const on=(el,type,fn,options={})=>el.addEventListener(type,fn,{...options,signal:abort.signal});
  const $=selector=>document.querySelector(selector);
@@ -41,6 +41,12 @@ export function start({forms,reduced=false}={}){
  const makeEdge=(guides,seed)=>signalEdge(guides,seed,width<=700?5:7);
  function scheduleLayout(){if(!layoutRaf&&!stopped)layoutRaf=requestAnimationFrame(layout);}
  function createSvg(name,attrs){const node=document.createElementNS(SVG,name);for(const [key,value] of Object.entries(attrs))node.setAttribute(key,value);return node;}
+ // Animate only the strips of signal currently crossing the screen.
+ const trafficObserver=reduced?null:new IntersectionObserver(entries=>{
+  for(const entry of entries)entry.target.classList.toggle('signal-in-view',entry.isIntersecting);
+ });
+ const setTraffic=()=>layer.classList.toggle('signal-running',!reduced&&!hidden);
+ setTraffic();
  const revealObserver=new IntersectionObserver(entries=>{
   for(const entry of entries)if(entry.isIntersecting&&!arrived.has(entry.target)){
    arrived.add(entry.target);if(!reduced)triggerFault(Number(entry.target.dataset.riftArrival));
@@ -75,16 +81,18 @@ export function start({forms,reduced=false}={}){
   const boundaries=[[firstTop,firstBottom],[secondTop,secondBottom],[thirdTop,thirdBottom],[lastTop,lastBottom]];
   regions=boundaries.map(([top,bottom])=>bandPolygon(top,bottom));lightPath=new Path2D();for(const polygon of regions)lightPath.addPath(pathFor(polygon));
   layer.setAttribute('viewBox',`0 0 ${width} ${pageHeight}`);layer.style.height=pageHeight+'px';
-  const fragment=document.createDocumentFragment();edges=[];
+  const fragment=document.createDocumentFragment();edges=[];trafficObserver?.disconnect();
   boundaries.forEach(([top,bottom],i)=>{
    const group=createSvg('g',{'data-rift-band':i});group.append(createSvg('path',{d:svgPath(regions[i]),fill:'#eeece5'}));
    for(const edge of [top,bottom]){
     if(edge===lastBottom)continue;const d=edge.map((p,j)=>(j?'L':'M')+p.map(v=>v.toFixed(1)).join(',')).join(' ');
-    group.append(createSvg('path',{d,class:'signal-edge'}));group.append(createSvg('path',{d,class:'signal-channel'}));
-    edges.push({band:i,top:Math.min(...edge.map(p=>p[1])),bottom:Math.max(...edge.map(p=>p[1])),packets:edgePackets(edge,i*17+edges.length,width<=700?65:120)});
+    const strip=createSvg('g',{class:'signal-strip'});
+    strip.append(createSvg('path',{d,class:'signal-edge'}),createSvg('path',{d,class:'signal-traffic'}),createSvg('path',{d,class:'signal-channel'}));group.append(strip);
+    edges.push({strip,band:i,top:Math.min(...edge.map(p=>p[1])),bottom:Math.max(...edge.map(p=>p[1])),packets:edgePackets(edge,i*17+edges.length,width<=700?65:120)});
    }
    fragment.append(group);
   });layer.replaceChildren(fragment);
+  for(const edge of edges)trafficObserver?.observe(edge.strip);
   // Clip actual HTML only at the single crossing; the shared document is never duplicated.
   const darkBelow=[...firstBottom,[width,pageHeight],[0,pageHeight]];
   for(const slot of slots){
@@ -106,26 +114,31 @@ export function start({forms,reduced=false}={}){
   context.translate(0,-scrollY);const path=new Path2D();path.rect(0,scrollY,w,h);path.addPath(lightPath);context.clip(path,'evenodd');context.translate(0,scrollY);
  }
  const accept=el=>el.closest('[data-rift-world]')?.dataset.riftWorld!=='points'&&!el.closest('[data-rift-stage]');
- function triggerFault(band){
+ function triggerFault(band,manual=false){
   if(reduced||hidden||stopped||performance.now()/1000-burstAt<.7)return;
   const visible=edges.filter(e=>e.bottom-scrollY>75&&e.top-scrollY<height&&(band===undefined||e.band===band));
   burstEdge=visible.sort((a,b)=>Math.abs((a.top+a.bottom)/2-scrollY-height/2)-Math.abs((b.top+b.bottom)/2-scrollY-height/2))[0]||null;
-  if(!burstEdge)return;
+  if(!burstEdge){
+   if(!manual)return;
+   const y=scrollY+height*.48;
+   const line=signalEdge([[width*.24,y+6],[width*.49,y-6],[width*.76,y+4]],32);
+   burstEdge={packets:edgePackets(line,32,width<=700?65:120)};
+  }
   burstAt=performance.now()/1000;root.dataset.glitchBursts=String(Number(root.dataset.glitchBursts||0)+1);
-  const group=layer.querySelector('[data-rift-band="'+burstEdge.band+'"]');group?.classList.add('signal-active');
+  const group=burstEdge?.strip;group?.classList.add('signal-active');
   const heading=[...document.querySelectorAll('main h1,main h3')].filter(el=>{const r=el.getBoundingClientRect();return r.top>80&&r.bottom<height&&(!el.dataset.construction||el.dataset.construction==='done');}).sort((a,b)=>Math.abs(a.getBoundingClientRect().top-height/2)-Math.abs(b.getBoundingClientRect().top-height/2))[0];
   let echo=null;if(heading){echo=document.createElement('span');echo.className='signal-echo';echo.setAttribute('aria-hidden','true');echo.textContent=heading.innerText;heading.classList.add('signal-host');heading.append(echo);}
   const id=setTimeout(()=>{group?.classList.remove('signal-active');echo?.remove();heading?.classList.remove('signal-host');timers.delete(id);},640);timers.add(id);dirty=true;wake();
  }
- function launchCursors(){
+ function launchCursors(resumeConstruction=true){
   cursorEngine?.stop();cursorMobile=width<=700;
-  cursorEngine=startCursors({reduced,resume:true,accept,cursorCount:cursorMobile?4:5,maxWorkers:cursorMobile?2:3,resizeWindows:false,frameInterval:cursorMobile?50:42,maxDpr:cursorMobile?1:1.25,clipFrame:clipCursors,idleWhenEmpty:true});
+  cursorEngine=startCursors({reduced,resume:resumeConstruction,accept,readableOnEntry:el=>el.matches('.hero-copy h1,.hero-copy .intro'),cursorCount:cursorMobile?4:5,maxWorkers:cursorMobile?2:3,resizeWindows:false,frameInterval:cursorMobile?50:42,maxDpr:cursorMobile?1:1.25,clipFrame:clipCursors,idleWhenEmpty:true});
  }
  function wake(){if(!raf&&!hidden&&!stopped)raf=requestAnimationFrame(frame);}
  function frame(stamp){
   raf=0;if(hidden||stopped)return;
   const interval=renderer.backend==='webgl-3d'?(width<=700?33:16):(width<=700?50:42);if(!reduced&&stamp-lastPaint<interval){wake();return;}lastPaint=stamp;
-  const dt=last?Math.min((stamp-last)/1000,.08):0;last=stamp;if(!reduced)time+=dt;
+  const dt=last?Math.min((stamp-last)/1000,.25):0;last=stamp;if(!reduced)time+=dt;
   if(reduced&&!dirty)return;dirty=false;
   const began=performance.now();renderer.begin(scrollY);
   const fault=reduced?0:faultPower(stamp/1000-burstAt);
@@ -140,19 +153,19 @@ export function start({forms,reduced=false}={}){
   if(fault&&burstEdge)renderer.draw(burstEdge.packets,{cx:0,cy:-scrollY,scale:1,masked:false,packet:true,dotSize:4,opacity:fault*.8,fault},time,reduced);
   root.dataset.riftDots=String(drawn);root.dataset.riftPaintMs=(performance.now()-began).toFixed(2);root.dataset.riftFrames=String(Number(root.dataset.riftFrames||0)+1);
   root.dataset.riftRenderer=renderer.backend;root.dataset.riftGeometry='xyz';root.dataset.glitchFault=fault.toFixed(2);
-  if(!reduced&&(visible.length||fault))wake();
+  if(!reduced&&(visible.length||fault))wake();else last=0;
  }
  const resizeObserver=new ResizeObserver(scheduleLayout);resizeObserver.observe($('main'));if($('footer'))resizeObserver.observe($('footer'));
  const wordObserver=new MutationObserver(scheduleLayout);if($('#word-letters'))wordObserver.observe($('#word-letters'),{childList:true,characterData:true,subtree:true});
  on(window,'resize',scheduleLayout,{passive:true});on(window,'scroll',()=>{dirty=true;wake();},{passive:true});
- on(document,'portfolio:glitch',()=>triggerFault());
- on(document,'visibilitychange',()=>{hidden=document.hidden;if(hidden){cancelAnimationFrame(raf);raf=0;}else{last=0;dirty=true;wake();}});
+ on(document,'portfolio:glitch',()=>triggerFault(undefined,true));
+ on(document,'visibilitychange',()=>{hidden=document.hidden;setTraffic();if(hidden){cancelAnimationFrame(raf);raf=0;}else{last=0;dirty=true;wake();}});
  root.dataset.glitchEngine='active';layout();
- launchCursors();
+ launchCursors(resume);
  const faultTimer=reduced?0:setInterval(()=>triggerFault(),6800);
  document.fonts.ready.then(()=>{if(!stopped){for(const slot of slots)slot.cloudKey=null;scheduleLayout();}});
  return {stop(){
-  stopped=true;abort.abort();clearInterval(faultTimer);cancelAnimationFrame(raf);cancelAnimationFrame(layoutRaf);resizeObserver.disconnect();wordObserver.disconnect();revealObserver.disconnect();for(const timer of timers)clearTimeout(timer);cursorEngine?.stop();interaction.stop();renderer.dispose();
+  stopped=true;abort.abort();clearInterval(faultTimer);cancelAnimationFrame(raf);cancelAnimationFrame(layoutRaf);resizeObserver.disconnect();wordObserver.disconnect();revealObserver.disconnect();trafficObserver?.disconnect();for(const timer of timers)clearTimeout(timer);cursorEngine?.stop();interaction.stop();renderer.dispose();
   document.querySelectorAll('.signal-echo').forEach(el=>el.remove());document.querySelectorAll('.signal-host').forEach(el=>el.classList.remove('signal-host'));
   for(const slot of slots){slot.el.style.clipPath=slot.style;for(const child of slot.children){child.el.inert=child.inert;if(child.aria===null)child.el.removeAttribute('aria-hidden');else child.el.setAttribute('aria-hidden',child.aria);}}
   for(const [el,key,value] of attributes.reverse())if(value===null)el.removeAttribute(key);else el.setAttribute(key,value);
