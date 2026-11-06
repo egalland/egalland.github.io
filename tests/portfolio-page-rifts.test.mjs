@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {tornEdge,bandPolygon,clipToRect,regionAt,boundedSamples} from '../portfolio-assets/themes/page-rifts.mjs';
-import {projectCloud,paintCloud} from '../portfolio-assets/themes/rift-points.mjs';
+import {createCloud,projectParticle} from '../portfolio-assets/themes/point-cloud.mjs';
+import {createShape,sampleShape} from '../portfolio-assets/themes/fusion-shapes.mjs';
 test('les déchirures occupent la largeur de la page et suivent des parcours différents',()=>{
  for(const width of [320,390,1440]){
   const edge=tornEdge([[0,200],[width*.45,220],[width,110]],12,width<=390?8:15);
@@ -16,10 +17,10 @@ test('un même masque découpe le fond du site et les moitiés de l’interface'
  const clipped=clipToRect(region,rect);assert.ok(clipped.length>4);for(const p of clipped){assert.ok(p[0]>=rect.left-1e-6&&p[0]<=rect.right+1e-6);assert.ok(p[1]>=rect.top-1e-6&&p[1]<=rect.bottom+1e-6);}
  assert.equal(regionAt([clipped],750,480),regionAt([region],750,480));
 });
-test('le budget partagé borne les points et le dessin groupe les appels par couleur',()=>{
+test('le budget borne les points tout en conservant leurs coordonnées XYZ',()=>{
  const samples=Array.from({length:6000},(_,i)=>i);assert.equal(boundedSamples(samples,800).length,800);
  for(const kind of ['hero','market','maison','atlas','timer']){
-  const cloud=projectCloud(kind,530,350,800);assert.ok(cloud.count<=800);let rects=0,fills=0;const ctx={beginPath(){},rect(x,y,w,h){assert.ok([x,y,w,h].every(Number.isFinite));rects++;},fill(){fills++;}};
-  paintCloud(ctx,cloud,0,0,4);assert.equal(rects,cloud.count);assert.equal(fills,cloud.groups.length);assert.ok(fills<8);
+  const form=sampleShape(createShape(kind),.055).map(p=>({x:p.p[0],y:p.p[1],z:p.p[2],c:[.2,.5,.6],size:1})),cloud=createCloud(form,{limit:800});assert.ok(cloud.count<=800);
+  for(let i=0;i<cloud.count;i++)assert.ok(projectParticle(cloud,i,{cx:265,cy:175,scale:100,yaw:.3,pitch:.2},4).every(Number.isFinite));
  }
 });

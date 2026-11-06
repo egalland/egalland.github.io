@@ -1,16 +1,13 @@
 import {resamplePoints} from '../../points/point-motion.mjs';
-import imageAssets from '../../points/assets/images.mjs';
 const cache=new Map();
 export function prepare(count=3600){
  if(!cache.has(count))cache.set(count,build(count));
  return cache.get(count);
 }
 async function build(N){
- const points=[],forms=[],SITE_FORMS=new Set([3,5,11]);let seed=6251;
+ const points=[],forms=[];let seed=6251;
  const random=()=>((seed=(Math.imul(1664525,seed)+1013904223)>>>0)/4294967296);
  const lerp=(a,b,t)=>a+(b-a)*t,rgb=h=>h.match(/[a-f\d]{2}/gi).map(x=>parseInt(x,16)/255);
- const loadImage=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Image indisponible'));image.src=src;});
- let logoImage,puppetImage;
  await document.fonts.load('700 100px Redline');
 function point(x,y,z,c='#111111',size=1){return{x,y,z,c:rgb(c),size};}
 function line(a,b,count=80,c='#151514',radius=.008){
@@ -22,23 +19,34 @@ function textCloud(text,x,y,fontSize,c='#f4e8d2',font='Redline',maxWidth=1.7){
   const c2=document.createElement('canvas');c2.width=1100;c2.height=350;const g=c2.getContext('2d');g.fillStyle=c;g.textAlign='center';g.textBaseline='middle';g.font=`700 ${fontSize}px ${font}, Arial`;g.fillText(text,550,175);const data=g.getImageData(0,0,1100,350).data;
   for(let yy=0;yy<350;yy+=4)for(let xx=0;xx<1100;xx+=4){const off=(yy*1100+xx)*4;if(data[off+3]>100)points.push({x:x+(xx-550)/550*maxWidth,y:y-(yy-175)/550*maxWidth,z:(random()-.5)*.09,c:[data[off]/255,data[off+1]/255,data[off+2]/255],size:1.15});}
 }
-function sampleDrawing(draw,scale=2.2){const c=document.createElement('canvas');c.width=700;c.height=700;const g=c.getContext('2d');draw(g);const d=g.getImageData(0,0,700,700).data;for(let y=0;y<700;y+=4)for(let x=0;x<700;x+=4){const i=(y*700+x)*4;if(d[i+3]>100){const nx=(x-350)/350,ny=(350-y)/350;points.push({x:nx*scale,y:ny*scale,z:.12+.26*Math.max(0,1-nx*nx-ny*ny)+(random()-.5)*.11,c:[d[i]/255,d[i+1]/255,d[i+2]/255],size:1});}}}
-function sampleImage(image,scale){
- const c=document.createElement('canvas');c.width=800;c.height=Math.round(800*image.height/image.width);const g=c.getContext('2d');g.drawImage(image,0,0,c.width,c.height);const d=g.getImageData(0,0,c.width,c.height).data;
- const h=scale*2*c.height/c.width;
- for(let y=0;y<c.height;y+=3)for(let x=0;x<c.width;x+=3){const i=(y*c.width+x)*4;if(d[i+3]>160){const nx=x/c.width-.5,ny=.5-y/c.height;points.push({x:nx*scale*2,y:ny*h,z:.14+.17*Math.max(0,1-nx*nx*4-ny*ny*4)+(random()-.5)*.055,c:[d[i]/255,d[i+1]/255,d[i+2]/255],size:1.1});}}
+function ellipsoid(x,y,z,rx,ry,rz,c,count=900){
+ for(let i=0;i<count;i++){const h=1-2*(i+.5)/count,r=Math.sqrt(1-h*h),a=i*2.399963229728653;points.push(point(x+Math.cos(a)*r*rx,y+h*ry,z+Math.sin(a)*r*rz,c,.9));}
 }
-function ellipse(g,x,y,rx,ry,c){g.fillStyle=c;g.beginPath();g.ellipse(x,y,rx,ry,0,0,Math.PI*2);g.fill();}
-function finish(){forms.push(resamplePoints(points.splice(0),N,random,SITE_FORMS.has(forms.length)));}
+function finish(){forms.push(resamplePoints(points.splice(0),N,random));}
 async function buildForms(){
  await document.fonts.ready;
- [logoImage,puppetImage]=await Promise.all([loadImage(imageAssets.logo),loadImage(imageAssets.puppet)]);
  // A dense suspended sphere, surrounded by three offset orbital filaments.
  for(let i=0;i<N;i++){const u=random()*Math.PI*2,z=random()*2-1,r=Math.sqrt(1-z*z),R=i%7===0?.78:.9;points.push(point(Math.cos(u)*r*R,z*R,Math.sin(u)*r*R,i%11===0?'#e7a293':'#f23625',1.15));}
  for(let ring=0;ring<3;ring++)for(let i=0;i<700;i++){const a=i/700*Math.PI*2,R=1.4+ring*.23;points.push(point(Math.cos(a)*R,Math.sin(a)*R*.4,Math.sin(a)*R*.85+Math.cos(a)*ring*.08,ring===1?'#f23625':'#4a4541',.68));}finish();
- sampleImage(logoImage,2.0);textCloud('M _ T',0,-.92,100,'#a79bbe','Redline',1.4);
- for(let i=0;i<400;i++){const t=random()*Math.PI*2;points.push(point(Math.cos(t)*2.1,Math.sin(t)*1.1,-.35,'#6d657b',.7));}finish();
- sampleImage(puppetImage,1.7);finish();
+ // The word and puppet are actual XYZ geometry, not point-filtered pictures.
+ textCloud('KIKALMO',0,.24,160,'#416977','Redline',2);
+ for(const z of [-.35,.32])rect(-1.9,-.62,3.8,1.28,z,'#8d6eaa',500);
+ for(const x of [-1.9,1.9])for(const y of [-.62,.66])line([x,y,-.35],[x,y,.32],75,'#8d6eaa');
+ textCloud('M _ T',0,-1.06,100,'#8b5c84','Redline',1.4);finish();
+ ellipsoid(0,-.85,0,.66,.48,.37,'#354b49',1400);
+ ellipsoid(0,-.65,.32,.2,.26,.08,'#d4b98c',480);
+ ellipsoid(0,.27,0,.62,.72,.5,'#168aab',2100);
+ for(const side of [-1,1]){
+  ellipsoid(side*.65,.24,0,.18,.26,.15,'#217e99',450);
+  ellipsoid(side*.24,.47,.43,.18,.21,.1,'#e8e5d8',520);
+  ellipsoid(side*.24,.46,.53,.075,.11,.045,'#234849',260);
+  line([side*.11,.76,.39],[side*.38,.72,.4],110,'#64382b',.025);
+  line([side*.09,-.48,.42],[side*.3,-.6,.36],120,'#c25739',.02);
+ }
+ ellipsoid(0,.16,.57,.14,.11,.13,'#cb6140',480);
+ for(let j=0;j<7;j++)ellipsoid((j-3)*.15,.9+Math.sin(j*.8)*.09,.13,.2,.17,.29,'#894127',280);
+ for(let i=0;i<200;i++){const a=i/199*Math.PI;points.push(point(Math.cos(a)*.24,-.05-Math.sin(a)*.12,.47,'#204f5d',1));}
+ finish();
  // A precise, planar UI: particles describe the controls rather than large fills.
  const gold='#efd091',lavender='#b5a7d3',rail='#786d99';
  rect(-1.95,-1.26,3.9,2.52,0,lavender,800);line([-1.95,.91,0],[1.95,.91,0],240,rail);line([-1.23,-1.26,0],[-1.23,.91,0],210,rail);
