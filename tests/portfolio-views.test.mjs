@@ -40,5 +40,5 @@ test('Points retrouve ses tableaux indépendants avec les mêmes contenus et lie
  const points=read('points/index.html');assert.ok(points.includes('id="particles"'));assert.equal([...points.matchAll(/data-scene=/g)].length,19);
  for(const p of [...data.projects,...data.atelier.projects]){assert.ok(text(points).includes(p.description),p.id);assert.ok(points.includes('id="'+p.id+'"'));}
  for(const t of data.about.timeline)assert.ok(text(points).includes(t.date));
- assert.ok(!points.includes('portfolio.mjs'));assert.ok(points.includes('app.js?v=independent1'));
+ assert.ok(!points.includes('portfolio.mjs'));assert.ok(points.includes('app.js?v=workshop1'));
 });

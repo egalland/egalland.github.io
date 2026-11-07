@@ -1,4 +1,4 @@
-import {ScrollConstruction} from './construction.mjs?v=independent1';
+import {ScrollConstruction} from './construction.mjs?v=workshop1';
 const completed=new WeakSet();
 export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
 const abort=new AbortController();const on=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:abort.signal});
@@ -165,7 +165,7 @@ on(window,'scroll',()=>{
 const construction=new ScrollConstruction({cursors,reduced,completed,accept,maxWorkers,onReveal(el){const panel=cursorWindows.find(panel=>panel.el===el);if(panel){if(resizeJob?.panel===panel)finishCursorResize();setWindowScale(panel,1);panel.done=true;panel.el.dataset.resizeState='done'}}});
 resetCursorResize();
 for(const unit of construction.units){
-  if(readableOnEntry(unit.el)||(resume&&(unit.el.getBoundingClientRect().top<innerHeight||[...unit.el.querySelectorAll('input')].some(input=>input.value.trim()))))construction.reveal(unit,true);
+  if(readableOnEntry(unit.el))construction.reveal(unit,true);
 }
 if(paused)construction.revealAll();else start();
 

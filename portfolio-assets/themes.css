@@ -48,42 +48,28 @@ html[data-theme=points] .mouse-glow{display:none}html[data-theme=points] footer 
 @media(max-width:700px){.theme-switch{padding:2px;gap:1px}.theme-switch button{font-size:9px;min-height:35px;padding:7px 8px}.nav .nav-right{gap:8px}.nav .brand{font-size:11px}.nav nav{z-index:40}html[data-theme=points] .nav nav{background:#e8ecdf;border-color:#9cae93}html[data-theme=points] .hero{padding-top:50px;min-height:0}html[data-theme=points] .hero h1{font-size:64px}html[data-theme=points] .hero-art{min-height:280px;max-width:100%;margin-top:35px}html[data-theme=points] .project{min-height:0;padding-top:35px;padding-bottom:35px;gap:25px}html[data-theme=points] .project-copy>p{font-size:13px}html[data-theme=points] .project-window{min-height:290px}html[data-theme=points] .project h3{font-size:48px}html[data-theme=points] .lab-card{min-height:0;grid-template-columns:1fr;padding:35px 0;gap:0}html[data-theme=points] .lab-card .lab-art{grid-column:1;grid-row:auto;height:260px;margin:0 0 20px}html[data-theme=points] .lab-card .lab-card-top{margin-bottom:18px}html[data-theme=points] .lab-card h3{font-size:31px;margin-top:6px}html[data-theme=points] .lab-card p{font-size:13px;max-width:100%}html[data-theme=points] .lab-type{min-height:0}}
 @media(max-width:420px){.nav .brand>span:last-child{display:none}.nav{gap:9px}.nav .nav-right{gap:10px}.theme-switch button{font-size:10px;padding:7px 9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
-/* A six-sector navigation wheel shared by Points and Curseurs. */
+/* Pointer navigation lives in the work area, without a modal panel. */
 .quickmenu-trigger{font:11px Inter,Arial,sans-serif;color:inherit;background:transparent;border:0;padding:8px 0;white-space:nowrap;cursor:pointer}
-[data-point-slot]:focus-visible{outline:2px solid #548b86;outline-offset:5px}
-#portfolio-menu{--wheel-bg:#121923;--wheel-sector:#1b2532;--wheel-border:#43546b;--wheel-ink:#edf3ff;--wheel-muted:#9eafc6;--wheel-accent:#b5d1ff;position:fixed;inset:auto;margin:0;padding:20px;width:min(420px,calc(100vw - 24px));box-sizing:border-box;max-height:calc(100svh - 24px);overflow:auto;background:var(--wheel-bg);color:var(--wheel-ink);border:1px solid var(--wheel-border);border-radius:22px;box-shadow:0 30px 100px #0007;font-family:Inter,Arial,sans-serif}
-#portfolio-menu::backdrop{background:#06090d99;backdrop-filter:blur(8px)}
-#portfolio-menu button{background:transparent;border:0;cursor:pointer;color:inherit}
-#portfolio-menu .orbital-header{display:flex;gap:12px;align-items:center}
-#portfolio-menu h2{font:500 20px/1.2 Inter,Arial,sans-serif;letter-spacing:-.04em;margin:0}
-#portfolio-menu .orbital-header>span{font:8px var(--mono);letter-spacing:.08em;color:var(--wheel-muted);margin-left:auto}
-#portfolio-menu .close-menu{width:36px;height:36px;border:1px solid var(--wheel-border);border-radius:50%;font-size:14px;flex-shrink:0}
-#portfolio-menu .orbital-map{position:relative;display:block;width:100%;padding:0;margin:18px 0;aspect-ratio:1}
-#portfolio-menu .navigation-wheel{display:block;width:100%;height:100%;overflow:visible}
-#portfolio-menu .wheel-sector{color:var(--wheel-ink);outline:none;cursor:pointer}
-#portfolio-menu .wheel-sector path{fill:var(--wheel-sector);stroke:var(--wheel-border);stroke-width:1;transition:fill .18s,stroke .18s}
-#portfolio-menu .wheel-sector text{text-anchor:middle;pointer-events:none;fill:currentColor}
-#portfolio-menu .wheel-number{font:9px var(--mono);opacity:.65;letter-spacing:.08em}
-#portfolio-menu .wheel-label{font:500 12px Inter,Arial,sans-serif}
-#portfolio-menu .wheel-sector[aria-current] path{stroke:var(--wheel-accent);stroke-width:2}
-#portfolio-menu .wheel-sector:is(:hover,:focus-visible){color:var(--wheel-bg)}
-#portfolio-menu .wheel-sector:is(:hover,:focus-visible) path{fill:var(--wheel-accent);stroke:var(--wheel-accent);stroke-width:3}
-#portfolio-menu .menu-center{position:absolute;inset:34% 34%;border:1px solid var(--wheel-border);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-decoration:none;color:var(--wheel-ink);background:var(--wheel-bg)}
-#portfolio-menu .menu-center strong{font:600 29px/1 Inter,Arial,sans-serif;letter-spacing:-.08em}
-#portfolio-menu .menu-center span{font:8px var(--mono);color:var(--wheel-muted)}
-#portfolio-menu .menu-center:hover{border-color:var(--wheel-accent)}
-#portfolio-menu .menu-themes{display:flex;gap:5px;padding:5px;border:1px solid var(--wheel-border);border-radius:10px}
-#portfolio-menu .menu-themes button{flex:1;min-height:40px;border-radius:6px;font:11px var(--mono);color:var(--wheel-muted)}
-#portfolio-menu .menu-themes button[aria-pressed=true]{color:var(--wheel-bg);background:var(--wheel-accent)}
-#portfolio-menu .menu-utilities{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;color:var(--wheel-muted);font:10px Inter,Arial,sans-serif}
-#portfolio-menu .menu-motion{min-height:44px;padding:8px 12px;border:1px solid var(--wheel-border);border-radius:8px;font:11px Inter,Arial,sans-serif}
-#portfolio-menu button:disabled{opacity:.5;cursor:default}
-#portfolio-menu .menu-key{font:8px/1.6 var(--mono);color:var(--wheel-muted);text-align:center;margin:12px 0 0}
-#portfolio-menu :is(button,.menu-center):focus-visible{outline:2px solid var(--wheel-accent);outline-offset:3px}
-html[data-theme=points] #portfolio-menu{--wheel-bg:#e9ede1;--wheel-sector:#dde5d4;--wheel-border:#98ab90;--wheel-ink:#203b2f;--wheel-muted:#4e6757;--wheel-accent:#315d49}
-@media(max-width:700px){.nav nav .quickmenu-trigger{padding:15px 0;text-align:left;font-size:13px}#portfolio-menu{padding:15px}#portfolio-menu .orbital-header>span{font-size:7px}#portfolio-menu .orbital-map{margin:12px 0}#portfolio-menu .menu-key{font-size:7px}}
-@media(max-height:580px) and (min-width:500px){#portfolio-menu{width:360px;padding:12px}#portfolio-menu .orbital-map{width:min(100%,240px);margin:4px auto}#portfolio-menu .menu-key{display:none}}
-@media(min-width:701px) and (max-width:900px){.nav{gap:14px}.nav nav{gap:12px}.nav .brand{font-size:12px}.quickmenu-trigger{font-size:10px}}
+#portfolio-menu{position:fixed;inset:auto;margin:0;padding:0;width:min(510px,calc(100vw - 24px));max-height:calc(100svh - 24px);overflow:visible;background:none;border:0;color:#e5edff;font-family:Inter,Arial,sans-serif;filter:drop-shadow(0 12px 28px #0009)}
+#portfolio-menu::backdrop{background:transparent;backdrop-filter:none}
+#portfolio-menu button{cursor:pointer;color:inherit;background:#182334;border:1px solid #6883a56b;border-radius:5px;font:10px var(--mono);min-height:40px;padding:8px 12px}
+#portfolio-menu .tool-heading{display:flex;justify-content:center;align-items:center;gap:10px;height:42px;font:9px var(--mono);color:#adc7f4}
+#portfolio-menu .tool-heading>span{background:#101927;padding:10px;border:1px dashed #779ed281}
+#portfolio-menu .close-menu{font-size:20px;min-height:32px;width:32px;padding:0;border-radius:50%}
+#portfolio-menu .tool-map{display:block;position:relative;height:260px;margin:10px 0}
+#portfolio-menu .tool-wires{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:#b1cdff;stroke-opacity:.45;stroke-width:1;stroke-dasharray:3 7;pointer-events:none}
+#portfolio-menu .tool-destination{position:absolute;left:var(--nx);top:var(--ny);translate:-50% -50%;display:flex;align-items:center;gap:10px;min-width:128px;min-height:52px;padding:12px;background:#151e2df5;border:1px solid #728aaa;color:#e5edff;font:12px Inter,Arial,sans-serif;box-shadow:4px 4px 0 #090d1580;animation:tool-arrive .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--order)*25ms);text-decoration:none}
+#portfolio-menu .tool-destination:before,#portfolio-menu .tool-destination:after{content:'';position:absolute;width:4px;height:4px;background:#172132;border:1px solid #a5c6ff}
+#portfolio-menu .tool-destination:before{left:-3px;top:-3px}#portfolio-menu .tool-destination:after{right:-3px;bottom:-3px}
+#portfolio-menu .tool-destination small{font:9px var(--mono);color:#86a9e5}
+#portfolio-menu .tool-destination:is(:hover,:focus-visible),#portfolio-menu .tool-destination[aria-current]{border-color:#a8cdff;background:#253b58;outline:1px solid #a8cdff;outline-offset:3px}
+#portfolio-menu .tool-origin{position:absolute;left:50%;top:47%;translate:-50% -50%;display:grid;gap:9px;justify-items:center;color:#b8d5ff;text-decoration:none;font:8px var(--mono)}
+#portfolio-menu .tool-origin svg{width:27px;height:32px;fill:#b8d5ff;stroke:#10141c;stroke-width:1}
+#portfolio-menu .tool-strip{display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;font:7px var(--mono);color:#90a6c7}
+#portfolio-menu[data-paused=true] *{animation:none}
+@keyframes tool-arrive{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:none}}
+@media(max-width:700px){.nav nav .quickmenu-trigger{padding:15px 0;text-align:left;font-size:13px}#portfolio-menu .tool-destination{min-width:96px;font-size:10px;padding:8px;gap:6px}#portfolio-menu .tool-map{height:230px}#portfolio-menu .tool-strip>span{display:none}}
+@media(max-height:420px){#portfolio-menu .tool-map{height:185px;margin:0}#portfolio-menu .tool-heading{height:35px}}
 
 /* Individual rotation composes with the existing window resize scale. */
 html[data-theme=curseurs] .construction-unit{rotate:var(--build-angle,0deg);transform-origin:center center}
@@ -95,3 +81,6 @@ html[data-theme=curseurs] .construction-unit:not([data-construction=done]):not([
 html[data-build-boot] main :is(.editable,.hero-art,.section-marker,.hero-bottom){visibility:hidden}
 .construction-frame[hidden]{display:none}
 html[data-theme=curseurs] .construction-unit[data-construction=waiting]{clip-path:inset(0 100% 100% 0)}
+
+html[data-theme=curseurs] .construction-unit:not([data-construction=done]){transform:perspective(1000px) rotateY(var(--build-flip,0deg));backface-visibility:visible}
+@media(prefers-reduced-motion:reduce){html[data-theme=curseurs] .construction-unit{transform:none!important}#portfolio-menu *{animation:none!important}}

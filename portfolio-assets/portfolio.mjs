@@ -1,6 +1,6 @@
 import './portfolio-content.mjs';
 import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=wheel2';
-import {createPortfolioMenu} from './context-menu.mjs?v=wheel2';
+import {createPortfolioMenu} from './context-menu.mjs?v=workshop1';
 
 const root=document.documentElement,buttons=[...document.querySelectorAll('[data-theme-choice]')],status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');
@@ -22,7 +22,7 @@ function setAppearance(theme){
 const manager=createThemeManager({
  apply:setAppearance,
  async load(name,options){
-  if(name==='curseurs')return import('./themes/cursors.mjs?v=independent1');
+  if(name==='curseurs')return import('./themes/cursors.mjs?v=workshop1');
   if(name==='points'){
    const module=await import('./themes/points.mjs?v=kinetic1');const forms=await module.prepare(options.count);
    return {start:settings=>module.start({...settings,forms})};
