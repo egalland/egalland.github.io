@@ -39,8 +39,9 @@ const manager=createThemeManager({
 });
 async function choose(theme,{save=true}={}){
  selected=normalizeTheme(theme);
+ try{localStorage.setItem('portfolio-theme',selected);}catch{}
  if(selected==='points'){
-  const id=readingPosition()?.el.id||location.hash.slice(1)||'home';
+  const id=(started?readingPosition()?.el.id:location.hash.slice(1))||location.hash.slice(1)||'home';
   const url=new URL('/points/',location.href);url.search=location.search;url.searchParams.delete('theme');url.hash=({work:'market-plus',atelier:'livre'})[id]||id;
   try{localStorage.setItem('portfolio-theme','points');}catch{}
   location.assign(url);return;
