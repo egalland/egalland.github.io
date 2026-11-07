@@ -84,3 +84,9 @@ html[data-theme=points] #portfolio-menu{--wheel-bg:#e9ede1;--wheel-sector:#dde5d
 @media(max-width:700px){.nav nav .quickmenu-trigger{padding:15px 0;text-align:left;font-size:13px}#portfolio-menu{padding:15px}#portfolio-menu .orbital-header>span{font-size:7px}#portfolio-menu .orbital-map{margin:12px 0}#portfolio-menu .menu-key{font-size:7px}}
 @media(max-height:580px) and (min-width:500px){#portfolio-menu{width:360px;padding:12px}#portfolio-menu .orbital-map{width:min(100%,240px);margin:4px auto}#portfolio-menu .menu-key{display:none}}
 @media(min-width:701px) and (max-width:900px){.nav{gap:14px}.nav nav{gap:12px}.nav .brand{font-size:12px}.quickmenu-trigger{font-size:10px}}
+
+/* Individual rotation composes with the existing window resize scale. */
+html[data-theme=curseurs] .construction-unit{rotate:var(--build-angle,0deg);transform-origin:center center}
+html[data-theme=curseurs] .construction-unit:not([data-construction=done]):not([data-construction=waiting]){will-change:translate,rotate;transition:none}
+.construction-frame{transform-origin:center center}
+@media(prefers-reduced-motion:reduce){html[data-theme=curseurs] .construction-unit{rotate:none!important}}

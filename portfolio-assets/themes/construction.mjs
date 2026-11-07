@@ -1,4 +1,5 @@
 'use strict';
+import {scatteredPose,placementPose} from './choreography.mjs?v=chaos1';
 
 // A staged workshop: one cursor draws, another types, another positions the result.
 // Original text nodes are restored after typing, so controls keep their own data.
@@ -14,7 +15,7 @@ export class ScrollConstruction {
       const category=el.matches('h1,h2,h3')?'TITRE':el.matches('.project-window,.hero-art')?'FENÊTRE':el.matches('.lab-card')?'PROJET':el.matches('p')?'TEXTE':el.matches('.actions,.project-links,.text-link')?'ACTION':'BLOC';
       const parts=el.matches('.project-window,.hero-art')?[...el.children]:[];
       parts.forEach(part=>part.classList.add('construction-detail'));el.classList.add('construction-unit');
-      this.units.push({el,index,category,parts,dx:0,dy:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
+      this.units.push({el,index,category,parts,dx:0,dy:0,angle:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
     });
     const roles=[['Cadres','create','#89afff'],['Texte','write','#ed9fbe'],['Placement','place','#8ad2b5'],['Structure','create','#e6bb77'],['Contenu','write','#b7a3ee'],['Alignement','place','#8acbd7']];
     roles.slice(0,maxWorkers).forEach(([name,role,color],i)=>{
@@ -33,13 +34,14 @@ export class ScrollConstruction {
     for(const unit of this.units){
       unit.el.classList.remove('construction-unit');
       for(const key of ['construction','drawProgress','written','textLength'])delete unit.el.dataset[key];
-      for(const key of ['--build-x','--build-y','--build-opacity','--build-width','--build-height'])unit.el.style.removeProperty(key);
+      for(const key of ['--build-x','--build-y','--build-opacity','--build-width','--build-height','--build-angle'])unit.el.style.removeProperty(key);
       for(const part of unit.parts){part.classList.remove('construction-detail');part.style.removeProperty('--part-progress');}
     }
   }
 
-  pose(unit,dx,dy,opacity=1) {
-    unit.dx=dx;unit.dy=dy;
+  pose(unit,dx,dy,opacity=1,angle=0) {
+    unit.dx=dx;unit.dy=dy;unit.angle=angle;
+    unit.el.style.setProperty('--build-angle',angle.toFixed(3)+'deg');
     unit.el.style.setProperty('--build-x',dx.toFixed(2)+'px');unit.el.style.setProperty('--build-y',dy.toFixed(2)+'px');
     unit.el.style.setProperty('--build-opacity',String(opacity));
   }
@@ -103,7 +105,13 @@ export class ScrollConstruction {
   ready(el){const unit=this.units.find(unit=>unit.el===el);return !unit||unit.state==='done'}
   owns(index){return index>=2&&!!this.team[index-2]?.job}
   hideCursors(){for(const worker of this.team)worker.node.hidden=true}
-  layoutRect(unit){const r=unit.el.getBoundingClientRect();return {left:r.left-unit.dx,top:r.top-unit.dy,width:r.width,height:r.height,right:r.right-unit.dx,bottom:r.bottom-unit.dy}}
+  layoutRect(unit){
+    // Recover the layout box from the rotated bounding box around its centre.
+    const r=unit.el.getBoundingClientRect(),scale=Number(unit.el.style.getPropertyValue('--window-scale')||1);
+    const width=unit.el.offsetWidth*scale,height=unit.el.offsetHeight*scale;
+    const left=r.left+r.width/2-width/2-unit.dx,top=r.top+r.height/2-height/2-unit.dy;
+    return {left,top,width,height,right:left+width,bottom:top+height};
+  }
   measure({width,height}) {
     const nav=width<=700?65:74;
     for(const unit of this.units){
@@ -130,15 +138,11 @@ export class ScrollConstruction {
     if(task==='adjust'){unit.adjustedPass=this.upwardPass;this.adjustmentsLeft--}
     if(task==='create'){
       this.prepareText(unit);
-      // Blocks are born close to their destination, in slightly disordered positions.
-      // Some are created in place; the rest are repositioned after their text is written.
-      const sign=(unit.index%2?1:-1),mobile=width<=700;
-      const dx=unit.index%4===0?0:sign*(mobile?18+unit.index%13:36+unit.index%41);
-      const dy=unit.index%3===0?-15:18+unit.index%17;
-      this.pose(unit,dx,dy);this.geometry(unit,.015,.015);this.details(unit,0);
+      const pose=scatteredPose(unit.index,width);
+      this.pose(unit,pose.x,pose.y,1,pose.angle);this.geometry(unit,.015,.015);this.details(unit,0);
     }
     const writingDuration=Math.min(2.1,Math.max(.55,unit.letters.length/(unit.category==='TITRE'?29:105)));
-    worker.job={unit,task,phase:'approach',elapsed:0,from:{x:worker.cursor.x,y:worker.cursor.y},source:{x:unit.dx,y:unit.dy},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?.48+(unit.index%3)*.12:.56};
+    worker.job={unit,task,phase:'approach',elapsed:0,from:{x:worker.cursor.x,y:worker.cursor.y},source:{x:unit.dx,y:unit.dy,angle:unit.angle},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?.65+(unit.index%3)*.12:1.25+(unit.index%3)*.15};
     unit.owner=worker;unit.state='approach';unit.el.dataset.construction='approach';worker.node.hidden=false;
   }
   finish(worker) {
@@ -190,6 +194,9 @@ export class ScrollConstruction {
         const p=job.phase==='approach'?0:job.phase==='settle'?1:ease(job.elapsed/job.duration);
         drawX=.015+.985*p;drawY=.015+.985*Math.pow(p,.85);
         this.geometry(unit,drawX,drawY);this.details(unit,Math.max(0,(p-.45)/.55));
+        // Arrive tilted, wobble once while drawing, then hand over to the typist.
+        const flutter=Math.sin(p*Math.PI*2)*(1-p);
+        this.pose(unit,job.source.x+flutter*14,job.source.y-Math.sin(p*Math.PI)*12,1,job.source.angle+flutter*7);
       }
       if(job.task==='write'&&job.phase==='write'){
         // Discrete characters with short pauses give the caret an actual writing rhythm.
@@ -197,16 +204,19 @@ export class ScrollConstruction {
         this.typeText(unit,Math.floor(unit.letters.length*paced));
       }
       if(job.task==='place'&&job.phase==='place'){
-        const p=ease(job.elapsed/job.duration),nudge=Math.sin(p*Math.PI)*(unit.index%2?1:-1)*5;
-        this.pose(unit,job.source.x*(1-p)+nudge,job.source.y*(1-p));
+        const pose=placementPose(job.source,job.elapsed/job.duration);
+        this.pose(unit,pose.x,pose.y,1,pose.angle);
       }
       if(job.task==='adjust'&&job.phase==='adjust'){
         const p=Math.min(1,job.elapsed/job.duration),nudge=Math.sin(p*Math.PI);
-        this.pose(unit,(unit.index%2?1:-1)*nudge*1.8,nudge*.6);
+        this.pose(unit,(unit.index%2?1:-1)*nudge*1.8,nudge*.6,1,(unit.index%2?1:-1)*nudge*.45);
       }
-      const actual=unit.el.getBoundingClientRect();
-      let point={x:actual.left+14,y:actual.top+10};
-      if(job.task==='create')point={x:actual.left+actual.width*drawX,y:actual.top+actual.height*drawY};
+      const actual=unit.el.getBoundingClientRect(),box=this.layoutRect(unit);
+      const angle=unit.angle*Math.PI/180,cx=box.left+unit.dx+box.width/2,cy=box.top+unit.dy+box.height/2;
+      const onBlock=(x,y)=>({x:cx+(x-box.width/2)*Math.cos(angle)-(y-box.height/2)*Math.sin(angle),y:cy+(x-box.width/2)*Math.sin(angle)+(y-box.height/2)*Math.cos(angle)});
+      let point=onBlock(14,10);
+      if(job.task==='create')point=onBlock(box.width*drawX,box.height*drawY);
+      if(job.task==='place')point=onBlock(box.width,0);
       const caret=job.task==='write'?this.caretRect(unit):null;
       if(caret)point={x:caret.left+6,y:caret.top+caret.height*.72};
       const c=worker.cursor;
@@ -214,11 +224,11 @@ export class ScrollConstruction {
         const p=ease(job.elapsed/.2);c.x=job.from.x+(point.x-job.from.x)*p;c.y=job.from.y+(point.y-job.from.y)*p;
       }else{c.x=point.x;c.y=point.y}
       worker.pointer.style.transform=`translate3d(${c.x}px,${c.y}px,0)`;
-      const f=worker.frame;f.style.left=actual.left+'px';f.style.top=actual.top+'px';f.style.width=actual.width*drawX+'px';f.style.height=actual.height*drawY+'px';
+      const f=worker.frame;f.style.left=box.left+unit.dx+'px';f.style.top=box.top+unit.dy+'px';f.style.width=box.width+'px';f.style.height=box.height+'px';f.style.rotate=unit.angle+'deg';
       worker.caret.hidden=!(caret&&job.phase==='write');
       if(caret){worker.caret.style.left=caret.left+'px';worker.caret.style.top=caret.top+'px';worker.caret.style.height=caret.height+'px'}
-      const verb=job.task==='adjust'?'AJUSTER':job.task==='create'?'CRÉER':job.task==='write'?'ÉCRIRE':'DÉPLACER';
-      worker.caption.textContent=verb+' / '+unit.category+(job.task==='write'?' · '+unit.written+'/'+unit.letters.length:'');
+      const verb=job.task==='adjust'?'AJUSTER':job.task==='create'?'CRÉER':job.task==='write'?'ÉCRIRE':Math.abs(unit.angle)>1?'REDRESSER':'ALIGNER';
+      worker.caption.textContent=verb+' / '+unit.category+(job.task==='write'?' · '+unit.written+'/'+unit.letters.length:job.task==='place'?' · '+Math.abs(unit.angle).toFixed(1)+'°':'');
       worker.node.dataset.phase=job.phase;worker.node.dataset.task=job.task;worker.node.classList.toggle('hide-selection',!showOutlines);
       unit.state=job.phase;unit.el.dataset.construction=job.phase;
     }
