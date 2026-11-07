@@ -1,4 +1,4 @@
-import {ScrollConstruction} from './construction.mjs?v=workshop1';
+import {ScrollConstruction} from './construction.mjs?v=scroll-physics1';
 const completed=new WeakSet();
 export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
 const abort=new AbortController();const on=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:abort.signal});
@@ -30,7 +30,7 @@ function frame(ts){
   const elapsed=Math.max(0,Math.min((ts-last)/1000,1)),dt=Math.min(elapsed,.05);last=ts;clock+=elapsed;
   ctx.clearRect(0,0,width,height);ctx.save();if(clipFrame)clipFrame(ctx,width,height);
   construction.update(elapsed,{width,height,count,showOutlines,enabled:true});
-  if(resizeWindows)updateCursorResize(elapsed);
+  if(resizeWindows)updateCursorResize(Math.min(elapsed,.05)*(construction.animationRate||1));
   if(clock>nextMeasure){visibleCache=visibleItems();nextMeasure=clock+.12}
   const n=width<700?Math.min(count,7):count;
   for(let i=0;i<n;i++){
@@ -73,7 +73,7 @@ function resetCursorResize(rebuild=false,preserve=false){
   const interrupted=resizeJob?.panel;
   resizeJob=null;resizeOverlay.hidden=true;resizeCooldown=rebuild?1.7:.45;
   cursorWindows.forEach(panel=>{
-    panel.done=!resizeWindows||reduced||completed.has(panel.el)||[...panel.el.querySelectorAll('input')].some(input=>input.value.trim())||(preserve&&(panel.done||panel===interrupted));
+    panel.done=!resizeWindows||reduced||construction.units.some(unit=>unit.el===panel.el&&unit.incident==='flip')||completed.has(panel.el)||[...panel.el.querySelectorAll('input')].some(input=>input.value.trim())||(preserve&&(panel.done||panel===interrupted));
     panel.el.dataset.resizeState=panel.done?'done':'waiting';
     panel.el.classList.remove('window-resizing');
     setWindowScale(panel,panel.done?1:smallWindowScale());

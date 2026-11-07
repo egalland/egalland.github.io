@@ -42,9 +42,9 @@ test('une construction complète attend le curseur, trace, écrit puis déplace 
   c.choose=()=>top>65&&top<900&&unit.stage!=='done'&&!unit.owner?unit:null;
   const stages=new Set();
   for(let i=0;i<350;i++){
-   if(i===35)top=-500;if(i===70)top=200;
+   if(i===5)top=-500;if(i===40)top=200;
    c.update(.04,{width:1440,height:900,count:8,showOutlines:true,enabled:true});stages.add(unit.el.dataset.construction);
-   if(i===40){assert.ok(unit.suspended);assert.notEqual(unit.stage,'done');}
+   if(i===10){assert.ok(unit.suspended);assert.notEqual(unit.stage,'done');}
    if(i===0){assert.equal(unit.el.dataset.construction,'approach');assert.equal(style.values['--build-opacity'],'0');}
    if(worker.job?.task==='write')assert.equal(unit.angle,0);
   }
@@ -60,6 +60,31 @@ test('le mouvement crée une inclinaison passagère et les incidents se terminen
   const pose={...source,kind,flip:kind==='flip'?180:0};
   assert.deepEqual(placementPose(pose,1),{x:0,y:0,angle:0,flip:0});
  }
- assert.equal(placementPose({...source,kind:'flip',flip:180},0).flip,180);
- assert.ok(placementPose({...source,kind:'flip',flip:180},.5).flip>80);
+ assert.equal(placementPose({...source,kind:'flip'},0).angle,180);
+ assert.equal(placementPose({...source,kind:'flip'},0).flip,0);
+ assert.ok(Math.abs(placementPose({...source,kind:'flip'},.5,0).angle-90)<.001);
+});
+
+test('un scroll lent limite les corrections, un scroll rapide ajoute inertie et vibration',()=>{
+ const source={...scatteredPose(0,1440,()=>.9),x:50};
+ assert.equal(placementPose(source,.2,0).angle,0);
+ assert.ok(Math.abs(placementPose(source,.2,1).angle)>.1);
+ for(const force of [0,.2,.7,1]){
+  assert.deepEqual(placementPose(source,0,force),{x:source.x,y:source.y,angle:0,flip:0});
+  assert.deepEqual(placementPose(source,1,force),{x:0,y:0,angle:0,flip:0});
+ }
+});
+
+test('la vitesse accélère progressivement la chronologie puis revient au rythme normal',()=>{
+ const previous=globalThis.window;globalThis.window={scrollY:0};
+ try{
+  const c=Object.create(ScrollConstruction.prototype);
+  Object.assign(c,{scrollY:0,clock:0,delay:0,measuredAt:0,units:[],team:[],overlay:{dataset:{}}});
+  const options={width:1440,height:900,count:8,enabled:true};
+  c.update(1/60,options);assert.equal(c.animationRate,1);
+  for(let i=0;i<30;i++){window.scrollY+=80;c.update(1/60,options);}
+  assert.ok(c.animationRate>5);assert.ok(c.animationRate<=6);
+  for(let i=0;i<180;i++)c.update(1/60,options);
+  assert.ok(c.animationRate<1.001);
+ }finally{globalThis.window=previous;}
 });

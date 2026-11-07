@@ -22,7 +22,7 @@ function setAppearance(theme){
 const manager=createThemeManager({
  apply:setAppearance,
  async load(name,options){
-  if(name==='curseurs')return import('./themes/cursors.mjs?v=workshop1');
+  if(name==='curseurs')return import('./themes/cursors.mjs?v=scroll-physics1');
   if(name==='points'){
    const module=await import('./themes/points.mjs?v=kinetic1');const forms=await module.prepare(options.count);
    return {start:settings=>module.start({...settings,forms})};

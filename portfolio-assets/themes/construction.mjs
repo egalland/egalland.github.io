@@ -1,5 +1,5 @@
 'use strict';
-import {scatteredPose,placementPose} from './choreography.mjs?v=workshop1';
+import {scatteredPose,placementPose} from './choreography.mjs?v=scroll-physics1';
 
 // Draw, write, then carry the built unit into place with momentum and occasional mishaps.
 // Original text nodes are restored after typing, so controls keep their own data.
@@ -100,7 +100,7 @@ export class ScrollConstruction {
   }
   reset(delay=0) {
     this.delay=delay;this.measuredAt=-1;
-    this.scrollY=window.scrollY;this.scrollingUp=false;this.adjustmentsLeft=0;this.overlay.dataset.direction='down';
+    this.scrollY=window.scrollY;this.scrollVelocity=0;this.animationRate=1;this.scrollingUp=false;this.adjustmentsLeft=0;this.overlay.dataset.direction='down';
     for(const worker of this.team){worker.job=null;worker.node.hidden=true;worker.cursor.trail=[]}
     for(const unit of this.units){
       this.restoreText(unit);unit.owner=null;unit.stage=this.reduced?'done':'create';unit.state=this.reduced?'done':'waiting';unit.adjustedPass=-1;unit.suspended=null;
@@ -155,14 +155,16 @@ export class ScrollConstruction {
     if(task==='create'){
       this.prepareText(unit);
       const pose=scatteredPose(unit.index,width);
-      pose.kind=unit.incident||'normal';pose.flip=pose.kind==='flip'?180:0;
+      pose.kind=unit.incident||'normal';pose.flip=0;pose.angle=pose.kind==='flip'?180:0;
+      const spread=.25+.75*Math.min(1,(this.scrollVelocity||0)/2400);
+      pose.x*=spread;pose.y*=spread;
       unit.scatter=pose;unit.el.dataset.incident=pose.kind;
-      this.pose(unit,pose.x,pose.y,0,0,pose.flip);this.geometry(unit,0,0);this.details(unit,0);
+      this.pose(unit,pose.x,pose.y,0,pose.angle,pose.flip);this.geometry(unit,0,0);this.details(unit,0);
     }
     if(task==='place'&&unit.scatter){
       // A nearby panel occupies the working lane: the carried block veers around it.
       const near=this.units.find(other=>other!==unit&&other.state!=='waiting'&&other.rect&&unit.rect&&Math.abs(other.rect.top-unit.rect.top)<Math.max(other.rect.height,unit.rect.height)+32);
-      unit.scatter.obstacle=near&&Math.random()<.32?(unit.scatter.x>=0?1:-1):0;
+      unit.scatter.obstacle=near&&Math.random()<.32*Math.min(1,(this.scrollVelocity||0)/2400)?(unit.scatter.x>=0?1:-1):0;
     }
     const writingDuration=Math.min(2.1,Math.max(.55,unit.letters.length/(unit.category==='TITRE'?29:105)));
     worker.job={unit,task,phase:'approach',elapsed:0,approachDuration:.28+Math.random()*.4,from:{x:worker.cursor.x,y:worker.cursor.y},source:{...unit.scatter,x:unit.dx,y:unit.dy,angle:unit.angle,flip:unit.flip||0},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?(unit.scatter?.duration||.8):(unit.incident?2.4:1.25+(unit.scatter?.duration||1)*.3)};
@@ -188,8 +190,14 @@ export class ScrollConstruction {
   }
   update(dt,{width,height,count,showOutlines,enabled}) {
     if(this.reduced||!enabled)return;
-    dt=Math.min(dt,.05);
+    const realDt=Math.max(0,Math.min(dt,.05));
     const delta=window.scrollY-this.scrollY;
+    // Smooth real scroll velocity; advance the existing timeline, never skip its phases.
+    const velocity=Math.min(6000,Math.abs(delta)/Math.max(realDt,1/120));
+    this.scrollVelocity??=0;
+    this.scrollVelocity+=(velocity-this.scrollVelocity)*(1-Math.exp(-realDt/(velocity>this.scrollVelocity ? .07 : .24)));
+    this.animationRate=1+5*Math.min(1,this.scrollVelocity/2400);
+    dt=realDt*this.animationRate;
     if(delta<-2){
       if(!this.scrollingUp)this.upwardPass++;
       this.scrollingUp=true;this.overlay.dataset.direction='up';
@@ -206,6 +214,9 @@ export class ScrollConstruction {
       if(!worker.job)continue;
       const job=worker.job,unit=job.unit,r=this.layoutRect(unit);
       if(r.bottom<65||r.top>height+50){this.suspend(worker);continue}
+      const intensity=Math.min(1,this.scrollVelocity/2400);
+      job.inertia??=intensity;
+      job.inertia+=(intensity-job.inertia)*(1-Math.exp(-realDt/(intensity>job.inertia ? .07 : .65)));
       job.elapsed+=dt;
       if(job.phase==='approach'&&job.elapsed>=job.approachDuration){job.phase=job.resuming?job.resumePhase:job.task;job.elapsed=job.resuming?job.resumeElapsed:0;job.resuming=false;}
       else if(job.phase===job.task&&job.elapsed>=job.duration){
@@ -221,7 +232,7 @@ export class ScrollConstruction {
         drawX=sideways?Math.min(1,p*1.8):Math.pow(p,.8);
         drawY=sideways?Math.pow(p,1.5):Math.min(1,p*1.5);
         this.geometry(unit,drawX,drawY);this.details(unit,0);
-        this.pose(unit,job.source.x,job.source.y,p>0?1:0,0,job.source.flip);
+        this.pose(unit,job.source.x,job.source.y,p>0?1:0,job.source.angle,job.source.flip);
       }
       if(job.task==='write'&&job.phase==='write'){
         // Discrete characters with short pauses give the caret an actual writing rhythm.
@@ -229,7 +240,7 @@ export class ScrollConstruction {
         this.typeText(unit,Math.floor(unit.letters.length*paced));this.details(unit,paced);
       }
       if(job.task==='place'&&job.phase==='place'){
-        const pose=placementPose(job.source,job.elapsed/job.duration);
+        const pose=placementPose(job.source,job.elapsed/job.duration,job.inertia);
         this.pose(unit,pose.x,pose.y,1,pose.angle,pose.flip);
       }
       if(job.task==='adjust'&&job.phase==='adjust'){
