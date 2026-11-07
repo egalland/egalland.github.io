@@ -1,6 +1,6 @@
 import './portfolio-content.mjs';
-import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=signal5';
-import {createPortfolioMenu} from './context-menu.mjs?v=signal5';
+import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=wheel2';
+import {createPortfolioMenu} from './context-menu.mjs?v=wheel2';
 
 const root=document.documentElement,buttons=[...document.querySelectorAll('[data-theme-choice]')],status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');
@@ -23,10 +23,6 @@ const manager=createThemeManager({
  apply:setAppearance,
  async load(name,options){
   if(name==='curseurs')return import('./themes/cursors.mjs?v=kinetic1');
-  if(name==='glitch'){
-   const [module,geometry]=await Promise.all([import('./themes/glitch.mjs?v=kinetic1'),import('./themes/formations.mjs?v=kinetic1')]);const forms=await geometry.prepare(options.count);
-   return {start:settings=>module.start({...settings,forms})};
-  }
   if(name==='points'){
    const module=await import('./themes/points.mjs?v=kinetic1');const forms=await module.prepare(options.count);
    return {start:settings=>module.start({...settings,forms})};
@@ -51,11 +47,12 @@ for(const button of buttons){button.disabled=false;button.addEventListener('clic
 projectMenu=createPortfolioMenu({
  getState:()=>({theme:selected,paused:userPaused||preference.matches,reduced:preference.matches}),
  onTheme:theme=>choose(theme),
- onPause:()=>{if(preference.matches)return;userPaused=!userPaused;try{localStorage.setItem('redline-lab-motion',userPaused?'paused':'active');}catch{}choose(selected,{save:false});},
- onGlitch:()=>document.dispatchEvent(new CustomEvent('portfolio:glitch'))
+ onPause:()=>{if(preference.matches)return;userPaused=!userPaused;try{localStorage.setItem('redline-lab-motion',userPaused?'paused':'active');}catch{}choose(selected,{save:false});}
 });
 preference.addEventListener('change',()=>choose(selected,{save:false}));
 addEventListener('pagehide',()=>manager.stop());
 addEventListener('pageshow',event=>{if(event.persisted)choose(selected,{save:false});});
 let saved;try{saved=localStorage.getItem('portfolio-theme')||localStorage.getItem('portfolio-view');}catch{}
-choose(new URL(location.href).searchParams.get('theme')||saved||'curseurs',{save:false});
+const requested=new URL(location.href).searchParams.get('theme')||saved||'curseurs';
+// Migrate the retired mixed view to the default without breaking old links.
+choose(requested,{save:requested!==normalizeTheme(requested)});
