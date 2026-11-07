@@ -1,15 +1,16 @@
 # Projets d’Emmanuel
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) présente un seul document HTML et un switch permanent Points / Curseurs / Glitch. Le choix active les moteurs d’animation correspondants sans rechargement ni remplacement du contenu. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+Le [portfolio d’Emmanuel](https://egalland.github.io/) propose deux présentations indépendantes, Points et Curseurs, reliées par un switch permanent. Elles partagent les textes et liens, tout en conservant leur propre structure visuelle. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
 
 ## Organisation
 
-- `index.html` : document unique, contenu actuel et switch de thème dans l’en-tête. Les descriptions, formulaires, états et ancres restent les mêmes pendant les changements.
-- `portfolio-assets/portfolio.mjs` et `theme-manager.mjs` : choix mémorisé, chargement à la demande, composition Glitch et cycle de vie des moteurs.
-- `portfolio-assets/themes/` : moteurs Points, Curseurs et Glitch, construction, formations et nettoyage des animations/écouteurs/éléments temporaires.
-- `portfolio-assets/portfolio-content.mjs` : interactions communes, mini-démo Kikalmo, onglets, modale et copie du profil, initialisés une seule fois.
-- `points/assets/` : ressources et polices du modèle original, conservées sans altération. `/points/` et `/curseurs/` redirigent vers le document commun, en préservant le thème et la section.
-- `portfolio/content.json` : source commune des textes et liens extraits du commit `8e4a64746f8fd3e1354867cc92fdcb24292e6902`. `scripts/build-portfolio.mjs` génère la page commune depuis `portfolio/page.template.html`, les modules de contenu et les deux redirections de compatibilité.
+- `index.html` : présentation Curseurs et mini-démo Kikalmo.
+- `portfolio-assets/themes/construction.mjs` : curseurs animés, tracé des cadres vides, placement puis écriture. Les éléments terminés restent stables.
+- `portfolio-assets/themes/choreography.mjs` : placement, angle, trajet et durée tirés au hasard une fois par construction, avec limites adaptées au mobile.
+- `portfolio-assets/portfolio.mjs` : choix mémorisé et passage vers la présentation Points au même projet.
+- `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 19 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
+- `points/assets/` : ressources et polices originales conservées sans altération.
+- `portfolio/content.json` : source commune des textes, projets et liens. `scripts/build-portfolio.mjs` génère les deux présentations depuis `portfolio/page.template.html` et `portfolio/points.template.html`.
 - `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
 - Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
 - Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.
@@ -79,31 +80,16 @@ node scripts/build-portfolio.mjs
 node --test tests/portfolio-*.test.mjs
 ```
 
-Le switch conserve le document, la saisie, les états des démonstrations et la position de lecture. Le choix est mémorisé et partageable avec `?theme=points`, `?theme=curseurs` ou `?theme=glitch`. Sans JavaScript, le document reste lisible et ses liens restent accessibles.
+Le switch mémorise le choix et retrouve le projet consulté. Les liens `?theme=points` ouvrent la scène Points ; `/curseurs/` conserve son rôle de raccourci. Les vues sont des documents distincts : elles partagent le contenu, pas la grille de mise en page.
 
-Points et Glitch partagent maintenant les mêmes modèles XYZ animés : rotation continue, perspective, profondeur, orientation au pointeur et déplacement des points lorsqu’on maintient la souris. Les volumes restent calculés en 3D à chaque image, par des shaders WebGL ou par une projection Canvas compatible. Les anciens échantillonnages de photos ont été remplacés par un personnage et un lettrage construits en géométrie. Les interfaces conservent des couches à différentes profondeurs. Les comètes suivent trois orbites inclinées autour de la sphère. Les modèles se rassemblent à leur première entrée dans l’écran et leurs pièces bougent sur place : courbe, murs, page de livre, aiguilles et anneaux.
+Curseurs commence par une zone vide. Les curseurs animés arrivent, tracent un cadre progressivement, corrigent son emplacement pendant qu’il est encore vide, puis écrivent le texte. Le placement et le geste varient à chaque chargement. Le défilement révèle les prochaines zones sans reconstruire ni incliner les éléments terminés. Le focus clavier révèle immédiatement le contenu concerné.
 
-Glitch garde ses quatre grandes zones de page Points / Curseurs et son raccord avec la vraie mini-démo Kikalmo. Des trains de pixels circulent le long des frontières visibles, avec de courtes désynchronisations : fragments de texte cyan/magenta et paquets de particules qui s’écartent du raccord puis disparaissent. Une perturbation dure au maximum 620 ms, à l’arrivée puis ponctuellement ; elle ne fait pas clignoter toute la page. Le fond, les lettres et les particules utilisent le même masque. Les lettres de Kikalmo sont mesurées dans le document pour préserver le raccord et la saisie.
+Points reprend la scène fixe d’avant Glitch : la molette, le tactile ou les flèches sélectionnent un tableau ; les mêmes particules se réorganisent en temps réel en sphère, lettrage, personnage, interfaces et objets. Les descriptions et liens proviennent de la même source que Curseurs. La roue de navigation à six secteurs reste disponible dans les deux vues.
 
-Le menu orbital d’origine est rétabli au clic droit sur le fond dans les trois vues. Il donne accès aux projets, à l’atelier et au parcours, permet de choisir une vue et de réduire/réactiver les effets. La préférence de pause est mémorisée ; la réduction des mouvements du système reste respectée. Les liens, champs, sélections de texte et le clic droit avec Maj gardent le menu natif du navigateur. Le bouton « Explorer » et le raccourci Maj + F10 donnent aussi accès au menu. Dans Glitch, une commande permet de provoquer une impulsion numérique.
-Chaque moteur fournit une fonction d’arrêt : boucle d’animation, écouteurs, sélections, transformations et éléments temporaires sont nettoyés. Un chargement devenu obsolète ne lance aucun moteur. La préférence de mouvement réduit est respectée ; les animations s’arrêtent lorsque l’onglet est masqué. Les unités déjà construites restent mémorisées et les fenêtres contenant une saisie ne recommencent pas leur agrandissement. Glitch garde les apparitions déjà vues et conserve la saisie lors des changements de thème. Les fenêtres sombres sont directement utilisables ; le mode Curseurs conserve aussi l’aperçu interactif complet de Market Plus.
+La pause mémorisée et les mouvements réduits sont respectés. Les animations s’arrêtent quand l’onglet est masqué. Sans JavaScript, les contenus et liens restent lisibles.
 
-Aucune application existante n’est déplacée : les arbres Git de `/inktober/`, `/inktober-2026/`, `/livre/`, `/redim/`, `/elec/`, `/map/` et de tous les autres sous-sites sont conservés. L’accès à l’outil Market Plus interne demeure absent ; son bouton ouvre uniquement la carte publique des composants.
+Aucun sous-site n’est déplacé : `/inktober/`, `/inktober-2026/`, `/livre/`, `/redim/`, `/elec/`, `/map/` et les autres dossiers conservent leurs chemins. Market Plus ouvre uniquement la cartographie publique.
 
-Les huit commits disponibles du modèle Points sont conservés dans les parties `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. Leur intégrité est testée. La publication conserve l’historique GitHub existant ; aucun commit passé n’est reconstruit. Voir `source-history/portfolio-points.md`.
+Les huit commits du modèle Points sont conservés dans `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. Leur intégrité reste testée. La restauration ajoute un commit à l’historique existant.
 
-Validation : vingt-neuf tests de contenu, routes, sélection des moteurs, courses entre chargements, nettoyage, réduction des mouvements, vraies projections 3D, réaction au pointeur, dessin compatible groupé par couleur, trajectoires autour de pivots, continuité des transitions, apparition au défilement, raccords en pixels et durée bornée des perturbations. Contrôle navigateur bureau : modèles vivants en Canvas 3D compatible, menu orbital au clic droit, pause/reprise mémorisée, navigation, bascule entre les trois vues sans doublon de moteurs, mini-démo réussie et saisie conservée. Les tests géométriques couvrent 320, 390 et 1440 px. Les contrôles sur fenêtres mobiles et WebGL de la version publiée sont réalisés après déploiement ; aucun téléphone physique n’est testé.
-
-### Modèles 3D et signal numérique
-
-- `portfolio-assets/themes/formations.mjs` : géométrie XYZ commune aux vues Points et Glitch, sans image animée ni photo projetée.
-- `portfolio-assets/themes/point-cloud.mjs` : buffers de modèles, caméras, perspective et projection 3D de secours.
-- `portfolio-assets/themes/point-renderer.mjs` : rendu WebGL, masque stencil et rendu Canvas 3D compatible ; libération des ressources graphiques.
-- `portfolio-assets/themes/point-interaction.mjs` : orientation au pointeur, glissement, attraction et commandes au clavier sur les modèles.
-- `portfolio-assets/themes/digital-signal.mjs` : découpes en blocs, enveloppe courte des perturbations et paquets de pixels.
-- `portfolio-assets/themes/glitch.mjs` : composition de la page, raccord HTML/points, déclenchement des impulsions et nettoyage.
-- `portfolio-assets/context-menu.mjs` : menu orbital commun, navigation et commandes d’animation.
-
-Les modèles sont préparés une seule fois en coordonnées XYZ, puis tournent et sont reprojetés en temps réel. WebGL vise au maximum 60 images/s sur bureau et 30 sur mobile ; le rendu compatible est limité à 24/20 images/s avec une densité réduite. Seules deux scènes visibles sont dessinées. Points plafonne à 5 600 points sur bureau et 3 360 sur mobile ; Glitch à 4 400 et 2 600, plus au maximum 120/65 petits paquets temporaires. Le secours Canvas réduit ces budgets à 2 200/1 400 pour Points et 1 800/1 200 pour Glitch.
-
-Les masques de page et les positions des glyphes sont recalculés lors des changements de mise en page. Aucun readback de canvas ni copie d’image n’est fait à chaque image ; les effets de rupture sont dessinés à partir des géométries. Les boucles s’arrêtent dans un onglet masqué, en pause et lorsqu’aucune scène ou impulsion n’est visible. Aucun service distant ni bibliothèque supplémentaire n’est nécessaire. Référence technique du masque : [stencil WebGL (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp).
+Validation : tests de contenu partagé, routes, géométries, continuité des trajectoires aléatoires et cycle complet arrivée → tracé → placement → écriture. Contrôle navigateur de la scène Points, des changements de tableau, de la roue et de la bascule vers Curseurs. Aucun téléphone physique testé.

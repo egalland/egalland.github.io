@@ -76,3 +76,25 @@ body.paused .chapter{transition:none!important}
 @media(max-width:370px){.intro-kicker{font-size:7px}.intro-bottom{left:20px;max-width:calc(100% - 40px)}.intro-bottom p{font-size:12px}.chapter .description{font-size:12px}.chapter .skills{font-size:8px}.point-timeline li{font-size:11px}.timeline-chapter .copy h2{font-size:31px}.point-timeline small{font-size:9px}.point-timeline li{padding:7px 0}.project-dock .dock-name{font-size:8.5px!important}}
 @media(max-height:720px){.timeline-chapter .copy h2{font-size:38px;margin-bottom:15px}.point-timeline li{padding:9px 0}.intro-bottom p{font-size:14px}}
 @media(max-height:720px) and (max-width:600px){.intro-bottom{bottom:20svh}.intro-bottom p{font-size:12px}.intro h1{font-size:15vw}.intro-kicker{font-size:7px;margin-bottom:17px}.timeline-chapter .copy h2{font-size:28px;margin-bottom:12px}.point-timeline li{padding:6px 0}.point-timeline small{font-size:9px}.timeline-chapter .skills{font-size:8px;gap:4px 9px}.timeline-chapter .panel{padding-bottom:125px}}
+
+/* Preserve the switch and navigation wheel while the stage keeps its own layout. */
+.theme-switch{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:5px;background:var(--dock);white-space:nowrap}
+.header-actions .theme-switch button,.theme-switch a{min-height:33px;padding:7px 11px;font:10px/1.2 RedlineMono,monospace;border-radius:2px;display:flex;align-items:center}
+.theme-switch button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+#projectMenu{padding:20px;border-radius:22px;width:min(420px,calc(100vw - 24px));max-height:calc(100svh - 24px);overflow:auto}
+#projectMenu .orbital-header{display:flex;align-items:center;justify-content:space-between}
+#projectMenu h2{font:500 20px RedlineText,Arial,sans-serif;margin:0}
+#projectMenu .orbital-map{position:relative;display:block;width:100%;height:auto;aspect-ratio:1;margin:12px 0}
+#projectMenu .navigation-wheel{display:block;width:100%;height:100%;overflow:visible}
+#projectMenu .wheel-sector{color:var(--fg);outline:none;cursor:pointer}
+#projectMenu .wheel-sector path{fill:var(--bg);stroke:var(--line);stroke-width:1}
+#projectMenu .wheel-sector text{text-anchor:middle;pointer-events:none;fill:currentColor;font:12px RedlineText,Arial,sans-serif}
+#projectMenu .wheel-sector .wheel-number{font:9px RedlineMono,monospace;opacity:.65}
+#projectMenu .wheel-sector:is(:hover,:focus-visible){color:var(--bg)}
+#projectMenu .wheel-sector:is(:hover,:focus-visible) path{fill:var(--fg);stroke:var(--accent);stroke-width:3}
+#projectMenu .menu-center{position:absolute;inset:34%;width:auto;height:auto;border:1px solid var(--line);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-decoration:none;color:var(--fg);background:var(--bg)}
+#projectMenu .menu-center strong{font:600 29px/1 RedlineText,Arial,sans-serif;letter-spacing:-.08em}
+#projectMenu .menu-center span{font:8px RedlineMono,monospace;position:static}
+#projectMenu .menu-utilities{display:flex;justify-content:space-between;gap:10px}
+#projectMenu .menu-utilities button{min-height:44px;font-size:10px}
+@media(max-width:600px){.header-actions{gap:10px}.contact-shortcut{display:none}.header-actions .theme-switch button,.theme-switch a{padding:7px 8px;font-size:9px}.header-actions #projectsButton{font-size:9px}.identity>span:last-child{display:none}}

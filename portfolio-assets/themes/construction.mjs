@@ -1,7 +1,7 @@
 'use strict';
-import {scatteredPose,placementPose} from './choreography.mjs?v=chaos1';
+import {scatteredPose,placementPose} from './choreography.mjs?v=independent1';
 
-// A staged workshop: one cursor draws, another types, another positions the result.
+// A staged workshop: draw an empty frame, position it, then write the content.
 // Original text nodes are restored after typing, so controls keep their own data.
 export class ScrollConstruction {
   constructor({cursors,reduced,onReveal,completed=new WeakSet(),accept=()=>true,maxWorkers=6}) {
@@ -26,6 +26,7 @@ export class ScrollConstruction {
       this.team.push({node,role,frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i+2],job:null});
     });
     this.reset();
+    delete document.documentElement.dataset.buildBoot;
     document.addEventListener('focusin',event=>this.units.filter(unit=>unit.el===event.target||unit.el.contains(event.target)).forEach(unit=>this.reveal(unit,true)),{signal:this.abort.signal});
     for(const unit of this.units)if(completed.has(unit.el))this.reveal(unit,true);
   }
@@ -92,7 +93,7 @@ export class ScrollConstruction {
     for(const worker of this.team){worker.job=null;worker.node.hidden=true;worker.cursor.trail=[]}
     for(const unit of this.units){
       this.restoreText(unit);unit.owner=null;unit.stage=this.reduced?'done':'create';unit.state=this.reduced?'done':'waiting';unit.adjustedPass=-1;
-      unit.el.dataset.construction=unit.state;this.geometry(unit);this.details(unit,this.reduced?1:0);this.pose(unit,0,0,this.reduced?1:0);
+      unit.el.dataset.construction=unit.state;this.geometry(unit,this.reduced?1:0,this.reduced?1:0);this.details(unit,this.reduced?1:0);this.pose(unit,0,0,this.reduced?1:0);
     }
   }
   revealAll(){for(const unit of this.units)this.reveal(unit,true)}
@@ -129,30 +130,28 @@ export class ScrollConstruction {
     if(writingBacklog.length>=3&&worker.role==='create')return writingBacklog[0];
     return candidates.find(unit=>unit.stage===worker.role)||candidates.find(unit=>unit.stage!=='create')||candidates[0];
   }
-  chooseAdjustment(worker,limit,{height}){
-    if(this.adjustmentsLeft<=0||(worker.role!=='place'&&limit>=3)||this.team.some(other=>other.job?.task==='adjust'))return null;
-    return this.units.filter(unit=>unit.state==='done'&&!unit.owner&&unit.adjustedPass!==this.upwardPass&&unit.el.matches('.project-window,.lab-card,.hero-art')&&Number(unit.el.style.getPropertyValue('--window-scale')||1)>=.999&&unit.rect?.top>100&&unit.rect.bottom<height-75&&!unit.el.contains(document.activeElement)).sort((a,b)=>Math.abs(a.rect.top+a.rect.height/2-height/2)-Math.abs(b.rect.top+b.rect.height/2-height/2))[0];
-  }
+  chooseAdjustment(){return null;}
   assign(worker,unit,{width}) {
     const task=this.scrollingUp?'adjust':unit.stage;
     if(task==='adjust'){unit.adjustedPass=this.upwardPass;this.adjustmentsLeft--}
     if(task==='create'){
       this.prepareText(unit);
       const pose=scatteredPose(unit.index,width);
-      this.pose(unit,pose.x,pose.y,1,pose.angle);this.geometry(unit,.015,.015);this.details(unit,0);
+      unit.scatter=pose;
+      this.pose(unit,pose.x,pose.y,0,pose.angle);this.geometry(unit,0,0);this.details(unit,0);
     }
     const writingDuration=Math.min(2.1,Math.max(.55,unit.letters.length/(unit.category==='TITRE'?29:105)));
-    worker.job={unit,task,phase:'approach',elapsed:0,from:{x:worker.cursor.x,y:worker.cursor.y},source:{x:unit.dx,y:unit.dy,angle:unit.angle},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?.65+(unit.index%3)*.12:1.25+(unit.index%3)*.15};
+    worker.job={unit,task,phase:'approach',elapsed:0,approachDuration:.28+Math.random()*.4,from:{x:worker.cursor.x,y:worker.cursor.y},source:{...unit.scatter,x:unit.dx,y:unit.dy,angle:unit.angle},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?(unit.scatter?.duration||.8):(unit.scatter?.duration||1)};
     unit.owner=worker;unit.state='approach';unit.el.dataset.construction='approach';worker.node.hidden=false;
   }
   finish(worker) {
     const {unit,task}=worker.job;
     if(task==='create'){
-      this.geometry(unit);this.details(unit);unit.stage=unit.letters.length?'write':'place';unit.state='created';
+      this.geometry(unit);this.details(unit,0);unit.stage='place';unit.state='created';
     }else if(task==='write'){
-      this.typeText(unit,unit.letters.length);this.restoreText(unit);unit.stage='place';unit.state='written';
+      this.typeText(unit,unit.letters.length);this.restoreText(unit);this.details(unit);this.pose(unit,0,0);unit.stage='done';unit.state='done';
     }else{
-      this.pose(unit,0,0);unit.stage='done';unit.state='done';
+      this.pose(unit,0,0);unit.stage=unit.letters.length?'write':'done';unit.state=unit.letters.length?'positioned':'done';if(!unit.letters.length)this.details(unit);
     }
     unit.el.dataset.construction=unit.state;unit.owner=null;unit.eligible=true;
     worker.job=null;worker.node.hidden=true;worker.cursor.trail=[];
@@ -183,25 +182,26 @@ export class ScrollConstruction {
       const job=worker.job,unit=job.unit,r=this.layoutRect(unit);
       if(r.bottom<65||r.top>height+50){this.reveal(unit);continue}
       job.elapsed+=dt;
-      if(job.phase==='approach'&&job.elapsed>=.2){job.phase=job.task;job.elapsed=0}
-      else if(job.phase===job.task&&job.elapsed>=job.duration){job.phase='settle';job.elapsed=0;
-        if(job.task==='create'){this.geometry(unit);this.details(unit)}
+      if(job.phase==='approach'&&job.elapsed>=job.approachDuration){job.phase=job.task;job.elapsed=0}
+      else if(job.phase===job.task&&job.elapsed>=job.duration){
+        job.phase='settle';job.elapsed=0;
+        if(job.task==='create'){this.geometry(unit);this.details(unit,0);}
         if(job.task==='write')this.typeText(unit,unit.letters.length);
         if(job.task==='place'||job.task==='adjust')this.pose(unit,0,0);
-      }else if(job.phase==='settle'&&job.elapsed>=.14){this.finish(worker);continue}
+      }else if(job.phase==='settle'&&job.elapsed>=.14){this.finish(worker);continue;}
       let drawX=1,drawY=1;
       if(job.task==='create'){
         const p=job.phase==='approach'?0:job.phase==='settle'?1:ease(job.elapsed/job.duration);
-        drawX=.015+.985*p;drawY=.015+.985*Math.pow(p,.85);
-        this.geometry(unit,drawX,drawY);this.details(unit,Math.max(0,(p-.45)/.55));
-        // Arrive tilted, wobble once while drawing, then hand over to the typist.
-        const flutter=Math.sin(p*Math.PI*2)*(1-p);
-        this.pose(unit,job.source.x+flutter*14,job.source.y-Math.sin(p*Math.PI)*12,1,job.source.angle+flutter*7);
+        const sideways=job.source.draw>.5;
+        drawX=sideways?Math.min(1,p*1.8):Math.pow(p,.8);
+        drawY=sideways?Math.pow(p,1.5):Math.min(1,p*1.5);
+        this.geometry(unit,drawX,drawY);this.details(unit,0);
+        this.pose(unit,job.source.x,job.source.y,p>0?1:0,job.source.angle);
       }
       if(job.task==='write'&&job.phase==='write'){
         // Discrete characters with short pauses give the caret an actual writing rhythm.
         const p=Math.min(1,job.elapsed/job.duration),paced=Math.max(0,Math.min(1,p-.022*Math.sin(p*Math.PI*6)));
-        this.typeText(unit,Math.floor(unit.letters.length*paced));
+        this.typeText(unit,Math.floor(unit.letters.length*paced));this.details(unit,paced);
       }
       if(job.task==='place'&&job.phase==='place'){
         const pose=placementPose(job.source,job.elapsed/job.duration);
@@ -221,10 +221,10 @@ export class ScrollConstruction {
       if(caret)point={x:caret.left+6,y:caret.top+caret.height*.72};
       const c=worker.cursor;
       if(job.phase==='approach'){
-        const p=ease(job.elapsed/.2);c.x=job.from.x+(point.x-job.from.x)*p;c.y=job.from.y+(point.y-job.from.y)*p;
+        const p=ease(job.elapsed/job.approachDuration);c.x=job.from.x+(point.x-job.from.x)*p;c.y=job.from.y+(point.y-job.from.y)*p;
       }else{c.x=point.x;c.y=point.y}
       worker.pointer.style.transform=`translate3d(${c.x}px,${c.y}px,0)`;
-      const f=worker.frame;f.style.left=box.left+unit.dx+'px';f.style.top=box.top+unit.dy+'px';f.style.width=box.width+'px';f.style.height=box.height+'px';f.style.rotate=unit.angle+'deg';
+      const f=worker.frame;f.style.left=box.left+unit.dx+'px';f.style.top=box.top+unit.dy+'px';f.style.width=box.width*drawX+'px';f.style.height=box.height*drawY+'px';f.style.transformOrigin=(box.width/2)+'px '+(box.height/2)+'px';f.style.rotate=unit.angle+'deg';f.hidden=job.phase==='approach';
       worker.caret.hidden=!(caret&&job.phase==='write');
       if(caret){worker.caret.style.left=caret.left+'px';worker.caret.style.top=caret.top+'px';worker.caret.style.height=caret.height+'px'}
       const verb=job.task==='adjust'?'AJUSTER':job.task==='create'?'CRÉER':job.task==='write'?'ÉCRIRE':Math.abs(unit.angle)>1?'REDRESSER':'ALIGNER';

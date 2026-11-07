@@ -90,3 +90,8 @@ html[data-theme=curseurs] .construction-unit{rotate:var(--build-angle,0deg);tran
 html[data-theme=curseurs] .construction-unit:not([data-construction=done]):not([data-construction=waiting]){will-change:translate,rotate;transition:none}
 .construction-frame{transform-origin:center center}
 @media(prefers-reduced-motion:reduce){html[data-theme=curseurs] .construction-unit{rotate:none!important}}
+
+/* A blank work area until the builders arrive; content remains in the DOM for access. */
+html[data-build-boot] main :is(.editable,.hero-art,.section-marker,.hero-bottom){visibility:hidden}
+.construction-frame[hidden]{display:none}
+html[data-theme=curseurs] .construction-unit[data-construction=waiting]{clip-path:inset(0 100% 100% 0)}

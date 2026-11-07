@@ -1,4 +1,4 @@
-import {ScrollConstruction} from './construction.mjs?v=chaos1';
+import {ScrollConstruction} from './construction.mjs?v=independent1';
 const completed=new WeakSet();
 export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
 const abort=new AbortController();const on=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:abort.signal});

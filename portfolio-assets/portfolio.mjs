@@ -22,7 +22,7 @@ function setAppearance(theme){
 const manager=createThemeManager({
  apply:setAppearance,
  async load(name,options){
-  if(name==='curseurs')return import('./themes/cursors.mjs?v=chaos1');
+  if(name==='curseurs')return import('./themes/cursors.mjs?v=independent1');
   if(name==='points'){
    const module=await import('./themes/points.mjs?v=kinetic1');const forms=await module.prepare(options.count);
    return {start:settings=>module.start({...settings,forms})};
@@ -39,6 +39,12 @@ const manager=createThemeManager({
 });
 async function choose(theme,{save=true}={}){
  selected=normalizeTheme(theme);
+ if(selected==='points'){
+  const id=readingPosition()?.el.id||location.hash.slice(1)||'home';
+  const url=new URL('/points/',location.href);url.search=location.search;url.searchParams.delete('theme');url.hash=({work:'market-plus',atelier:'livre'})[id]||id;
+  try{localStorage.setItem('portfolio-theme','points');}catch{}
+  location.assign(url);return;
+ }
  const promise=manager.select(selected,{reduced:preference.matches||userPaused,resume:started,count:innerWidth<=700?1680:2800});started=true;
  if(save){try{localStorage.setItem('portfolio-theme',selected);}catch{}const url=new URL(location.href);url.searchParams.set('theme',selected);history.replaceState(null,'',url);}
  await promise;

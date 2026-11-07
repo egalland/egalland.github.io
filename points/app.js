@@ -166,6 +166,7 @@ async function buildForms(){
 let gl=null,ctx=null,program,buffers={},useGL=false;
 const root=document.documentElement;
 const menu=$('#projectMenu');
+try{localStorage.setItem('portfolio-theme','points');}catch{}
 const xCurrent=new Float32Array(N*3),cCurrent=new Float32Array(N*3),sCurrent=new Float32Array(N);
 const xStart=new Float32Array(N*3),cStart=new Float32Array(N*3),sStart=new Float32Array(N);
 let activeScene=-1,morphStart=-10000,morphDuration=1150,morphValue=1,frameId=0;
@@ -218,7 +219,7 @@ function setScene(index){
  $('#formationLabel').textContent=labels[index];$('#sceneNumber').textContent=String(index).padStart(2,'0');$('#currentFrame').textContent=String(index).padStart(2,'0');$('#stepLabel').textContent=frameTitles[index];
  $('#previousFrame').disabled=index===0;$('#nextFrame').disabled=index===LAST_SCENE;
  const p=projectFor(index);document.querySelectorAll('[data-project]').forEach((a,k)=>{a.classList.toggle('active',p===k);if(p===k)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current');const start=PROJECT_STARTS[k];[...a.querySelectorAll('b')].forEach((bar,n)=>bar.className=index>start+n?'past':index===start+n?'now':'');});
- root.dataset.scene=String(index);root.dataset.project=String(p);const viewToggle=$('[data-view-switch]');if(viewToggle)viewToggle.href='/curseurs/#'+sections[index].dataset.cursor;document.body.classList.toggle('is-intro',index===0);
+ root.dataset.scene=String(index);root.dataset.project=String(p);const viewToggle=$('[data-view-switch]');if(viewToggle)viewToggle.href='/?theme=curseurs#'+sections[index].dataset.cursor;document.body.classList.toggle('is-intro',index===0);
  root.dataset.flowingPoints=String(forms[index].filter(p=>p.track).length);
  $('#interactionStatus').textContent=frameTitles[index];
  // Theme changes continue through the same matter transition as the scene.
@@ -309,11 +310,11 @@ function openMenu(x=width/2,y=height/2){
 $('#projectsButton').addEventListener('click',()=>openMenu());$('.close-menu').addEventListener('click',closeMenu);
 menu.addEventListener('close',()=>{document.body.classList.remove('dialog-open');pointer.down=false;dirty=true;wake()});menu.addEventListener('click',e=>{if(e.target===menu){const r=menu.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeMenu()}});
 $('#restartButton').addEventListener('click',()=>{closeMenu();goScene(0)});
-$('#motionButton').addEventListener('click',()=>{paused=!(paused||reduced);reduced=false;userPause=paused;try{localStorage.setItem('redline-lab-motion',paused?'paused':'active')}catch{}updateMotion();});
+$('#motionButton').addEventListener('click',()=>{if(mq.matches)return;paused=!paused;userPause=paused;try{localStorage.setItem('redline-lab-motion',paused?'paused':'active')}catch{}updateMotion();});
 mq.addEventListener('change',e=>{reduced=e.matches;if(userPause===null)paused=reduced;updateMotion()});
 $('#nextFrame').addEventListener('click',()=>goScene(activeScene+1));$('#previousFrame').addEventListener('click',()=>goScene(activeScene-1));$('#nextProject').addEventListener('click',()=>goScene(nextProjectFor(activeScene)));
 document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const index=sections.findIndex(s=>'#'+s.id===a.getAttribute('href'));if(index<0)return;e.preventDefault();closeMenu();goScene(index)});
-document.addEventListener('contextmenu',e=>{if(e.target.closest('a,input,textarea,[contenteditable]'))return;e.preventDefault();openMenu(e.clientX,e.clientY)});
+document.addEventListener('contextmenu',e=>{if(e.shiftKey||window.getSelection()?.toString().trim()||e.target.closest('a,input,textarea,[contenteditable],dialog'))return;e.preventDefault();openMenu(e.clientX,e.clientY)});
 document.addEventListener('pointermove',e=>{
  if(e.pointerType==='touch'){if(Math.abs(e.clientY-dragY)>12)pointer.down=false;return}
  const dist=pointer.active?Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y):0;pointer.speed=range(dist,0,90);pointer.px=pointer.x;pointer.py=pointer.y;pointer.x=e.clientX;pointer.y=e.clientY;pointer.active=true;
