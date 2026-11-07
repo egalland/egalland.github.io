@@ -15,7 +15,8 @@ const save=(name,content)=>{const target=path.join(root,name);fs.mkdirSync(path.
 const link=({label,href,external},className='project-link')=>`<a class="${className}" href="${escape(href)}"${external?' target="_blank" rel="noopener noreferrer"':''}>${escape(label)} <span aria-hidden="true">↗</span></a>`;
 const tags=items=>`<div class="skills">${items.map(t=>`<span>${escape(t)}</span>`).join('')}</div>`;
 const [market,kikalmo,maison,bodyos]=data.projects;
-const [livre,redim,atlas,four,biscuit,inktober]=data.atelier.projects;
+const [livre,redim,atlas]=data.atelier.projects;
+const inktober=data.inktober;
 const chapters=[];
 function chapter({id,formation,label,title,description='',category='',links=[],extra='',cursor=id,theme=formation,sharp=false,className=''}){
  const i=chapters.length;
@@ -31,20 +32,22 @@ chapter({id:maison.id,formation:6,label:maison.title,title:`<em>${escape(maison.
 chapter({id:'maison-reseaux',formation:7,label:'Maison / Tableau électrique',title:'Tableau<br><em>électrique.</em>',category:maison.title,description:maison.description,links:maison.links,cursor:maison.id,extra:'<p class="demo-note">Esquisse visuelle · les outils s’ouvrent séparément</p>'});
 chapter({id:bodyos.id,formation:8,label:bodyos.title,title:'Body<em>OS.</em>',category:bodyos.category+' · '+bodyos.status,description:bodyos.description,extra:tags(bodyos.tags)+'<p class="private-label">Projet privé · présentation sans données personnelles</p>'});
 chapter({id:'bodyos-tendance',formation:9,label:'BodyOS / Progression',title:'La<br><em>progression.</em>',category:bodyos.title,description:data.details.bodyos.description,extra:`<ul class="point-features">${data.details.bodyos.features.map(t=>`<li>${escape(t)}</li>`).join('')}</ul><p class="demo-note">Courbes fictives.</p>`,cursor:bodyos.id});
-for(const [project,formation] of [[livre,10],[redim,11],[atlas,13],[four,14],[biscuit,15],[inktober,16]]){
- const title=project.id==='livre'?'Atelier<br><em>du livre.</em>':project.id==='four-en-route'?'Four<br><em>en route.</em>':project.id==='biscuit-du-jour'?'Biscuit<br><em>du jour.</em>':project.id==='atlas'?'Atlas /<br><em>WikiCartes.</em>':`<em>${escape(project.title)}.</em>`;
+for(const [project,formation] of [[livre,10],[redim,11],[atlas,13]]){
+ const title=project.id==='livre'?'Atelier<br><em>du livre.</em>':project.id==='atlas'?'Atlas /<br><em>WikiCartes.</em>':`<em>${escape(project.title)}.</em>`;
  chapter({id:project.id,formation,label:project.title,title,category:project.category,description:project.description,extra:`<p class="demo-note">${escape(project.tagline)}</p>`,links:[{label:'Ouvrir '+project.title,href:project.href,external:true}],cursor:project.id,sharp:project.id==='redim',theme:formation>12?10:formation});
 }
+chapter({id:'inktober',formation:16,label:'Inktober / Le calendrier des ombres',title:data.inktober.titleHtml.replace('class="muted"','class="point-accent"'),category:data.inktober.category,description:data.inktober.description,extra:'<p class="point-manifesto">31 mots. Un terrain de jeu.</p>'+tags(['Jeux','Outils','Expériences web']),links:[{label:'Explorer le calendrier',href:data.inktober.href,external:false}],theme:0,className:'inktober-chapter'});
 chapter({id:'about',formation:17,label:'Parcours & pratique',title:data.about.titleHtml.replace('class="muted"','class="point-accent"'),category:'PARCOURS & PRATIQUE',description:data.about.description,extra:`<p class="point-manifesto">${escape(data.about.manifesto)}</p>${tags(data.about.interests)}`,theme:0});
 chapter({id:'parcours',formation:17,label:'Parcours & compétences',title:'Parcours &<br><em>pratique.</em>',category:'PARCOURS & PRATIQUE',extra:`<ol class="point-timeline">${data.about.timeline.map(t=>`<li><time>${escape(t.date)}</time><div>${escape(t.label)}<small>${escape(t.note)}</small></div></li>`).join('')}</ol>${tags(data.about.skills)}`,cursor:'about',theme:0,className:'timeline-chapter'});
 chapter({id:'contact',formation:12,label:'La suite',title:data.contact.titleHtml.replace('class="muted"','class="point-accent"'),category:'LA SUITE',description:data.contact.description,links:[{label:'Mon GitHub',href:data.profile.github,external:true}],theme:0,className:'outro'});
-const groups=[['market-plus','Market Plus',2],['kikalmo','Kikalmo',3],['maison','Maison',2],['bodyos','BodyOS',2],['livre','L’atelier',6],['about','Parcours',2]];
+const groups=[['market-plus','Market Plus',2],['kikalmo','Kikalmo',3],['maison','Maison',2],['bodyos','BodyOS',2],['livre','L’atelier',3],['inktober','Inktober',1],['about','Parcours',2]];
 const dockHtml=`<nav class="project-dock" aria-label="Accès direct aux projets">${groups.map(([id,name,count],i)=>`<a href="#${id}" data-project="${i}"><span class="dock-order">0${i+1}</span><span class="dock-name">${name}</span><i>${'<b></b>'.repeat(count)}</i></a>`).join('')}<button class="dock-next" id="nextProject" aria-label="Passer au projet suivant">↗</button></nav>`;
-const positions=[[18,19],[50,7],[82,22],[83,72],[49,89],[16,68]];
+const positions=[[18,20],[50,5],[82,20],[84,61],[67,88],[33,88],[15,61]];
 const nodes=groups.map(([id,name],i)=>`<a class="particle-destination" href="#${id}" style="--nx:${positions[i][0]}%;--ny:${positions[i][1]}%;--order:${i}"><span class="particle-cluster" aria-hidden="true">${Array.from({length:9},(_,n)=>`<i style="--dot:${n}"></i>`).join('')}</span><small>0${i+1}</small><span>${name}</span></a>`).join('');
 const menuHtml=`<div id="projectMenu" popover="auto" aria-label="Constellation des projets"><div class="constellation-heading mono"><span>CHOISIR UNE ORBITE</span><button class="close-menu" aria-label="Fermer la navigation">×</button></div><nav class="constellation" aria-label="Projets et parcours"><div class="constellation-orbit" aria-hidden="true"></div><div class="constellation-dust" aria-hidden="true">${Array.from({length:25},(_,i)=>`<i style="--x:${(i*37+13)%100}%;--y:${(i*53+7)%100}%;--delay:${-i*.37}s"></i>`).join('')}</div>${nodes}<a class="constellation-home" href="#home" aria-label="Retour à l’accueil"><span>eg.</span><small>ACCUEIL</small></a></nav><div class="constellation-tools"><button id="restartButton">↺ Recommencer</button><button id="motionButton" aria-pressed="false">Ⅱ Pause</button></div></div>`;
 const metaDescription='Les projets d’Emmanuel Galland : Market Plus, Kikalmo, Maison, BodyOS, Atelier du livre et Redim. Développement web, données et automatisation.';
 save('points/index.html',render(fs.readFileSync(path.join(root,'portfolio/points.template.html'),'utf8'),{chaptersHtml:chapters.join('\n'),dockHtml,menuHtml,metaDescription}));
 save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template.html'),'utf8'),data));
+save('portfolio-assets/content.js','window.PORTFOLIO_CONTENT='+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 save('portfolio-assets/content.mjs','export default '+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 console.log('Generated two independent presentations from portfolio/content.json.');

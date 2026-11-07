@@ -1,4 +1,4 @@
-import {magneticDestination,formationProgress,cursorForce,springStep,projectFor,nextProjectFor,PROJECT_STARTS,LAST_SCENE} from './motion-core.mjs';
+import {magneticDestination,formationProgress,cursorForce,springStep,projectFor,nextProjectFor,PROJECT_STARTS,LAST_SCENE} from './motion-core.mjs?v=editorial1';
 import {resamplePoints,particlePosition} from './point-motion.mjs';
 import imageAssets from './assets/images.mjs';
 const $ = (s) => document.querySelector(s);

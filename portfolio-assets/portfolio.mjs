@@ -1,13 +1,13 @@
-import './portfolio-content.mjs';
+import './portfolio-content.mjs?v=editorial1';
 import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=wheel2';
-import {createPortfolioMenu} from './context-menu.mjs?v=workshop1';
+import {createPortfolioMenu} from './context-menu.mjs?v=editorial1';
 
 const root=document.documentElement,buttons=[...document.querySelectorAll('[data-theme-choice]')],status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');
 let started=false,selected='curseurs',userPaused=false,projectMenu=null;
 try{userPaused=localStorage.getItem('redline-lab-motion')==='paused';}catch{}
 function readingPosition(){
- const elements=[...document.querySelectorAll('#home,.project,.lab-card,#about,#contact')];
+ const elements=[...document.querySelectorAll('#home,.project,.lab-card,#inktober,#about,#contact')];
  const visible=elements.filter(el=>{const r=el.getBoundingClientRect();return r.bottom>innerHeight*.3&&r.top<innerHeight*.7;});
  const el=visible.sort((a,b)=>Math.abs(a.getBoundingClientRect().top-100)-Math.abs(b.getBoundingClientRect().top-100))[0];
  if(!el)return null;const r=el.getBoundingClientRect();return {el,ratio:(100-r.top)/Math.max(1,r.height)};

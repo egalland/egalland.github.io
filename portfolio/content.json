@@ -27,20 +27,20 @@
     ],
     "metrics": [
       {
-        "label": "INTERFACES",
-        "value": "React"
+        "label": "CONCEVOIR",
+        "value": "Outils métier"
       },
       {
-        "label": "APPLICATIONS",
-        "value": "Node.js"
+        "label": "SIMPLIFIER",
+        "value": "Automatisation"
       },
       {
-        "label": "DONNÉES",
-        "value": "SQL"
+        "label": "STRUCTURER",
+        "value": "Données & référentiels"
       },
       {
-        "label": "AUTOMATISATION",
-        "value": "VBA"
+        "label": "EXPÉRIMENTER",
+        "value": "Expériences web"
       }
     ]
   },
@@ -131,7 +131,7 @@
   ],
   "atelier": {
     "titleHtml": "D’autres idées.<br><span class=\"muted\">À ouvrir.</span>",
-    "descriptionHtml": "Des outils pratiques et des expériences.<br>Pour transformer, explorer ou simplement jouer.",
+    "descriptionHtml": "Trois outils pour transformer les documents,<br>les images et les connaissances.",
     "projects": [
       {
         "id": "livre",
@@ -156,30 +156,6 @@
         "description": "Explorer les connaissances de Wikipédia à travers des cartes.",
         "tagline": "CARTOGRAPHIER LES IDÉES",
         "href": "https://wikicartes.emmanuel-galland117.chatgpt.site"
-      },
-      {
-        "id": "four-en-route",
-        "category": "04 / QUOTIDIEN",
-        "title": "Four en route",
-        "description": "Plusieurs cuissons, plusieurs minuteurs. Chacun son nom, chacun son rythme.",
-        "tagline": "MINUTEURS INDÉPENDANTS",
-        "href": "https://four-en-route.emmanuel-galland117.chatgpt.site"
-      },
-      {
-        "id": "biscuit-du-jour",
-        "category": "05 / PETIT RITUEL",
-        "title": "Biscuit du jour",
-        "description": "Un biscuit à ouvrir, un message à découvrir.",
-        "tagline": "UNE SURPRISE À LA FOIS",
-        "href": "/biscuit-du-jour/"
-      },
-      {
-        "id": "inktober",
-        "category": "06 / EXPÉRIMENTATIONS",
-        "title": "Inktober",
-        "description": "Des mots transformés en jeux, en outils et en expériences web.",
-        "tagline": "LE CALENDRIER DES OMBRES",
-        "href": "/inktober-2026/"
       }
     ]
   },
@@ -218,7 +194,7 @@
       "REACT",
       "JAVASCRIPT / TYPESCRIPT",
       "NODE.JS",
-      "SQL / NOSQL",
+      "NOSQL / SQL",
       "EXCEL / VBA",
       "THREE.JS"
     ]
@@ -262,5 +238,14 @@
       ],
       "url": null
     }
+  },
+  "inktober": {
+    "id": "inktober",
+    "category": "EXPÉRIMENTATIONS / OCTOBRE 2026",
+    "title": "Inktober",
+    "description": "Des mots transformés en jeux, en outils et en expériences web.",
+    "tagline": "LE CALENDRIER DES OMBRES",
+    "href": "/inktober-2026/",
+    "titleHtml": "Un mot.<br><span class=\"muted\">Une expérience.</span>"
   }
 }

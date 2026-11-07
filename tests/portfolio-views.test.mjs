@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {PROJECT_STARTS,LAST_SCENE,projectFor,nextProjectFor} from '../points/motion-core.mjs';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url)),read=name=>fs.readFileSync(root+name,'utf8');
@@ -17,7 +18,7 @@ test('la vue Curseurs conserve les contenus, dates et liens de la page GitHub',(
 });
 test('la vue Curseurs conserve ses ancres uniques et des ancres uniques',()=>{
  const ids=[...page.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);assert.equal([...page.matchAll(/<main\b/g)].length,1);assert.ok(!/<iframe|<template|view-choice|data-view-switch/.test(page));
- for(const p of [...data.projects,...data.atelier.projects])assert.equal(ids.filter(id=>id===p.id).length,1);
+ for(const p of [...data.projects,...data.atelier.projects,data.inktober])assert.equal(ids.filter(id=>id===p.id).length,1);
  for(const name of ['points','curseurs'])assert.ok(page.includes('data-theme-choice="'+name+'"'));
  for(const [,id] of page.matchAll(/href="#([^"]+)"/g))assert.ok(ids.includes(id),id);
  assert.ok(!page.includes('data-theme-choice="glitch"'));assert.ok(!page.includes('glitch.css'));
@@ -37,8 +38,28 @@ test('les dossiers des applications restent hors du périmètre des modification
 });
 
 test('Points retrouve ses tableaux indépendants avec les mêmes contenus et liens',()=>{
- const points=read('points/index.html');assert.ok(points.includes('id="particles"'));assert.equal([...points.matchAll(/data-scene=/g)].length,19);
- for(const p of [...data.projects,...data.atelier.projects]){assert.ok(text(points).includes(p.description),p.id);assert.ok(points.includes('id="'+p.id+'"'));}
+ const points=read('points/index.html');assert.ok(points.includes('id="particles"'));assert.equal([...points.matchAll(/data-scene=/g)].length,17);
+ for(const p of [...data.projects,...data.atelier.projects,data.inktober]){assert.ok(text(points).includes(p.description),p.id);assert.ok(points.includes('id="'+p.id+'"'));}
  for(const t of data.about.timeline)assert.ok(text(points).includes(t.date));
- assert.ok(!points.includes('portfolio.mjs'));assert.ok(points.includes('app.js?v=workshop1'));
+ assert.ok(!points.includes('portfolio.mjs'));assert.ok(points.includes('app.js?v=editorial1'));
+});
+
+test('la sélection conserve trois outils et donne une section et une entrée propres à Inktober',()=>{
+ assert.deepEqual(data.atelier.projects.map(p=>p.id),['livre','redim','atlas']);
+ for(const html of [page,read('points/index.html')]){
+  assert.ok(!html.includes('four-en-route'));assert.ok(!html.includes('biscuit-du-jour'));
+  assert.match(html,/<section[^>]*id="inktober"/);assert.ok(html.includes('href="/inktober-2026/"'));
+ }
+ assert.ok(!/<a class="lab-card[^>]*id="inktober"/.test(page));
+ for(const axis of data.hero.metrics)assert.ok(text(page).includes(axis.value));
+ assert.ok(text(page).includes('NOSQL / SQL'));
+});
+test('tous les groupes et le dernier tableau Points suivent les scènes réellement générées',()=>{
+ const html=read('points/index.html');
+ const scenes=[...html.matchAll(/<section[^>]*id="([^"]+)"[^>]*data-scene="(\d+)"/g)].map(m=>m[1]);
+ const targets=[...html.matchAll(/<a href="#([^"]+)" data-project="(\d+)"/g)].map(m=>m[1]);
+ assert.equal(LAST_SCENE,scenes.length-1);assert.deepEqual(PROJECT_STARTS,targets.map(id=>scenes.indexOf(id)));
+ PROJECT_STARTS.forEach((start,i)=>assert.equal(projectFor(start),i));
+ assert.equal(nextProjectFor(scenes.indexOf('atlas')),scenes.indexOf('inktober'));
+ assert.equal(nextProjectFor(LAST_SCENE),0);
 });

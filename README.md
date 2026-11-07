@@ -8,7 +8,7 @@ Le [portfolio d’Emmanuel](https://egalland.github.io/) propose deux présentat
 - `portfolio-assets/themes/construction.mjs` : curseurs animés, tracé des cadres droits, écriture puis transport avec inertie. Les éléments terminés restent stables.
 - `portfolio-assets/themes/choreography.mjs` : placement et durée tirés au hasard, inclinaison issue du mouvement, contournements ponctuels et deux incidents au maximum (chute et retournement 3D).
 - `portfolio-assets/portfolio.mjs` : choix mémorisé et passage vers la présentation Points au même projet.
-- `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 19 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
+- `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 17 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
 - `points/assets/` : ressources et polices originales conservées sans altération.
 - `portfolio/content.json` : source commune des textes, projets et liens. `scripts/build-portfolio.mjs` génère les deux présentations depuis `portfolio/page.template.html` et `portfolio/points.template.html`.
 - `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
@@ -84,7 +84,7 @@ Le switch mémorise le choix et retrouve le projet consulté. Les liens `?theme=
 
 Curseurs commence par une zone vide. Les curseurs animés arrivent, tracent un cadre droit progressivement, écrivent le contenu, puis transportent le bloc. L’inclinaison apparaît pendant le transport et se résorbe après un dépassement amorti. Certains trajets contournent un panneau voisin pour donner l’impression d’un chantier encombré. Une ligne au maximum glisse et se fait rattraper ; un panneau au maximum est construit à l’envers puis retourné avec perspective. Le placement et le geste varient à chaque chargement. Le défilement active les prochaines zones sans reconstruire ni incliner les éléments terminés. Les travaux hors écran sont suspendus et repris à la même étape, sans révélation instantanée au retour ni à la remontée. Le focus sur un contrôle de saisie révèle immédiatement le contenu nécessaire ; une ancre vers une carte projet ne court-circuite pas sa construction.
 
-Points reprend la scène fixe d’avant Glitch : la molette, le tactile ou les flèches sélectionnent un tableau ; les mêmes particules se réorganisent en temps réel en sphère, lettrage, personnage, interfaces et objets. Les descriptions et liens proviennent de la même source que Curseurs. Les navigations utilisent des popovers natifs sans fond de modale : petites cartes et poignées de sélection pour Curseurs ; constellation, orbites et poussière de points pour Points. Échap et le clic extérieur ferment les outils ; le reste de la page reste utilisable.
+Points reprend la scène fixe d’avant Glitch : la molette, le tactile ou les flèches sélectionnent un tableau ; les mêmes particules se réorganisent en temps réel en sphère, lettrage, personnage, interfaces et objets. Les descriptions et liens proviennent de la même source que Curseurs. Les navigations utilisent des popovers natifs sans fond de modale : menu contextuel compact ancré au clic et poignées de sélection au survol pour Curseurs ; constellation, orbites et poussière de points pour Points. Échap et le clic extérieur ferment les outils ; le reste de la page reste utilisable.
 
 La pause mémorisée et les mouvements réduits sont respectés. Les animations s’arrêtent quand l’onglet est masqué. Sans JavaScript, les contenus et liens restent lisibles.
 
@@ -93,3 +93,9 @@ Aucun sous-site n’est déplacé : `/inktober/`, `/inktober-2026/`, `/livre/`, 
 Les huit commits du modèle Points sont conservés dans `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. Leur intégrité reste testée. La restauration ajoute un commit à l’historique existant.
 
 Validation : tests de contenu partagé, routes, géométries, continuité des trajectoires aléatoires et cycle complet arrivée → tracé → écriture → transport, suspension hors écran et retour au repos des incidents. Contrôle navigateur de la scène Points, des changements de tableau, des deux outils de navigation et de la bascule vers Curseurs. Aucun téléphone physique testé.
+
+### Sélection du portfolio
+
+Les quatre axes d’ouverture présentent le profil hybride : Outils métier, Automatisation, Données & référentiels, Expériences web. Les technologies restent dans le parcours, avec NoSQL avant SQL.
+
+L’Atelier contient uniquement Atelier du livre, Redim et Atlas. Four en route et Biscuit du jour sont retirés de la sélection, sans suppression de leurs sous-sites. Inktober dispose d’une section dédiée et de sa propre entrée dans les navigations Curseurs et Points. Les constantes de navigation Points correspondent aux 17 tableaux générés.

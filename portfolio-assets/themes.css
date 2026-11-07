@@ -48,28 +48,29 @@ html[data-theme=points] .mouse-glow{display:none}html[data-theme=points] footer 
 @media(max-width:700px){.theme-switch{padding:2px;gap:1px}.theme-switch button{font-size:9px;min-height:35px;padding:7px 8px}.nav .nav-right{gap:8px}.nav .brand{font-size:11px}.nav nav{z-index:40}html[data-theme=points] .nav nav{background:#e8ecdf;border-color:#9cae93}html[data-theme=points] .hero{padding-top:50px;min-height:0}html[data-theme=points] .hero h1{font-size:64px}html[data-theme=points] .hero-art{min-height:280px;max-width:100%;margin-top:35px}html[data-theme=points] .project{min-height:0;padding-top:35px;padding-bottom:35px;gap:25px}html[data-theme=points] .project-copy>p{font-size:13px}html[data-theme=points] .project-window{min-height:290px}html[data-theme=points] .project h3{font-size:48px}html[data-theme=points] .lab-card{min-height:0;grid-template-columns:1fr;padding:35px 0;gap:0}html[data-theme=points] .lab-card .lab-art{grid-column:1;grid-row:auto;height:260px;margin:0 0 20px}html[data-theme=points] .lab-card .lab-card-top{margin-bottom:18px}html[data-theme=points] .lab-card h3{font-size:31px;margin-top:6px}html[data-theme=points] .lab-card p{font-size:13px;max-width:100%}html[data-theme=points] .lab-type{min-height:0}}
 @media(max-width:420px){.nav .brand>span:last-child{display:none}.nav{gap:9px}.nav .nav-right{gap:10px}.theme-switch button{font-size:10px;padding:7px 9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
-/* Pointer navigation lives in the work area, without a modal panel. */
+/* Pointer mode uses a selection context menu, anchored to the click. */
 .quickmenu-trigger{font:11px Inter,Arial,sans-serif;color:inherit;background:transparent;border:0;padding:8px 0;white-space:nowrap;cursor:pointer}
-#portfolio-menu{position:fixed;inset:auto;margin:0;padding:0;width:min(510px,calc(100vw - 24px));max-height:calc(100svh - 24px);overflow:visible;background:none;border:0;color:#e5edff;font-family:Inter,Arial,sans-serif;filter:drop-shadow(0 12px 28px #0009)}
+#portfolio-menu{position:fixed;inset:auto;margin:0;padding:5px;width:min(310px,calc(100vw - 24px));box-sizing:border-box;max-height:calc(100svh - 24px);overflow:auto;background:#141922f5;border:1px solid #71819a66;border-radius:6px;box-shadow:0 12px 30px #0008;color:#e0e9fa;font-family:Inter,Arial,sans-serif;backdrop-filter:blur(10px)}
 #portfolio-menu::backdrop{background:transparent;backdrop-filter:none}
-#portfolio-menu button{cursor:pointer;color:inherit;background:#182334;border:1px solid #6883a56b;border-radius:5px;font:10px var(--mono);min-height:40px;padding:8px 12px}
-#portfolio-menu .tool-heading{display:flex;justify-content:center;align-items:center;gap:10px;height:42px;font:9px var(--mono);color:#adc7f4}
-#portfolio-menu .tool-heading>span{background:#101927;padding:10px;border:1px dashed #779ed281}
-#portfolio-menu .close-menu{font-size:20px;min-height:32px;width:32px;padding:0;border-radius:50%}
-#portfolio-menu .tool-map{display:block;position:relative;height:260px;margin:10px 0}
-#portfolio-menu .tool-wires{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:#b1cdff;stroke-opacity:.45;stroke-width:1;stroke-dasharray:3 7;pointer-events:none}
-#portfolio-menu .tool-destination{position:absolute;left:var(--nx);top:var(--ny);translate:-50% -50%;display:flex;align-items:center;gap:10px;min-width:128px;min-height:52px;padding:12px;background:#151e2df5;border:1px solid #728aaa;color:#e5edff;font:12px Inter,Arial,sans-serif;box-shadow:4px 4px 0 #090d1580;animation:tool-arrive .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--order)*25ms);text-decoration:none}
-#portfolio-menu .tool-destination:before,#portfolio-menu .tool-destination:after{content:'';position:absolute;width:4px;height:4px;background:#172132;border:1px solid #a5c6ff}
-#portfolio-menu .tool-destination:before{left:-3px;top:-3px}#portfolio-menu .tool-destination:after{right:-3px;bottom:-3px}
-#portfolio-menu .tool-destination small{font:9px var(--mono);color:#86a9e5}
-#portfolio-menu .tool-destination:is(:hover,:focus-visible),#portfolio-menu .tool-destination[aria-current]{border-color:#a8cdff;background:#253b58;outline:1px solid #a8cdff;outline-offset:3px}
-#portfolio-menu .tool-origin{position:absolute;left:50%;top:47%;translate:-50% -50%;display:grid;gap:9px;justify-items:center;color:#b8d5ff;text-decoration:none;font:8px var(--mono)}
-#portfolio-menu .tool-origin svg{width:27px;height:32px;fill:#b8d5ff;stroke:#10141c;stroke-width:1}
-#portfolio-menu .tool-strip{display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;font:7px var(--mono);color:#90a6c7}
-#portfolio-menu[data-paused=true] *{animation:none}
-@keyframes tool-arrive{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:none}}
-@media(max-width:700px){.nav nav .quickmenu-trigger{padding:15px 0;text-align:left;font-size:13px}#portfolio-menu .tool-destination{min-width:96px;font-size:10px;padding:8px;gap:6px}#portfolio-menu .tool-map{height:230px}#portfolio-menu .tool-strip>span{display:none}}
-@media(max-height:420px){#portfolio-menu .tool-map{height:185px;margin:0}#portfolio-menu .tool-heading{height:35px}}
+#portfolio-menu button{background:none;color:inherit;border:0;cursor:pointer}
+#portfolio-menu .pointer-menu-heading{display:flex;align-items:center;gap:10px;height:46px;padding:0 8px;border-bottom:1px solid #8293ae29;font-size:11px;color:#9daec7}
+#portfolio-menu .pointer-menu-heading svg{width:19px;height:23px;fill:#bdd6ff;stroke:#10141c;stroke-width:1}
+#portfolio-menu .close-menu{margin-left:auto;font-size:19px;width:30px;height:30px}
+#portfolio-menu .pointer-menu-list{display:flex;flex-direction:column;padding:5px 0;gap:3px}
+#portfolio-menu .pointer-menu-list a{position:relative;display:flex;align-items:center;gap:12px;min-height:39px;padding:8px 12px;font:12px Inter,Arial,sans-serif;color:inherit;text-decoration:none;border:1px solid transparent;border-radius:2px}
+#portfolio-menu .pointer-menu-list small{font:9px var(--mono);color:#8298bc;min-width:15px}
+#portfolio-menu .pointer-menu-list i{font-style:normal;margin-left:auto;opacity:0;color:#bedaff}
+#portfolio-menu .pointer-home{border-bottom-color:#71819a29!important;color:#a8bad5!important}
+#portfolio-menu .pointer-home small{margin-left:auto;text-align:right}
+#portfolio-menu .pointer-menu-list a:is(:hover,:focus-visible),#portfolio-menu .pointer-menu-list a[aria-current]{background:#294366;border-color:#7da4e3;outline:0}
+#portfolio-menu .pointer-menu-list a:is(:hover,:focus-visible):before,#portfolio-menu .pointer-menu-list a:is(:hover,:focus-visible):after{content:'';position:absolute;width:4px;height:4px;background:#152035;border:1px solid #bfd7ff}
+#portfolio-menu .pointer-menu-list a:before{left:-2px;top:-2px}#portfolio-menu .pointer-menu-list a:after{right:-2px;bottom:-2px}
+#portfolio-menu .pointer-menu-list a:is(:hover,:focus-visible) i{opacity:1}
+#portfolio-menu .pointer-menu-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #8293ae29;padding:5px 8px}
+#portfolio-menu .pointer-menu-footer button{font:10px var(--mono);min-height:37px;color:#a7badd}
+#portfolio-menu button:focus-visible{outline:1px solid #a7c9ff;outline-offset:2px}
+#portfolio-menu button:disabled{opacity:.5;cursor:default}
+@media(max-width:700px){.nav nav .quickmenu-trigger{padding:15px 0;text-align:left;font-size:13px}#portfolio-menu .pointer-menu-list a{min-height:44px}}
 
 /* Individual rotation composes with the existing window resize scale. */
 html[data-theme=curseurs] .construction-unit{rotate:var(--build-angle,0deg);transform-origin:center center}
@@ -84,3 +85,21 @@ html[data-theme=curseurs] .construction-unit[data-construction=waiting]{clip-pat
 
 html[data-theme=curseurs] .construction-unit:not([data-construction=done]){transform:perspective(1000px) rotateY(var(--build-flip,0deg));backface-visibility:visible}
 @media(prefers-reduced-motion:reduce){html[data-theme=curseurs] .construction-unit{transform:none!important}#portfolio-menu *{animation:none!important}}
+
+/* The opening axes describe the work, with technologies kept in the parcours. */
+.metrics strong{font-size:clamp(18px,1.9vw,25px);line-height:1.2;letter-spacing:-.7px;max-width:16ch}
+.metrics>div{min-width:0}
+.lab-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.inktober-section{background:radial-gradient(ellipse at 80% 50%,#40362d22,transparent 65%)}
+.inktober-layout{display:grid;grid-template-columns:1fr 1fr;gap:65px;align-items:center}
+.inktober-copy h2{font-size:clamp(40px,5vw,65px);line-height:1.05;margin:25px 0}
+.inktober-copy>p:not(.eyebrow){font-size:15px;line-height:1.75;color:#a8a8b8;max-width:420px}
+.inktober-copy .tags{margin:25px 0 32px}
+.inktober-board{border:1px solid #665848;background:#171513;padding:24px}
+.inktober-board-heading{display:flex;justify-content:space-between;font:9px var(--mono);letter-spacing:.1em;color:#c2aa87;padding-bottom:20px;border-bottom:1px solid #5e503e}
+.inktober-days{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;padding:22px 0}
+.inktober-days span{display:grid;place-items:center;aspect-ratio:1;border:1px solid #4f4538;font:12px var(--mono);color:#ac9778;background:#211d17}
+.inktober-days span:nth-child(5n){background:#665039;color:#f2ddbe;border-color:#a1845e}
+.inktober-board-footer{font:8px var(--mono);letter-spacing:.08em;color:#a7957a;padding-top:18px;border-top:1px solid #5e503e}
+@media(max-width:900px){.inktober-layout{gap:30px}.lab-grid{gap:18px}.metrics strong{font-size:20px}}
+@media(max-width:700px){.lab-grid{grid-template-columns:1fr}.inktober-layout{grid-template-columns:1fr;gap:32px}.inktober-copy h2{font-size:42px}.inktober-copy>p:not(.eyebrow){font-size:13px}.inktober-board{padding:18px}.metrics strong{font-size:20px}.inktober-days span{font-size:11px}}
