@@ -15,11 +15,12 @@ test('le document unique conserve les contenus, dates et liens de la page GitHub
  for(const href of [...data.projects.flatMap(p=>p.links.map(l=>l.href)),...data.atelier.projects.map(p=>p.href)])assert.ok(page.includes('href="'+href+'"'),href);
  assert.ok(!page.includes('href="https://market-plus.'));assert.ok(page.includes('2018–2025'));
 });
-test('les trois thèmes partagent un seul contenu HTML et des ancres uniques',()=>{
+test('les deux thèmes partagent un seul contenu HTML et des ancres uniques',()=>{
  const ids=[...page.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);assert.equal([...page.matchAll(/<main\b/g)].length,1);assert.ok(!/<iframe|<template|view-choice|data-view-switch/.test(page));
  for(const p of [...data.projects,...data.atelier.projects])assert.equal(ids.filter(id=>id===p.id).length,1);
- for(const name of ['points','curseurs','glitch'])assert.ok(page.includes('data-theme-choice="'+name+'"'));
+ for(const name of ['points','curseurs'])assert.ok(page.includes('data-theme-choice="'+name+'"'));
  for(const [,id] of page.matchAll(/href="#([^"]+)"/g))assert.ok(ids.includes(id),id);
+ assert.ok(!page.includes('data-theme-choice="glitch"'));assert.ok(!page.includes('glitch.css'));
  assert.ok(page.includes('portfolio.mjs'));assert.ok(!page.includes('src="/portfolio-assets/app.js'));assert.ok(!page.includes('{{'));
 });
 test('les anciennes adresses gardent le thème et la section dans le document commun',()=>{

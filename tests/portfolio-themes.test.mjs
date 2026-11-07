@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {THEMES,engineNames,normalizeTheme,createThemeManager,glitchEnvelope} from '../portfolio-assets/theme-manager.mjs';
-test('Glitch possède son propre moteur de fusion et les deux vues conservent les leurs',()=>{
- assert.deepEqual(engineNames('points'),['points']);assert.deepEqual(engineNames('curseurs'),['curseurs']);assert.deepEqual(engineNames('glitch'),['glitch']);assert.equal(normalizeTheme('invalid'),'curseurs');
- assert.deepEqual(THEMES.glitch.sources,['points','curseurs']);
+test('seules Points et Curseurs sont disponibles et les anciens choix reviennent sur Curseurs',()=>{
+ assert.deepEqual(Object.keys(THEMES),['points','curseurs']);
+ assert.deepEqual(engineNames('points'),['points']);assert.deepEqual(engineNames('curseurs'),['curseurs']);
+ for(const old of ['glitch','mixed','invalid']){assert.equal(normalizeTheme(old),'curseurs');assert.deepEqual(engineNames(old),['curseurs']);}
 });
 test('une sélection rapide annule le lancement différé du moteur précédent',async()=>{
  let finish;const calls=[],reports=[];
@@ -13,8 +14,8 @@ test('une sélection rapide annule le lancement différé du moteur précédent'
 });
 test('chaque moteur est arrêté une seule fois et reçoit la préférence de mouvement réduit',async()=>{
  const events=[];const m=createThemeManager({apply(){},load:async name=>({start:o=>{events.push(['start',name,o.reduced,o.mode]);return{stop:()=>events.push(['stop',name])};}})});
- await m.select('glitch',{reduced:true});await m.select('points',{reduced:false});m.stop();m.stop();
- assert.deepEqual(events,[['start','glitch',true,'glitch'],['stop','glitch'],['start','points',false,'points'],['stop','points']]);
+ await m.select('curseurs',{reduced:true});await m.select('points',{reduced:false});m.stop();m.stop();
+ assert.deepEqual(events,[['start','curseurs',true,'curseurs'],['stop','curseurs'],['start','points',false,'points'],['stop','points']]);
 });
 test('une erreur de démarrage nettoie le mélange et conserve le contenu lisible',async()=>{
  let stopped=0;const appearances=[],reports=[];const m=createThemeManager({registry:{...THEMES,glitch:{engines:['points','broken']}},apply:t=>appearances.push(t),report:e=>reports.push(e),load:async name=>({start:()=>{if(name==='broken')throw Error('failure');return{stop:()=>stopped++};}})});
