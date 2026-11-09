@@ -1,5 +1,4 @@
 import {ScrollConstruction} from './construction.mjs?v=scroll-physics1';
-import {startEditorPointer} from './editor-pointer.mjs';
 const completed=new WeakSet();
 export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
 const abort=new AbortController();const on=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:abort.signal});
@@ -171,7 +170,7 @@ for(const unit of construction.units){
 if(paused)construction.revealAll();else start();
 
  on(document,'visibilitychange',()=>{hidden=document.hidden;updateRoutes();if(hidden){cancelAnimationFrame(raf);raf=0}else start()});
- if(!clipFrame && document.documentElement.dataset.theme==='curseurs')startEditorPointer({signal:abort.signal,reduced});
+ on(document,'pointermove',e=>{if(!reduced){const glow=$('.mouse-glow');glow.style.left=e.clientX+'px';glow.style.top=e.clientY+'px';}},{passive:true});
  document.documentElement.dataset.cursorEngine='active';
  return {stop(){
   abort.abort();cancelAnimationFrame(raf);raf=0;routeObserver?.disconnect();if(routes)routes.classList.remove('routes-live');
