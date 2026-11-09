@@ -1,4 +1,4 @@
-import content from './content.mjs?v=editorial1';
+import content from './content.mjs?v=pratiques1';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let toastTimer;function toast(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3500)}
 $('#menu').addEventListener('click',()=>{const on=$('.nav').classList.toggle('mobile-open');$('#menu').setAttribute('aria-expanded',String(on));$('#menu').textContent=on?'×':'☰'});

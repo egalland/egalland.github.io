@@ -86,7 +86,7 @@ html[data-theme=curseurs] .construction-unit[data-construction=waiting]{clip-pat
 html[data-theme=curseurs] .construction-unit:not([data-construction=done]){transform:perspective(1000px) rotateY(var(--build-flip,0deg));backface-visibility:visible}
 @media(prefers-reduced-motion:reduce){html[data-theme=curseurs] .construction-unit{transform:none!important}#portfolio-menu *{animation:none!important}}
 
-/* The opening axes describe the work, with technologies kept in the parcours. */
+/* Opening practices and the independent October calendar. */
 .metrics strong{font-size:clamp(18px,1.9vw,25px);line-height:1.2;letter-spacing:-.7px;max-width:16ch}
 .metrics>div{min-width:0}
 .lab-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -103,3 +103,64 @@ html[data-theme=curseurs] .construction-unit:not([data-construction=done]){trans
 .inktober-board-footer{font:8px var(--mono);letter-spacing:.08em;color:#a7957a;padding-top:18px;border-top:1px solid #5e503e}
 @media(max-width:900px){.inktober-layout{gap:30px}.lab-grid{gap:18px}.metrics strong{font-size:20px}}
 @media(max-width:700px){.lab-grid{grid-template-columns:1fr}.inktober-layout{grid-template-columns:1fr;gap:32px}.inktober-copy h2{font-size:42px}.inktober-copy>p:not(.eyebrow){font-size:13px}.inktober-board{padding:18px}.metrics strong{font-size:20px}.inktober-days span{font-size:11px}}
+
+/* The signature and its wire drawing share one open composition. */
+.hero-copy{align-self:center}
+.hero-copy .eyebrow{font-size:clamp(8px,.77vw,10px);line-height:1.8;letter-spacing:.06em;color:#abbaCF;margin:0 0 22px}
+.hero h1{font-size:clamp(68px,7.7vw,108px);font-weight:550;line-height:.95;letter-spacing:-.075em;margin:14px 0 38px}
+.hero h1 .muted{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-style:italic;letter-spacing:-.065em;color:#b4c4e5}
+.hero-copy .actions{align-items:center;gap:22px}
+.hero-copy .text-link{align-self:center}
+.signature-plate{position:relative;width:100%;aspect-ratio:4/3}
+.signature-routes{color:#536079;overflow:visible}
+.signature-contours{opacity:.95}
+.registration-marks{stroke-width:1}
+.hero .metrics{margin-top:54px}
+.work,.atelier,.about,.contact,.inktober-section{border-top:1px solid var(--line)}
+.inktober-copy .button{margin-top:24px}
+.inktober-days{padding-bottom:0}
+.practice-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:clamp(32px,6vw,88px);align-items:start}
+.practice-layout h2{margin:0}
+.practice-list{min-width:0;padding:0;margin:0;list-style:none}
+.practice-list li{border-top:1px solid var(--line)}
+.practice-list li:last-child{border-bottom:1px solid var(--line)}
+.practice-row{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:baseline;padding:18px 0 21px}
+.practice-verb{font-size:clamp(20px,2.2vw,32px);letter-spacing:-.04em;font-weight:500}
+.practice-words{grid-row:2;grid-column:1/-1;color:#aeb3bf;font:12px/1.7 var(--mono);margin-top:4px}
+.practice-project{grid-row:1;grid-column:2;align-self:center;font:11px/1.5 var(--mono);color:#b7caea}
+.practice-project i{font-style:normal}
+.practice-row:is(:hover,:focus-visible) .practice-project{text-decoration:underline;text-underline-offset:4px}
+.practice-row:focus-visible{outline:1px solid #a7c9ff;outline-offset:4px}
+.pills-window{display:grid;place-items:center;min-height:300px;background:radial-gradient(ellipse at 70% 30%,#6a4959,#382e42 65%,#242434)}
+.pills-strip{width:108%;padding:20px 0;background:#17151c;box-shadow:0 12px 30px #1210178c;transform:rotate(-6deg);position:relative}
+.pills-strip::before,.pills-strip::after{content:"";position:absolute;left:0;width:100%;height:6px;background:repeating-linear-gradient(90deg,transparent 0 9px,#71616c 9px 17px,transparent 17px 25px)}
+.pills-strip::before{top:7px}.pills-strip::after{bottom:7px}
+.pills-frames{display:grid;gap:5px;grid-template-columns:repeat(3,1fr);padding:0 5%}
+.pills-frame{background:#e5c2b1;color:#392c36;min-width:0;display:grid;grid-template-rows:1fr auto;justify-items:center;align-items:center;padding:18px 6px 10px;aspect-ratio:.88}
+.pills-frame:nth-child(2){background:#d9bbd6}.pills-frame:nth-child(3){background:#bacadd}
+.pills-frame span{font:italic clamp(20px,3vw,36px)/1.1 "Instrument Serif",Georgia,serif;letter-spacing:-.045em}
+.pills-frame i{display:block;width:min(80%,66px);aspect-ratio:1;position:relative}
+.pills-reel{border:2px solid currentColor;border-radius:50%;background:
+  radial-gradient(circle at 50% 20%,currentColor 0 12%,transparent 13%),
+  radial-gradient(circle at 79% 42%,currentColor 0 12%,transparent 13%),
+  radial-gradient(circle at 68% 75%,currentColor 0 12%,transparent 13%),
+  radial-gradient(circle at 32% 75%,currentColor 0 12%,transparent 13%),
+  radial-gradient(circle at 21% 42%,currentColor 0 12%,transparent 13%),
+  radial-gradient(circle at center,currentColor 0 6%,transparent 7%)}
+.pills-pages::before,.pills-pages::after{position:absolute;content:"";top:18%;bottom:14%;width:47%;border:2px solid currentColor;background:repeating-linear-gradient(0deg,transparent 0 7px,#392c3655 7px 8px)}
+.pills-pages::before{left:3%;transform:skewY(12deg)}.pills-pages::after{left:50%;transform:skewY(-12deg)}
+.pills-screens::before{content:"";position:absolute;inset:22% 14% 25% 0;border:2px solid currentColor;box-shadow:4px -4px #bacadd,5px -5px currentColor,8px -8px #bacadd,9px -9px currentColor}
+.pills-screens::after{content:"";position:absolute;left:34%;top:41%;width:0;height:0;border:7px solid transparent;border-right:0;border-left:10px solid currentColor}
+@media(max-width:700px){
+  .hero h1{font-size:clamp(54px,12vw,76px);margin:10px 0 27px}
+  .hero .hero-art{margin:24px auto 0}
+  .signature-plate{max-height:250px}
+  .hero .metrics{margin-top:25px}
+  .practice-layout{grid-template-columns:1fr;gap:28px}
+  .practice-words{font-size:11px}
+  .pills-window{min-height:225px}
+}
+@media(max-width:380px){
+  .practice-row{grid-template-columns:1fr;gap:3px}
+  .practice-project{grid-row:3;grid-column:1}
+}

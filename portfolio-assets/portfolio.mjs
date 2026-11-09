@@ -1,6 +1,6 @@
-import './portfolio-content.mjs?v=editorial1';
+import './portfolio-content.mjs?v=pratiques1';
 import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=wheel2';
-import {createPortfolioMenu} from './context-menu.mjs?v=editorial1';
+import {createPortfolioMenu} from './context-menu.mjs?v=pratiques1';
 
 const root=document.documentElement,buttons=[...document.querySelectorAll('[data-theme-choice]')],status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');

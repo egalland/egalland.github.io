@@ -10,17 +10,16 @@
     "github": "https://github.com/egalland"
   },
   "hero": {
-    "eyebrowHtml": "<span class=\"status-dot\"></span> DÉVELOPPEMENT <span class=\"slash\">/</span> DONNÉES <span class=\"slash\">/</span> AUTOMATISATION",
+    "eyebrowHtml": "JEUX DE MOTS <span class=\"slash\">/</span> IMAGES EN MOUVEMENT <span class=\"slash\">/</span> OUTILS SUR MESURE",
     "titleHtml": "Emmanuel<br><span class=\"muted\">Galland.</span>",
-    "intro": "Du code aux outils métier. Je crée des applications web, des automatisations et des expériences interactives.",
     "actions": [
       {
-        "label": "Explorer mes projets",
+        "label": "Voir les projets",
         "href": "#work",
         "external": false
       },
       {
-        "label": "Mon parcours",
+        "label": "Pratiques",
         "href": "#about",
         "external": false
       }
@@ -47,13 +46,13 @@
   "projects": [
     {
       "id": "market-plus",
-      "category": "01 / OUTIL MÉTIER",
+      "category": "OUTIL MÉTIER",
       "status": "● INTERNE",
       "title": "Market Plus",
-      "description": "Réunir les points marché, les tickets Jira, les simulations et les évolutions tarifaires dans un même outil de présentation.",
+      "description": "Assembler tickets Jira, simulations et variations de prix pour préparer le point marché.",
       "tags": [
-        "Données métier",
         "Automatisation",
+        "Imports de données",
         "Tableaux de bord"
       ],
       "links": [
@@ -71,14 +70,14 @@
     },
     {
       "id": "kikalmo",
-      "category": "02 / JEU WEB",
+      "category": "JEU WEB",
       "status": "● À JOUER",
       "title": "Kikalmo",
-      "description": "Un jeu de mots sans voyelles. Des salons, des manches rapides, un mot du jour et des personnages à personnaliser.",
+      "description": "Retrouver les voyelles d’un mot avant les autres joueurs.",
       "tags": [
+        "Jeu de lettres",
         "Multijoueur",
-        "Mot du jour",
-        "Personnalisation"
+        "Avatars"
       ],
       "links": [
         {
@@ -91,14 +90,14 @@
     },
     {
       "id": "maison",
-      "category": "03 / OUTILS DE CONCEPTION",
+      "category": "CONCEPTION 3D",
       "status": "● INTERACTIF",
       "title": "Maison",
-      "description": "Visualiser les travaux avant de les réaliser. Plans de cuisine, aménagement et simulation d’un tableau électrique en 3D.",
+      "description": "Tracer les murs d’une cuisine, déplacer les meubles et composer un tableau électrique en 3D.",
       "tags": [
-        "Plans & volumes",
-        "Three.js",
-        "Interactions 3D"
+        "Plans à l’échelle",
+        "Volumes",
+        "Three.js"
       ],
       "links": [
         {
@@ -116,92 +115,99 @@
     },
     {
       "id": "bodyos",
-      "category": "04 / APPLICATION PERSONNELLE",
+      "category": "CARNET D’ENTRAÎNEMENT",
       "status": "● PRIVÉ",
       "title": "BodyOS",
-      "description": "Organiser l’entraînement, suivre ses objectifs et retrouver sa progression dans une interface personnelle.",
+      "description": "Consigner ses séances et suivre sa progression d’un entraînement à l’autre.",
       "tags": [
-        "Suivi personnel",
-        "Entraînement",
+        "Historique",
+        "Objectifs",
         "Visualisation"
       ],
       "links": [],
       "details": true
+    },
+    {
+      "id": "pills",
+      "category": "CRITIQUE CULTURELLE",
+      "status": "● CODE PUBLIC",
+      "title": "Pills",
+      "description": "Écrire sa critique d’un film, d’une série ou d’un livre, puis en discuter.",
+      "tags": [
+        "Cinéma",
+        "Écriture critique",
+        "Catalogue d’œuvres"
+      ],
+      "links": [
+        {
+          "label": "Code source",
+          "href": "https://github.com/egalland/Pills",
+          "external": true
+        }
+      ],
+      "details": false
     }
   ],
   "atelier": {
-    "titleHtml": "D’autres idées.<br><span class=\"muted\">À ouvrir.</span>",
-    "descriptionHtml": "Trois outils pour transformer les documents,<br>les images et les connaissances.",
+    "titleHtml": "L’<span class=\"muted\">atelier.</span>",
     "projects": [
       {
         "id": "livre",
-        "category": "01 / DOCUMENTS",
+        "category": "DOCUMENTS",
         "title": "Atelier du livre",
-        "description": "Transformer un PDF en livre à feuilleter, puis l’exporter en HTML autonome.",
-        "tagline": "PDF → LIVRE INTERACTIF",
+        "description": "Feuilleter un PDF comme un livre et l’exporter en HTML.",
+        "tagline": "PDF → HTML",
         "href": "/livre/"
       },
       {
         "id": "redim",
-        "category": "02 / IMAGES",
+        "category": "IMAGES",
         "title": "Redim",
-        "description": "Redimensionner, cadrer et compresser des images directement dans le navigateur.",
-        "tagline": "CADRER · AJUSTER · EXPORTER",
+        "description": "Recadrer, redimensionner et compresser une image dans le navigateur.",
+        "tagline": "TRAITEMENT D’IMAGE",
         "href": "/redim/"
       },
       {
         "id": "atlas",
-        "category": "03 / EXPLORATION",
+        "category": "CARTOGRAPHIE",
         "title": "Atlas / WikiCartes",
-        "description": "Explorer les connaissances de Wikipédia à travers des cartes.",
-        "tagline": "CARTOGRAPHIER LES IDÉES",
+        "description": "Parcourir Wikipédia sur une carte, d’un article au suivant.",
+        "tagline": "WIKIPÉDIA",
         "href": "https://wikicartes.emmanuel-galland117.chatgpt.site"
       }
     ]
   },
   "about": {
-    "titleHtml": "Le code.<br><span class=\"muted\">Le terrain.</span>",
-    "description": "Développeur de formation, aujourd’hui Analyste Tarif & Référentiel chez DMBP, groupe Saint-Gobain. Je construis des outils à partir d’usages concrets.",
-    "manifesto": "Comprendre le besoin. Construire. Tester. Améliorer.",
-    "interests": [
-      "Cinéma",
-      "Astronomie",
-      "Interfaces 3D"
-    ],
-    "timeline": [
+    "titleHtml": "Savoir<span class=\"muted\">-faire.</span>",
+    "practices": [
       {
-        "date": "2016",
-        "label": "Licence informatique",
-        "note": "Les fondations techniques."
+        "verb": "Animer",
+        "words": "Particules 3D · Interfaces en mouvement",
+        "project": "Portfolio",
+        "href": "#home"
       },
       {
-        "date": "2019",
-        "label": "Formation développement web",
-        "note": "Applications et projets concrets."
+        "verb": "Inventer",
+        "words": "Règles de jeu · Multijoueur",
+        "project": "Kikalmo",
+        "href": "#kikalmo"
       },
       {
-        "date": "2018–2025",
-        "label": "Développement React & freelance",
-        "note": "Du frontend au backend."
+        "verb": "Relier",
+        "words": "Modélisation de données · Catalogues d’œuvres",
+        "project": "Pills",
+        "href": "#pills"
       },
       {
-        "date": "2025 →",
-        "label": "Tarif & Référentiel · DMBP",
-        "note": "Données, outils métier et automatisation."
+        "verb": "Automatiser",
+        "words": "Imports de données · Tableaux de bord",
+        "project": "Market Plus",
+        "href": "#market-plus"
       }
-    ],
-    "skills": [
-      "REACT",
-      "JAVASCRIPT / TYPESCRIPT",
-      "NODE.JS",
-      "NOSQL / SQL",
-      "EXCEL / VBA",
-      "THREE.JS"
     ]
   },
   "contact": {
-    "titleHtml": "Toujours une idée<br><span class=\"muted\">en cours.</span>",
-    "description": "Retrouver mes projets et leur code.",
+    "titleHtml": "Code <span class=\"muted\">source.</span>",
     "links": [
       {
         "label": "Mon GitHub",
@@ -211,30 +217,28 @@
     ]
   },
   "projectsHeading": {
-    "titleHtml": "Des idées.<br><span class=\"muted\">Des applications.</span>",
-    "descriptionHtml": "Du quotidien professionnel aux projets personnels.<br>Quatre terrains de création."
+    "titleHtml": "Pièces <span class=\"muted\">choisies.</span>"
   },
   "details": {
     "market": {
       "category": "OUTIL MÉTIER / INTERNE",
       "title": "Market Plus",
-      "description": "Un outil pour préparer et présenter les points marché. La présentation du portfolio reste schématique.",
+      "description": "Préparer le point marché.",
       "features": [
-        "Points marché composés en blocs.",
-        "Tickets Jira, simulations et suivi des promotions.",
-        "Variations fournisseurs et imports de données.",
-        "Exports et présentation des informations utiles."
+        "Assembler le point en blocs.",
+        "Suivre les tickets, les simulations et les promotions.",
+        "Importer les variations fournisseurs."
       ],
       "url": null
     },
     "bodyos": {
       "category": "APPLICATION PERSONNELLE / PRIVÉ",
       "title": "BodyOS",
-      "description": "Un espace personnel pour réunir les séances, les objectifs et la progression. Seule l’approche du projet est présentée ici.",
+      "description": "Un carnet pour retrouver ses séances.",
       "features": [
-        "Organisation du suivi dans une même interface.",
-        "Historique et visualisation de la progression.",
-        "Lecture simple des informations utiles."
+        "Historique des entraînements.",
+        "Suivi des objectifs.",
+        "Courbes de progression."
       ],
       "url": null
     }
@@ -243,9 +247,10 @@
     "id": "inktober",
     "category": "EXPÉRIMENTATIONS / OCTOBRE 2026",
     "title": "Inktober",
-    "description": "Des mots transformés en jeux, en outils et en expériences web.",
+    "description": "Un mot d’octobre devient un jeu, un outil ou une expérience à manipuler.",
     "tagline": "LE CALENDRIER DES OMBRES",
     "href": "/inktober-2026/",
-    "titleHtml": "Un mot.<br><span class=\"muted\">Une expérience.</span>"
-  }
+    "titleHtml": "Le calendrier<br><span class=\"muted\">des ombres.</span>"
+  },
+  "metaDescription": "Le portfolio interactif d’Emmanuel Galland. Jeux de mots, images en mouvement, critiques de cinéma et outils sur mesure."
 }

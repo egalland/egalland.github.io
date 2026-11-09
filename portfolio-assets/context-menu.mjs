@@ -1,4 +1,4 @@
-export const QUICK_DESTINATIONS=['market-plus','kikalmo','maison','bodyos','atelier','inktober','about'];
+export const QUICK_DESTINATIONS=['market-plus','kikalmo','maison','bodyos','pills','atelier','inktober','about'];
 export function preservesNativeMenu(target,{shiftKey=false,selection=''}={}){
  return shiftKey||Boolean(selection.trim())||Boolean(target?.closest?.('a,input,textarea,select,[contenteditable],dialog,#portfolio-menu'));
 }
@@ -7,13 +7,13 @@ export function preservesNativeMenu(target,{shiftKey=false,selection=''}={}){
 export function createPortfolioMenu({getState,onTheme,onPause}){
  const abort=new AbortController(),on=(el,type,fn)=>el.addEventListener(type,fn,{signal:abort.signal});
  const menu=document.createElement('div');menu.id='portfolio-menu';menu.setAttribute('popover','auto');menu.setAttribute('aria-label','Outils de navigation');
- menu.innerHTML='<div class="pointer-menu-heading"><svg viewBox="0 0 28 32" aria-hidden="true"><path d="M2 2L7 27L13 19L23 18Z"/></svg><span>Naviguer dans le portfolio</span><button type="button" class="close-menu" aria-label="Fermer la navigation">×</button></div><nav class="pointer-menu-list" aria-label="Projets et parcours"><a class="pointer-home" href="#home"><span>Accueil</span><small>↑</small></a></nav><div class="pointer-menu-footer"><button type="button" data-open-points>Vue Points ↗</button><button type="button" class="menu-motion"></button></div>';
+ menu.innerHTML='<div class="pointer-menu-heading"><svg viewBox="0 0 28 32" aria-hidden="true"><path d="M2 2L7 27L13 19L23 18Z"/></svg><span>Naviguer dans le portfolio</span><button type="button" class="close-menu" aria-label="Fermer la navigation">×</button></div><nav class="pointer-menu-list" aria-label="Projets et pratiques"><a class="pointer-home" href="#home"><span>Accueil</span><small>↑</small></a></nav><div class="pointer-menu-footer"><button type="button" data-open-points>Vue Points ↗</button><button type="button" class="menu-motion"></button></div>';
  const map=menu.querySelector('.pointer-menu-list');
  QUICK_DESTINATIONS.forEach((id,i)=>{
   const target=document.getElementById(id);if(!target)return;
   const link=document.createElement('a');link.className='pointer-menu-item';link.href='#'+id;link.dataset.destination=id;
   const number=document.createElement('small');number.textContent=String(i+1).padStart(2,'0');
-  const label=document.createElement('span');label.textContent=id==='atelier'?'L’atelier':id==='inktober'?'Inktober':id==='about'?'Parcours':target.querySelector('h3').textContent;
+  const label=document.createElement('span');label.textContent=id==='atelier'?'L’atelier':id==='inktober'?'Inktober':id==='about'?'Pratiques':target.querySelector('h3').textContent;
   link.append(number,label);const arrow=document.createElement('i');arrow.textContent='↵';arrow.setAttribute('aria-hidden','true');link.append(arrow);map.append(link);
  });
  const motion=menu.querySelector('.menu-motion'),explorer=document.createElement('button');

@@ -69,7 +69,7 @@ Les huit commits disponibles du portfolio d’origine sont conservés exactement
 
 La carte réelle des composants et de leurs dépendances est disponible à part sur [/map/](https://egalland.github.io/map/) : 259 composants, 925 liaisons, filtres par famille, recherche et fiches de dépendances. Elle reprend la vue « Explorer le code » de Point marché, avec son moteur Three.js et une projection 2D de secours. Les références et les quatre étapes de source disponibles sont conservées dans `map/SOURCE.md` et `map/source-history.patch`.
 
-L’accueil conserve la présentation de Market Plus et son aperçu schématique, sans carte embarquée ni lien vers l’outil interne. Les dates du parcours et les autres sous-sites sont préservés.
+L’accueil conserve la présentation de Market Plus et son aperçu schématique, sans carte embarquée ni lien vers l’outil interne.
 
 ## Thèmes du portfolio
 
@@ -96,6 +96,6 @@ Validation : tests de contenu partagé, routes, géométries, continuité des tr
 
 ### Sélection du portfolio
 
-Les quatre axes d’ouverture présentent le profil hybride : Outils métier, Automatisation, Données & référentiels, Expériences web. Les technologies restent dans le parcours, avec NoSQL avant SQL.
+L’accueil présente quatre domaines de pratique. La rubrique Savoir-faire relie chaque geste à un projet. Pills, plateforme de critique culturelle, figure dans les deux vues avec [son dépôt public](https://github.com/egalland/Pills).
 
 L’Atelier contient uniquement Atelier du livre, Redim et Atlas. Four en route et Biscuit du jour sont retirés de la sélection, sans suppression de leurs sous-sites. Inktober dispose d’une section dédiée et de sa propre entrée dans les navigations Curseurs et Points. Les constantes de navigation Points correspondent aux 17 tableaux générés.

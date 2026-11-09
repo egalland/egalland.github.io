@@ -8,15 +8,31 @@ import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url)),read=name=>fs.readFileSync(root+name,'utf8');
 const data=JSON.parse(read('portfolio/content.json')),page=read('index.html');
 const text=html=>html.replace(/<[^>]*>/g,' ').replaceAll('&amp;','&').replaceAll('&gt;','>').replaceAll('&lt;','<').replaceAll('&quot;','"').replace(/\s+/g,' ').trim();
-const original=execFileSync('git',['show',data.source.commit+':index.html'],{cwd:root,encoding:'utf8'});
-test('la vue Curseurs conserve les contenus, dates et liens de la page GitHub',()=>{
- const values=[data.hero.intro,...data.projects.map(p=>p.description),...data.atelier.projects.map(p=>p.description),data.about.description,data.about.manifesto,data.contact.description];
- for(const value of values){assert.ok(text(original).includes(value));assert.ok(text(page).includes(value),value);}
- for(const t of data.about.timeline)for(const k of ['date','label','note'])assert.ok(text(page).includes(t[k]),t[k]);
- for(const href of [...data.projects.flatMap(p=>p.links.map(l=>l.href)),...data.atelier.projects.map(p=>p.href)])assert.ok(page.includes('href="'+href+'"'),href);
- assert.ok(!page.includes('href="https://market-plus.'));assert.ok(page.includes('2018–2025'));
+test('les deux modes présentent les gestes, les projets et leurs liens depuis la même source',()=>{
+ for(const html of [page,read('points/index.html')]){
+  const shown=text(html);
+  for(const item of [...data.projects,...data.atelier.projects,data.inktober]){
+   assert.ok(shown.includes(item.description),item.id);
+   for(const href of item.links?.map(link=>link.href)??[item.href])assert.ok(html.includes('href="'+href+'"'),href);
+  }
+  for(const practice of data.about.practices){
+   for(const value of [practice.verb,practice.words,practice.project])assert.ok(shown.includes(value),value);
+   assert.ok(html.includes('href="'+practice.href+'"'),practice.href);
+  }
+  assert.ok(shown.includes('Savoir-faire.')||shown.includes('Savoir -faire.'));
+  assert.doesNotMatch(shown,/Analyste Tarif|Saint-Gobain|Licence informatique|Mon parcours/i);
+  assert.ok(!html.includes('href="https://market-plus.'));
+ }
 });
-test('la vue Curseurs conserve ses ancres uniques et des ancres uniques',()=>{
+test('Pills est une pièce autonome dans les deux présentations et donne accès au dépôt public',()=>{
+ for(const html of [page,read('points/index.html')]){
+  const pills=html.match(/<(article|section)\b[^>]*\bid="pills"[^>]*>([\s\S]*?)<\/\1>/);
+  assert.ok(pills);
+  assert.match(pills[2],/href="https:\/\/github\.com\/egalland\/Pills"/);
+  for(const tag of data.projects.find(project=>project.id==='pills').tags)assert.ok(text(pills[2]).includes(tag),tag);
+ }
+});
+test('la vue Curseurs conserve des ancres uniques dans un document autonome',()=>{
  const ids=[...page.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);assert.equal([...page.matchAll(/<main\b/g)].length,1);assert.ok(!/<iframe|<template|view-choice|data-view-switch/.test(page));
  for(const p of [...data.projects,...data.atelier.projects,data.inktober])assert.equal(ids.filter(id=>id===p.id).length,1);
  for(const name of ['points','curseurs'])assert.ok(page.includes('data-theme-choice="'+name+'"'));
@@ -40,8 +56,7 @@ test('les dossiers des applications restent hors du périmètre des modification
 test('Points retrouve ses tableaux indépendants avec les mêmes contenus et liens',()=>{
  const points=read('points/index.html');assert.ok(points.includes('id="particles"'));assert.equal([...points.matchAll(/data-scene=/g)].length,17);
  for(const p of [...data.projects,...data.atelier.projects,data.inktober]){assert.ok(text(points).includes(p.description),p.id);assert.ok(points.includes('id="'+p.id+'"'));}
- for(const t of data.about.timeline)assert.ok(text(points).includes(t.date));
- assert.ok(!points.includes('portfolio.mjs'));assert.ok(points.includes('app.js?v=editorial1'));
+ assert.ok(!points.includes('portfolio.mjs'));assert.match(points,/<script type="module" src="app\.js(?:\?[^"]*)?"/);
 });
 
 test('la sélection conserve trois outils et donne une section et une entrée propres à Inktober',()=>{
@@ -51,8 +66,7 @@ test('la sélection conserve trois outils et donne une section et une entrée pr
   assert.match(html,/<section[^>]*id="inktober"/);assert.ok(html.includes('href="/inktober-2026/"'));
  }
  assert.ok(!/<a class="lab-card[^>]*id="inktober"/.test(page));
- for(const axis of data.hero.metrics)assert.ok(text(page).includes(axis.value));
- assert.ok(text(page).includes('NOSQL / SQL'));
+ for(const axis of data.hero.metrics)for(const html of [page,read('points/index.html')])assert.ok(text(html).includes(axis.value),axis.value);
 });
 test('tous les groupes et le dernier tableau Points suivent les scènes réellement générées',()=>{
  const html=read('points/index.html');

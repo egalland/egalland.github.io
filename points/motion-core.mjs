@@ -1,8 +1,19 @@
 export const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
 export const mix=(a,b,t)=>a+(b-a)*t;
 export const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
-export const PROJECT_STARTS=[1,3,6,8,10,13,14];
-export const LAST_SCENE=16;
+// Each group owns consecutive tableaux between the opening and closing scenes.
+export const PROJECT_GROUPS = [
+ {id:'market-plus', count:2}, {id:'kikalmo', count:3}, {id:'maison', count:2},
+ {id:'bodyos', count:2}, {id:'pills', count:1}, {id:'livre', count:3},
+ {id:'inktober', count:1}, {id:'about', count:1}
+];
+export const PROJECT_STARTS = [];
+let nextScene = 1;
+for (const {count} of PROJECT_GROUPS) {
+ PROJECT_STARTS.push(nextScene);
+ nextScene += count;
+}
+export const LAST_SCENE = nextScene;
 export const projectFor=i=>i<1||i>=LAST_SCENE?-1:PROJECT_STARTS.findLastIndex(start=>start<=i);
 export const nextProjectFor=i=>PROJECT_STARTS.find(start=>start>i)??(i<LAST_SCENE?LAST_SCENE:0);
 // The gesture selects a destination. The formation then completes on its own clock.

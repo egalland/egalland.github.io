@@ -1,4 +1,4 @@
-import {magneticDestination,formationProgress,cursorForce,springStep,projectFor,nextProjectFor,PROJECT_STARTS,LAST_SCENE} from './motion-core.mjs?v=editorial1';
+import {magneticDestination,formationProgress,cursorForce,springStep,projectFor,nextProjectFor,PROJECT_STARTS,LAST_SCENE} from './motion-core.mjs?v=pratiques1';
 import {resamplePoints,particlePosition} from './point-motion.mjs';
 import imageAssets from './assets/images.mjs';
 const $ = (s) => document.querySelector(s);
@@ -19,7 +19,8 @@ const sourcePalettes = [
   ['#10171b','#e8f0ea','#a3ec9d','#8d9fa2'],
   ['#eee8dc','#283c4b','#8e532c','#655f52'],
   ['#e7edf0','#193744','#156e82','#50646c'],
-  ['#eeeae3','#171716','#f23625','#69675f']
+  ['#eeeae3','#171716','#f23625','#69675f'],
+  ['#191622','#f2eada','#ed977e','#bcb2c0']
 ];
 const palettes=sections.map(s=>sourcePalettes[Number(s.dataset.theme)]||sourcePalettes[0]);
 const range = (v,a,b) => Math.min(b,Math.max(a,v));
@@ -146,21 +147,49 @@ async function buildForms(){
  // Atlas: a globe whose meridians and latitude lines carry the same matter.
  for(let ring=0;ring<10;ring++)for(let i=0;i<370;i++){const a=i/370*Math.PI*2,t=ring/10*Math.PI;points.push(point(Math.cos(a)*Math.sin(t)*1.42,Math.cos(t)*1.42,Math.sin(a)*Math.sin(t)*1.42,ring%3?'#283c4b':'#a46636',.82));}
  for(let ring=0;ring<10;ring++)for(let i=0;i<230;i++){const a=i/230*Math.PI*2,t=ring/10*Math.PI;points.push(point(Math.cos(a)*Math.cos(t)*1.42,Math.sin(a)*1.42,Math.cos(a)*Math.sin(t)*1.42,'#61796f',.8));}finish();
- // Four en route: three independent dials with hands and name fields.
- for(let dial=0;dial<3;dial++){const x=(dial-1)*1.28,y=dial===1?.27:-.25,z=(dial-1)*.18,c=['#8e532c','#c06b39','#5e786b'][dial];
-  for(let ring=0;ring<2;ring++)for(let i=0;i<700;i++){const a=i/700*Math.PI*2,r=.54-ring*.04;points.push(point(x+Math.cos(a)*r,y+Math.sin(a)*r,z,c,.95));}
-  for(let tick=0;tick<12;tick++){const a=tick/12*Math.PI*2;line([x+Math.cos(a)*.43,y+Math.sin(a)*.43,z],[x+Math.cos(a)*.48,y+Math.sin(a)*.48,z],25,c);}
-  line([x,y,z+.02],[x+.26*Math.sin(dial+1),y+.26*Math.cos(dial+1),z+.02],120,'#283c4b');line([x,y,z+.02],[x-.15,y+.07,z+.02],80,'#283c4b');rect(x-.43,y-.85,.86,.2,z,c,200);
- }finish();
- // A biscuit, its fold and a short paper fortune: no bitmap layer.
- for(let i=0;i<6200;i++){const a=random()*Math.PI*2,r=Math.sqrt(random()),x=Math.cos(a)*r*1.5,y=Math.sin(a)*r*.95,z=Math.sqrt(1-r*r)*.38;points.push(point(x,y,z,i%13===0?'#704c33':i%3?'#a76b39':'#bc8c50',.85));}
- line([-1.4,-.05,.22],[1.35,-.05,.22],480,'#61422d');rect(.4,-.24,1.43,.42,.35,'#8e7356',500);for(let i=0;i<3;i++)line([.58,-.12+i*.09,.36],[1.58,-.12+i*.09,.36],100,'#655f52');finish();
+ // Pills: a curved film strip with ten perforations along each edge.
+ const film = (x,y) => [x,y+.17*Math.sin(x*1.4),.42*Math.cos(x*1.4)];
+ const filmEdge = (x1,x2,y,count,ink) => {
+  const parts = Math.ceil((x2-x1)*16);
+  for(let part=0;part<parts;part++){
+   const from = lerp(x1,x2,part/parts), to = lerp(x1,x2,(part+1)/parts);
+   line(film(from,y),film(to,y),count/parts,ink);
+  }
+ };
+ for(const side of [-1,1]){
+  filmEdge(-1.95,1.95,side*.86,680,'#f6ddad');
+  filmEdge(-1.95,1.95,side*.59,360,'#ac87a4');
+  for(let hole=0;hole<10;hole++){
+   const x=-1.84+hole*.38, y=side*.73;
+   for(const edge of [-1,1]){
+    filmEdge(x,x+.22,y+edge*.055,45,'#ed977e');
+    const end=edge===1?x+.22:x;
+    line(film(end,y-.055),film(end,y+.055),35,'#ed977e');
+   }
+  }
+ }
+ for(let frame=0;frame<3;frame++){
+  const x=-1.85+frame*1.26, end=x+1.15;
+  for(const edge of [-1,1]){
+   filmEdge(x,end,edge*.48,240,'#eac49b');
+   const side=edge===1?end:x;
+   line(film(side,-.48),film(side,.48),140,'#eac49b');
+  }
+ }
+ finish();
  // Inktober: thirty-one cells arranged like a calendar.
  rect(-1.9,-1.33,3.8,2.62,0,'#283c4b',600);line([-1.9,.98,0],[1.9,.98,0],200,'#8e532c');
  for(let day=0;day<31;day++){const col=day%7,row=Math.floor(day/7),x=-1.72+col*.51,y=.52-row*.4;rect(x,y,.4,.29,.03,day%5===0?'#a46636':'#61796f',100);textCloud(String(day+1),x+.2,y+.15,75,'#283c4b','Redline',.48);}finish();
- // A continuous thread through the four milestones of the shared timeline.
- const milestones=[[-1.5,.72,0],[-.55,.25,.15],[.47,.7,.3],[1.48,-.1,.1]];
- for(let i=0;i<milestones.length;i++){const [x,y,z]=milestones[i];for(let k=0;k<700;k++){const a=k/700*Math.PI*2;points.push(point(x+Math.cos(a)*.2,y+Math.sin(a)*.2,z,'#dd4633',1));}line([x,y-.24,z],[x,-1.15,z],180,'#657365');if(i)line(milestones[i-1],milestones[i],400,'#283c4b');}finish();
+ // Four continuous strands share a centre and cross in different planes.
+ const inks=['#db412a','#283c4b','#89795d','#508071'];
+ for(let strand=0;strand<inks.length;strand++){
+  const phase=strand*Math.PI/2;
+  for(let bead=0;bead<1600;bead++){
+   const t=bead/1600*Math.PI*2, radius=1.1+.53*Math.cos(2*t+phase);
+   points.push(point(radius*Math.cos(t),radius*Math.sin(t),.48*Math.sin(2*t+phase),inks[strand],1));
+  }
+ }
+ finish();
 }
 
 let gl=null,ctx=null,program,buffers={},useGL=false;
@@ -220,6 +249,13 @@ function setScene(index){
  $('#formationLabel').textContent=labels[index];$('#sceneNumber').textContent=String(index).padStart(2,'0');$('#currentFrame').textContent=String(index).padStart(2,'0');$('#stepLabel').textContent=frameTitles[index];
  $('#previousFrame').disabled=index===0;$('#nextFrame').disabled=index===LAST_SCENE;
  const p=projectFor(index);document.querySelectorAll('[data-project]').forEach((a,k)=>{a.classList.toggle('active',p===k);if(p===k)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current');const start=PROJECT_STARTS[k];[...a.querySelectorAll('b')].forEach((bar,n)=>bar.className=index>start+n?'past':index===start+n?'now':'');});
+ // Keep the active label in view without moving the vertical scene track.
+ const dock=document.querySelector('.project-dock'), active=dock.querySelector('.active');
+ if(active && dock.scrollWidth>dock.clientWidth){
+  const left=active.offsetLeft, right=left+active.offsetWidth;
+  if(left<dock.scrollLeft)dock.scrollLeft=left;
+  else if(right>dock.scrollLeft+dock.clientWidth)dock.scrollLeft=right-dock.clientWidth;
+ }
  root.dataset.scene=String(index);root.dataset.project=String(p);const viewToggle=$('[data-view-switch]');if(viewToggle)viewToggle.href='/?theme=curseurs#'+sections[index].dataset.cursor;document.body.classList.toggle('is-intro',index===0);
  root.dataset.flowingPoints=String(forms[index].filter(p=>p.track).length);
  $('#interactionStatus').textContent=frameTitles[index];
@@ -316,7 +352,15 @@ $('#restartButton').addEventListener('click',()=>{closeMenu();goScene(0)});
 $('#motionButton').addEventListener('click',()=>{if(mq.matches)return;paused=!paused;userPause=paused;try{localStorage.setItem('redline-lab-motion',paused?'paused':'active')}catch{}updateMotion();});
 mq.addEventListener('change',e=>{reduced=e.matches;if(userPause===null)paused=reduced;updateMotion()});
 $('#nextFrame').addEventListener('click',()=>goScene(activeScene+1));$('#previousFrame').addEventListener('click',()=>goScene(activeScene-1));$('#nextProject').addEventListener('click',()=>goScene(nextProjectFor(activeScene)));
-document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const index=sections.findIndex(s=>'#'+s.id===a.getAttribute('href'));if(index<0)return;e.preventDefault();closeMenu();goScene(index)});
+function sceneForHash(hash){
+ const id=hash==='#parcours'?'about':hash.slice(1);
+ return sections.findIndex(section=>section.id===id);
+}
+addEventListener('hashchange',()=>{
+ const index=sceneForHash(location.hash);
+ if(ready && index>=0)goScene(index);
+});
+document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const index=sceneForHash(a.getAttribute('href'));if(index<0)return;e.preventDefault();closeMenu();goScene(index)});
 document.addEventListener('contextmenu',e=>{if(e.shiftKey||window.getSelection()?.toString().trim()||e.target.closest('a,input,textarea,[contenteditable],dialog,#projectMenu'))return;e.preventDefault();openMenu(e.clientX,e.clientY)});
 document.addEventListener('pointermove',e=>{
  if(e.pointerType==='touch'){if(Math.abs(e.clientY-dragY)>12)pointer.down=false;return}
@@ -350,7 +394,7 @@ document.addEventListener('keydown',e=>{
 const track=document.createElement('div');track.className='scene-track';track.setAttribute('aria-hidden','true');sections.forEach((s,i)=>{const a=document.createElement('div');a.className='scene-anchor';a.dataset.scene=String(i);track.append(a)});document.querySelector('main').append(track);
 try{
  await buildForms();const sourceForms=forms.splice(0);for(const section of sections){const form=sourceForms[Number(section.dataset.formation)];if(!form)throw new Error("Formation inconnue");forms.push(form);}startRenderer();ready=true;
- const linked=sections.findIndex(s=>'#'+s.id===location.hash);const index=linked>=0?linked:sceneAtScroll();goScene(index,true);updateMotion();
+ const linked=sceneForHash(location.hash);const index=linked>=0?linked:sceneAtScroll();goScene(index,true);updateMotion();
  root.dataset.formations=String(forms.length);root.dataset.points=String(N);root.dataset.geometryValid=String(forms.every(f=>f.length===N&&f.every(p=>[p.x,p.y,p.z,...p.c].every(Number.isFinite))));
 }catch(error){
  root.dataset.error='true';document.body.classList.add('static-mode');sections.forEach(s=>{s.inert=false;s.removeAttribute('aria-hidden')});const msg=document.createElement('p');msg.className='render-error';msg.textContent='Le rendu interactif est indisponible. Les projets restent accessibles ci-dessous.';document.querySelector('main').prepend(msg);console.error(error);
