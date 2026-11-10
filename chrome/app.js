@@ -1,3 +1,4 @@
+import {enableStripScroll} from './strip-scroll.mjs';
 import {themeSwitch} from '/portfolio-assets/theme-switch.mjs';
 import {setChromeType,lightType} from './chrome-type.js?v=theme-url1';
 import {chapters as entries,chapterFromHash,renderChapters} from './chapters.js?v=theme-url1';
@@ -142,15 +143,24 @@ function resize(){
 }
 new ResizeObserver(resize).observe(stage);resize();
 strip.addEventListener('scroll',queue,{passive:true});
-stage.addEventListener('wheel',e=>{
+function advanceStrip(delta){
  travel=null;
- if(menu.isOpen())menu.close();
- if(e.ctrlKey||e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)||!e.deltaY){wheelGoal=null;return}
- const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?strip.clientWidth:1);
- e.preventDefault();
- if(!animated()){wheelGoal=null;strip.scrollLeft+=delta;return}
- wheelGoal=clamp((wheelGoal??strip.scrollLeft)+delta,0,strip.scrollWidth-strip.clientWidth);
+ const goal=clamp((wheelGoal??strip.scrollLeft)+delta,0,strip.scrollWidth-strip.clientWidth);
+ if(animated())wheelGoal=goal;
+ else{wheelGoal=null;strip.scrollLeft=goal}
  queue();
+}
+enableStripScroll(strip,{
+ blocked:()=>dialog.open||menu.isOpen(),
+ coast:distance=>{if(animated())advanceStrip(distance)}
+});
+stage.addEventListener('wheel',e=>{
+ if(dialog.open||menu.isOpen()||e.ctrlKey||e.metaKey||e.defaultPrevented)return;
+ const dominant=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+ if(!dominant)return;
+ const unit=e.deltaMode===1?16:e.deltaMode===2?strip.clientWidth:1;
+ e.preventDefault();
+ advanceStrip(dominant*unit);
 },{passive:false});
 function light(e){
  spot={x:e.clientX,y:e.clientY};
@@ -218,7 +228,8 @@ rail.addEventListener('keydown',e=>{
 });
 document.addEventListener('keydown',e=>{
  if(menu.isOpen()||dialog.open||e.ctrlKey||e.altKey||e.metaKey)return;
- const keys={ArrowRight:index+1,ArrowLeft:index-1,Home:0,End:entries.length-1};
+ const current=travel?.end??index;
+ const keys={ArrowRight:current+1,ArrowDown:current+1,PageDown:current+1,ArrowLeft:current-1,ArrowUp:current-1,PageUp:current-1,Home:0,End:entries.length-1};
  if(!(e.key in keys))return;e.preventDefault();goto(keys[e.key]);
 });
 window.addEventListener('hashchange',()=>{const i=chapterFromHash(location.hash);if(i>=0)goto(i,false)});
@@ -252,7 +263,7 @@ function openSheet(item){
  }
  travel=null;wheelGoal=null;dialog.showModal();dialog.scrollTop=0;$('#close').focus({preventScroll:true});
 }
-$('#guide').addEventListener('click',()=>openSheet({type:'Chrome',title:'Mode d’emploi',copy:'Fais défiler avec la molette ou le pavé tactile. Sur téléphone, glisse pour parcourir les projets ou maintiens le doigt une demi-seconde sur la scène pour ouvrir Maillons. Sur ordinateur, ouvre le même menu avec un clic droit. Les flèches et la réglette parcourent les chapitres.\n\nPasse sur un maillon pour soulever la chaîne. Effleure un badge pour le faire pivoter, ou clique dessus pour ouvrir sa fiche. Dans Maillons, choisis une sculpture suspendue pour rejoindre le projet.'}));
+$('#guide').addEventListener('click',()=>openSheet({type:'Chrome',title:'Mode d’emploi',copy:'Fais défiler vers le bas ou vers la droite pour avancer le long de la chaîne. Sur téléphone, glisse vers le haut ou vers la gauche pour avancer. Un appui d’une demi-seconde sur la scène ouvre Maillons. Sur ordinateur, ouvre le même menu avec un clic droit. Les flèches et la réglette parcourent les chapitres.\n\nPasse sur un maillon pour soulever la chaîne. Effleure un badge pour le faire pivoter, ou clique dessus pour ouvrir sa fiche. Dans Maillons, choisis une sculpture suspendue pour rejoindre le projet.'}));
 for(const btn of strip.querySelectorAll('[data-open]'))btn.addEventListener('click',()=>{const i=Number(btn.dataset.open);if(i===0)goto(1);else openSheet(entries[i])});
 $('#close').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close()}});
 dialog.addEventListener('close',()=>{timestamp=0;queue();previousFocus?.focus({preventScroll:true})});
