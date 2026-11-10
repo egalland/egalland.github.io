@@ -17,8 +17,7 @@ export class ScrollConstruction {
       parts.forEach(part=>part.classList.add('construction-detail'));el.classList.add('construction-unit');
       const sample=(el.querySelector('h3,.window-title')||(el.matches('.tags,.actions,.project-links')&&el.firstElementChild)||el).textContent.replace(/\s+/g,' ').trim();
       const key=index+'-'+Array.from(sample).reduce((hash,ch)=>Math.imul(hash,31)+ch.charCodeAt(0)|0,0).toString(36);
-      const payload=sample.length>36?sample.slice(0,35).trimEnd()+'…':sample;
-      this.units.push({el,index,key,payload,category,parts,dx:0,dy:0,angle:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
+      this.units.push({el,index,key,category,parts,dx:0,dy:0,angle:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
     });
     const roles=[['Cadres','create','#89afff'],['Texte','write','#ed9fbe'],['Placement','place','#8ad2b5'],['Structure','create','#e6bb77'],['Contenu','write','#b7a3ee'],['Alignement','place','#8acbd7']];
     const crewSize=Math.min(cursors.length,maxWorkers);
@@ -26,9 +25,9 @@ export class ScrollConstruction {
       const [name,role,color]=roles[i%roles.length];
       const node=document.createElement('div');node.className='construction-worker';node.dataset.role=role;
       node.style.setProperty('--worker-color',color);node.hidden=true;
-      node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span><span class="construction-payload" hidden></span></div>`;
+      node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span></div>`;
       this.overlay.append(node);
-      this.team.push({node,role,cargo:node.querySelector('.construction-payload'),frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i],job:null});
+      this.team.push({node,role,frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i],job:null});
     }
     // At most two exceptional incidents over the whole page, never on every block.
     const pick=items=>items[Math.floor(Math.random()*items.length)];
@@ -121,7 +120,6 @@ export class ScrollConstruction {
     if(!worker.job)return;
     const unit=worker.job.unit,job=worker.job;
     if(job.task==='adjust'){this.finish(worker);return}
-    job.carrying=false;
     unit.suspended=job.resuming?{...job,phase:job.resumePhase,elapsed:job.resumeElapsed,resuming:false}:job;unit.owner=null;
     worker.job=null;worker.node.hidden=true;worker.cursor.trail=[];
   }
@@ -258,21 +256,7 @@ export class ScrollConstruction {
       if(worker.job||!leads.length)continue;
       const lead=leads.shift();worker.helping=lead.job;lead.job.helper=worker;
     }
-    // Keep a delivery label attached to its courier until the hand-off.
-    const carriers=available.filter(w=>w.job?.carrying&&w.job.phase!=='settle');
     for(const worker of available){
-      if(carriers.length>=(width<=700?1:2))break;
-      const j=worker.job;
-      if(j&&!j.carrying&&j.phase==='approach'&&j.unit.payload&&['write','place'].includes(j.task)){
-        j.carrying=true;carriers.push(worker);
-      }
-    }
-    for(const worker of available){
-      if(worker.cargo){
-        const label=worker.job?.carrying&&worker.job.phase!=='settle'?worker.job.unit.payload:'';
-        worker.cargo.hidden=!label;
-        if(worker.cargo.textContent!==label)worker.cargo.textContent=label;
-      }
       if(!worker.job)continue;
       const job=worker.job,unit=job.unit,r=this.layoutRect(unit);
       if(r.bottom<65||r.top>height+50){this.suspend(worker);continue}
