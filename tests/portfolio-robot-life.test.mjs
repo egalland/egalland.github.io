@@ -19,16 +19,17 @@ test('les robots alternent quatre occupations et laissent la priorité au chanti
  life.update(50,[],7,false);assert.deepEqual(actors(50),[]);
 });
 
-test('les pensées correspondent au geste et la réplique vient du second curseur',()=>{
- const life=createRobotLife(()=>0),visible=[{i:0,r:{x:20,top:220,width:200,height:30}}],lines=[];
- let code=false;
- for(let t=0;t<55;t+=.15){
+test('chaque scène affiche un seul mot et le partenaire reste silencieux',()=>{
+ const life=createRobotLife(()=>0),visible=[{i:0,r:{x:20,top:220,width:200,height:30}}];
+ const speakers=new Set(),seen=new Set();
+ for(let t=0;t<44;t+=.15){
   life.update(t,visible,3,false);
   for(let i=0;i<3;i++){
-   const a=life.pose(i,t,visible,390,650);if(!a)continue;
-   if(a.kind==='code'&&a.text){assert.ok(a.snippet);code=true}
-   if(a.kind==='review'&&a.text&&!lines.some(l=>l.text===a.text))lines.push({i,text:a.text});
+   const a=life.pose(i,t,visible,390,650);if(!a?.text)continue;
+   assert.match(a.text,/^\p{L}+$/u);
+   seen.add(a.kind);
+   if(a.kind==='review')speakers.add(i);
   }
  }
- assert.ok(code);assert.ok(lines.length>=2);assert.notEqual(lines[0].i,lines[1].i);
+ assert.equal(seen.size,4);assert.equal(speakers.size,1);
 });

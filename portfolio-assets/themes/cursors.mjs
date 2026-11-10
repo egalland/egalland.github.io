@@ -1,4 +1,4 @@
-import {createRobotLife,paintRobot} from './robot-life.mjs';
+import {createRobotLife,paintRobot} from './robot-life.mjs?v=ideas1';
 import {ScrollConstruction} from './construction.mjs?v=robots1';
 import {startEditorPointer} from './editor-pointer.mjs';
 const completed=new WeakSet();
