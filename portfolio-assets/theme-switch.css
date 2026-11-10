@@ -36,3 +36,77 @@
  .theme-switch {padding: 2px; font-size: 11px}
  .theme-switch > * {min-width: 49px; min-height: 40px}
 }
+
+/* Each view keeps its own navigation tools in the right-hand column. */
+header.portfolio-bar {
+ --bar-height: 64px;
+ box-sizing: border-box;
+ height: var(--bar-height);
+ width: 100%;
+ display: grid;
+ grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+ align-items: center;
+ gap: 12px;
+ padding: 0 clamp(16px, 3vw, 48px);
+ background: #151519;
+ color: #f3f1ec;
+ border-bottom: 1px solid #38383e;
+ pointer-events: auto;
+}
+.portfolio-bar .bar-brand {
+ justify-self: start;
+ display: inline-flex;
+ align-items: center;
+ gap: 10px;
+ color: inherit;
+ font: 600 14px/1 system-ui, sans-serif;
+ letter-spacing: -.025em;
+ white-space: nowrap;
+ text-decoration: none;
+}
+.bar-brand b {
+ color: #a1f7e7;
+ font: italic 750 31px/1 Arial, sans-serif;
+ letter-spacing: -.1em;
+}
+.portfolio-bar .bar-actions {
+ justify-self: end;
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ margin: 0;
+ color: inherit;
+}
+.portfolio-bar.header .contact-shortcut,
+.portfolio-bar.header #projectsButton {color: inherit}
+@media (max-width: 1150px) {
+ .portfolio-bar.nav .bar-actions nav {
+  display: none;
+  position: absolute;
+  inset: var(--bar-height) 0 auto;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 16px;
+  background: #151519;
+  color: #f3f1ec;
+  border-bottom: 1px solid #38383e;
+ }
+ .portfolio-bar.nav .bar-actions nav > * {padding: 12px 0; text-align: left}
+ .portfolio-bar.nav.mobile-open .bar-actions nav {display: flex}
+ .portfolio-bar.nav #menu {display: block; color: inherit; min-width: 34px; min-height: 40px}
+}
+@media (max-width: 720px) {
+ header.portfolio-bar {
+  --bar-height: 54px;
+  grid-template-columns: 36px auto minmax(0,1fr);
+  gap: 8px;
+  padding-inline: clamp(8px, 3vw, 16px);
+ }
+ .portfolio-bar .bar-brand span {display: none}
+ .portfolio-bar .bar-actions {gap: 2px}
+ .portfolio-bar .contact-shortcut {display: none}
+ .portfolio-bar .tools .guide {min-width: 32px}
+ .portfolio-bar .tools #motion {min-width: 32px}
+ .portfolio-bar .tools #guide {font-size: 0; gap: 0}
+ .portfolio-bar .tools #guide span {font-size: 11px}
+}

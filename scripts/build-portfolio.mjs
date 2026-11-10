@@ -55,9 +55,14 @@ function themeSwitchHtml(current) {
   : `<a data-theme-choice="${id}" href="/?theme=${id}">${label}</a>`);
  return `<div class="theme-switch" role="navigation" aria-label="Thème visuel">${items.join('')}</div>`;
 }
-save('chrome/index.html',render(fs.readFileSync(path.join(root,'portfolio/chrome.template.html'),'utf8'),{themeSwitchHtml:themeSwitchHtml('chrome')}));
-save('points/index.html',render(fs.readFileSync(path.join(root,'portfolio/points.template.html'),'utf8'),{themeSwitchHtml:themeSwitchHtml('points'),chaptersHtml:chapters.join('\n'),dockHtml,menuHtml,maxScene:chapters.length-1,metaDescription:data.metaDescription}));
-save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template.html'),'utf8'),{...data,themeSwitchHtml:themeSwitchHtml('curseurs')}));
+function headerFields(theme) {
+ const home = theme === 'chrome' ? '#chrome' : '#home';
+ const brandHtml = `<a class="bar-brand" href="${home}" aria-label="Emmanuel Galland, accueil"><b aria-hidden="true">eg.</b><span>Emmanuel Galland</span></a>`;
+ return {brandHtml, themeSwitchHtml:themeSwitchHtml(theme)};
+}
+save('chrome/index.html',render(fs.readFileSync(path.join(root,'portfolio/chrome.template.html'),'utf8'),headerFields('chrome')));
+save('points/index.html',render(fs.readFileSync(path.join(root,'portfolio/points.template.html'),'utf8'),{...headerFields('points'),chaptersHtml:chapters.join('\n'),dockHtml,menuHtml,maxScene:chapters.length-1,metaDescription:data.metaDescription}));
+save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template.html'),'utf8'),{...data,...headerFields('curseurs')}));
 save('portfolio-assets/content.js','window.PORTFOLIO_CONTENT='+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 save('portfolio-assets/content.mjs','export default '+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 console.log('Generated the Curseur and Points pages and the shared portfolio content.');

@@ -107,7 +107,9 @@ test('les trois en-têtes partagent le même sélecteur et gardent le projet dan
   assert.deepEqual([...control.matchAll(/data-theme-choice="([^"]+)"/g)].map(m=>m[1]),Object.keys(views));
   assert.equal((control.match(/aria-current="page"/g)||[]).length,1);
   assert.ok(control.includes('<span data-theme-choice="'+current+'" aria-current="page">'));
-  assert.ok(html.includes('href="/portfolio-assets/theme-switch.css"'));
+  assert.match(html,/href="\/portfolio-assets\/theme-switch\.css(?:\?[^"]*)?"/);
+  assert.match(header,/<header class="portfolio-bar[^"]*"><a class="bar-brand".*?<b aria-hidden="true">eg\.<\/b><span>Emmanuel Galland<\/span><\/a><div class="theme-switch"/);
+  assert.ok(header.indexOf('class="bar-actions') > header.indexOf('class="theme-switch'));
   for(const target of Object.keys(views).filter(t=>t!==current)){
    assert.ok(control.includes('href="/?theme='+target+'"'));
    for(const [chapter,expected] of [['pills','pills'],['atelier','livre'],['chrome','home']]){

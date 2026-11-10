@@ -178,7 +178,7 @@ $('#motion').addEventListener('click',()=>{
 });
 reduced.addEventListener('change',motionControl);motionControl();
 function goLink(e){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();goto(chapterFromHash(this.hash))}
-nav.forEach(a=>a.addEventListener('click',goLink));$('.brand').addEventListener('click',goLink);
+nav.forEach(a=>a.addEventListener('click',goLink));$('.bar-brand').addEventListener('click',goLink);
 $('.inline-practices').addEventListener('click',goLink);$('#prev').addEventListener('click',()=>goto(index-1));$('#next').addEventListener('click',()=>goto(index+1));
 const tip=$('.rail-tip');
 let tipIndex=-1,draggingRail=false;
