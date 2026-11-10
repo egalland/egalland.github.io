@@ -15,7 +15,10 @@ export class ScrollConstruction {
       const category=el.matches('h1,h2,h3')?'TITRE':el.matches('.project-window,.hero-art')?'FENÊTRE':el.matches('.lab-card')?'PROJET':el.matches('p')?'TEXTE':el.matches('.actions,.project-links,.text-link')?'ACTION':'BLOC';
       const parts=el.matches('.project-window,.hero-art')?[...el.children]:[];
       parts.forEach(part=>part.classList.add('construction-detail'));el.classList.add('construction-unit');
-      this.units.push({el,index,category,parts,dx:0,dy:0,angle:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
+      const sample=(el.querySelector('h3,.window-title')||(el.matches('.tags,.actions,.project-links')&&el.firstElementChild)||el).textContent.replace(/\s+/g,' ').trim();
+      const key=index+'-'+Array.from(sample).reduce((hash,ch)=>Math.imul(hash,31)+ch.charCodeAt(0)|0,0).toString(36);
+      const payload=sample.length>36?sample.slice(0,35).trimEnd()+'…':sample;
+      this.units.push({el,index,key,payload,category,parts,dx:0,dy:0,angle:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
     });
     const roles=[['Cadres','create','#89afff'],['Texte','write','#ed9fbe'],['Placement','place','#8ad2b5'],['Structure','create','#e6bb77'],['Contenu','write','#b7a3ee'],['Alignement','place','#8acbd7']];
     const crewSize=Math.min(cursors.length,maxWorkers);
@@ -23,9 +26,9 @@ export class ScrollConstruction {
       const [name,role,color]=roles[i%roles.length];
       const node=document.createElement('div');node.className='construction-worker';node.dataset.role=role;
       node.style.setProperty('--worker-color',color);node.hidden=true;
-      node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span></div>`;
+      node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span><span class="construction-payload" hidden></span></div>`;
       this.overlay.append(node);
-      this.team.push({node,role,frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i],job:null});
+      this.team.push({node,role,cargo:node.querySelector('.construction-payload'),frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i],job:null});
     }
     // At most two exceptional incidents over the whole page, never on every block.
     const pick=items=>items[Math.floor(Math.random()*items.length)];
@@ -40,7 +43,7 @@ export class ScrollConstruction {
       if(!event.target.matches('input,textarea,select,button,[contenteditable]'))return;
       this.units.filter(unit=>unit.el===event.target||unit.el.contains(event.target)).forEach(unit=>this.reveal(unit,true));
     },{signal:this.abort.signal});
-    for(const unit of this.units)if(completed.has(unit.el))this.reveal(unit,true);
+    for(const unit of this.units)if(completed.has(unit.el))this.reveal(unit);
   }
   destroy(){
     this.abort.abort();this.revealAll();this.overlay.remove();
@@ -117,6 +120,8 @@ export class ScrollConstruction {
   suspend(worker){
     if(!worker.job)return;
     const unit=worker.job.unit,job=worker.job;
+    if(job.task==='adjust'){this.finish(worker);return}
+    job.carrying=false;
     unit.suspended=job.resuming?{...job,phase:job.resumePhase,elapsed:job.resumeElapsed,resuming:false}:job;unit.owner=null;
     worker.job=null;worker.node.hidden=true;worker.cursor.trail=[];
   }
@@ -151,16 +156,19 @@ export class ScrollConstruction {
     }
     return best;
   }
-  chooseAdjustment(){return null;}
-  assign(worker,unit,{width}) {
+  chooseAdjustment(){
+    if(!this.adjustmentsLeft||!this.scrollingUp||this.scrollVelocity<300)return null;
+    return this.units.find(u=>u.stage==='done'&&!u.owner&&u.rect&&u.rect.top>85&&u.rect.bottom<window.innerHeight-25&&
+      u.el.matches('h2,h3,.section-marker')&&u.adjustedPass!==this.upwardPass)||null;
+  }
+  assign(worker,unit,{width},task=unit.stage) {
     worker.helping=null;
     if(unit.suspended){
       const previous=unit.suspended;unit.suspended=null;
       worker.job={...previous,resuming:true,resumePhase:previous.phase,resumeElapsed:previous.elapsed,phase:'approach',elapsed:0,from:{x:worker.cursor.x,y:worker.cursor.y}};
       unit.owner=worker;worker.node.hidden=false;return;
     }
-    const task=unit.stage;
-    if(task==='adjust'){unit.adjustedPass=this.upwardPass;this.adjustmentsLeft--}
+    if(task==='adjust'){unit.adjustedPass=this.upwardPass;this.adjustmentsLeft--;this.nextAdjustment=this.clock+8}
     if(task==='create'){
       this.prepareText(unit);
       const pose=scatteredPose(unit.index,width);
@@ -175,11 +183,12 @@ export class ScrollConstruction {
       const near=this.units.find(other=>other!==unit&&other.state!=='waiting'&&other.rect&&unit.rect&&Math.abs(other.rect.top-unit.rect.top)<Math.max(other.rect.height,unit.rect.height)+32);
       unit.scatter.obstacle=near&&Math.random()<.32*Math.min(1,(this.scrollVelocity||0)/2400)?(unit.scatter.x>=0?1:-1):0;
     }
-    const writingDuration=Math.min(1.25,Math.max(.3,unit.letters.length/(unit.category==='TITRE'?48:165)));
+    const writingDuration=Math.min(1.65,Math.max(.56,unit.letters.length/(unit.category==='TITRE'?40:125)));
     const r=unit.rect||this.layoutRect(unit);
     const reach=Math.hypot(worker.cursor.x-r.left,worker.cursor.y-r.top);
-    worker.job={unit,task,phase:'approach',elapsed:0,approachDuration:.09+Math.min(.30,reach/2300),from:{x:worker.cursor.x,y:worker.cursor.y},source:{...unit.scatter,x:unit.dx,y:unit.dy,angle:unit.angle,flip:unit.flip||0},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?(.66*(unit.scatter?.duration||.8)):(unit.incident?1.65:.58+(unit.scatter?.duration||1)*.23)};
-    unit.owner=worker;unit.state='approach';unit.el.dataset.construction='approach';worker.node.hidden=false;
+    worker.job={unit,task,phase:'approach',elapsed:0,approachDuration:.17+Math.min(.31,reach/1900),from:{x:worker.cursor.x,y:worker.cursor.y},source:{...unit.scatter,x:unit.dx,y:unit.dy,angle:unit.angle,flip:unit.flip||0},duration:task==='adjust'?1.05:task==='write'?writingDuration:task==='create'?(.66*(unit.scatter?.duration||.8)):(unit.incident?2.05:.96+(unit.scatter?.duration||1)*.26)};
+    unit.owner=worker;worker.node.hidden=false;
+    if(task!=='adjust'){unit.state='approach';unit.el.dataset.construction='approach';}
   }
   finish(worker) {
     const {unit,task}=worker.job;
@@ -210,7 +219,10 @@ export class ScrollConstruction {
     this.animationRate=1+5*Math.min(1,this.scrollVelocity/2400);
     dt=realDt*this.animationRate;
     if(delta<-2){
-      if(!this.scrollingUp)this.upwardPass++;
+      if(!this.scrollingUp){
+        this.upwardPass++;
+        if(this.clock>=(this.nextAdjustment||0))this.adjustmentsLeft=1;
+      }
       this.scrollingUp=true;this.overlay.dataset.direction='up';
     }else if(delta>2){this.scrollingUp=false;this.overlay.dataset.direction='down'}
     this.scrollY=window.scrollY;
@@ -234,7 +246,11 @@ export class ScrollConstruction {
       if(!worker.job){
         const unit=this.choose(worker);
         if(unit)this.assign(worker,unit,{width});
-        else worker.node.hidden=true;
+        else{
+          const finished=this.chooseAdjustment();
+          if(finished)this.assign(worker,finished,{width},'adjust');
+          else worker.node.hidden=true;
+        }
       }
     }
     const leads=available.filter(w=>w.job&&['create','place'].includes(w.job.task)&&w.job.phase!=='settle'&&w.job.unit.rect?.width>=110);
@@ -242,21 +258,38 @@ export class ScrollConstruction {
       if(worker.job||!leads.length)continue;
       const lead=leads.shift();worker.helping=lead.job;lead.job.helper=worker;
     }
+    // Keep a delivery label attached to its courier until the hand-off.
+    const carriers=available.filter(w=>w.job?.carrying&&w.job.phase!=='settle');
     for(const worker of available){
+      if(carriers.length>=(width<=700?1:2))break;
+      const j=worker.job;
+      if(j&&!j.carrying&&j.phase==='approach'&&j.unit.payload&&['write','place'].includes(j.task)){
+        j.carrying=true;carriers.push(worker);
+      }
+    }
+    for(const worker of available){
+      if(worker.cargo){
+        const label=worker.job?.carrying&&worker.job.phase!=='settle'?worker.job.unit.payload:'';
+        worker.cargo.hidden=!label;
+        if(worker.cargo.textContent!==label)worker.cargo.textContent=label;
+      }
       if(!worker.job)continue;
       const job=worker.job,unit=job.unit,r=this.layoutRect(unit);
       if(r.bottom<65||r.top>height+50){this.suspend(worker);continue}
       const intensity=Math.min(1,this.scrollVelocity/2400);
       job.inertia??=intensity;
       job.inertia+=(intensity-job.inertia)*(1-Math.exp(-realDt/(intensity>job.inertia ? .07 : .65)));
-      job.elapsed+=dt*(job.helper&&job.phase===job.task?1.35:1);
+      const precision=job.task==='place'||job.task==='adjust';
+      const cap=job.phase==='settle'?1:precision?1.45:job.task==='write'?1.9:3;
+      const assist=job.helper&&job.phase===job.task&&!precision?1.2:1;
+      job.elapsed+=realDt*Math.min(cap,this.animationRate*assist);
       if(job.phase==='approach'&&job.elapsed>=job.approachDuration){job.phase=job.resuming?job.resumePhase:job.task;job.elapsed=job.resuming?job.resumeElapsed:0;job.resuming=false;}
       else if(job.phase===job.task&&job.elapsed>=job.duration){
         job.phase='settle';job.elapsed=0;
         if(job.task==='create'){this.geometry(unit);this.details(unit,0);}
         if(job.task==='write')this.typeText(unit,unit.letters.length);
         if(job.task==='place'||job.task==='adjust')this.pose(unit,0,0);
-      }else if(job.phase==='settle'&&job.elapsed>=.07){this.finish(worker);continue;}
+      }else if(job.phase==='settle'&&job.elapsed>=(precision?.24:.12)){this.finish(worker);continue;}
       let drawX=1,drawY=1;
       if(job.task==='create'){
         const p=job.phase==='approach'?(job.resuming?(job.resumePhase==='settle'?1:ease(job.resumeElapsed/job.duration)):0):job.phase==='settle'?1:ease(job.elapsed/job.duration);
@@ -313,7 +346,7 @@ export class ScrollConstruction {
       const verb=job.task==='place'&&unit.incident==='drop'?'RATTRAPER':job.task==='place'&&unit.incident==='flip'?'RETOURNER':job.task==='place'&&job.source.obstacle?'DÉGAGER':job.task==='adjust'?'AJUSTER':job.task==='create'?'CRÉER':job.task==='write'?'ÉCRIRE':Math.abs(unit.angle)>1?'REDRESSER':'ALIGNER';
       worker.caption.textContent=verb+' / '+unit.category+(job.task==='write'?' · '+unit.written+'/'+unit.letters.length:job.task==='place'?' · '+Math.abs(unit.angle).toFixed(1)+'°':'');
       worker.node.dataset.phase=job.phase;worker.node.dataset.task=job.task;worker.node.classList.toggle('hide-selection',!showOutlines);
-      unit.state=job.phase;unit.el.dataset.construction=job.phase;
+      if(job.task!=='adjust'){unit.state=job.phase;unit.el.dataset.construction=job.phase;}
     }
   }
 }

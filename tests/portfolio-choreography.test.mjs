@@ -107,3 +107,21 @@ test('tous les curseurs disponibles démarrent des blocs distincts dans la même
   }
  }finally{globalThis.window=saved}
 });
+
+test('une retouche reste lisible à plein scroll et laisse le bloc construit',()=>{
+ const saved=globalThis.window;globalThis.window={scrollY:3000,innerHeight:850};
+ try{
+  const c=Object.create(ScrollConstruction.prototype),rect={top:180,left:40,bottom:260,width:240,height:80};
+  const unit={category:'TITRE',stage:'done',state:'done',index:0,payload:'Pills',el:{dataset:{construction:'done'},matches:()=>true},rect,parts:[],letters:[],dx:0,dy:0,angle:0};
+  const w={cursor:{x:50,y:190,trail:[]},frame:{style:{}},caret:{style:{}},pointer:{style:{}},caption:{},node:{dataset:{},classList:{toggle(){}}}};
+  Object.assign(c,{units:[unit],team:[w],clock:20,delay:0,measuredAt:0,upwardPass:0,overlay:{dataset:{}},scrollVelocity:5000,scrollY:3100});
+  c.layoutRect=()=>rect;c.measure=()=>{};c.pose=(u,x,y)=>{u.dx=x;u.dy=y};c.details=()=>{};
+  c.prepareText=()=>assert.fail('un titre terminé ne doit pas être réécrit');
+  const step=()=>{window.scrollY-=60;c.update(.016,{width:1200,height:850,count:1,enabled:true})};
+  step();assert.equal(w.job.task,'adjust');
+  let frames=0;while(w.job&&frames<200){step();assert.equal(unit.el.dataset.construction,'done');frames++}
+  assert.ok(frames*.016>=1,'laisser voir la prise, la correction et le relâchement');
+  assert.equal(w.job,null);assert.equal(unit.dx,0);assert.equal(unit.dy,0);
+  step();assert.equal(w.job,null);
+ }finally{globalThis.window=saved}
+});

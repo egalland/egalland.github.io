@@ -51,3 +51,6 @@ html{overflow-x:clip}
 .construction-worker[data-phase="adjust"] .construction-grip{opacity:.65}
 
 .construction-worker[data-task="assist"] .construction-name{display:none}
+
+.construction-payload{position:absolute;left:16px;bottom:5px;width:max-content;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid var(--worker-color);border-radius:4px;padding:4px 7px;background:#12151cee;color:#edf1f7;font:10px/1.25 var(--mono);box-shadow:0 2px 7px #0005}
+@media(max-width:700px){.construction-payload{max-width:125px;font-size:9px}}
