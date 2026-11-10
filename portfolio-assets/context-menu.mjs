@@ -7,7 +7,7 @@ export function preservesNativeMenu(target,{shiftKey=false,selection=''}={}){
 export function createPortfolioMenu({getState,onTheme,onPause}){
  const abort=new AbortController(),on=(el,type,fn)=>el.addEventListener(type,fn,{signal:abort.signal});
  const menu=document.createElement('div');menu.id='portfolio-menu';menu.setAttribute('popover','auto');menu.setAttribute('aria-label','Outils de navigation');
- menu.innerHTML='<div class="pointer-menu-heading"><svg viewBox="0 0 28 32" aria-hidden="true"><path d="M2 2L7 27L13 19L23 18Z"/></svg><span>Naviguer dans le portfolio</span><button type="button" class="close-menu" aria-label="Fermer la navigation">×</button></div><nav class="pointer-menu-list" aria-label="Projets et pratiques"><a class="pointer-home" href="#home"><span>Accueil</span><small>↑</small></a></nav><div class="pointer-menu-footer"><button type="button" data-open-points>Vue Points ↗</button><button type="button" class="menu-motion"></button></div>';
+ menu.innerHTML='<div class="pointer-menu-heading"><svg viewBox="0 0 28 32" aria-hidden="true"><path d="M2 2L7 27L13 19L23 18Z"/></svg><span>Naviguer dans le portfolio</span><button type="button" class="close-menu" aria-label="Fermer la navigation">×</button></div><nav class="pointer-menu-list" aria-label="Projets et pratiques"><a class="pointer-home" href="#home"><span>Accueil</span><small>↑</small></a></nav><div class="pointer-menu-footer"><button type="button" data-open-points>Points ↗</button><button type="button" data-open-chrome>Chrome ↗</button><button type="button" class="menu-motion"></button></div>';
  const map=menu.querySelector('.pointer-menu-list');
  QUICK_DESTINATIONS.forEach((id,i)=>{
   const target=document.getElementById(id);if(!target)return;
@@ -36,6 +36,7 @@ export function createPortfolioMenu({getState,onTheme,onPause}){
  on(explorer,'click',()=>{const r=explorer.getBoundingClientRect();isOpen()?close():open(r.left,r.bottom);});on(menu.querySelector('.close-menu'),'click',close);
  on(menu,'toggle',()=>explorer.setAttribute('aria-expanded',String(isOpen())));
  on(menu.querySelector('[data-open-points]'),'click',()=>{close();onTheme('points');});
+ on(menu.querySelector('[data-open-chrome]'),'click',()=>{close();onTheme('chrome');});
  on(motion,'click',()=>{onPause();refresh();});
  on(menu,'click',e=>{
   const link=e.target.closest('a');if(!link)return;

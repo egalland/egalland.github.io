@@ -1,0 +1,1 @@
+export const advances={"chrome":[5.1705,4.0625],"market-plus":[3.3125,2.4943],"kikalmo":[4.267],"maison":[3.8352],"bodyos":[4.3352],"pills":[2.4375],"livre":[3.1989,1.3352,2.4375],"redim":[3.4432],"atlas":[2.5341,0.3864,5.5795],"inktober":[4.2841],"about":[5.8182],"contact":[2.6136,3.6705]};

@@ -1,6 +1,6 @@
 export const THEMES={
  points:{label:'Points',engines:['points']},
- curseurs:{label:'Curseurs',engines:['curseurs']}
+ curseurs:{label:'Pointeur',engines:['curseurs']}
 };
 export const normalizeTheme=(value,registry=THEMES)=>Object.hasOwn(registry,value)?value:'curseurs';
 export function engineNames(theme,registry=THEMES){

@@ -1,6 +1,6 @@
 import './portfolio-content.mjs?v=pratiques1';
-import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=wheel2';
-import {createPortfolioMenu} from './context-menu.mjs?v=pratiques1';
+import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=chrome1';
+import {createPortfolioMenu} from './context-menu.mjs?v=chrome1';
 
 const root=document.documentElement,buttons=[...document.querySelectorAll('[data-theme-choice]')],status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');
@@ -38,14 +38,12 @@ const manager=createThemeManager({
  }
 });
 async function choose(theme,{save=true}={}){
- selected=normalizeTheme(theme);
- try{localStorage.setItem('portfolio-theme',selected);}catch{}
- if(selected==='points'){
-  const id=(started?readingPosition()?.el.id:location.hash.slice(1))||location.hash.slice(1)||'home';
-  const url=new URL('/points/',location.href);url.search=location.search;url.searchParams.delete('theme');url.hash=({work:'market-plus',atelier:'livre'})[id]||id;
-  try{localStorage.setItem('portfolio-theme','points');}catch{}
+ if(theme==='points'||theme==='chrome'){
+  const id=(started?readingPosition()?.el.id:null)||location.hash.slice(1)||'home';
+  const url=new URL('/'+theme+'/',location.href);url.search=location.search;url.searchParams.delete('theme');url.hash=({work:'market-plus',atelier:'livre'})[id]||id;
   location.assign(url);return;
  }
+ selected=normalizeTheme(theme);
  const promise=manager.select(selected,{reduced:preference.matches||userPaused,resume:started,count:innerWidth<=700?1680:2800});started=true;
  if(save){try{localStorage.setItem('portfolio-theme',selected);}catch{}const url=new URL(location.href);url.searchParams.set('theme',selected);history.replaceState(null,'',url);}
  await promise;
@@ -59,7 +57,5 @@ projectMenu=createPortfolioMenu({
 preference.addEventListener('change',()=>choose(selected,{save:false}));
 addEventListener('pagehide',()=>manager.stop());
 addEventListener('pageshow',event=>{if(event.persisted)choose(selected,{save:false});});
-let saved;try{saved=localStorage.getItem('portfolio-theme')||localStorage.getItem('portfolio-view');}catch{}
-const requested=new URL(location.href).searchParams.get('theme')||saved||'curseurs';
-// Migrate the retired mixed view to the default without breaking old links.
-choose(requested,{save:requested!==normalizeTheme(requested)});
+const requested=new URL(location.href).searchParams.get('theme')||'curseurs';
+choose(requested,{save:!['points','chrome','curseurs'].includes(requested)});

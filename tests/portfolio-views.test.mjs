@@ -35,7 +35,7 @@ test('Pills est une pièce autonome dans les deux présentations et donne accès
 test('la vue Curseurs conserve des ancres uniques dans un document autonome',()=>{
  const ids=[...page.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);assert.equal([...page.matchAll(/<main\b/g)].length,1);assert.ok(!/<iframe|<template|view-choice|data-view-switch/.test(page));
  for(const p of [...data.projects,...data.atelier.projects,data.inktober])assert.equal(ids.filter(id=>id===p.id).length,1);
- for(const name of ['points','curseurs'])assert.ok(page.includes('data-theme-choice="'+name+'"'));
+ for(const name of ['points','curseurs','chrome'])assert.ok(page.includes('data-theme-choice="'+name+'"'));
  for(const [,id] of page.matchAll(/href="#([^"]+)"/g))assert.ok(ids.includes(id),id);
  assert.ok(!page.includes('data-theme-choice="glitch"'));assert.ok(!page.includes('glitch.css'));
  assert.ok(page.includes('portfolio.mjs'));assert.ok(!page.includes('src="/portfolio-assets/app.js'));assert.ok(!page.includes('{{'));
@@ -50,7 +50,7 @@ test('les anciennes adresses gardent le thème et la section dans le document co
 });
 test('les dossiers des applications restent hors du périmètre des modifications',()=>{
  const changed=execFileSync('git',['diff','--name-only','48359f09fe15e09fd8c8e3409ed302b7a66d11e0'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- for(const name of changed)assert.match(name,/^(?:index\.html|README\.md|portfolio-assets\/|points\/|curseurs\/|portfolio\/|scripts\/|tests\/portfolio-)/,name);
+ for(const name of changed)assert.match(name,/^(?:index\.html|README\.md|source-history\/portfolio-chrome\.bundle|chrome\/|portfolio-assets\/|points\/|curseurs\/|portfolio\/|scripts\/|tests\/portfolio-)/,name);
 });
 
 test('Points retrouve ses tableaux indépendants avec les mêmes contenus et liens',()=>{

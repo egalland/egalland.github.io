@@ -52,4 +52,4 @@ save('points/index.html',render(fs.readFileSync(path.join(root,'portfolio/points
 save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template.html'),'utf8'),data));
 save('portfolio-assets/content.js','window.PORTFOLIO_CONTENT='+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 save('portfolio-assets/content.mjs','export default '+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
-console.log('Generated two independent presentations from portfolio/content.json.');
+console.log('Generated the Pointeur and Points pages and the shared portfolio content.');
