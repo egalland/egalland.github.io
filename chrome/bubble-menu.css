@@ -6,8 +6,6 @@
 .rack-head,.rack-pages{display:flex;align-items:center}
 .rack-head{padding:0 4px 0 8px;gap:16px}
 #index-title{font:italic 700 25px/1 Display,Arial;letter-spacing:-.055em}
-.index-views{display:flex;gap:14px;margin-left:auto;color:#bffcf0;font:11px var(--mono)}
-.index-views a{padding:9px 0}
 .core-close,.rack-pages button{background:transparent;color:#fbe6e0;border:0;font:22px Arial;padding:3px 9px;min-width:36px;min-height:34px}
 .rack{position:relative;flex:1;min-height:0}
 .index-chain,.rack nav{position:absolute;inset:0;width:100%;height:100%}
@@ -41,11 +39,9 @@
 @media(max-width:620px),(pointer:coarse){
  #chain-index::backdrop{background:#160c15ad}
  .rack-head{margin:0 3%;gap:8px}
- .index-views{gap:3px}
- .index-views a,.core-close,.rack-pages button{
+ .core-close,.rack-pages button{
   display:inline-grid;place-items:center;min-width:44px;min-height:44px;
  }
- .index-views a{padding:0 7px}
  .rack-pages{gap:8px}
  .rack-pages button,.core-close{border-radius:50%;background:radial-gradient(circle,#54333c80 43%,transparent 47%)}
  .rack-count{min-width:5ch;text-align:center;font-variant-numeric:tabular-nums}
@@ -56,4 +52,23 @@
  .rack a[aria-current] .charm-label{box-shadow:inset 0 -2px #9dffe9}
 }
 
-.index-views{align-items:center}.index-views [aria-current]{color:#ffece2;font-weight:bold}
+
+.rack-head .core-close{margin-left:auto}
+.index-label{font:inherit}
+header .view-switch{
+ display:flex;align-items:center;gap:1px;padding:2px;border:1px solid #826c70;
+ border-radius:5px;background:#2c1b23;white-space:nowrap
+}
+header .view-switch>*{
+ display:grid;align-items:center;min-height:34px;padding:0 10px;border-radius:3px;
+ color:#eededc;font:11px/1 var(--mono)
+}
+header .view-switch a:hover{background:#453038}
+header .view-switch [aria-current]{color:#211921;background:linear-gradient(#eee9e3,#c4cbce)}
+@media(max-width:720px){
+ header{padding-inline:clamp(8px,3vw,18px);gap:6px}
+ header .brand span,.tools .index-label{display:none}
+ header .tools{gap:3px}
+ header .view-switch>*{min-height:38px;padding:0 7px;font-size:10px}
+ header .tools .guide{min-width:32px;justify-content:center;padding:0}
+}

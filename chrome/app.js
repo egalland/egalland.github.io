@@ -1,6 +1,6 @@
 import {setChromeType,lightType} from './chrome-type.js?v=theme-url1';
 import {chapters as entries,chapterFromHash,renderChapters} from './chapters.js?v=theme-url1';
-import {makeChainMenu} from './chain-menu.js?v=theme-url1';
+import {makeChainMenu} from './chain-menu.js?v=header1';
 import {makeFlecks} from './chrome-flecks.js';
 import {makeChain} from './chain.js';
 import {drawCast,emblem} from './sculpture.js';
@@ -9,6 +9,7 @@ const stage=$('#stage'),strip=$('#strip'),rail=$('#rail'),dialog=$('#sheet');
 renderChapters(strip,document.querySelector('footer nav'));
 $('#total').textContent=String(entries.length).padStart(2,'0');
 rail.max=String((entries.length-1)*1000);
+const viewLinks=document.querySelectorAll('header [data-view]');
 const railControl=rail.parentElement;
 const railNotches=railControl.querySelector('.rail-notches');
 for(const entry of entries)railNotches.append(document.createElement('i'));
@@ -52,6 +53,8 @@ function sync(p){
   index=next;
   $('#count').textContent=String(index+1).padStart(2,'0');
   nav.forEach(a=>{if(a.textContent===entries[index].group)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current')});
+  const anchor=entries[index].id==='chrome'?'home':entries[index].id;
+  for(const link of viewLinks)link.hash=anchor;
   if(menu.isOpen())menu.refresh();
   sections.forEach((s,i)=>{s.inert=i!==index});
   $('#prev').disabled=index===0;$('#next').disabled=index===entries.length-1;

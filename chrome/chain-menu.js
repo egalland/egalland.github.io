@@ -28,9 +28,7 @@ export function makeChainMenu({go,current,blocked,animated}){
  const bound=(v,a,b)=>Math.max(a,Math.min(b,v));
  function refresh(){
   const i=current();items.forEach((item,j)=>j===i?item.a.setAttribute('aria-current','step'):item.a.removeAttribute('aria-current'));
-  const hash=chapters[i].id==='chrome'?'home':chapters[i].id;
-  panel.querySelector('[data-view=points]').href='/?theme=points#'+hash;
-  panel.querySelector('[data-view=curseurs]').href='/?theme=curseurs#'+hash;
+
  }
  function show(n){
   page=bound(n,0,Math.ceil(items.length/per)-1);selection=null;delete panel.dataset.choosing;
