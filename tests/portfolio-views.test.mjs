@@ -56,7 +56,7 @@ test('les dossiers des applications restent hors du périmètre des modification
 test('Points retrouve ses tableaux indépendants avec les mêmes contenus et liens',()=>{
  const points=read('points/index.html');assert.ok(points.includes('id="particles"'));assert.equal([...points.matchAll(/data-scene=/g)].length,17);
  for(const p of [...data.projects,...data.atelier.projects,data.inktober]){assert.ok(text(points).includes(p.description),p.id);assert.ok(points.includes('id="'+p.id+'"'));}
- assert.ok(!points.includes('portfolio.mjs'));assert.match(points,/<script type="module" src="app\.js(?:\?[^"]*)?"/);
+ assert.ok(!points.includes('portfolio.mjs'));assert.match(points,/<script type="module" src="\/points\/app\.js(?:\?[^"]*)?"/);
 });
 
 test('la sélection conserve trois outils et donne une section et une entrée propres à Inktober',()=>{
@@ -76,4 +76,23 @@ test('tous les groupes et le dernier tableau Points suivent les scènes réellem
  PROJECT_STARTS.forEach((start,i)=>assert.equal(projectFor(start),i));
  assert.equal(nextProjectFor(scenes.indexOf('atlas')),scenes.indexOf('inktober'));
  assert.equal(nextProjectFor(LAST_SCENE),0);
+});
+
+
+test('les URL de thème et les anciens dossiers conservent projet et paramètres',()=>{
+ const route=read('portfolio-assets/theme-route.js');
+ const run=(href,view)=>{
+  let target=null;
+  vm.runInNewContext(route,{URL,document:{currentScript:{dataset:{view}},documentElement:{dataset:{},style:{}}},
+   location:{href,replace:url=>{target=url}},history:{state:null,replaceState:(_,__,url)=>{target=url}}});
+  return target;
+ };
+ for(const theme of ['chrome','points']){
+  const canonical='https://egalland.github.io/?theme='+theme+'&lang=fr#pills';
+  const doc=run(canonical,'curseurs');
+  assert.equal(new URL(doc).pathname,'/'+theme+'/');
+  assert.equal(run(doc,theme),canonical);
+  assert.equal(run('https://egalland.github.io/'+theme+'/#atlas',theme),'https://egalland.github.io/?theme='+theme+'#atlas');
+ }
+ assert.equal(run('https://egalland.github.io/','curseurs'),null);
 });

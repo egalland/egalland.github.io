@@ -1,6 +1,6 @@
-import {setChromeType,lightType} from './chrome-type.js';
-import {chapters as entries,chapterFromHash,renderChapters} from './chapters.js';
-import {makeChainMenu} from './chain-menu.js';
+import {setChromeType,lightType} from './chrome-type.js?v=theme-url1';
+import {chapters as entries,chapterFromHash,renderChapters} from './chapters.js?v=theme-url1';
+import {makeChainMenu} from './chain-menu.js?v=theme-url1';
 import {makeFlecks} from './chrome-flecks.js';
 import {makeChain} from './chain.js';
 import {drawCast,emblem} from './sculpture.js';

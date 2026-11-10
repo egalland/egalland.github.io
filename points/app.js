@@ -256,7 +256,7 @@ function setScene(index){
   if(left<dock.scrollLeft)dock.scrollLeft=left;
   else if(right>dock.scrollLeft+dock.clientWidth)dock.scrollLeft=right-dock.clientWidth;
  }
- root.dataset.scene=String(index);root.dataset.project=String(p);const viewToggle=$('[data-view-switch]');if(viewToggle)viewToggle.href='/?theme=curseurs#'+sections[index].dataset.cursor; $('[data-chrome-switch]').href='/chrome/#'+sections[index].dataset.cursor;document.body.classList.toggle('is-intro',index===0);
+ root.dataset.scene=String(index);root.dataset.project=String(p);const viewToggle=$('[data-view-switch]');if(viewToggle)viewToggle.href='/?theme=curseurs#'+sections[index].dataset.cursor; $('[data-chrome-switch]').href='/?theme=chrome#'+sections[index].dataset.cursor;document.body.classList.toggle('is-intro',index===0);
  root.dataset.flowingPoints=String(forms[index].filter(p=>p.track).length);
  $('#interactionStatus').textContent=frameTitles[index];
  // Theme changes continue through the same matter transition as the scene.

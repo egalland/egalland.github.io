@@ -51,7 +51,7 @@ export function setChromeType(heading,id,title,period=true){
  (title+'.').split(/\s+/).forEach((word,i)=>{
   if(i)heading.append(' ');
   const el=document.createElement('span');el.className='metal-word';el.style.width=advances[id][i]+'em';el.setAttribute('aria-hidden','true');
-  const url='lettering/'+id+'-'+i+'.webp';el.dataset.face=url;
+  const url='/chrome/lettering/'+id+'-'+i+'.webp';el.dataset.face=url;
   const img=new Image();img.alt='';img.src=url;const c=document.createElement('canvas');
   const fallback=document.createElement('span');fallback.className='word-fallback';fallback.textContent=word;img.onload=()=>fallback.hidden=true;
   el.append(fallback,img,c);heading.append(el);observer.observe(el);

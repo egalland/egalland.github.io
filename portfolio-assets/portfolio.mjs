@@ -40,7 +40,7 @@ const manager=createThemeManager({
 async function choose(theme,{save=true}={}){
  if(theme==='points'||theme==='chrome'){
   const id=(started?readingPosition()?.el.id:null)||location.hash.slice(1)||'home';
-  const url=new URL('/'+theme+'/',location.href);url.search=location.search;url.searchParams.delete('theme');url.hash=({work:'market-plus',atelier:'livre'})[id]||id;
+  const url=new URL(location.href);url.pathname='/';url.searchParams.set('theme',theme);url.hash=({work:'market-plus',atelier:'livre'})[id]||id;
   location.assign(url);return;
  }
  selected=normalizeTheme(theme);

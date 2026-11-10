@@ -29,7 +29,7 @@ export function makeChainMenu({go,current,blocked,animated}){
  function refresh(){
   const i=current();items.forEach((item,j)=>j===i?item.a.setAttribute('aria-current','step'):item.a.removeAttribute('aria-current'));
   const hash=chapters[i].id==='chrome'?'home':chapters[i].id;
-  panel.querySelector('[data-view=points]').href='/points/#'+hash;
+  panel.querySelector('[data-view=points]').href='/?theme=points#'+hash;
   panel.querySelector('[data-view=curseurs]').href='/?theme=curseurs#'+hash;
  }
  function show(n){

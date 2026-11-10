@@ -1,4 +1,4 @@
-import {setChromeType} from './chrome-type.js';
+import {setChromeType} from './chrome-type.js?v=theme-url1';
 import data from '../portfolio-assets/content.mjs';
 
 export const chapters=[
