@@ -49,3 +49,5 @@ html{overflow-x:clip}
 @media(prefers-reduced-motion:reduce){.construction-unit{clip-path:none!important}.construction-letter{opacity:1!important}}
 .construction-worker[data-task="adjust"] .construction-frame{border-style:dotted;opacity:.45}
 .construction-worker[data-phase="adjust"] .construction-grip{opacity:.65}
+
+.construction-worker[data-task="assist"] .construction-name{display:none}

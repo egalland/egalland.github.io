@@ -1,13 +1,13 @@
 # Projets d’Emmanuel
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Pointeur. Le sélecteur permet aussi de parcourir les vues Points et [Chrome](https://egalland.github.io/chrome/). Elles partagent les textes et liens, tout en conservant leur propre structure visuelle. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur permet aussi de parcourir les vues Points et [Chrome](https://egalland.github.io/chrome/). Elles partagent les textes et liens, tout en conservant leur propre structure visuelle. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
 
 ## Organisation
 
-- `index.html` : présentation Pointeur et mini-démo Kikalmo.
+- `index.html` : présentation Curseur et mini-démo Kikalmo.
 - `portfolio-assets/themes/construction.mjs` : curseurs animés, tracé des cadres droits, écriture puis transport avec inertie. Les éléments terminés restent stables.
 - `portfolio-assets/themes/choreography.mjs` : placement et durée tirés au hasard, inclinaison issue du mouvement, contournements ponctuels et deux incidents au maximum (chute et retournement 3D).
-- `portfolio-assets/portfolio.mjs` : ouverture de Pointeur par défaut et passage vers Points ou Chrome au projet en cours.
+- `portfolio-assets/portfolio.mjs` : ouverture de Curseur par défaut et passage vers Points ou Chrome au projet en cours.
 - `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 17 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
 - `points/assets/` : ressources et polices originales conservées sans altération.
 - `portfolio/content.json` : source commune des textes, projets et liens. `scripts/build-portfolio.mjs` génère les deux présentations depuis `portfolio/page.template.html` et `portfolio/points.template.html`.

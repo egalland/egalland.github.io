@@ -88,3 +88,22 @@ test('la vitesse accélère progressivement la chronologie puis revient au rythm
   assert.ok(c.animationRate<1.001);
  }finally{globalThis.window=previous;}
 });
+
+test('tous les curseurs disponibles démarrent des blocs distincts dans la même frame',()=>{
+ const saved=globalThis.window;globalThis.window={scrollY:0};
+ try{
+  for(const [width,count,resizing] of [[1280,12,false],[390,7,false],[1280,12,true]]){
+   const c=Object.create(ScrollConstruction.prototype);
+   const rect={left:20,top:100,width:100,height:30,bottom:130};
+   const units=Array.from({length:count},(_,index)=>({index,rect,stage:'create',state:'waiting',eligible:true,el:{dataset:{}},dx:0,dy:0,angle:0}));
+   const team=units.map(()=>({cursor:{x:0,y:0},role:'write',node:{dataset:{},classList:{toggle(){}}},frame:{style:{}},caret:{},pointer:{style:{}},caption:{}}));
+   Object.assign(c,{clock:0,delay:0,measuredAt:0,scrollY:0,units,team,overlay:{dataset:{}}});
+   c.layoutRect=()=>rect;c.geometry=()=>{};c.details=()=>{};c.pose=()=>{};c.prepareText=u=>{u.letters=[]};
+   c.update(.016,{width,height:800,count,resizing,showOutlines:true,enabled:true});
+   const busy=team.filter(w=>w.job);
+   assert.equal(busy.length,count-(resizing?2:0));
+   assert.equal(new Set(busy.map(w=>w.job.unit)).size,busy.length);
+   if(resizing)assert.ok(!c.owns(0)&&!c.owns(1));
+  }
+ }finally{globalThis.window=saved}
+});

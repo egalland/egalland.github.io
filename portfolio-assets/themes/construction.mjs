@@ -4,7 +4,7 @@ import {scatteredPose,placementPose} from './choreography.mjs?v=scroll-physics1'
 // Draw, write, then carry the built unit into place with momentum and occasional mishaps.
 // Original text nodes are restored after typing, so controls keep their own data.
 export class ScrollConstruction {
-  constructor({cursors,reduced,onReveal,completed=new WeakSet(),accept=()=>true,maxWorkers=6}) {
+  constructor({cursors,reduced,onReveal,completed=new WeakSet(),accept=()=>true,maxWorkers=cursors.length}) {
     this.cursors=cursors;this.reduced=reduced;this.onReveal=onReveal;this.abort=new AbortController();
     this.clock=0;this.delay=0;this.measuredAt=-1;this.units=[];this.team=[];
     this.scrollY=window.scrollY;this.scrollingUp=false;this.upwardPass=0;this.adjustmentsLeft=0;
@@ -18,13 +18,15 @@ export class ScrollConstruction {
       this.units.push({el,index,category,parts,dx:0,dy:0,angle:0,state:'waiting',stage:'create',owner:null,rect:null,textRecords:[],letters:[],written:0,adjustedPass:-1});
     });
     const roles=[['Cadres','create','#89afff'],['Texte','write','#ed9fbe'],['Placement','place','#8ad2b5'],['Structure','create','#e6bb77'],['Contenu','write','#b7a3ee'],['Alignement','place','#8acbd7']];
-    roles.slice(0,maxWorkers).forEach(([name,role,color],i)=>{
+    const crewSize=Math.min(cursors.length,maxWorkers);
+    for(let i=0;i<crewSize;i++){
+      const [name,role,color]=roles[i%roles.length];
       const node=document.createElement('div');node.className='construction-worker';node.dataset.role=role;
       node.style.setProperty('--worker-color',color);node.hidden=true;
       node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span></div>`;
       this.overlay.append(node);
-      this.team.push({node,role,frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i+2],job:null});
-    });
+      this.team.push({node,role,frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i],job:null});
+    }
     // At most two exceptional incidents over the whole page, never on every block.
     const pick=items=>items[Math.floor(Math.random()*items.length)];
     const flip=pick(this.units.filter(u=>u.el.matches('.project-window,.lab-card')));
@@ -119,7 +121,7 @@ export class ScrollConstruction {
     worker.job=null;worker.node.hidden=true;worker.cursor.trail=[];
   }
   ready(el){const unit=this.units.find(unit=>unit.el===el);return !unit||unit.state==='done'}
-  owns(index){return index>=2&&!!this.team[index-2]?.job}
+  owns(index){return !!this.team[index]?.job||!!this.team[index]?.helping}
   hideCursors(){for(const worker of this.team)worker.node.hidden=true}
   layoutRect(unit){
     // Recover the layout box from the rotated bounding box around its centre.
@@ -136,15 +138,22 @@ export class ScrollConstruction {
 
     }
   }
-  choose(worker,limit) {
-    const candidates=this.units.filter(unit=>unit.eligible&&!unit.owner&&unit.state!=='done');
-    candidates.sort((a,b)=>a.rect.top-b.rect.top||a.index-b.index);
-    const writingBacklog=candidates.filter(unit=>unit.stage==='write');
-    if(writingBacklog.length>=3&&worker.role==='create')return writingBacklog[0];
-    return candidates.find(unit=>unit.stage===worker.role)||candidates.find(unit=>unit.stage!=='create')||candidates[0];
+  choose(worker) {
+    // Dispatch across the viewport from each cursor's actual position. Roles
+    // break close ties; every free cursor can take every stage.
+    let best=null,bestScore=Infinity;
+    for(const unit of this.units){
+      if(!unit.eligible||unit.owner||unit.state==='done')continue;
+      const r=unit.rect;
+      const distance=Math.hypot(worker.cursor.x-(r.left+r.width*.5),worker.cursor.y-(r.top+r.height*.5));
+      const score=distance*.48-(unit.stage==='create'?0:90)-(unit.stage===worker.role?35:0)-(unit.suspended?100:0);
+      if(score<bestScore){best=unit;bestScore=score}
+    }
+    return best;
   }
   chooseAdjustment(){return null;}
   assign(worker,unit,{width}) {
+    worker.helping=null;
     if(unit.suspended){
       const previous=unit.suspended;unit.suspended=null;
       worker.job={...previous,resuming:true,resumePhase:previous.phase,resumeElapsed:previous.elapsed,phase:'approach',elapsed:0,from:{x:worker.cursor.x,y:worker.cursor.y}};
@@ -166,8 +175,10 @@ export class ScrollConstruction {
       const near=this.units.find(other=>other!==unit&&other.state!=='waiting'&&other.rect&&unit.rect&&Math.abs(other.rect.top-unit.rect.top)<Math.max(other.rect.height,unit.rect.height)+32);
       unit.scatter.obstacle=near&&Math.random()<.32*Math.min(1,(this.scrollVelocity||0)/2400)?(unit.scatter.x>=0?1:-1):0;
     }
-    const writingDuration=Math.min(2.1,Math.max(.55,unit.letters.length/(unit.category==='TITRE'?29:105)));
-    worker.job={unit,task,phase:'approach',elapsed:0,approachDuration:.28+Math.random()*.4,from:{x:worker.cursor.x,y:worker.cursor.y},source:{...unit.scatter,x:unit.dx,y:unit.dy,angle:unit.angle,flip:unit.flip||0},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?(unit.scatter?.duration||.8):(unit.incident?2.4:1.25+(unit.scatter?.duration||1)*.3)};
+    const writingDuration=Math.min(1.25,Math.max(.3,unit.letters.length/(unit.category==='TITRE'?48:165)));
+    const r=unit.rect||this.layoutRect(unit);
+    const reach=Math.hypot(worker.cursor.x-r.left,worker.cursor.y-r.top);
+    worker.job={unit,task,phase:'approach',elapsed:0,approachDuration:.09+Math.min(.30,reach/2300),from:{x:worker.cursor.x,y:worker.cursor.y},source:{...unit.scatter,x:unit.dx,y:unit.dy,angle:unit.angle,flip:unit.flip||0},duration:task==='adjust'?.36:task==='write'?writingDuration:task==='create'?(.66*(unit.scatter?.duration||.8)):(unit.incident?1.65:.58+(unit.scatter?.duration||1)*.23)};
     unit.owner=worker;unit.state='approach';unit.el.dataset.construction='approach';worker.node.hidden=false;
   }
   finish(worker) {
@@ -188,7 +199,7 @@ export class ScrollConstruction {
     const r=letter.getBoundingClientRect();
     return {left:unit.written?r.right:r.left,top:r.top,height:Math.max(10,r.height)};
   }
-  update(dt,{width,height,count,showOutlines,enabled}) {
+  update(dt,{width,height,count,resizing=false,showOutlines,enabled}) {
     if(this.reduced||!enabled)return;
     const realDt=Math.max(0,Math.min(dt,.05));
     const delta=window.scrollY-this.scrollY;
@@ -205,26 +216,47 @@ export class ScrollConstruction {
     this.scrollY=window.scrollY;
     this.clock+=dt;this.delay=Math.max(0,this.delay-dt);if(this.delay)return;
     if(this.clock-this.measuredAt>.075){this.measure({width,height});this.measuredAt=this.clock}
-    const limit=Math.min(width<=700?3:6,Math.max(1,count-2));
+    const limit=Math.min(count,this.team.length);
     const ease=value=>{const t=Math.max(0,Math.min(1,value));return t*t*(3-2*t)};
+    // Claim distinct blocks first. The resize pair is reserved only while it
+    // really holds a window, and otherwise takes ordinary construction jobs.
     for(let i=0;i<this.team.length;i++){
-      const worker=this.team[i];
-      if(i>=limit){if(worker.job)this.suspend(worker);continue}
-      if(!worker.job){const unit=this.choose(worker,limit);if(unit)this.assign(worker,unit,{width})}
+      const worker=this.team[i];worker.helping=null;
+      if(worker.job)worker.job.helper=null;
+      if(i>=limit||(resizing&&i<2)){
+        if(worker.job)this.suspend(worker);
+        worker.node.hidden=true;continue;
+      }
+    }
+    const available=this.team.slice(resizing?2:0,limit);
+    for(let i=0;i<available.length;i++){
+      const worker=available[(i+(resizing?0:2))%available.length];
+      if(!worker.job){
+        const unit=this.choose(worker);
+        if(unit)this.assign(worker,unit,{width});
+        else worker.node.hidden=true;
+      }
+    }
+    const leads=available.filter(w=>w.job&&['create','place'].includes(w.job.task)&&w.job.phase!=='settle'&&w.job.unit.rect?.width>=110);
+    for(const worker of available){
+      if(worker.job||!leads.length)continue;
+      const lead=leads.shift();worker.helping=lead.job;lead.job.helper=worker;
+    }
+    for(const worker of available){
       if(!worker.job)continue;
       const job=worker.job,unit=job.unit,r=this.layoutRect(unit);
       if(r.bottom<65||r.top>height+50){this.suspend(worker);continue}
       const intensity=Math.min(1,this.scrollVelocity/2400);
       job.inertia??=intensity;
       job.inertia+=(intensity-job.inertia)*(1-Math.exp(-realDt/(intensity>job.inertia ? .07 : .65)));
-      job.elapsed+=dt;
+      job.elapsed+=dt*(job.helper&&job.phase===job.task?1.35:1);
       if(job.phase==='approach'&&job.elapsed>=job.approachDuration){job.phase=job.resuming?job.resumePhase:job.task;job.elapsed=job.resuming?job.resumeElapsed:0;job.resuming=false;}
       else if(job.phase===job.task&&job.elapsed>=job.duration){
         job.phase='settle';job.elapsed=0;
         if(job.task==='create'){this.geometry(unit);this.details(unit,0);}
         if(job.task==='write')this.typeText(unit,unit.letters.length);
         if(job.task==='place'||job.task==='adjust')this.pose(unit,0,0);
-      }else if(job.phase==='settle'&&job.elapsed>=.14){this.finish(worker);continue;}
+      }else if(job.phase==='settle'&&job.elapsed>=.07){this.finish(worker);continue;}
       let drawX=1,drawY=1;
       if(job.task==='create'){
         const p=job.phase==='approach'?(job.resuming?(job.resumePhase==='settle'?1:ease(job.resumeElapsed/job.duration)):0):job.phase==='settle'?1:ease(job.elapsed/job.duration);
@@ -247,7 +279,7 @@ export class ScrollConstruction {
         const p=Math.min(1,job.elapsed/job.duration),nudge=Math.sin(p*Math.PI);
         this.pose(unit,(unit.index%2?1:-1)*nudge*1.8,nudge*.6,1,(unit.index%2?1:-1)*nudge*.45);
       }
-      const actual=unit.el.getBoundingClientRect(),box=this.layoutRect(unit);
+      const box=r;
       const angle=unit.angle*Math.PI/180,cx=box.left+unit.dx+box.width/2,cy=box.top+unit.dy+box.height/2;
       const onBlock=(x,y)=>{
         const localX=x-box.width/2,localY=y-box.height/2,yaw=(unit.flip||0)*Math.PI/180;
@@ -259,6 +291,17 @@ export class ScrollConstruction {
       if(job.task==='place')point=onBlock(box.width,0);
       const caret=job.task==='write'?this.caretRect(unit):null;
       if(caret)point={x:caret.left+6,y:caret.top+caret.height*.72};
+      if(job.helper&&job.phase!=='settle'){
+        // Trace the opposite corner or carry the opposite end of the panel.
+        const helper=job.helper;
+        const target=job.task==='create'?onBlock(0,box.height*drawY):onBlock(0,box.height);
+        const follow=1-Math.exp(-18*dt);
+        helper.cursor.x+=(target.x-helper.cursor.x)*follow;
+        helper.cursor.y+=(target.y-helper.cursor.y)*follow;
+        helper.node.hidden=false;helper.frame.hidden=true;helper.caret.hidden=true;
+        helper.node.dataset.phase=job.phase;helper.node.dataset.task='assist';
+        helper.pointer.style.transform=`translate3d(${helper.cursor.x}px,${helper.cursor.y}px,0)`;
+      }
       const c=worker.cursor;
       if(job.phase==='approach'){
         const p=ease(job.elapsed/job.approachDuration);c.x=job.from.x+(point.x-job.from.x)*p;c.y=job.from.y+(point.y-job.from.y)*p;

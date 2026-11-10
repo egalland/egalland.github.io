@@ -1,7 +1,7 @@
-import {ScrollConstruction} from './construction.mjs?v=scroll-physics1';
+import {ScrollConstruction} from './construction.mjs?v=crew2';
 import {startEditorPointer} from './editor-pointer.mjs';
 const completed=new WeakSet();
-export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=6,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
+export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=cursorCount,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
 const abort=new AbortController();const on=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:abort.signal});
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -30,10 +30,10 @@ function frame(ts){
   // The first callback can carry a frame timestamp just before start().
   const elapsed=Math.max(0,Math.min((ts-last)/1000,1)),dt=Math.min(elapsed,.05);last=ts;clock+=elapsed;
   ctx.clearRect(0,0,width,height);ctx.save();if(clipFrame)clipFrame(ctx,width,height);
-  construction.update(elapsed,{width,height,count,showOutlines,enabled:true});
+  const n=width<700?Math.min(count,7):count;
+  construction.update(elapsed,{width,height,count:n,resizing:!!resizeJob,showOutlines,enabled:true});
   if(resizeWindows)updateCursorResize(Math.min(elapsed,.05)*(construction.animationRate||1));
   if(clock>nextMeasure){visibleCache=visibleItems();nextMeasure=clock+.12}
-  const n=width<700?Math.min(count,7):count;
   for(let i=0;i<n;i++){
     const c=cursors[i];
     // The two builders belong to the resize choreography while holding a window.
@@ -109,7 +109,7 @@ function updateCursorResize(dt){
     panel.eligible=construction.ready(panel.el)&&r.top>navBottom+25&&r.top<height*.78&&r.bottom<height-76;
     // Keep completed geometry when scrolling out of and back into view.
   }
-  if(!resizeJob&&!resizeCooldown){
+  if(!resizeJob&&!resizeCooldown&&!construction.owns(0)&&!construction.owns(1)){
     const next=cursorWindows.filter(p=>!p.done&&p.eligible).sort((a,b)=>Math.abs((a.rect.top+a.rect.bottom)/2-height*.5)-Math.abs((b.rect.top+b.rect.bottom)/2-height*.5))[0];
     if(next){
       resizeJob={panel:next,phase:'approach',elapsed:0,startScale:next.scale,from:cursors.slice(0,2).map(c=>({x:c.x,y:c.y}))};
