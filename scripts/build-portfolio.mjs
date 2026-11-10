@@ -48,8 +48,16 @@ const dockHtml=`<nav class="project-dock" aria-label="Accès direct aux projets"
 const positions=[[18,18],[50,8],[82,18],[86,50],[82,82],[50,92],[18,82],[14,50]];
 const nodes=PROJECT_GROUPS.map(({id},i)=>`<a class="particle-destination" href="#${id}" style="--nx:${positions[i][0]}%;--ny:${positions[i][1]}%;--order:${i}"><span class="particle-cluster" aria-hidden="true">${Array.from({length:9},(_,n)=>`<i style="--dot:${n}"></i>`).join('')}</span><span>${escape(groupLabels.get(id))}</span></a>`).join('');
 const menuHtml=`<div id="projectMenu" popover="auto" aria-label="Constellation des projets"><div class="constellation-heading mono"><span>CHOISIR UNE ORBITE</span><button class="close-menu" aria-label="Fermer la navigation">×</button></div><nav class="constellation" aria-label="Projets et pratiques"><div class="constellation-orbit" aria-hidden="true"></div><div class="constellation-dust" aria-hidden="true">${Array.from({length:25},(_,i)=>`<i style="--x:${(i*37+13)%100}%;--y:${(i*53+7)%100}%;--delay:${-i*.37}s"></i>`).join('')}</div>${nodes}<a class="constellation-home" href="#home" aria-label="Retour à l’accueil"><span>eg.</span><small>ACCUEIL</small></a></nav><div class="constellation-tools"><button id="restartButton">↺ Recommencer</button><button id="motionButton" aria-pressed="false">Ⅱ Pause</button></div></div>`;
-save('points/index.html',render(fs.readFileSync(path.join(root,'portfolio/points.template.html'),'utf8'),{chaptersHtml:chapters.join('\n'),dockHtml,menuHtml,maxScene:chapters.length-1,metaDescription:data.metaDescription}));
-save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template.html'),'utf8'),data));
+const themes = {curseurs:'Curseur', points:'Points', chrome:'Chrome'};
+function themeSwitchHtml(current) {
+ const items = Object.entries(themes).map(([id, label]) => id === current
+  ? `<span data-theme-choice="${id}" aria-current="page">${label}</span>`
+  : `<a data-theme-choice="${id}" href="/?theme=${id}">${label}</a>`);
+ return `<div class="theme-switch" role="navigation" aria-label="Thème visuel">${items.join('')}</div>`;
+}
+save('chrome/index.html',render(fs.readFileSync(path.join(root,'portfolio/chrome.template.html'),'utf8'),{themeSwitchHtml:themeSwitchHtml('chrome')}));
+save('points/index.html',render(fs.readFileSync(path.join(root,'portfolio/points.template.html'),'utf8'),{themeSwitchHtml:themeSwitchHtml('points'),chaptersHtml:chapters.join('\n'),dockHtml,menuHtml,maxScene:chapters.length-1,metaDescription:data.metaDescription}));
+save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template.html'),'utf8'),{...data,themeSwitchHtml:themeSwitchHtml('curseurs')}));
 save('portfolio-assets/content.js','window.PORTFOLIO_CONTENT='+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 save('portfolio-assets/content.mjs','export default '+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 console.log('Generated the Curseur and Points pages and the shared portfolio content.');

@@ -77,11 +77,8 @@ body.paused .chapter{transition:none!important}
 @media(max-height:720px){.intro-bottom p{font-size:14px}}
 @media(max-height:720px) and (max-width:600px){.intro-bottom{bottom:20svh}.intro-bottom p{font-size:12px}.intro h1{font-size:15vw}.intro-kicker{font-size:7px;margin-bottom:17px}}
 
-
 /* Points has a floating constellation, with no enclosing modal panel. */
-.theme-switch{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:5px;background:var(--dock);white-space:nowrap}
-.header-actions .theme-switch button,.theme-switch a{min-height:33px;padding:7px 11px;font:10px/1.2 RedlineMono,monospace;border-radius:2px;display:flex;align-items:center}
-.theme-switch button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+
 #projectMenu{position:fixed;inset:auto;left:var(--menu-x,12px);top:var(--menu-y,12px);margin:0;padding:12px;width:min(520px,calc(100vw - 24px));max-height:calc(100svh - 24px);overflow:visible;border:0;background:transparent;color:var(--fg);filter:drop-shadow(0 3px 15px var(--bg));font-family:RedlineText,Arial,sans-serif}
 #projectMenu::backdrop{background:transparent;backdrop-filter:none}
 #projectMenu .constellation-heading{display:flex;align-items:center;justify-content:center;gap:18px;font-size:9px;color:var(--accent)}
@@ -105,7 +102,7 @@ body.paused .chapter{transition:none!important}
 @keyframes constellation-gather{from{opacity:0;transform:scale(.65) translateY(12px)}to{opacity:1;transform:none}}
 @keyframes constellation-drift{to{translate:6px -9px;opacity:.2}}
 body.paused #projectMenu *{animation:none!important}
-@media(max-width:600px){.header-actions{gap:10px}.contact-shortcut{display:none}.header-actions .theme-switch button,.theme-switch a{padding:7px 8px;font-size:9px}.header-actions #projectsButton{font-size:9px}.identity>span:last-child{display:none}#projectMenu .particle-destination{min-width:84px;font-size:11px}#projectMenu .constellation{height:245px}}
+@media(max-width:600px){.header-actions{gap:10px}.contact-shortcut{display:none}.header-actions #projectsButton{font-size:9px}.identity>span:last-child{display:none}#projectMenu .particle-destination{min-width:84px;font-size:11px}#projectMenu .constellation{height:245px}}
 @media(max-height:460px){#projectMenu .constellation{height:185px;margin:8px 0}#projectMenu .constellation-heading{height:32px}}
 @media(prefers-reduced-motion:reduce){#projectMenu *{animation:none!important;transition:none!important}}
 

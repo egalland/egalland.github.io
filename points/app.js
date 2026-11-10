@@ -1,7 +1,9 @@
+import {themeSwitch} from '/portfolio-assets/theme-switch.mjs';
 import {magneticDestination,formationProgress,cursorForce,springStep,projectFor,nextProjectFor,PROJECT_STARTS,LAST_SCENE} from './motion-core.mjs?v=pratiques1';
 import {resamplePoints,particlePosition} from './point-motion.mjs';
 import imageAssets from './assets/images.mjs';
 const $ = (s) => document.querySelector(s);
+const updateLinks=themeSwitch();
 const sections = [...document.querySelectorAll('.chapter')];
 sections.forEach(s=>{const h=s.querySelector('h2');if(h){const lines=h.innerHTML.split(/<br>\s*/);h.innerHTML=lines.map((line,k)=>`<span class="title-line" style="--line-index:${k}"><span>${line}</span></span>`).join(' ');}});
 const canvas = $('#particles');
@@ -256,7 +258,7 @@ function setScene(index){
   if(left<dock.scrollLeft)dock.scrollLeft=left;
   else if(right>dock.scrollLeft+dock.clientWidth)dock.scrollLeft=right-dock.clientWidth;
  }
- root.dataset.scene=String(index);root.dataset.project=String(p);const viewToggle=$('[data-view-switch]');if(viewToggle)viewToggle.href='/?theme=curseurs#'+sections[index].dataset.cursor; $('[data-chrome-switch]').href='/?theme=chrome#'+sections[index].dataset.cursor;document.body.classList.toggle('is-intro',index===0);
+ root.dataset.scene=String(index);root.dataset.project=String(p);updateLinks(sections[index].dataset.cursor);document.body.classList.toggle('is-intro',index===0);
  root.dataset.flowingPoints=String(forms[index].filter(p=>p.track).length);
  $('#interactionStatus').textContent=frameTitles[index];
  // Theme changes continue through the same matter transition as the scene.

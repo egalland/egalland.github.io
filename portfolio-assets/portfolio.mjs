@@ -1,8 +1,9 @@
+import {themeSwitch,themeUrl} from './theme-switch.mjs';
 import './portfolio-content.mjs?v=pratiques1';
 import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=crew2';
 import {createPortfolioMenu} from './context-menu.mjs?v=chrome1';
 
-const root=document.documentElement,buttons=[...document.querySelectorAll('[data-theme-choice]')],status=document.querySelector('#theme-status');
+const root=document.documentElement,status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');
 let started=false,selected='curseurs',userPaused=false,projectMenu=null;
 try{userPaused=localStorage.getItem('redline-lab-motion')==='paused';}catch{}
@@ -16,7 +17,6 @@ function setAppearance(theme){
  const position=started?readingPosition():null;
  root.dataset.theme=theme;document.body.classList.toggle('paused',preference.matches||userPaused);
  root.dataset.motion=preference.matches||userPaused?'paused':'active';
- buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.themeChoice===theme)));
  if(position){const r=position.el.getBoundingClientRect();scrollTo({top:scrollY+r.top+position.ratio*r.height-100,behavior:'instant'});}
 }
 const manager=createThemeManager({
@@ -31,7 +31,6 @@ const manager=createThemeManager({
  },
  report({theme,status:state,error}){
   root.dataset.themeStatus=state;
-  buttons.forEach(button=>button.setAttribute('aria-busy',String(state==='loading'&&button.dataset.themeChoice===theme)));
   status.textContent=state==='loading'?'Chargement du thème '+THEMES[theme].label+'.':state==='ready'?'Thème '+THEMES[theme].label+' activé.':'Le thème n’a pas pu se charger. Le contenu reste accessible.';
   if(error)console.error('Chargement du thème',error);
   projectMenu?.refresh();
@@ -40,15 +39,25 @@ const manager=createThemeManager({
 async function choose(theme,{save=true}={}){
  if(theme==='points'||theme==='chrome'){
   const id=(started?readingPosition()?.el.id:null)||location.hash.slice(1)||'home';
-  const url=new URL(location.href);url.pathname='/';url.searchParams.set('theme',theme);url.hash=({work:'market-plus',atelier:'livre'})[id]||id;
-  location.assign(url);return;
+  location.assign(themeUrl(theme,id));return;
  }
  selected=normalizeTheme(theme);
  const promise=manager.select(selected,{reduced:preference.matches||userPaused,resume:started,count:innerWidth<=700?1680:2800});started=true;
  if(save){try{localStorage.setItem('portfolio-theme',selected);}catch{}const url=new URL(location.href);url.searchParams.set('theme',selected);history.replaceState(null,'',url);}
  await promise;
 }
-for(const button of buttons){button.disabled=false;button.addEventListener('click',()=>choose(button.dataset.themeChoice));}
+const updateLinks = themeSwitch();
+function syncSwitch() {
+ updateLinks(readingPosition()?.el.id || location.hash.slice(1) || 'home');
+}
+let pending = false;
+addEventListener('scroll', () => {
+ if (pending) return;
+ pending = true;
+ requestAnimationFrame(() => { pending = false; syncSwitch(); });
+}, {passive:true});
+addEventListener('pageshow',syncSwitch);
+syncSwitch();
 projectMenu=createPortfolioMenu({
  getState:()=>({theme:selected,paused:userPaused||preference.matches,reduced:preference.matches}),
  onTheme:theme=>choose(theme),

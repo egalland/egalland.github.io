@@ -96,3 +96,26 @@ test('les URL de thème et les anciens dossiers conservent projet et paramètres
  }
  assert.equal(run('https://egalland.github.io/','curseurs'),null);
 });
+
+test('les trois en-têtes partagent le même sélecteur et gardent le projet dans les liens',async()=>{
+ const {themeUrl}=await import('../portfolio-assets/theme-switch.mjs');
+ const views={curseurs:'index.html',points:'points/index.html',chrome:'chrome/index.html'};
+ for(const [current,file] of Object.entries(views)){
+  const html=read(file);
+  const header=html.match(/<header\b[\s\S]*?<\/header>/)[0];
+  const control=header.match(/<div class="theme-switch"[^>]*>(.*?)<\/div>/)[1];
+  assert.deepEqual([...control.matchAll(/data-theme-choice="([^"]+)"/g)].map(m=>m[1]),Object.keys(views));
+  assert.equal((control.match(/aria-current="page"/g)||[]).length,1);
+  assert.ok(control.includes('<span data-theme-choice="'+current+'" aria-current="page">'));
+  assert.ok(html.includes('href="/portfolio-assets/theme-switch.css"'));
+  for(const target of Object.keys(views).filter(t=>t!==current)){
+   assert.ok(control.includes('href="/?theme='+target+'"'));
+   for(const [chapter,expected] of [['pills','pills'],['atelier','livre'],['chrome','home']]){
+    const url=new URL(themeUrl(target,chapter,'https://egalland.github.io/?lang=fr&theme='+current),'https://egalland.github.io/');
+    assert.equal(url.hash,'#'+expected);
+    assert.equal(url.searchParams.get('theme'),target);
+    assert.equal(url.searchParams.get('lang'),'fr');
+   }
+  }
+ }
+});

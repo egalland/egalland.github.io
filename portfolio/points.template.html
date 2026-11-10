@@ -7,14 +7,14 @@
   <title>Emmanuel Galland — Projets en points</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23eeece5'/%3E%3Ccircle cx='32' cy='32' r='21' fill='%23f23625'/%3E%3C/svg%3E">
   <link rel="preload" href="/points/assets/fonts.css" as="style">
-  <link rel="stylesheet" href="/points/style.css?v=pratiques1">
-</head>
+  <link rel="stylesheet" href="/points/style.css?v=switch2">
+<link rel="stylesheet" href="/portfolio-assets/theme-switch.css"></head>
 <body>
   <a class="skip" href="#market-plus">Aller aux projets</a>
   <header class="header">
     <a class="identity" href="/" aria-label="Emmanuel Galland, choisir une vue"><span class="monogram">eg<span>●</span></span><span>EMMANUEL<br> GALLAND</span></a>
 
-    <div class="header-actions"><div class="theme-switch" role="group" aria-label="Thème visuel"><a data-view-switch href="/?theme=curseurs" role="button" aria-pressed="false">Curseur</a><button type="button" aria-pressed="true">Points</button><a data-chrome-switch href="/?theme=chrome" role="button" aria-pressed="false">Chrome</a></div><a class="contact-shortcut" href="#contact">LIENS <span>↗</span></a><button id="projectsButton" aria-expanded="false" aria-controls="projectMenu">LES PROJETS <span class="menu-mark" aria-hidden="true">＋</span></button></div>
+    <div class="header-actions">{{themeSwitchHtml}}<a class="contact-shortcut" href="#contact">LIENS <span>↗</span></a><button id="projectsButton" aria-expanded="false" aria-controls="projectMenu">LES PROJETS <span class="menu-mark" aria-hidden="true">＋</span></button></div>
   </header>
 
   <div id="scene" aria-hidden="true"><canvas id="particles"></canvas><div class="scene-grid"></div><div class="stage-label"><span class="signal"></span><span id="formationLabel">EMMANUEL GALLAND</span></div><div class="coordinates"><span id="sceneNumber">00</span><span class="cross">+</span></div></div>
@@ -33,6 +33,6 @@
   {{menuHtml}}
   <div id="interactionStatus" class="sr-only" role="status" aria-live="polite"></div>
   <noscript><style>.chapter,.chapter.intro,.chapter.outro{position:relative!important;visibility:visible!important;opacity:1!important;height:auto!important;overflow:visible!important}.panel{position:relative!important;min-height:90svh;height:auto!important;padding:110px 5vw!important}.copy{max-width:100%!important;pointer-events:auto!important;opacity:1!important}.project-dock,.frame-navigation,.navigation-hint,#scene{display:none!important}</style><div class="noscript">Les descriptions et liens restent accessibles. Activez JavaScript pour explorer les formations interactives.</div></noscript>
-  <script type="module" src="/points/app.js?v=theme-url1"></script>
+  <script type="module" src="/points/app.js?v=switch2"></script>
 </body>
 </html>

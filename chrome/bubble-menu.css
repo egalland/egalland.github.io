@@ -52,23 +52,13 @@
  .rack a[aria-current] .charm-label{box-shadow:inset 0 -2px #9dffe9}
 }
 
-
 .rack-head .core-close{margin-left:auto}
 .index-label{font:inherit}
-header .view-switch{
- display:flex;align-items:center;gap:1px;padding:2px;border:1px solid #826c70;
- border-radius:5px;background:#2c1b23;white-space:nowrap
-}
-header .view-switch>*{
- display:grid;align-items:center;min-height:34px;padding:0 10px;border-radius:3px;
- color:#eededc;font:11px/1 var(--mono)
-}
-header .view-switch a:hover{background:#453038}
-header .view-switch [aria-current]{color:#211921;background:linear-gradient(#eee9e3,#c4cbce)}
+
 @media(max-width:720px){
  header{padding-inline:clamp(8px,3vw,18px);gap:6px}
  header .brand span,.tools .index-label{display:none}
  header .tools{gap:3px}
- header .view-switch>*{min-height:38px;padding:0 7px;font-size:10px}
+
  header .tools .guide{min-width:32px;justify-content:center;padding:0}
 }

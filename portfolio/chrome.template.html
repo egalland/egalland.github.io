@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><script src="/portfolio-assets/theme-route.js" data-view="chrome"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#21080b"><title>Chrome — Emmanuel Galland</title>
+<meta name="description" content="Les projets, l’atelier et les pratiques d’Emmanuel Galland le long d’une chaîne chromée.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23250910'/%3E%3Ctext x='5' y='27' fill='%2398fff2' font-size='22' font-family='Arial' font-weight='bold'%3Eeg%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/chrome/style.css"><link rel="stylesheet" href="/chrome/bubble-menu.css?v=switch2"><script type="module" src="/chrome/app.js?v=switch2"></script>
+<link rel="stylesheet" href="/portfolio-assets/theme-switch.css"></head>
+<body>
+<header><a href="#chrome" class="brand" aria-label="Emmanuel Galland, accueil"><b>eg.</b><span>Emmanuel Galland</span></a><div class="tools">{{themeSwitchHtml}}<button id="index-trigger" aria-label="Maillons" title="Maillons" popovertarget="chain-index" class="guide" aria-controls="chain-index" aria-expanded="false"><i class="link-symbol" aria-hidden="true"></i><b class="index-label">Maillons</b></button><button id="motion" class="guide" aria-label="Mettre le mouvement en pause" title="Mettre le mouvement en pause">Ⅱ</button><button class="guide" id="guide"><span aria-hidden="true">?</span> Mode d’emploi</button></div></header>
+<main id="stage">
+  <div class="backdrop" aria-hidden="true"></div>
+  <canvas id="metal" aria-hidden="true"></canvas>
+  <div class="strip" id="strip" tabindex="0" aria-label="Parcours horizontal des projets">
+    <noscript><a href="https://egalland.github.io/">Ouvrir le portfolio d’Emmanuel Galland</a></noscript>
+  </div>
+  <template id="tag-template"><div class="pendant" aria-hidden="true">
+    <div class="bail"></div>
+    <div class="plaque"><div class="inner">
+      <div class="slot"></div><div class="print"><span class="badgenum">EG / 00</span><span>◆</span></div>
+      <canvas class="glyph" width="480" height="320"></canvas>
+      <div class="legend"><span class="badgeTitle">Emmanuel<br>Galland</span><i class="barcode"></i></div>
+    </div></div>
+  </div></template>
+</main>
+<footer>
+ <div class="rail-head"><span>Défilement horizontal</span><span class="counter"><b id="count">01</b> / <span id="total"></span></span></div>
+ <div class="rail-control"><div class="rail-scale" aria-hidden="true"><div class="rail-notches"></div><i class="rail-carriage"></i></div><div class="rail-tip" aria-hidden="true" hidden><canvas width="76" height="56"></canvas><span></span></div><input id="rail" type="range" min="0" max="0" value="0" aria-label="Position dans le parcours"></div>
+ <div class="navigation"><nav aria-label="Rubriques"></nav>
+ <div class="arrows"><button id="prev" aria-label="Chapitre précédent">←</button><button id="next" aria-label="Chapitre suivant">→</button></div></div>
+</footer>
+<dialog id="sheet" aria-labelledby="sheet-title"><div class="dialog-head"><span id="sheet-type">Chrome</span><button id="close" aria-label="Fermer">×</button></div><div class="sheet-hero"><h2 id="sheet-title"></h2><canvas id="sheet-emblem" aria-hidden="true" width="168" height="132" hidden></canvas></div><p id="sheet-copy"></p><div id="sheet-actions"></div><div id="sheet-body"></div></dialog>
+<div id="chain-index" popover="auto" aria-labelledby="index-title">
+ <div class="rack-head"><span id="index-title">Maillons</span><button class="core-close" aria-label="Fermer l’index">×</button></div>
+ <div class="rack"><canvas class="index-chain" aria-hidden="true"></canvas><nav aria-label="Maillons du portfolio"></nav></div>
+ <div class="rack-pages"><button data-turn="-1" aria-label="Groupe précédent">←</button><span class="rack-count" aria-live="polite"></span><button data-turn="1" aria-label="Groupe suivant">→</button></div>
+</div>
+</body></html>
