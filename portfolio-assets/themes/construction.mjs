@@ -25,7 +25,7 @@ export class ScrollConstruction {
       const [name,role,color]=roles[i%roles.length];
       const node=document.createElement('div');node.className='construction-worker';node.dataset.role=role;
       node.style.setProperty('--worker-color',color);node.hidden=true;
-      node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span></div>`;
+      node.innerHTML=`<div class="construction-frame"><span class="construction-caption"></span><i></i><i></i><i></i><i></i></div><div class="construction-caret"></div><div class="construction-pointer"><span class="construction-grip"></span><svg viewBox="-3 -3 28 32"><path transform="scale(${cursors[i].size ?? 1})" d="M0 0L5 21L10 14L19 13Z"/></svg><span class="construction-name">${name}</span></div>`;
       this.overlay.append(node);
       this.team.push({node,role,frame:node.querySelector('.construction-frame'),caption:node.querySelector('.construction-caption'),caret:node.querySelector('.construction-caret'),pointer:node.querySelector('.construction-pointer'),cursor:cursors[i],job:null});
     }
@@ -266,7 +266,10 @@ export class ScrollConstruction {
       const precision=job.task==='place'||job.task==='adjust';
       const cap=job.phase==='settle'?1:precision?1.45:job.task==='write'?1.9:3;
       const assist=job.helper&&job.phase===job.task&&!precision?1.2:1;
-      job.elapsed+=realDt*Math.min(cap,this.animationRate*assist);
+      const speed=worker.cursor.speed ?? 1;
+      // Keep placement corrections legible and give every release its full settling time.
+      const pace=job.phase==='settle'?1:precision&&job.phase!=='approach'?1+(speed-1)*.35:speed;
+      job.elapsed+=realDt*Math.min(cap,this.animationRate*assist)*pace;
       if(job.phase==='approach'&&job.elapsed>=job.approachDuration){job.phase=job.resuming?job.resumePhase:job.task;job.elapsed=job.resuming?job.resumeElapsed:0;job.resuming=false;}
       else if(job.phase===job.task&&job.elapsed>=job.duration){
         job.phase='settle';job.elapsed=0;
@@ -312,7 +315,7 @@ export class ScrollConstruction {
         // Trace the opposite corner or carry the opposite end of the panel.
         const helper=job.helper;
         const target=job.task==='create'?onBlock(0,box.height*drawY):onBlock(0,box.height);
-        const follow=1-Math.exp(-18*dt);
+        const follow=1-Math.exp(-18*dt*(helper.cursor.speed ?? 1));
         helper.cursor.x+=(target.x-helper.cursor.x)*follow;
         helper.cursor.y+=(target.y-helper.cursor.y)*follow;
         helper.node.hidden=false;helper.frame.hidden=true;helper.caret.hidden=true;

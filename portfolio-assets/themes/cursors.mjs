@@ -1,5 +1,5 @@
 import {createRobotLife,paintRobot} from './robot-life.mjs?v=ideas1';
-import {ScrollConstruction} from './construction.mjs?v=robots1';
+import {ScrollConstruction} from './construction.mjs?v=tempo1';
 import {startEditorPointer} from './editor-pointer.mjs';
 const completed=new WeakSet();
 export function start({reduced=false,resume=false,accept=()=>true,readableOnEntry=()=>false,cursorCount=12,maxWorkers=cursorCount,resizeWindows=true,frameInterval=0,maxDpr=2,clipFrame=null,idleWhenEmpty=false}={}){
@@ -19,10 +19,21 @@ let width=innerWidth,height=innerHeight,last=0,clock=0,raf=0,hidden=document.hid
 const colors=['#7faaff','#ec8aaa','#a59af2','#7bc9af','#e7bd74','#8dd2ef','#d49feb'];
 const names=['Interface','Données','Code','Automatisation','Idées','Mouvement','Projets'];
 const items=$$('.editable').filter(accept);
-const cursors=Array.from({length:24},(_,i)=>({x:Math.random()*width,y:Math.random()*height,tx:0,ty:0,phase:Math.random()*6.28,speed:.6+Math.random()*.4,target:i%items.length,timer:0,trail:[],color:colors[i%colors.length]}));
+// Even a small mobile crew includes quick, measured and slower pointers.
+const firstPace = Math.floor(Math.random()*3);
+const paceOrder = Math.random()<.5 ? 1 : 2;
+const cursors = Array.from({length:24}, (_,i) => {
+  const band = (firstPace + i*paceOrder)%3;
+  return {
+    x:Math.random()*width, y:Math.random()*height, tx:0, ty:0,
+    phase:Math.random()*Math.PI*2, speed:.76 + band*.21 + Math.random()*.12,
+    size:.92 + Math.random()*.16, target:i%items.length, timer:0,
+    trail:[], color:colors[i%colors.length]
+  };
+});
 function resize(){width=innerWidth;height=innerHeight;const dpr=Math.min(devicePixelRatio||1,maxDpr);canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}resize();on(window,'resize',resize);
 function visibleItems(){return items.map((el,i)=>({el,i,r:el.getBoundingClientRect()})).filter(o=>o.r.bottom>100&&o.r.top<height-100&&o.r.width>0&&!o.el.closest('.construction-unit:not([data-construction="done"])'))}
-function pathCursor(c,i){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.sin(clock*.3+c.phase)*.08);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3.2,15);ctx.lineTo(7,10.6);ctx.lineTo(12.4,10.5);ctx.closePath();ctx.fillStyle=c.color;ctx.strokeStyle='#09090b';ctx.lineWidth=1.1;ctx.fill();ctx.stroke();if(i<3&&width>700){ctx.font='8px Inter,Arial';const name=names[i];const tw=ctx.measureText(name).width;ctx.fillStyle=c.color;ctx.fillRect(12,15,tw+12,16);ctx.fillStyle='#101018';ctx.fillText(name,18,26)}ctx.restore()}
+function pathCursor(c,i){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.sin(clock*.3+c.phase)*.08);ctx.save();ctx.scale(c.size,c.size);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3.2,15);ctx.lineTo(7,10.6);ctx.lineTo(12.4,10.5);ctx.closePath();ctx.fillStyle=c.color;ctx.strokeStyle='#09090b';ctx.lineWidth=1.1;ctx.fill();ctx.stroke();ctx.restore();if(i<3&&width>700){ctx.font='8px Inter,Arial';const name=names[i];const tw=ctx.measureText(name).width;ctx.fillStyle=c.color;ctx.fillRect(12,15,tw+12,16);ctx.fillStyle='#101018';ctx.fillText(name,18,26)}ctx.restore()}
 function outline(r,color,i){if(r.top<75||r.bottom>height-55)return;ctx.strokeStyle=color;ctx.globalAlpha=.4;ctx.lineWidth=.75;ctx.strokeRect(r.x-3,r.y-3,r.width+6,r.height+6);ctx.globalAlpha=.8;for(const [x,y] of [[r.x-5,r.y-5],[r.right+1,r.y-5],[r.x-5,r.bottom+1],[r.right+1,r.bottom+1]]){ctx.fillStyle='#0c0c10';ctx.fillRect(x,y,4,4);ctx.strokeRect(x,y,4,4)}if(width>700&&i<2){ctx.fillStyle=color;ctx.fillRect(r.x-3,r.y-17,80,14);ctx.fillStyle='#0b0b11';ctx.font='7px monospace';ctx.fillText(Math.round(r.width)+' × '+Math.round(r.height),r.x+3,r.y-7)}ctx.globalAlpha=1}
 let visibleCache=[],nextMeasure=0,lastPaint=0;
 const life=createRobotLife();
@@ -42,7 +53,7 @@ function frame(ts){
     const c=cursors[i];
     // The two builders belong to the resize choreography while holding a window.
     if((resizeJob&&i<2)||construction.owns(i))continue;
-    c.timer-=dt;
+    c.timer-=dt*c.speed;
     if(c.timer<=0&&visibleCache.length){
       const o=visibleCache[Math.floor(Math.random()*visibleCache.length)];
       c.target=o.i;c.timer=1.8+Math.random()*3.8;
@@ -50,7 +61,7 @@ function frame(ts){
     const o=visibleCache.find(o=>o.i===c.target)||visibleCache[i%visibleCache.length];
     const action=life.pose(i,clock,visibleCache,width,height);
     if(action){c.tx=action.x;c.ty=action.y}
-    else if(o){const r=o.r;c.tx=r.x+r.width*(.15+.7*(.5+.5*Math.sin(clock*.45+c.phase)));c.ty=r.y+r.height*(.15+.7*(.5+.5*Math.cos(clock*.6+c.phase)))}
+    else if(o){const r=o.r;c.tx=r.x+r.width*(.15+.7*(.5+.5*Math.sin(clock*.45*c.speed+c.phase)));c.ty=r.y+r.height*(.15+.7*(.5+.5*Math.cos(clock*.6*c.speed+c.phase)))}
     else{c.tx=width*.5;c.ty=height*.5}
     const ease=1-Math.exp(-(action?5.5:3.2)*dt*c.speed);c.x+=(c.tx-c.x)*ease;c.y+=(c.ty-c.y)*ease;
     c.trail.push({x:c.x,y:c.y});if(c.trail.length>15)c.trail.shift();
@@ -71,7 +82,7 @@ const cursorWindows=$$('.hero-art, .project-window, .lab-card').filter(accept).m
 });
 const resizeOverlay=document.createElement('div');
 resizeOverlay.className='resize-choreography';resizeOverlay.hidden=true;resizeOverlay.setAttribute('aria-hidden','true');
-resizeOverlay.innerHTML=`<div class="resize-selection"><span class="resize-measure"></span>${Array.from({length:8},(_,i)=>`<i class="resize-handle handle-${i}"></i>`).join('')}</div>${['Interface','Mouvement'].map((name,i)=>`<div class="resize-cursor builder-${i}"><span class="grab-ring"></span><svg viewBox="-3 -3 28 32"><path d="M0 0L5 21L10 14L19 13Z"/></svg><span class="builder-name">${name}</span></div>`).join('')}`;
+resizeOverlay.innerHTML=`<div class="resize-selection"><span class="resize-measure"></span>${Array.from({length:8},(_,i)=>`<i class="resize-handle handle-${i}"></i>`).join('')}</div>${['Interface','Mouvement'].map((name,i)=>`<div class="resize-cursor builder-${i}"><span class="grab-ring"></span><svg viewBox="-3 -3 28 32"><path transform="scale(${cursors[i].size})" d="M0 0L5 21L10 14L19 13Z"/></svg><span class="builder-name">${name}</span></div>`).join('')}`;
 document.body.append(resizeOverlay);
 const selection=resizeOverlay.querySelector('.resize-selection');
 const measure=resizeOverlay.querySelector('.resize-measure');
@@ -113,7 +124,7 @@ function updateCursorResize(dt){
   if(!resizeJob&&!resizeCooldown&&!construction.owns(0)&&!construction.owns(1)){
     const next=cursorWindows.filter(p=>!p.done&&p.eligible).sort((a,b)=>Math.abs((a.rect.top+a.rect.bottom)/2-height*.5)-Math.abs((b.rect.top+b.rect.bottom)/2-height*.5))[0];
     if(next){
-      resizeJob={panel:next,phase:'approach',elapsed:0,startScale:next.scale,from:cursors.slice(0,2).map(c=>({x:c.x,y:c.y}))};
+      resizeJob={panel:next,phase:'approach',elapsed:0,approachDuration:.72/Math.min(cursors[0].speed,cursors[1].speed),startScale:next.scale,from:cursors.slice(0,2).map(c=>({x:c.x,y:c.y}))};
       next.el.classList.add('window-resizing');resizeOverlay.hidden=false;
     }
   }
@@ -123,7 +134,7 @@ function updateCursorResize(dt){
   if(rect.bottom<navBottom||rect.top>height){finishCursorResize(false);return}
   resizeOverlay.hidden=false;
   job.elapsed+=dt;
-  if(job.phase==='approach'&&job.elapsed>=.72){job.phase='grip';job.elapsed=0}
+  if(job.phase==='approach'&&job.elapsed>=job.approachDuration){job.phase='grip';job.elapsed=0}
   else if(job.phase==='grip'&&job.elapsed>=.3){job.phase='drag';job.elapsed=0}
   else if(job.phase==='drag'&&job.elapsed>=1.65){job.phase='release';job.elapsed=0;setWindowScale(panel,1);rect=panel.el.getBoundingClientRect()}
   else if(job.phase==='release'&&job.elapsed>=.5){finishCursorResize();return}
@@ -137,7 +148,7 @@ function updateCursorResize(dt){
   corners.forEach((point,i)=>{
     const c=cursors[i];
     if(job.phase==='approach'){
-      const t=smoothStep(job.elapsed/.72);
+      const t=smoothStep(job.elapsed*c.speed/.72);
       c.x=job.from[i].x+(point.x-job.from[i].x)*t;c.y=job.from[i].y+(point.y-job.from[i].y)*t;
     }else{c.x=point.x;c.y=point.y}
     // The arrow tip and the handle share exactly the same viewport coordinates.

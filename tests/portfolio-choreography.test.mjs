@@ -96,13 +96,14 @@ test('tous les curseurs disponibles démarrent des blocs distincts dans la même
    const c=Object.create(ScrollConstruction.prototype);
    const rect={left:20,top:100,width:100,height:30,bottom:130};
    const units=Array.from({length:count},(_,index)=>({index,rect,stage:'create',state:'waiting',eligible:true,el:{dataset:{}},dx:0,dy:0,angle:0}));
-   const team=units.map(()=>({cursor:{x:0,y:0},role:'write',node:{dataset:{},classList:{toggle(){}}},frame:{style:{}},caret:{},pointer:{style:{}},caption:{}}));
+   const team=units.map((_,i)=>({cursor:{x:0,y:0,speed:i%2?1.24:.84},role:'write',node:{dataset:{},classList:{toggle(){}}},frame:{style:{}},caret:{},pointer:{style:{}},caption:{}}));
    Object.assign(c,{clock:0,delay:0,measuredAt:0,scrollY:0,units,team,overlay:{dataset:{}}});
    c.layoutRect=()=>rect;c.geometry=()=>{};c.details=()=>{};c.pose=()=>{};c.prepareText=u=>{u.letters=[]};
    c.update(.016,{width,height:800,count,resizing,showOutlines:true,enabled:true});
    const busy=team.filter(w=>w.job);
    assert.equal(busy.length,count-(resizing?2:0));
    assert.equal(new Set(busy.map(w=>w.job.unit)).size,busy.length);
+   for(const w of busy)assert.ok(Math.abs(w.job.elapsed-.016*w.cursor.speed)<1e-8,'chaque approche avance à la vitesse de son curseur');
    if(resizing)assert.ok(!c.owns(0)&&!c.owns(1));
   }
  }finally{globalThis.window=saved}
