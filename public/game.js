@@ -75,6 +75,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
   let yaw=p.angle,pitch=.13,drag=null,freeLookUntil=0,cameraSnap=true,stickX=0,stickY=0,aimX=0,aimY=0,fireHeld=false,sprintHeld=false,paused=false;
   let time=0,epoch=net?.serverTime?.()||Date.now(),networkTick=0,hudTick=0,mapTick=0,popTick=0,trafficTick=0,routeClock=0,lastState='',ready=false,sound=false,audio=null;
   let reloading=0,cooldown=0,contactLock=0,actionAt=-2,score=0,arrivalChecked=false,isRunning=true;
+  let roadMotion=null;
   let actors=[],cars=[],routeActors=[],routeCars=[],remotes=[],obstacles=[],previousFrame=performance.now(),frameId;
   let driftX=0,driftY=0,aimPointer=null,shotFacingUntil=-1,meleeCameraAim=false,levelPlace=null,streetName=streetAt(p.x,p.y),streetTime=-1;
   let travelClaim=null,touchFireHeld=false,aimAssist=true,aimLock=null,lockPoint=null,markImpactUntil=0,nextLockCheck=0,heldSource='pointer';
@@ -703,7 +704,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     const claim={...car,x:p.x,y:p.y,angle:p.angle,speed,occupied:true,owner:net.id};
     travelClaim.sent=emit('vehicle',claim)!==false;
   }
-  function travelSpot(x,y,angle,vehicle,sourceId){
+  function travelSpot(x,y,angle,vehicle,sourceId,clearance=55){
     const nearby=routeAgents(x,y,64,epoch),world=net?.world?.()||{};
     const occupants=net?.peers?.()||[],occupied=new Set(occupants.map(r=>r.vehicle?.id));
     const at={x,y},entities=new Map();
@@ -728,7 +729,8 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     const geometry={radius:PLAYER_RADIUS,angle,destroyed,colliders:Array.from(entities.values(),collisionBody)};
     if(vehicle)Object.assign(geometry,dimensions(vehicle));
     if(!contactAt(x,y,geometry))return {x,y};
-    for(const radius of [.8,1.8,3.5,6,10,16,25,40,55]){
+    for(const radius of [.8,1.8,3.5,6,8,10,16,25,40,55]){
+      if(radius>clearance)break;
       const count=Math.max(12,Math.ceil(Math.PI*radius));
       for(let i=0;i<count;i++){
         const q=offset({x,y},angle+i*Math.PI*2/count,radius);
@@ -737,7 +739,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     }
     return null;
   }
-  function restoreTravelState(s){
+  function restoreTravelState(s,{clearance=55}={}){
     if(!s||![1,2].includes(s.version)||![s.x,s.y,s.angle].every(Number.isFinite)||Math.max(Math.abs(s.x),Math.abs(s.y))>100000)return false;
     const finite=(v,fallback,min,max)=>Number.isFinite(v)?clamp(v,min,max):fallback;
     const safeAngle=v=>Math.atan2(Math.sin(v),Math.cos(v));
@@ -751,7 +753,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     }
     const angle=safeAngle(s.angle);
     for(const id of net?.world?.().destroyed||[])destroyed.add(id);
-    const q=travelSpot(s.x,s.y,angle,ride,s.sourceId);
+    const q=travelSpot(s.x,s.y,angle,ride,s.sourceId,clearance);
     if(!q || (car&&car.id!==ride?.id&&!dropCar()))return false;
     resetInputs();resetPopulation();arrivalChecked=true;cameraSnap=true;levelPlace=null;
     p.x=q.x;p.y=q.y;p.angle=angle;
@@ -770,7 +772,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     yaw=safeAngle(Number.isFinite(s.yaw)?s.yaw:angle);pitch=finite(s.pitch,.13,-.47,1.35);
     const ownerChain=ride&&Array.isArray(s.vehicle.previousOwners)?s.vehicle.previousOwners:[];
     const previousOwners=[...new Set([s.vehicle?.owner,...ownerChain].filter(id=>typeof id==='string'&&id.length<=64))].slice(0,4);
-    car=ride;travelClaim=ride&&net?{previousOwners,sent:false,retryAt:0}:null;
+    car=ride;travelClaim=ride&&net&&s.sourceId!==net.id?{previousOwners,sent:false,retryAt:0}:null;
     speed=ride?finite(s.vehicle.speed,0,-vehicleSpec(ride.type).reverse,vehicleSpec(ride.type).forward):0;
     vx=ride?Math.cos(angle)*speed:finite(s.vx,0,-6.4,6.4);vy=ride?Math.sin(angle)*speed:finite(s.vy,0,-6.4,6.4);
     traversal.reset(vx,vy);p.moving=Math.hypot(vx,vy)>.1;p.sprinting=!ride&&Math.hypot(vx,vy)>4;
@@ -955,6 +957,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     if(!ammo[weapon])readyReload();
   }
   function move(dt){
+    roadMotion=null;
     if(selfRecoil){
       const r=selfRecoil,t=Math.min(1,r.progress+dt/recoilSeconds);
       const advance=(1-r.progress)**3-(1-t)**3;
@@ -986,6 +989,10 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
       const dx=Math.cos(targetAngle)*speed*dt,dy=Math.sin(targetAngle)*speed*dt;
       const options={radius:1,angle:targetAngle,...dimensions(car),footZ:0,bodyHeight:spec.height,destroyed,colliders:obstacles};
       let result=moveBody(p.x,p.y,dx,dy,options);
+      if(!paused&&(Math.abs(sy)>.12||Math.abs(speed)>.6)){
+        const sign=Math.sign(sy||speed);
+        roadMotion={x:Math.cos(targetAngle)*sign,y:Math.sin(targetAngle)*sign,speed:Math.abs(speed),boundary:result.touched?.id==='boundary'};
+      }
       if(result.hit&&softProp(result.touched)&&contactLock<=0){
         const normalSpeed=Math.max(0,-speed*(Math.cos(targetAngle)*result.normalX+Math.sin(targetAngle)*result.normalY));
         const amount=vehiclePropDamage(normalSpeed,spec.halfLength);
@@ -1002,7 +1009,8 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
         const struck=actors.find(e=>e.id===result.touched?.id);
         if(struck&&!struck.stunned&&Math.abs(speed)>4.8&&hurtNpc(struck,pedestrianDamage(speed),targetAngle+(speed<0?Math.PI:0),clamp(Math.abs(speed)/13,.4,1)))
           recordAction(['police','swat'].includes(struck.type)?'hitOfficer':'hitCivilian');
-        if(contactLock<=0 && normalSpeed>2.2){
+        if(result.touched?.id==='boundary')speed*=.78;
+        else if(contactLock<=0 && normalSpeed>2.2){
           impact=clamp(normalSpeed/12,.25,1);tone(95,.10,'triangle',.04,38);
           if(normalSpeed>11.5){damage(crashDamage(normalSpeed),targetAngle,.3,'crash');if(life.down)return;}
           if(result.touched?.id&&remotes.some(e=>e.id===result.touched.id)&&normalSpeed>8){
@@ -1022,6 +1030,8 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
       const attackPace=swing?(swing.kind==='kick' ? .50 : .72):1;
       const footing=selfRecoil && selfRecoil.progress<.45 ? .35 : attackPace;
       const foot=traversal.step(dt,{x:(sy*c-sx*s)*footing,y:(sy*s+sx*c)*footing,angle:p.angle,sprint:p.sprinting},{destroyed,colliders:obstacles});
+      if(!paused&&traversal.grounded&&m>.12)
+        roadMotion={x:(sy*c-sx*s)/Math.min(m,1),y:(sy*s+sx*c)/Math.min(m,1),speed:foot.actual,boundary:foot.boundary};
       vx=foot.vx;vy=foot.vy;p.moving=foot.actual>.11;
       if(traversal.grounded)p.walk+=foot.actual*dt*3.25;
       const firing=keys.has('f')?'key':fireHeld?heldSource:touchFireHeld?'touch':null;
@@ -1265,6 +1275,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     setSound(v){sound=!!v;if(sound)unlock();},
     getWeaponAmmo(id){return owned.has(id)?ammo[id]:undefined;},
     getPosition(){return {x:p.x,y:p.y,angle:p.angle,district:district()};},
+    getRoadMotion(){return paused||incapacitated()?null:roadMotion;},
     drawFullMap(target){paintMap(target,p,{full:true,peers:net?.peers?.()||remotes,vehicles:cars,pickups:availableDrops(weaponDrops)});},
     destroy(){isRunning=false;clearAimLock();cancelAnimationFrame(frameId);detachEvent?.();view.dispose();
       window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',resetInputs);document.removeEventListener('visibilitychange',visibility);

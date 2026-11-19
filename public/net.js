@@ -12,18 +12,20 @@ const COMBAT_WINDOW=1400;
 const MAX_BATCH=20, MAX_QUEUE=120;
 const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{},pickups:{},propHealth:{}});
 const cleanName=s=>[...String(s||'Kikalmo').replace(/[\u0000-\u001f\u007f]/g,' ').trim()].slice(0,24).join('')||'Kikalmo';
+const uuid=/^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i;
 export function createNet(options={}) {
   const {onStatus=()=>{},onPlayers=()=>{},onChat=()=>{}}=options;
   const fetcher=options.fetcher || ((url,init)=>fetch(url,init));
   const uid=()=>crypto.randomUUID();
-  const id=uid(), token=uid();
+  const saved=options.identity, resume=uuid.test(saved?.id)&&uuid.test(saved?.token)&&Number.isSafeInteger(saved?.op)&&saved.op>=0;
+  const id=resume?saved.id:uid(), token=resume?saved.token:uid();
   let name=cleanName(options.name);
   const rosterWire=createRosterWire(),stateEncoder=createStateEncoder();
   const clockSamples=[];
   let timerDue=Infinity,poseDue=false,leaving=null;
   let activeOps=new Set(),rosterRevision=0;
   let run=0,request=null,timer=null,started=false,busy=false,joined=false,status='connecting',cursor=0,offset=0;
-  let roster=[], context=blankWorld(), pending=[], state={}, failures=0, op=0;
+  let roster=[], context=blankWorld(), pending=[], state={}, failures=0, op=resume?saved.op:0;
   let rosterKey='', lifetimeChats=new Set();
   const listeners=new Set();
   const pickupRequests=new Map(),claimingItems=new Set();
@@ -317,8 +319,10 @@ export function createNet(options={}) {
       const attempt=run;
       return leaving?leaving.then(()=>started&&run===attempt?tick():false):tick();
     },
-    stop(){
-      leave();started=false;run++;clearTimeout(timer);timer=null;timerDue=Infinity;request?.abort();request=null;
+    getTransferIdentity(){return {id,token,op};},
+    stop({preservePresence=false}={}){
+      if(!preservePresence)leave();
+      started=false;run++;clearTimeout(timer);timer=null;timerDue=Infinity;request?.abort();request=null;
       busy=false;joined=false;activeOps.clear();combatUntil=0;poseDue=false;failures=0;lastReply=-Infinity;
       stateEncoder.ack(null);discardSessionActions();rosterWire.reset();updatePlayers([]);updateStatus('offline');
       if (typeof window!=='undefined') {

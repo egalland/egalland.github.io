@@ -5,6 +5,7 @@ import {installCombatControls} from './combat-controls.js';
 import {installKikalmoLink} from './kikalmo-link.js';
 import {createWanted,wantedRules,wantedThresholds} from './wanted.js';
 import {attachSectorTravel} from './sector-travel.js';
+import {readSectorTransfer} from './sector-transfer.js';
 import {createGame} from './game.js';
 import {createNet} from './net.js';
 import {createPanels} from './panels.js';
@@ -83,7 +84,8 @@ function updateOnline(status,players){
   panels?.refresh();
 }
 let welcomed=false;
-const net=createNet({name,onStatus:st=>{
+const sectorTransfer=readSectorTransfer();
+const net=createNet({name,identity:sectorTransfer?.identity,onStatus:st=>{
   if(st==='online' && !welcomed){welcomed=true;appendChat({system:true,text:'Tu as rejoint le monde partagé.'});}
   updateOnline(st,net.players());
 },onPlayers:players=>updateOnline(net.status,players),onChat:appendChat});
@@ -263,6 +265,7 @@ window.addEventListener('pagehide',()=>{
   }catch{}
 });
 window.addEventListener('pageshow',e=>{if(e.persisted)net.start();});
-attachSectorTravel(game,net,$('#sectorEdge'));
-net.start();
-$('#loadScene').hidden=true;
+if(attachSectorTravel(game,net,$('#sectorEdge'),sectorTransfer)!==false){
+  net.start();
+  $('#loadScene').hidden=true;
+}

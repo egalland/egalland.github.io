@@ -1,6 +1,6 @@
 import {sectorHeightGrid} from './terrain-height.js';
+import {sectorRadius as RADIUS} from './sector-crossing.js';
 // Load metric geometry around a visitor-selected point, from the same IGN layers as the embedded map.
-const RADIUS = 660;
 const COUNT = 1000;
 const LAYERS = ['batiment', 'troncon_de_route', 'surface_hydrographique', 'zone_de_vegetation'];
 const CACHE_NAME = 'maille-city-ign-sectors-v1';
@@ -221,7 +221,7 @@ async function readOrLoad(key,bounds,center) {
     const data=projectFeatures(pages,bounds,center),entry={saved:Date.now(),schema:CACHE_SCHEMA,data};
     if(memory.size>=3)memory.delete(memory.keys().next().value);
     memory.set(key,entry);
-    void cacheWrite(key,entry);
+    await cacheWrite(key,entry);
     return data;
   }catch(error){
     controller.abort();

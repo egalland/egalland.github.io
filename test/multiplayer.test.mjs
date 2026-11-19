@@ -139,3 +139,34 @@ test('Retries do not duplicate chat, rewind vehicles or change the identity of a
     assert.equal(view.history.length,1);
   } finally {DB.close();}
 });
+
+test('an automatic road transfer keeps the same presence and continues the shared action counter',async()=>{
+  const DB=localDatabase(),requests=new Set();
+  const fetcher=(path,init)=>{
+    const work=api(DB,path,JSON.parse(init.body));
+    requests.add(work);work.then(()=>requests.delete(work),()=>requests.delete(work));
+    return work;
+  };
+  const chat=[],first=createNet({name:'En route',fetcher,pollMs:15,onChat:e=>chat.push(e.text)});
+  let second;
+  try{
+    first.publish({x:5010,y:1370});assert(await first.start());
+    assert(first.sendChat('Premier quartier'));
+    await until(()=>chat.includes('Premier quartier'));
+    const occupied=first.players().find(p=>p.id===first.id);
+    const identity=first.getTransferIdentity();
+    first.stop({preservePresence:true});
+    second=createNet({name:'En route',identity,fetcher,pollMs:15,onChat:e=>chat.push(e.text)});
+    second.publish({x:5010,y:1370});assert(await second.start());
+    assert.equal(second.players().length,1);
+    assert.equal(second.id,first.id);
+    assert.equal(second.players()[0].joinedAt,occupied.joinedAt);
+    assert(second.sendChat('Deuxième quartier'));
+    await until(()=>chat.includes('Deuxième quartier'));
+    const rows=await DB.prepare('SELECT count(*) AS total FROM mc_events WHERE type=? AND player=?').bind('chat',first.id).first();
+    assert.equal(rows.total,2);
+  }finally{
+    first.stop();second?.stop();
+    await Promise.allSettled([...requests]);DB.close();
+  }
+});

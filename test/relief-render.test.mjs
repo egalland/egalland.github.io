@@ -38,6 +38,19 @@ test('the 3D mesh puts walkable pavement at its physics elevation across Paris a
   assert.ok(Math.max(...elevations)-Math.min(...elevations)>25);
 });
 
+test('an ordinary Parisian building is represented in the skyline beyond the old chunk radius',t=>{
+  installCanvas(t);
+  const scene=new Scene(),city=createCity3D(scene),start=getTravelPoint('etoile');
+  t.after(()=>city.dispose());
+  const x=3979,y=644,ground=terrainHeight(x,y);
+  assert.ok(Math.hypot(x-start.x,y-start.y)>800);
+  for(let i=0;i<220;i++)city.update(start,i/60);
+  scene.updateMatrixWorld(true);
+  const ray=new Raycaster(new Vector3(x,ground+48,y),new Vector3(0,-1,0),0,45);
+  const surfaces=ray.intersectObjects(scene.children,true);
+  assert(surfaces.some(surface=>Math.abs(surface.point.y-ground-23.2)<3),'the distant roof is part of the actual scene');
+});
+
 test('on the mobile Canvas view a jumping character visibly separates from its pavement shadow',t=>{
   installCanvas(t);
   const width=390,height=640,surface=native.createCanvas(width,height),yaw=SPAWN.angle;

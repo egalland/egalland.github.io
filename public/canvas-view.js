@@ -1,4 +1,5 @@
 import {emotePatch} from './emote-art.js';
+import {canvasViewRange,detailedCanvasRange,streetViewRange} from './view-range.js';
 import {paintSkyView} from './textile-sky.js';
 import {paintStreetProp} from './street-props-art.js';
 import {paintStreetFabric,streetFabric} from './street-fabric.js';
@@ -472,7 +473,7 @@ export function createCanvasView(canvas,spawn,onNotice){
     }});
   }
   function groundRelief(){
-    const distances=[.2,4,10,20,35,56,83,120,170,240,330,440,600,820,1150],strips=12;
+    const distances=[.2,4,10,20,35,56,83,120,170,240,330,440,600,820,1150,1550],strips=12;
     let previous=null;
     for(let k=distances.length-1;k>=0;k--){
       const d=distances[k],row=[];
@@ -620,11 +621,10 @@ export function createCanvasView(canvas,spawn,onNotice){
     }
     return !visible;
   }
-  function building(item){
+  function building(item,skyline=false){
     const {o,wind,seed,bounds}=item,poly=o.poly,H=Math.max(2.2,o.h||13);
     const glass=H>48||(bounds.x< -135&&bounds.y< -625&&H>24);
     const eave=glass?H-.7:H>7.5?H-Math.min(3.25,H*.15):H-.65;
-    const distance=Math.hypot(bounds.x-camX,bounds.y-camY);
     const top=poly.map(q=>[q[0]+(bounds.x-q[0])*.032,q[1]+(bounds.y-q[1])*.032,H]);
     for(let j=0;j<poly.length;j++){
       const a=poly[j],b=poly[(j+1)%poly.length],dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
@@ -632,8 +632,14 @@ export function createCanvasView(canvas,spawn,onNotice){
       const normalX=wind*dy/length,normalY=-wind*dx/length;
       if(normalX*(camX-a[0])+normalY*(camY-a[1])<0)continue;
       const d=depth((a[0]+b[0])*.5,(a[1]+b[1])*.5),shade=normalX*-.45+normalY*-.6>-.09?1:0;
-      const pts=[[a[0],a[1],Math.min(0,terrainHeight(a[0],a[1])-item.ground)-.12],[b[0],b[1],Math.min(0,terrainHeight(b[0],b[1])-item.ground)-.12],[b[0],b[1],eave],[a[0],a[1],eave]];
+      const crest=skyline?H:eave;
+      const pts=[[a[0],a[1],Math.min(0,terrainHeight(a[0],a[1])-item.ground)-.12],[b[0],b[1],Math.min(0,terrainHeight(b[0],b[1])-item.ground)-.12],[b[0],b[1],crest],[a[0],a[1],crest]];
       const pp=projectPoly(pts);if(!pp||hiddenByFacade(pp))continue;
+      if(skyline){
+        const color=glass?(shade?'#a2a5af':'#8e969f'):(shade?'#c5ae9c':'#ac9a94');
+        queue.push({z:d,base:item.ground,draw:()=>fillPath(pp,color)});
+        continue;
+      }
       queue.push({z:d,base:item.ground,draw:()=>{
         fillPath(pp,glass?shade?'#829aa1':'#657b88':tint(stone[seed%8],shade?1.00:.85));
         const topA=top[j],topB=top[(j+1)%top.length],roofColor=roofs[seed%roofs.length];
@@ -796,7 +802,10 @@ export function createCanvasView(canvas,spawn,onNotice){
     const tilt=Math.atan2(terrainHeight(followX+fx*look,followY+fy*look)+focus+pitch*.95-camH,arm+look);
     sin=Math.sin(tilt);cos=Math.cos(tilt);horizon=h*.5+f*Math.tan(tilt);sideLimit=w/(2*f)+.1;
     if(Math.hypot(cacheX-p.x,cacheY-p.y)>35){
-      cacheX=p.x;cacheY=p.y;nearBuildings=spatial.blocks.around(p.x,p.y,560);nearWays=spatial.ways.around(p.x,p.y,490);
+      cacheX=p.x;cacheY=p.y;
+      const queryRange=canvasViewRange(false)+45;
+      nearBuildings=spatial.blocks.around(p.x,p.y,queryRange);
+      nearWays=spatial.ways.around(p.x,p.y,streetViewRange+45);
     }
     if(snap||time-lastProps>.42){props=nearbyProps(p.x,p.y,370);lastProps=time;}
     const changed=wearChanged(props,state.propHealth,state.propDamageRevision);
@@ -818,6 +827,8 @@ export function createCanvasView(canvas,spawn,onNotice){
     }
     const visibleWays=nearWays.filter(s=>seen(s.bounds,230)),arc=monuments.arc;
     const atArc=Math.hypot(arc.x-p.x,arc.y-p.y)<450;
+    for(const seg of nearWays)if(seg.w>=8&&seen(seg.bounds,streetViewRange)&&!seen(seg.bounds,230))
+      roadRibbon(seg,0,'#8c7f81',0,seg.a,seg.b);
     if(atArc)ellipseGround(arc.x,arc.y,115,0,streetFabric.road.color);
     for(const seg of visibleWays)roadRibbon(seg,1.35,'#c7af95',0,seg.a,seg.b);
     for(const seg of visibleWays)if(seg.way.kind!=='path')
@@ -834,8 +845,14 @@ export function createCanvasView(canvas,spawn,onNotice){
     }
     groundTexture();
     occlusion.length=0;
-    const facadeSet=nearBuildings.filter(item=>seen(item.bounds,440)).sort((a,b)=>depth(a.bounds.x,a.bounds.y)-depth(b.bounds.x,b.bounds.y));
-    for(const item of facadeSet){projectionBase=item.ground;building(item);}
+    const range=canvasViewRange(w<h,renderQuality);
+    const facadeSet=nearBuildings.filter(item=>seen(item.bounds,range)).sort((a,b)=>depth(a.bounds.x,a.bounds.y)-depth(b.bounds.x,b.bounds.y));
+    let skylineCount=0;
+    for(const item of facadeSet){
+      const skyline=!seen(item.bounds,detailedCanvasRange);
+      if(skyline&&item.o.h<50&&++skylineCount>(w<h?210:320))continue;
+      projectionBase=item.ground;building(item,skyline);
+    }
     projectionBase=null;
     for(const obj of monumentModels){
       const reach=obj.m.range||2300,md=depth(obj.m.x,obj.m.y);

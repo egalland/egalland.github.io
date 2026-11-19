@@ -144,7 +144,7 @@ export function createParkour(p,ground,gradient){
     if(airborne){p.motion=vertical>.15?'jump':'fall';p.motionPhase=cap(airTime/(2*impulse/gravity),0,1);}
     else if(landing>0){p.motion='land';p.motionPhase=cap(1-landing/.25,0,1);}
     else{p.motion=actual>.1?(input.sprint&&actual>4?'run':'walk'):'idle';p.motionPhase=0;}
-    return {vx:speedX,vy:speedY,actual,heading:Math.atan2(speedY,speedX)};
+    return {vx:speedX,vy:speedY,actual,heading:Math.atan2(speedY,speedX),boundary:result.touched?.id==='boundary'};
   }
   return {step,reset,setPressed,clearInput,interrupt,get grounded(){return !airborne&&!plan;},
     hint:(angle,world)=>buildPlan(angle,world)?.kind||'jump'};

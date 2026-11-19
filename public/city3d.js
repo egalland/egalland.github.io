@@ -1,4 +1,5 @@
 import {canopyDyes} from './street-props-art.js';
+import {cityViewRange,streetViewRange} from './view-range.js';
 import {streetFabric} from './street-fabric.js';
 import {feltSlate as slates,shopCloths as stripMaterials} from './paris-applique.js';
 import {terrainHeight,buildingGround,waterLevel} from './terrain-height.js';
@@ -261,7 +262,7 @@ function flatWithHoles(batch,mat,poly,holes,height,col,scale=1){
   const pts=ring.concat(...hh),uv=pts.map(p=>[p[0]/scale,p[1]/scale]);
   for(const [a,b,c] of idx){const ids=[c,b,a];batch.tri(mat,...ids.map(i=>[pts[i][0],height,pts[i][1]]),col,ids.map(i=>uv[i]));}
 }
-function addBuilding(b,building,detail){
+function addBuilding(b,building,detail,skyline=false){
   const poly=distinct(building.poly);if(poly.length<3)return;
   const [cx,cz]=mean(poly);
   b.base=buildingGround(building.poly);b.foundation=true;
@@ -275,7 +276,8 @@ function addBuilding(b,building,detail){
   if(!detail){
     for(let i=0;i<count;i++){
       const a=poly[i],c=poly[(i+1)%count],len=Math.hypot(a[0]-c[0],a[1]-c[1]);
-      b.wall(glass?'glass':'facade',a,c,0,h-.5,stone,Math.max(1,Math.round(len/(glass?4.8:7.1))),Math.max(1,Math.round(h/(glass?4:3.6))));
+      const mat=skyline?'plain':glass?'glass':'facade';
+      b.wall(mat,a,c,0,h-.5,stone,Math.max(1,Math.round(len/(glass?4.8:7.1))),Math.max(1,Math.round(h/(glass?4:3.6))));
     }
     flatWithHoles(b,'plain',poly,building.holes,h-.48,glass?'#9398a8':roof);
     return;
@@ -692,23 +694,31 @@ export function createCity3D(scene){
     const geo=index.groups.get(target.key)||{buildings:[],segments:[]};
     const b=new Batch();
     const [ix,iz]=target.key.split(',').map(Number);
-    groundTile(b,ix*chunkSize,iz*chunkSize,target.detail?16:8,lakes,parks);
-    for(const building of geo.buildings)addBuilding(b,building,target.detail);
-    for(const seg of geo.segments)addRoad(b,seg);
+    groundTile(b,ix*chunkSize,iz*chunkSize,target.detail?16:target.skyline?4:8,lakes,parks);
+    for(const building of geo.buildings)addBuilding(b,building,target.detail,target.skyline);
+    for(const seg of geo.segments){
+      if(!target.skyline)addRoad(b,seg);
+      else if(seg.street.w>=8){
+        b.base=0;b.foundation=false;b.drape=true;
+        strip(b,'plain',seg.a,seg.d,seg.street.w,.03,'#827e84');
+      }
+    }
     const object=b.mesh(materials);root.add(object);
     const before=chunks.get(target.key);if(before)disposeGroup(before.object);
-    chunks.set(target.key,{object,detail:target.detail,dist:target.dist});
+    chunks.set(target.key,{object,detail:target.detail,skyline:target.skyline});
   }
   function setTargets(pos){
     const sx=Math.floor(pos.x/chunkSize),sz=Math.floor(pos.y/chunkSize),keys=new Set(),next=[];
-    for(let i=-4;i<=4;i++)for(let j=-4;j<=4;j++){
+    const span=Math.ceil(cityViewRange/chunkSize);
+    for(let i=-span;i<=span;i++)for(let j=-span;j<=span;j++){
       const cx=sx+i,cz=sz+j,k=cx+','+cz;
       const dd=Math.hypot((cx+.5)*chunkSize-pos.x,(cz+.5)*chunkSize-pos.y);
-      if(dd>640)continue;
-      const detail=dd<245,target={key:k,detail,dist:dd};keys.add(k);next.push(target);
+      if(dd>cityViewRange || dd>streetViewRange&&!index.groups.has(k))continue;
+      const detail=dd<245,skyline=dd>streetViewRange;
+      keys.add(k);next.push({key:k,detail,skyline,dist:dd});
     }
     for(const [k,entry] of chunks)if(!keys.has(k)){disposeGroup(entry.object);chunks.delete(k);}
-    targets=next.filter(t=>!chunks.has(t.key)||chunks.get(t.key).detail!==t.detail).sort((a,b)=>a.dist-b.dist);
+    targets=next.filter(t=>!chunks.has(t.key)||chunks.get(t.key).detail!==t.detail||chunks.get(t.key).skyline!==t.skyline).sort((a,b)=>a.dist-b.dist);
     lastX=pos.x;lastZ=pos.y;
   }
   function propSet(kind,variant,stage,distant){
