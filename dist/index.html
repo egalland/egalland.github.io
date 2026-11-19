@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8f6f0"><meta name="description" content="Concevez votre ouvrage en tricot, choisissez les mesures et les fils, placez un motif et préparez vos pelotes.">
+<title>Maille · Mon atelier tricot</title><link rel="icon" href="./maille.svg"><link rel="stylesheet" href="./style.css"><script type="module" src="./app.js"></script>
+</head><body>
+<header class="mast"><div class="mast-inner"><a class="brand" href="./" aria-label="Maille, mon atelier"><img src="./maille.svg" width="39" height="39" alt=""><span>maille<span class="period">.</span></span></a><span class="brand-caption">L’atelier tricot</span>
+<div class="mast-actions"><button class="button quiet" data-act="book"><span data-icon="book"></span><span>Mes projets</span></button><button class="button ink" data-act="exports"><span data-icon="download"></span><span>Exporter</span></button></div></div></header>
+<main class="shell">
+<div class="project-line"><div><button class="project-name" data-act="rename" title="Renommer le projet"><h1 id="project-title">Mon ouvrage</h1><span data-icon="pencil"></span></button><div class="save-line" id="save-line" role="status"></div></div><div class="project-actions"><button hidden class="button frame patron-shortcut" id="patron-shortcut" data-act="pull-open"><span data-icon="needle"></span>Mon patron</button><button class="button frame save-now" data-act="save"><span data-icon="check"></span>Enregistrer</button></div></div>
+<nav id="steps" class="steps" aria-label="Étapes du projet"></nav>
+<div class="mobile-switch" aria-label="Vue de l’atelier"><button data-act="mobile" data-value="edit">Réglages</button><button data-act="mobile" data-value="view">Aperçu 3D</button></div>
+<div class="workspace">
+<section id="settings" class="settings" aria-label="Réglages de l’ouvrage"><div id="step-panel"></div><div class="step-actions" id="step-actions"></div></section>
+<section id="viewer" class="viewer" aria-label="Aperçu de l’ouvrage"><div class="viewer-header"><div><span class="viewer-kind">Aperçu de l’ouvrage</span><h2 id="view-title">Pull</h2></div><button class="circle" data-act="capture" aria-label="Télécharger l’image de l’ouvrage" title="Télécharger l’image"><span data-icon="camera"></span></button></div>
+<div class="stage" id="stage"><div class="ground"></div><canvas id="object" tabindex="0" aria-label="Aperçu 3D de l’ouvrage. Utilisez les flèches pour tourner ou les boutons sous l’aperçu."></canvas><div id="no-3d" hidden></div></div>
+<div class="view-controls"><div class="mode-switch"><button id="rotate-mode" data-act="view-mode" data-value="rotate"><span data-icon="rotate"></span>Tourner</button><button id="place-mode" data-act="view-mode" data-value="place"><span data-icon="move"></span>Placer le motif</button></div><div class="zoom"><button class="circle" data-act="zoom" data-value="-1" aria-label="Réduire le zoom" title="Réduire le zoom">−</button><button class="circle" data-act="zoom" data-value="1" aria-label="Agrandir le zoom" title="Agrandir le zoom">+</button></div></div>
+<div class="view-hint" id="view-hint"></div><div class="view-tools" id="view-tools"></div>
+<div class="viewer-foot"><div class="mini-swatch"><canvas id="sample-view" width="150" height="150" aria-label="Détail des mailles"></canvas></div><div><b id="stitch-caption">Jersey</b><span id="fabric-caption"></span></div><button class="button link" data-act="yarn-count" id="budget-short"></button></div></section>
+</div></main>
+<dialog id="modal" aria-labelledby="modal-title"><div class="modal-top"><h2 id="modal-title"></h2><button class="circle" data-act="close" aria-label="Fermer"><span data-icon="x"></span></button></div><div id="modal-content"></div></dialog>
+<dialog id="follow" aria-labelledby="follow-title"><div class="modal-top"><h2 id="follow-title">Suivre les rangs</h2><button class="circle" data-act="end-follow" aria-label="Fermer le suivi"><span data-icon="x"></span></button></div><div id="follow-content"></div></dialog>
+<input type="file" id="import-file" accept=".json,application/json" hidden><div id="notice" class="notice" role="status" aria-live="polite"></div><section id="print-sheet"></section>
+<noscript>Activez JavaScript pour ouvrir votre atelier tricot.</noscript>
+</body></html>

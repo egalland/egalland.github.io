@@ -1,0 +1,9 @@
+{
+  "name": "maille-atelier",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "three": "0.180.0"
+  }
+}
