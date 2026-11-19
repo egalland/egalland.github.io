@@ -1,12 +1,13 @@
 import {OBJECTS} from './catalog.js';
 import {area,overlap,unionArea,unionCells,boundarySegments,intersect,segmentOnRect} from './geometry.js';
 import {levelOf,objectLevel,openingLevel,openingSegment,objectRect,deckRects,stairHoles} from './model.js';
+import {railingSegments} from './surfaces.js';
 const EPS=.001;
 export function compute(s){
  const B=s.building,T=s.thermal,L=s.light,total=area(B),br={x:0,y:0,...B};
- const levels=s.levels.map(l=>{const rooms=s.rooms.filter(r=>r.levelId===l.id),holes=stairHoles(s,l.id),cells=unionCells(rooms,holes),deck=unionCells(deckRects(s,l.id),holes);return{...l,rooms,cells,holes,deck,home:cells.reduce((a,r)=>a+area(r),0),deckArea:deck.reduce((a,r)=>a+area(r),0),boundaries:boundarySegments(rooms,B)};});
+ const levels=s.levels.map(l=>{const rooms=s.rooms.filter(r=>r.levelId===l.id),holes=stairHoles(s,l.id),cells=unionCells(rooms,holes),deck=unionCells(deckRects(s,l.id),holes);return{...l,rooms,surfaces:(s.surfaces||[]).filter(q=>q.levelId===l.id),cells,holes,deck,home:cells.reduce((a,r)=>a+area(r),0),deckArea:deck.reduce((a,r)=>a+area(r),0),boundaries:boundarySegments(rooms,B)};});
  const home=levels.reduce((a,l)=>a+l.home,0),groundHome=levels[0].home,groundStairs=s.objects.filter(o=>o.kind==='stairs'&&objectLevel(s,o)===levels[0].id).map(o=>objectRect(s,o));
- const groundOccupied=unionArea([...levels[0].cells,...groundStairs]),free=Math.max(0,total-groundOccupied),upperArea=levels.slice(1).reduce((a,l)=>a+l.deckArea,0),upperOpen=levels.slice(1).reduce((a,l)=>a+Math.max(0,l.deckArea-l.home),0),pairs=[],verticalConflicts=[],heightWarnings=[];
+ const groundSurfaces=levels[0].surfaces,groundOccupied=unionArea([...levels[0].cells,...groundStairs,...groundSurfaces.map(q=>intersect(q,br)).filter(Boolean)]),free=Math.max(0,total-groundOccupied),upperArea=levels.slice(1).reduce((a,l)=>a+l.deckArea,0),upperOpen=levels.slice(1).reduce((a,l)=>a+Math.max(0,l.deckArea-l.home),0),pairs=[],verticalConflicts=[],heightWarnings=[];
  for(let i=0;i<s.rooms.length;i++){
   const a=s.rooms[i],la=levelOf(s,a.levelId);
   if(la.elevation+a.h>B.h+.001)heightWarnings.push(`${a.name} : plafond à ${(la.elevation+a.h).toFixed(2)} m, au-dessus du bâtiment`);
@@ -24,7 +25,8 @@ export function compute(s){
   const glass=[...groups.values()].reduce((a,list)=>a+unionArea(list),0),net=unionArea([r],l.holes),previous=s.rooms.slice(0,index).filter(q=>q.levelId===r.levelId),allocated=Math.max(0,unionArea([...previous,r],l.holes)-unionArea(previous,l.holes));
   return{...r,area:net,gross:area(r),glass,fixtures:Math.ceil(allocated*r.lux/(L.lumens*L.factor)-1e-9)};
  });
- const homeFixtures=roomRows.reduce((a,r)=>a+r.fixtures,0),shopFixtures=Math.ceil((free+upperOpen)*L.shoplux/(L.shoplumens*L.factor)-1e-9),watts=homeFixtures*L.watt+shopFixtures*L.shopwatt,kwh=watts/1000*L.hours*365;
+ const outdoorUpper=levels.slice(1).reduce((sum,l)=>sum+unionArea(l.surfaces.filter(q=>q.kind==='terrace'),[...l.rooms,...l.holes]),0);
+ const homeFixtures=roomRows.reduce((a,r)=>a+r.fixtures,0),shopFixtures=Math.ceil((free+Math.max(0,upperOpen-outdoorUpper))*L.shoplux/(L.shoplumens*L.factor)-1e-9),watts=homeFixtures*L.watt+shopFixtures*L.shopwatt,kwh=watts/1000*L.hours*365;
  let externalWalls=0,internalWalls=0,partitionArea=0,insideLength=0,extLen=0,extGlass=0,intGlass=0,extDoor=0,intDoor=0;
  function cutoutArea(b,l,kind){
   const rects=[];
@@ -54,18 +56,14 @@ export function compute(s){
  const volume=all?total*B.h:levels.reduce((sum,l)=>sum+l.cells.reduce((a,c)=>a+area(c)*Math.max(0,...l.rooms.filter(r=>overlap(r,c)).map(r=>r.h)),0),0),groundFloor=all?total:groundHome,elevatedFloor=Math.max(0,floor-groundFloor);
  const heat=(externalWalls*U[0]+extGlass*T.ug+extDoor*T.ud)*dt+(internalWalls*U[0]+intGlass*T.ug+intDoor*T.ud+roof*U[1]+elevatedFloor*U[2])*di+groundFloor*U[2]*df+volume*.34*T.air*dt;
  const waste=1+T.waste/100,matWall=walls*T.wallprice*waste,matRoof=roof*T.roofprice*waste,matFloor=floor*T.floorprice*waste,materials=matWall+matRoof+matFloor;
- let railing=0;
- for(const l of levels.slice(1))for(const b of boundarySegments(l.deck,B)){
-  if(b.partition||b.external)continue;const mid=(b.a+b.b)/2;
-  const attached=l.rooms.some(r=>b.axis==='v'?(Math.abs(r.x-b.pos)<.01||Math.abs(r.x+r.w-b.pos)<.01)&&mid>r.y&&mid<r.y+r.l:(Math.abs(r.y-b.pos)<.01||Math.abs(r.y+r.l-b.pos)<.01)&&mid>r.x&&mid<r.x+r.w);
-  if(!attached)railing+=b.b-b.a;
- }
- const furniture=s.objects.reduce((a,o)=>a+(o.price??OBJECTS[o.kind].price),0),structureCost=upperArea*s.budget.structure+railing*s.budget.railing;
+ const railing=levels.reduce((sum,l)=>sum+railingSegments(l,B).reduce((a,b)=>a+b.b-b.a,0),0);
+ const surfaceAreas=kind=>levels.reduce((sum,l)=>sum+unionArea(l.surfaces.filter(q=>q.kind===kind),[...l.rooms,...l.holes]),0),mezzanineArea=surfaceAreas('mezzanine'),terraceArea=surfaceAreas('terrace'),groundDeckArea=unionArea(groundSurfaces,levels[0].rooms);
+ const furniture=s.objects.reduce((a,o)=>a+(o.price??OBJECTS[o.kind].price),0),structureCost=upperArea*s.budget.structure+railing*s.budget.railing+groundDeckArea*(s.budget.terrace??120);
  const lots=[
   {key:'insulation',name:'Matériaux isolants',value:materials,color:'#799274',note:'Enveloppe des pièces, hors parois entre pièces chauffées'},
   {key:'partition',name:'Murs & cloisons',value:partitionArea*s.budget.partition,color:'#b4bc9b',note:'Parois dessinées, cloisons communes comptées une fois'},
   {key:'fitout',name:'Réseaux & finitions',value:home*s.budget.fitout,color:'#c5ad89',note:'Surfaces cumulées par niveau, trémies retirées'},
-  {key:'structure',name:'Planchers & garde-corps',value:structureCost,color:'#a6b4b6',note:'Planchers ajoutés et bords ouverts ; escalier dans les équipements'},
+  {key:'structure',name:'Planchers & garde-corps',value:structureCost,color:'#a6b4b6',note:'Planchers ajoutés, terrasses au sol et garde-corps ; escalier dans les équipements'},
   {key:'openings',name:'Menuiseries',value:s.openings.reduce((a,o)=>a+o.w*o.h*(o.kind==='window'?s.budget.glazing:s.budget.door),0),color:'#8ba5ad',note:'Toutes les ouvertures dessinées'},
   {key:'furniture',name:'Mobilier & escaliers',value:furniture,color:'#a897b1',note:'Montants modifiables par élément'}
  ];
@@ -77,5 +75,5 @@ export function compute(s){
  }
  const unexposed=glazing.filter(w=>segmentOnRect(w.seg,br)<EPS).length,stairsWarnings=s.objects.filter(o=>o.kind==='stairs'&&(!o.targetLevelId||levelOf(s,o.targetLevelId).elevation<=levelOf(s,objectLevel(s,o)).elevation)).map(()=> 'Escalier : choisissez un niveau d’arrivée plus haut');
  for(const o of s.objects.filter(o=>o.kind==='stairs'&&o.targetLevelId)){const r=objectRect(s,o),q=o.rotation,landing=q===90?{x:r.x+.01,y:r.y+r.l/2}:q===180?{x:r.x+r.w/2,y:r.y+.01}:q===270?{x:r.x+r.w-.01,y:r.y+r.l/2}:{x:r.x+r.w/2,y:r.y+r.l-.01};if(!deckRects(s,o.targetLevelId).some(d=>landing.x>=d.x&&landing.x<=d.x+d.w&&landing.y>=d.y&&landing.y<=d.y+d.l))stairsWarnings.push(`Escalier : arrivée hors du plancher de ${levelOf(s,o.targetLevelId).name}`);}
- return{total,home,groundHome,groundOccupied,free,covered:home,spare:0,upperArea,upperOpen,levels,pairs,verticalConflicts,heightWarnings,stairsWarnings,windows,allWindows,unexposed,roomRows,homeFixtures,shopFixtures,watts,kwh,energy:kwh*L.kwhPrice,extLen,walls,externalWalls,internalWalls,roof,floor,sharedFloor,volume,Rs,heat,materials,matWall,matRoof,matFloor,insideLength,partitionArea,railing,structureCost,furniture,lots,works,contingency,fees,budget,openingPairs};
+ return{total,home,groundHome,mezzanineArea,terraceArea,groundDeckArea,groundOccupied,free,covered:home,spare:0,upperArea,upperOpen,levels,pairs,verticalConflicts,heightWarnings,stairsWarnings,windows,allWindows,unexposed,roomRows,homeFixtures,shopFixtures,watts,kwh,energy:kwh*L.kwhPrice,extLen,walls,externalWalls,internalWalls,roof,floor,sharedFloor,volume,Rs,heat,materials,matWall,matRoof,matFloor,insideLength,partitionArea,railing,structureCost,furniture,lots,works,contingency,fees,budget,openingPairs};
 }
