@@ -1,0 +1,3 @@
+import {Header} from "../../components/Header";import ProjectList from "../../components/ProjectList";import {publicProjects} from "../../lib/store";
+export const dynamic="force-dynamic";
+export default async function Projects(){const projects=await publicProjects();return <><Header/><main className="inner"><span className="eyebrow">INDEX / {String(projects.length).padStart(2,"0")} EXPERIMENTS</span><h1 className="page-title">LES PROJETS<span style={{color:"var(--orange)"}}>.</span></h1><p className="page-intro">Des applications métier aux expériences personnelles. Choisis une piste et entre dans le processus de création.</p><ProjectList projects={projects}/></main></>}

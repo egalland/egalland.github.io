@@ -1,0 +1,4 @@
+"use client";
+import {useState} from "react";import Link from "next/link";
+import {categories, type Category,type Project} from "../lib/projects";
+export default function ProjectList({projects}:{projects:Project[]}){const [filter,setFilter]=useState<Category|"all">("all");return <><div className="filters">{(["all",...Object.keys(categories)] as (Category|"all")[]).map(c=><button key={c} aria-pressed={filter===c} onClick={()=>setFilter(c)}>{c==="all"?"TOUS":categories[c]}</button>)}</div><div className="project-list">{projects.filter(p=>filter==="all"||p.category===filter).map(p=><Link key={p.id} href={`/projects/${p.slug}`} className="index-row"><span>{p.id}</span><strong>{p.name}</strong><em>{categories[p.category]}</em><div className="progress-track" aria-label={`Progression estimée ${p.progress}%`}><span style={{width:`${p.progress}%`}}/></div><b>↗</b></Link>)}</div></>}

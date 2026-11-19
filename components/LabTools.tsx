@@ -1,0 +1,8 @@
+"use client";
+import {useEffect} from "react";
+type Tool={name:string;title:string;description:string;inputSchema:object;annotations:{readOnlyHint:boolean};execute:(input:unknown)=>Promise<unknown>};
+declare global {interface Document {modelContext?:{registerTool:(tool:Tool,options?:{signal?:AbortSignal})=>void|Promise<void>}}}
+export default function LabTools(){useEffect(()=>{const context=document.modelContext;if(!context?.registerTool)return;const lifecycle=new AbortController();const register=(tool:Tool)=>{void Promise.resolve(context.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{})};
+ register({name:"list_lab_projects",title:"Lister les projets",description:"Lire les projets du Project Lab privé.",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:true},async execute(){const r=await fetch("/api/projects");if(!r.ok)throw new Error("Lab indisponible");return await r.json()}});
+ register({name:"create_lab_project",title:"Créer un projet",description:"Créer une nouvelle idée avec son identifiant permanent PRJ.",inputSchema:{type:"object",properties:{name:{type:"string",minLength:2},category:{type:"string",enum:["ideas","business","personal","data","games"]}},required:["name"],additionalProperties:false},annotations:{readOnlyHint:false},async execute(input){const v=input as {name?:string;category?:string};if(typeof v?.name!=="string"||v.name.trim().length<2)throw new Error("Nom invalide");const r=await fetch("/api/projects",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(v)});const x=await r.json();if(!r.ok)throw new Error("Création impossible");window.dispatchEvent(new Event("lab:refresh"));return x}});
+ return()=>lifecycle.abort()},[]);return null}

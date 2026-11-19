@@ -1,0 +1,2 @@
+import Link from "next/link";
+export function Header(){return <header className="site-header"><Link href="/" className="brand" aria-label="Product Lab, accueil"><span className="brand-mark">E<span>·</span></span><span>EMMANUEL<br/><b>PRODUCT LAB</b></span></Link><nav aria-label="Navigation principale"><Link href="/projects">PROJETS</Link><Link href="/activity">ACTIVITÉ</Link><Link href="/about">À PROPOS</Link><Link href="/lab" className="lab-link">LAB <span>↗</span></Link></nav></header>}
