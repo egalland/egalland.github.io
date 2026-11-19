@@ -226,7 +226,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const go=node('button','mc-primary','S’y rendre');go.type='submit';
     row.addEventListener('submit',e=>{
       e.preventDefault();
-      if(metadata.sector){location.assign(historicURL(location.href,net.room,target.value));return;}
+      if(metadata.sector){net.stop();location.assign(historicURL(location.href,net.room,target.value));return;}
       if(game.travel(target.value)!==false){close();notify?.('Arrivée · '+target.selectedOptions[0].textContent);}
     });
     row.append(target,go);travel.append(label,row);
@@ -241,7 +241,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
       if(region&&!built){
         mountAtlas(regional,{position:game.getPosition?.(),visit:point=>{
           const url=sectorURL(location.href,net.room,point.lon,point.lat,point.name);
-          if(url)location.assign(url);
+          if(url){net.stop();location.assign(url);}
         }});
         built=true;
       }

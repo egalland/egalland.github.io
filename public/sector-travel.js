@@ -33,6 +33,7 @@ export function attachSectorTravel(game,net,button) {
     net.stop();location.assign(dest.href);
   };
   checkEdge();
-  const tick=setInterval(checkEdge,420);
-  window.addEventListener('pagehide',()=>clearInterval(tick),{once:true});
+  let tick=setInterval(checkEdge,420);
+  window.addEventListener('pagehide',()=>clearInterval(tick));
+  window.addEventListener('pageshow',e=>{if(e.persisted){checkEdge();tick=setInterval(checkEdge,420);}});
 }

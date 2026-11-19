@@ -126,7 +126,7 @@ export function createNet(options={}) {
     // Same-origin keepalive also works when a player closes the tab.
     void fetcher('/api/paris/leave',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
   }
-  function pageHide(e) {if (!e.persisted) net.stop();}
+  function pageHide() {net.stop();}
   function wake() {if (started && !busy && (typeof document==='undefined' || !document.hidden)) schedule(0);}
   const net={
     get id(){return id;}, get name(){return name;}, get room(){return room;}, get status(){return status;},

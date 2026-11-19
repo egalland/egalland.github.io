@@ -110,6 +110,7 @@ const releaseFire=()=>{aimStart=null;game.action('fire',false);game.setAim(0,0);
 fire.onpointerup=fire.onpointercancel=fire.onlostpointercapture=releaseFire;
 window.addEventListener('blur',()=>{stopStick();releaseFire();});
 city.addEventListener('pointerdown',()=>{if(controlsAreTouch())chat.classList.remove('mobile-open');});
+window.addEventListener('pageshow',e=>{if(e.persisted)net.start();});
 attachSectorTravel(game,net,$('#sectorEdge'));
 net.start();
 $('#loadScene').hidden=true;
