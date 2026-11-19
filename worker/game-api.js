@@ -1,3 +1,5 @@
+import { decodeDropId, isEligibleDropId } from '../public/drop-id.js';
+
 // The Worker owns these tables. They are initialized once per D1 binding and isolate.
 const schemaReady = new WeakMap();
 const SCHEMA = [
@@ -17,7 +19,14 @@ const SCHEMA = [
     room TEXT NOT NULL, kind TEXT NOT NULL, item TEXT NOT NULL,
     seq INTEGER NOT NULL, owner TEXT NOT NULL, data TEXT NOT NULL, at INTEGER NOT NULL,
     PRIMARY KEY (room,kind,item))`,
-  'CREATE INDEX IF NOT EXISTS mc_items_age ON mc_items (at)'
+  'CREATE INDEX IF NOT EXISTS mc_items_age ON mc_items (at)',
+  `CREATE TABLE IF NOT EXISTS mc_pickup_claims (
+    room TEXT NOT NULL, player TEXT NOT NULL, op TEXT NOT NULL, item TEXT NOT NULL,
+    ok INTEGER NOT NULL, available INTEGER NOT NULL, at INTEGER NOT NULL,
+    PRIMARY KEY (room,player,op))`,
+  'CREATE INDEX IF NOT EXISTS mc_pickup_item ON mc_pickup_claims (room,item,available DESC) WHERE ok=1',
+  'CREATE INDEX IF NOT EXISTS mc_pickup_active ON mc_pickup_claims (room,available) WHERE ok=1',
+  'CREATE INDEX IF NOT EXISTS mc_pickup_age ON mc_pickup_claims (at)'
 ];
 // Keep the public Paris records in place. Earlier named games remain isolated in storage.
 const WORLD_KEY = 'paris:public';
@@ -25,6 +34,8 @@ const GONE = 25_000;
 const MAX_BATCH = 20;
 const EVENT_RETENTION = 86_400_000;
 const ITEM_RETENTION = 7 * EVENT_RETENTION;
+const PICKUP_COOLDOWN = 60_000;
+const PICKUP_REQUEST_AGE = 30_000;
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const KEY = /^[\w:-]{1,68}$/;
 const ITEM_TYPES = new Set(['destroy','vehicle','npc']);
@@ -95,7 +106,7 @@ function events(rows) {
   return rows.map(r=>({seq:r.seq,player:r.player,name:r.name,type:r.type,data:JSON.parse(r.data),at:r.at}));
 }
 function shared(rows) {
-  const world={destroyed:[],vehicles:{},npcs:{}};
+  const world={destroyed:[],vehicles:{},npcs:{},pickups:{}};
   for (const r of rows) {
     if (r.kind==='destroy') world.destroyed.push(r.item);
     if (r.kind==='vehicle') world.vehicles[r.item]={...JSON.parse(r.data),owner:r.owner};
@@ -121,11 +132,39 @@ async function join(db,b,now) {
     q(MEMBERS_SQL,room,now-GONE),
     q('SELECT seq,player,name,type,data,at FROM mc_events WHERE room=? AND type=\'chat\' ORDER BY seq DESC LIMIT 30',room),
     q('SELECT COALESCE(MAX(seq),0) AS last FROM mc_events WHERE room=?',room),
-    q('SELECT kind,item,data,owner FROM mc_items WHERE room=?',room)
+    q('SELECT kind,item,data,owner FROM mc_items WHERE room=?',room),
+    q('SELECT item,available FROM mc_pickup_claims WHERE room=? AND ok=1 AND available>?',room,now),
+    q('DELETE FROM mc_pickup_claims WHERE at<?',now-EVENT_RETENTION)
   ]);
   if (!results[4].results.length) return json({error:'session'},403);
+  const world=shared(results[8].results);
+  for(const pickup of results[9].results)world.pickups[pickup.item]=pickup.available;
   return json({now,players:roster(results[5].results),history:events(results[6].results.reverse()),
-    cursor:results[7].results[0].last,world:shared(results[8].results)});
+    cursor:results[7].results[0].last,world});
+}
+function recordPickup(stmts,q,{room,id,token,name,op,item,weapon,state,now}){
+  const p=decodeDropId(item);
+  if(!p||p.weapon!==weapon||!isEligibleDropId(item))return false;
+  const match=/^pick-([0-9a-z]{7,11})-([0-9a-z]{1,10})$/.exec(op);
+  if(!match)return false;
+  const issued=parseInt(match[1],36);
+  const fresh=issued>=now-PICKUP_REQUEST_AGE&&issued<=now+2500;
+  if(!fresh)return true; // An expired operation can only read its original receipt.
+  const close=Number.isFinite(state.x)&&Number.isFinite(state.y)&&!state.vehicle&&Math.hypot(state.x-p.x,state.y-p.y)<=4;
+  // Reads, receipt and winner event share one D1 batch transaction. Another player
+  // can enter only after it commits and will see the winning availability timestamp.
+  stmts.push(q(`INSERT OR IGNORE INTO mc_pickup_claims (room,player,op,item,ok,available,at)
+    SELECT ?,?,?,?, (previous<=? AND ?),
+      CASE WHEN previous>? THEN previous WHEN ? THEN ? ELSE 0 END, ?
+    FROM (SELECT COALESCE((SELECT available FROM mc_pickup_claims
+      WHERE room=? AND item=? AND ok=1 ORDER BY available DESC LIMIT 1),0) AS previous)
+    WHERE EXISTS (SELECT 1 FROM mc_members WHERE room=? AND id=? AND secret=? AND seen>?)`,
+    room,id,op,item,now,close?1:0,now,close?1:0,now+PICKUP_COOLDOWN,now,room,item,room,id,token,now-GONE));
+  stmts.push(q(`INSERT OR IGNORE INTO mc_events (room,player,op,name,type,data,at)
+    SELECT room,player,op,?,'pickup',json_object('id',item,'weapon',?,'availableAt',available),at
+    FROM mc_pickup_claims WHERE room=? AND player=? AND op=? AND item=? AND ok=1 AND at=?`,
+    name,weapon,room,id,op,item,now));
+  return true;
 }
 async function sync(db,b,now) {
   const {id,token}=b,room=WORLD_KEY;
@@ -145,10 +184,17 @@ async function sync(db,b,now) {
         AND item=? AND owner=? AND at<?`,JSON.stringify(car),now,room,carId,id,now-1000));
     }
   }
-  const claims=new Set();
+  const claims=new Set(),pickupOps=new Map();
   for (const input of (Array.isArray(b.events) ? b.events.slice(0,MAX_BATCH) : [])) {
     const {type,op}=dict(input);
+    if(type==='pickup'&&key(op)){
+      const {id:item,weapon}=dict(input.data);
+      if(key(item)&&recordPickup(stmts,q,{room,id,token,name,op,item,weapon,now,state:Number.isFinite(rawState.x)?rawState:JSON.parse(member.state)}))
+        pickupOps.set(op,item);
+      continue;
+    }
     if (!EVENTS.has(type) || !key(op)) continue;
+    if(op.startsWith('pick-')) continue;
     const data=eventData(type,input.data,now);
     if (!data) continue;
     const requiresCar=type==='vehicle';
@@ -182,10 +228,15 @@ async function sync(db,b,now) {
   if (claims.size) {
     stmts.push(q(`SELECT item AS id,owner FROM mc_items WHERE room=? AND kind='vehicle' AND item IN (${[...claims].map(()=>'?').join(',')})`,room,...claims));
   }
+  const pickupIndex=stmts.length;
+  if(pickupOps.size)stmts.push(q(`SELECT op,item,ok,available FROM mc_pickup_claims WHERE room=? AND player=?
+    AND op IN (${[...pickupOps].map(()=>'?').join(',')})`,room,id,...pickupOps.keys()));
   const result=await db.batch(stmts);
   const feed=events(result[membersIndex+1].results);
   const denied=claims.size ? result[membersIndex+2].results.filter(c=>c.owner && c.owner!==id) : [];
-  return json({now,players:roster(result[membersIndex].results),events:feed,denied,cursor:feed.at(-1)?.seq??cursor});
+  const pickupResults=pickupOps.size?result[pickupIndex].results.filter(r=>pickupOps.get(r.op)===r.item)
+    .map(r=>({op:r.op,id:r.item,ok:r.ok===1,availableAt:r.available})):undefined;
+  return json({now,players:roster(result[membersIndex].results),events:feed,denied,pickupResults,cursor:feed.at(-1)?.seq??cursor});
 }
 export async function handleApi(request, env) {
   const pathname=new URL(request.url).pathname;

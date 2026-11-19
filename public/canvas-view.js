@@ -3,6 +3,7 @@
 import {buildings,streets,water} from './paris-data.js';
 import {monuments,cameraDistance,nearbyProps} from './paris-world.js';
 import {drawCanvasPuppet,drawCanvasCar} from './canvas-puppets.js';
+import {pickupPatch,pickupStyle,pickupLift,pickupPhase,pickupRange,pickupMarkerWidth} from './pickup-art.js';
 import {grandParisModels,skipLandmark} from './canvas-landmarks.js';
 
 const tau=Math.PI*2,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),near=.32;
@@ -293,7 +294,7 @@ export function createCanvasView(canvas,spawn,onNotice){
     surface.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
     canvas.after(surface);g=surface.getContext('2d',{alpha:false});
   }
-  if(!g){onNotice?.('Le navigateur ne fournit pas de surface de dessin.');return {available:false,mode:'canvas',render(){},aim(){return null;},effect(){},dispose(){surface!==canvas&&surface.remove();}};}
+  if(!g){onNotice?.('Le navigateur ne fournit pas de surface de dessin.');return {available:false,mode:'canvas',render(){},aim(){return null;},projectTarget(){return null;},effect(){},dispose(){surface!==canvas&&surface.remove();}};}
   const spatial=getSpatial();
   let w=0,h=0,f=0,camX=spawn.x,camY=spawn.y,camH=2.3,fx=1,fy=0,sin=0,cos=1,horizon=.42,sideLimit=1;
   let arm=5.25,followX=spawn.x,followY=spawn.y,cacheX=Infinity,cacheY=Infinity,nearBuildings=[],nearWays=[],props=[],lastProps=-10;
@@ -501,6 +502,40 @@ export function createCanvasView(canvas,spawn,onNotice){
       g.drawImage(pic,base.x-width/2,base.y-ph,width,ph);
     }});
   }
+  const pickupVisibility=new Map();
+  function pickupClear(id,x,y,height,reach,time,destroyed){
+    const cached=pickupVisibility.get(id),revision=destroyed?.size||0;
+    if(cached&&revision===cached.revision&&time-cached.time<.21&&Math.hypot(camX-cached.x,camY-cached.y)<.35&&Math.abs(camH-cached.h)<.12)return cached.clear;
+    const clear=reach<=1.65||cameraDistance(camX,camY,camH,Math.atan2(y-camY,x-camX),reach,height,destroyed)>=reach-.75;
+    if(pickupVisibility.size>128)pickupVisibility.clear();
+    pickupVisibility.set(id,{x:camX,y:camY,h:camH,clear,time,revision});
+    return clear;
+  }
+  function queuePickup(p,time,destroyed){
+    const style=pickupStyle(p.weapon);
+    if(!style||!Number.isFinite(p.x+p.y)||!seen({x:p.x,y:p.y,r:1.25},pickupRange))return;
+    const reach=Math.hypot(p.x-camX,p.y-camY);if(reach>pickupRange||reach<.43)return;
+    const phase=pickupPhase(p.id),height=pickupLift(time,phase);
+    const base=at(p.x,p.y,.11),icon=at(p.x,p.y,height),body=at(p.x,p.y,.23),cap=at(p.x,p.y,.45);
+    if(!base||!icon||!body||!cap)return;
+    if(!pickupClear(p.id,p.x,p.y,height,reach,time,destroyed))return;
+    const unit=f/base.d,art=pickupPatch(p.weapon),iconWidth=pickupMarkerWidth*f/icon.d;
+    if(icon.x+iconWidth*.55<0||icon.x-iconWidth*.55>w||base.y<0||icon.y-iconWidth*.42>h)return;
+    queue.push({z:depth(p.x,p.y),draw:()=>{
+      const pulse=1+.065*Math.sin(time*2.36+phase),radius=.735*unit*pulse;
+      const ellipse=(x,y,rx,ry,col)=>{g.beginPath();g.ellipse(x,y,Math.max(.45,rx),Math.max(.32,ry),0,0,tau);g.fillStyle=col;g.fill();};
+      const perspective=clamp(camH/reach,.045,.81);
+      ellipse(base.x,base.y,radius+unit*.08,radius*perspective+unit*.055,'rgba(55,40,57,.40)');
+      g.beginPath();g.ellipse(base.x,base.y,radius,Math.max(.65,radius*perspective),0,0,tau);g.lineWidth=Math.max(.85,unit*.047);g.strokeStyle=style.accent;g.stroke();
+      const rx=.52*unit,ry=Math.max(.65,rx*perspective);
+      ellipse(base.x,base.y,rx,ry,'#99765f');
+      g.fillStyle=style.thread;g.fillRect(body.x-unit*.434,cap.y,unit*.868,Math.max(1,base.y-cap.y));
+      for(let i=1;i<=3;i++){const yy=cap.y+(base.y-cap.y)*i/4;ellipse(body.x,yy,unit*.43,Math.max(.65,ry*.33),i===2?style.accent:style.thread);}
+      ellipse(cap.x,cap.y,rx,ry,'#b99a78');
+      ellipse(cap.x,cap.y-.05*unit,rx*.84,ry*.78,'#dfbd93');
+      g.drawImage(art,icon.x-iconWidth*.5,icon.y-iconWidth*.4,iconWidth,iconWidth*.8);
+    }});
+  }
   function effect(kind,x,y,angle=0,len=0){if(effects.length>60)effects.shift();effects.push({kind,x,y,angle,len,born:clock});}
   function render(state,dt,time){
     if(!running)return;clock=time;
@@ -570,6 +605,7 @@ export function createCanvasView(canvas,spawn,onNotice){
     g=oldG;
     }
     g.drawImage(background,0,0);queue.length=0;
+    for(const pickup of state.pickups||[])queuePickup(pickup,time,destroyed);
     for(const e of state.entities){
       const base=at(e.x,e.y,0),high=e.isCar?1.75:1.78,top=at(e.x,e.y,high);
       if(!base||!top||base.d>(e.isCar?160:96)||base.d<.61)continue;
@@ -597,6 +633,12 @@ export function createCanvasView(canvas,spawn,onNotice){
       else {g.beginPath();g.moveTo(pp.x,pp.y);const steps=isYarn?15:1;for(let j=1;j<=steps;j++){const t=j/steps,swing=isYarn?Math.sin(j*1.2)*.23:0,pt=at(e.x+Math.cos(e.angle)*e.len*t-Math.sin(e.angle)*swing,e.y+Math.sin(e.angle)*e.len*t+Math.cos(e.angle)*swing,.96+swing*.1);if(pt)g.lineTo(pt.x,pt.y);}g.stroke();}
     }
   }
+  function projectTarget(x,y,elevation=1){
+    if(!running||!drawn||!w||!h||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(elevation))return null;
+    const pixel=at(x,y,elevation);
+    if(!pixel||pixel.d>6300||pixel.x<0||pixel.x>w||pixel.y<0||pixel.y>h)return null;
+    return {x:pixel.x/w,y:pixel.y/h,depth:pixel.d};
+  }
   function aim(clientX,clientY,p){
     const b=canvas.getBoundingClientRect();if(!w||!b.width||!b.height)return null;
     const s=((clientX-b.left)/b.width*w-w*.5)/f,v=(h*.5-(clientY-b.top)/b.height*h)/f;
@@ -604,5 +646,5 @@ export function createCanvasView(canvas,spawn,onNotice){
     const d=(.87-camH)/height;
     return d>0&&d<180?Math.atan2(camY+dy*d-p.y,camX+dx*d-p.x):Math.atan2(dy,dx);
   }
-  return {available:true,mode:'canvas',render,aim,effect,dispose(){running=false;effects.length=0;if(surface!==canvas)surface.remove();}};
+  return {available:true,mode:'canvas',render,aim,projectTarget,effect,dispose(){running=false;effects.length=0;if(surface!==canvas)surface.remove();}};
 }

@@ -1,5 +1,7 @@
+import {decodeDropId,isEligibleDropId} from './drop-id.js';
+
 // Each tab is a separate player. State snapshots may coalesce; actions have stable IDs and are retried.
-const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{}});
+const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{},pickups:{}});
 const cleanName=s=>[...String(s||'Kikalmo').replace(/[\u0000-\u001f\u007f]/g,' ').trim()].slice(0,24).join('')||'Kikalmo';
 export function createNet(options={}) {
   const {onStatus=()=>{},onPlayers=()=>{},onChat=()=>{}}=options;
@@ -11,6 +13,24 @@ export function createNet(options={}) {
   let roster=[], context=blankWorld(), pending=[], state={}, failures=0, op=0;
   let rosterKey='', lifetimeChats=new Set();
   const listeners=new Set();
+  const pickupRequests=new Map(),claimingItems=new Set();
+  let lastPickupPrune=0;
+  function rememberPickup(item,availableAt){
+    if(Number.isFinite(availableAt)&&availableAt>Date.now()+offset&&availableAt>(context.pickups[item]||0))
+      context.pickups[item]=availableAt;
+  }
+  function finishClaim(operation,answer){
+    const request=pickupRequests.get(operation);
+    if(!request)return;
+    pickupRequests.delete(operation);claimingItems.delete(request.item);clearTimeout(request.timeout);
+    const until=Number.isFinite(answer?.availableAt)?answer.availableAt:0;
+    rememberPickup(request.item,until);
+    request.resolve({ok:answer?.ok===true && until>Date.now()+offset,availableAt:until});
+  }
+  function cancelClaims(){
+    for(const operation of pickupRequests.keys())finishClaim(operation);
+    pending=pending.filter(e=>e.type!=='pickup');
+  }
   function updateStatus(next) {
     if (status!==next) {status=next;onStatus(next);}
   }
@@ -31,6 +51,7 @@ export function createNet(options={}) {
     if (e.type==='destroy' && !context.destroyed.includes(d.id)) context.destroyed.push(d.id);
     if (e.type==='vehicle') context.vehicles[d.id]=d;
     if (e.type==='npc') context.npcs[d.id]=d;
+    if (e.type==='pickup') rememberPickup(d.id,d.availableAt);
     if (e.type==='chat') {
       if (lifetimeChats.has(e.seq)) return;
       lifetimeChats.add(e.seq);
@@ -66,13 +87,13 @@ export function createNet(options={}) {
         body:JSON.stringify({id,token,name,state,cursor,events:batch})
       });
       if (attempt!==run) return false;
-      if (response.status===401) {joined=false;updateStatus('connecting');return false;}
+      if (response.status===401) {cancelClaims();joined=false;updateStatus('connecting');return false;}
       if (!response.ok) throw new Error('network');
       const data=await response.json();
       if (attempt!==run) return false;
       offset=data.now-Date.now();
       if (joining) {
-        context=data.world || blankWorld();
+        context={...blankWorld(),...data.world};
         joined=true;
         (data.history||[]).forEach(receive);
       } else {
@@ -81,12 +102,21 @@ export function createNet(options={}) {
           pending=pending.filter(e=>!ack.has(e.op));
         }
         (data.events||[]).forEach(receive);
+        const replies=new Map((data.pickupResults||[]).map(r=>[r.op,r]));
+        for(const item of batch)if(item.type==='pickup'){
+          const answer=replies.get(item.op);
+          finishClaim(item.op,answer?.id===item.data.id?answer:null);
+        }
         for (const denied of data.denied||[]) {
           for (const fn of listeners) fn({type:'vehicleDenied',data:denied,at:data.now,player:denied.owner});
         }
         if (data.events?.length===160) delay=30;
       }
       cursor=data.cursor;
+      if(data.now-lastPickupPrune>5000){
+        for(const [item,until] of Object.entries(context.pickups))if(until<=data.now)delete context.pickups[item];
+        lastPickupPrune=data.now;
+      }
       failures=0;
       updatePlayers(data.players||[]);
       updateStatus('online');
@@ -104,6 +134,7 @@ export function createNet(options={}) {
     }
   }
   function send(type,data) {
+    if(type==='pickup')return false;
     if (!started) return false;
     if (status!=='online' && ['chat','shot','hit','alert','emote'].includes(type)) return false;
     if (pending.length>=120) {
@@ -114,6 +145,23 @@ export function createNet(options={}) {
     pending.push({op:(++op).toString(36),type,data});
     if (!busy && joined && status==='online') schedule(24);
     return true;
+  }
+  function claimPickup(item,weapon){
+    if(decodeDropId(item)?.weapon!==weapon||!isEligibleDropId(item))return Promise.resolve({ok:false,availableAt:0});
+    const clock=Date.now()+offset, availableAt=context.pickups[item]||0;
+    if(!started||!joined||status!=='online'||pending.length>=120||claimingItems.has(item)||availableAt>clock)
+      return Promise.resolve({ok:false,availableAt});
+    const operation='pick-'+Math.trunc(clock).toString(36)+'-'+(++op).toString(36);
+    return new Promise(resolve=>{
+      claimingItems.add(item);
+      const timeout=setTimeout(()=>{
+        pending=pending.filter(e=>e.op!==operation);
+        finishClaim(operation);
+      },16000);
+      pickupRequests.set(operation,{item,resolve,timeout});
+      pending.unshift({op:operation,type:'pickup',data:{id:item,weapon}});
+      if(!busy)schedule(0);
+    });
   }
   function leave() {
     if (!joined) return;
@@ -130,6 +178,7 @@ export function createNet(options={}) {
     world:()=>context,
     serverTime:()=>Date.now()+offset,
     publish(next){state=next||{};},
+    claimPickup,
     emit:send,
     onEvent(fn){listeners.add(fn);return ()=>listeners.delete(fn);},
     sendChat(text){text=String(text||'').trim();return !!text && send('chat',{text:[...text].slice(0,240).join('')});},
@@ -147,7 +196,7 @@ export function createNet(options={}) {
       return tick();
     },
     stop(){
-      leave();started=false;run++;clearTimeout(timer);request?.abort();request=null;busy=false;joined=false;updatePlayers([]);
+      leave();started=false;run++;clearTimeout(timer);request?.abort();request=null;busy=false;joined=false;cancelClaims();updatePlayers([]);
       if (typeof window!=='undefined') {
         window.removeEventListener('pagehide',pageHide);
         window.removeEventListener('online',wake);

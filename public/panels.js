@@ -1,6 +1,8 @@
 import {drawItemIcon, drawAvatar} from './sprites.js';
 import {metadata} from './paris-data.js';
-import {coreDestinations} from './paris-world.js';
+import {coreDestinations, districtAt, streetAt} from './paris-world.js';
+import {weaponDrops} from './weapon-drops.js';
+import {wantedRules, wantedThresholds, wantedTuning} from './wanted.js';
 import {mountAtlas,sectorURL,historicURL} from './grand-paris.js';
 
 const weapons = [
@@ -32,6 +34,7 @@ const shortcuts = [
   ['Plan de la ville', ['M']]
 ];
 const signs = {
+  lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/>',
   close:'<path d="m6 6 12 12M18 6 6 18"/>',
   weapon:'<circle cx="12" cy="12" r="7"/><path d="M12 2v5m0 10v5M2 12h5m10 0h5"/>',
   emotes:'<path d="M3 4h18v13H10l-5 4v-4H3z"/><path d="M7 9h1m8 0h1m-9 3 2 2h4l2-2"/>',
@@ -87,7 +90,7 @@ function gameShareURL() {
   return coreDestinations.some(d=>d.key===halt)?historicURL(url.href,halt):url.href;
 }
 
-export function createPanels({game,net,getState,selectWeapon,setName,setSound,getSound,notify,returnFocus}) {
+export function createPanels({game,net,getState,selectWeapon,setName,setSound,getSound,setTouchAim,getTouchAim,notify,returnFocus}) {
   const root=document.getElementById('panels');
   let current='', dialog=null, selected=0, choose=null, setSelected=null;
   let held=false, wheelDirty=false, openedAt=0, interval=0, renderCurrent=null;
@@ -97,6 +100,24 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
   root.hidden=true;
   const state=()=>getState?.() || {};
   const sound=()=>Boolean(getSound?.());
+  const ownsWeapon=id=>(state().ownedWeapons || ['fist','pistol']).includes(id);
+
+  function dropHint(weapon) {
+    const position=game.getPosition();
+    const cooldowns=net.world?.()?.pickups || {};
+    const now=net.serverTime?.() ?? Date.now();
+    let nearest=null, nearestDistance=Infinity;
+    for(const drop of weaponDrops){
+      if(drop.weapon!==weapon || cooldowns[drop.id]>now)continue;
+      const distance=Math.hypot(position.x-drop.x,position.y-drop.y);
+      if(distance<nearestDistance){nearestDistance=distance;nearest=drop;}
+    }
+    if(!nearest)return 'Consulte le plan local pour repérer le prochain dépôt disponible.';
+    const street=streetAt(nearest.x,nearest.y);
+    const district=districtAt(nearest.x,nearest.y);
+    return [street,district].filter((text,i)=>text && (!i || text!==street)).join(' · ');
+  }
+
   function close(focus=true) {
     if(!current) return;
     clearInterval(interval);
@@ -145,12 +166,20 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     graph.setAttribute('viewBox','0 0 200 200');graph.setAttribute('aria-hidden','true');graph.classList.add('mc-wheel-sectors');
     const paths=items.map((_,i)=>{
       const p=document.createElementNS(ns,'path');p.setAttribute('d',sectorPath(i,items.length));graph.append(p);
-      p.addEventListener('pointermove',()=>{setSelected(i);wheelDirty=true;});
+      p.addEventListener('pointermove',()=>{if(selected!==i)setSelected(i);wheelDirty=true;});
       p.addEventListener('click',()=>{setSelected(i);choose();});
       return p;
     });
     ring.append(graph);
     const center=node('div','mc-hub');
+    const hint=node('div','mc-drop-hint');
+    const hintLabel=node('span','mc-drop-caption','Dépôt à pied');
+    const hintPlace=node('strong');
+    const hintCopy=node('div');
+    hintCopy.setAttribute('aria-live','polite');
+    hintCopy.append(hintLabel,hintPlace);
+    hint.append(hintCopy,button('Voir le plan','mc-hint-map',()=>open('map')));
+    hint.hidden=true;
     const large=node('div','mc-hub-glyph');
     const centerLabel=node('strong','mc-hub-label');
     const detail=node('small','mc-hub-detail');
@@ -161,10 +190,14 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
       const pick=button('', 'mc-choice',()=>{setSelected(i);choose();});
       pick.style.left=(50+36.8*Math.cos(t))+'%';pick.style.top=(50+36.8*Math.sin(t))+'%';
       pick.setAttribute('aria-label',it.name);
-      if(isWeapon) pick.append(weaponCanvas(it.id,54));
+      if(isWeapon){
+        const lock=node('span','mc-lock-badge');
+        lock.innerHTML=icon('lock');
+        pick.append(weaponCanvas(it.id,54),lock);
+      }
       else pick.append(node('span','mc-emoji',it.id));
       const shortcut=node('span','mc-slot-key',String(i+1));pick.append(shortcut);
-      pick.addEventListener('pointerenter',()=>{setSelected(i);wheelDirty=true;});
+      pick.addEventListener('pointerenter',()=>{if(selected!==i)setSelected(i);wheelDirty=true;});
       pick.addEventListener('focus',()=>setSelected(i));
       ring.append(pick);
       return pick;
@@ -172,8 +205,15 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     setSelected=(i,focus=false)=>{
       selected=(i+items.length)%items.length;
       const it=items[selected];
-      paths.forEach((path,index)=>path.classList.toggle('mc-selected',index===selected));
+      const locked=isWeapon && !ownsWeapon(it.id);
+      paths.forEach((path,index)=>{
+        path.classList.toggle('mc-selected',index===selected);
+        path.classList.toggle('mc-locked',isWeapon && !ownsWeapon(items[index].id));
+      });
       cells.forEach((c,index)=>{
+        const unavailable=isWeapon && !ownsWeapon(items[index].id);
+        c.classList.toggle('mc-locked',unavailable);
+        c.setAttribute('aria-label',items[index].name+(unavailable?' · À trouver · Voir l’indice':''));
         c.setAttribute('aria-pressed',String(index===selected));
         c.classList.toggle('mc-selected',index===selected);
         c.tabIndex=index===selected?0:-1;
@@ -182,20 +222,32 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
         large.dataset.value=it.id;
         large.replaceChildren(isWeapon?weaponCanvas(it.id,54):node('span','mc-emoji',it.id));
       }
-      centerLabel.textContent=it.name;detail.textContent=it.hint;
+      center.classList.toggle('mc-locked',locked);
+      centerLabel.textContent=it.name;
+      detail.textContent=locked?'À trouver':it.hint;
+      hint.hidden=!locked;
+      if(locked){
+        const location=dropHint(it.id);
+        if(hintPlace.textContent!==location)hintPlace.textContent=location;
+      }
       if(focus)cells[selected].focus({preventScroll:true});
     };
-    choose=()=>{
+    choose=(dismissLocked=false)=>{
       const item=items[selected];
+      if(isWeapon && !ownsWeapon(item.id)){
+        if(dismissLocked)close();
+        return;
+      }
       close();
       if(isWeapon) selectWeapon(item.id);
       else game.emote(item.id);
     };
     setSelected(selected);
-    wheelStage.append(ring);
+    wheelStage.append(ring,hint);
+    if(isWeapon)renderCurrent=()=>setSelected(selected);
     const actions=node('div','mc-wheel-actions');
     actions.innerHTML=key('←')+key('→')+'<span>Choisir</span>'+key('Entrée')+'<span>Valider</span>';
-    const tip=node('div','mc-wheel-touch','Touche une case pour la sélectionner.');
+    const tip=node('div','mc-wheel-touch',isWeapon?'Touche une arme pour l’équiper ou découvrir son emplacement.':'Touche une émote pour l’envoyer.');
     sheet.append(wheelStage,actions,tip);
   }
   function mapPanel() {
@@ -208,10 +260,10 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const detail=node('div','gp-local'),regional=node('div','gp-regional');
     const map=node('div','mc-map-box');
     const canvas=node('canvas','mc-map-canvas');canvas.width=840;canvas.height=448;
-    canvas.setAttribute('aria-label','Plan de la ville avec la position des joueurs et des véhicules');
+    canvas.setAttribute('aria-label','Plan local avec les joueurs, les véhicules et les armes à trouver');
     map.append(canvas);detail.append(map);
     const legends=node('div','mc-map-legends');
-    [['mc-me','Vous'],['mc-other','Autres joueurs'],['mc-car','Véhicules']].forEach(([c,value])=>{
+    [['mc-me','Vous'],['mc-other','Autres joueurs'],['mc-car','Véhicules'],['mc-drop','Arme à trouver']].forEach(([c,value])=>{
       const line=node('span','mc-map-legend');line.append(node('i',c),node('span','',value));legends.append(line);
     });
     const travel=node('div','mc-travel');
@@ -259,12 +311,38 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     return list;
   }
   function helpPanel() {
-    const sheet=frame('help','Commandes','Comment jouer');
-    const body=node('div','mc-body');
-    body.append(keyRows());
-    const mobile=node('p','mc-form-note','Sur mobile, pousse le joystick à fond pour courir. Glisse sur le décor pour tourner la caméra. Au volant, pousse vers le haut pour accélérer et vers le bas pour freiner ou reculer.');
-    body.append(mobile);
-    sheet.append(body);
+    const sheet=frame('help','Guide de jeu','Comment jouer');
+    const body=node('div','mc-body mc-guide');
+    const kit=node('section','mc-guide-section');
+    kit.append(node('h3','','Trouver une arme'),node('p','','Tu commences avec les poings et le pistolet. Dans la roue, sélectionne un cadenas pour localiser l’arme. Approche-toi à pied du dépôt pour la ramasser.'));
+    kit.append(node('p','mc-guide-aside','Après un ramassage, le dépôt redevient disponible pour tous au bout de 60 s.'));
+
+    const alert=node('section','mc-guide-section');
+    alert.append(node('h3','','Indice de recherche'),node('p','','Chaque infraction ajoute des points. La barre sous les étoiles indique ta progression vers le niveau suivant.'));
+    const levels=node('ol','mc-thresholds');
+    levels.setAttribute('aria-label','Points nécessaires pour chaque niveau de recherche');
+    wantedThresholds.forEach((threshold,index)=>{
+      const item=node('li');
+      item.setAttribute('aria-label',(index+1)+' étoile'+(index?'s':'')+' à '+threshold+' points');
+      item.append(node('strong','',String(index+1)+' ★'),node('small','',threshold+' pts'));
+      levels.append(item);
+    });
+    const rules=node('details','mc-guide-details');
+    rules.append(node('summary','','Barème des infractions'));
+    const pointsList=node('dl','mc-points-list');
+    for(const {label,points} of Object.values(wantedRules)){
+      pointsList.append(node('dt','',label),node('dd','',points?'+'+points:'0'));
+    }
+    const {repeatWindow, repeatStep, maxRepeatBonus, calmDelay, decayRate}=wantedTuning;
+    rules.append(pointsList,node('p','mc-guide-aside','La même infraction répétée en moins de '+repeatWindow+' s rapporte '+Math.round(repeatStep*100)+' % de plus par répétition, jusqu’à +'+Math.round(maxRepeatBonus*100)+' %.'));
+    alert.append(levels,node('p','mc-guide-aside','Après '+calmDelay+' s sans infraction, l’alerte diminue de '+decayRate.toLocaleString('fr-FR')+' points par seconde.'),rules);
+
+    const controls=node('details','mc-guide-details');
+    controls.append(node('summary','','Commandes clavier et souris'),keyRows());
+    const mobile=node('section','mc-guide-section');
+    mobile.append(node('h3','','Commandes tactiles'),node('p','','Pousse le joystick à fond pour courir. Glisse sur le décor pour tourner la caméra. Au volant, pousse vers le haut pour accélérer ou vers le bas pour freiner puis reculer.'));
+    mobile.append(node('p','','Maintiens le bouton de tir pour accrocher une cible devant toi. Un réticule apparaît dessus. Glisse le pouce sur ce bouton pour ajuster la visée, puis relâche pour arrêter de tirer.'));
+    body.append(kit,alert,mobile,controls);sheet.append(body);
   }
   function fieldLabel(text, id) {const l=node('label','mc-field-label',text);l.htmlFor=id;return l;}
   function settingsPanel() {
@@ -274,12 +352,21 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const username=node('input','mc-input');username.id='mc-name';username.name='nickname';username.autocomplete='nickname';username.maxLength=24;username.required=true;username.value=net.name || '';
     const group=node('div','mc-field');
     group.append(fieldLabel('Nom de joueur',username.id),username);
-    const row=node('div','mc-option-row');
-    const soundLabel=node('div','mc-option-label');soundLabel.innerHTML=icon('speaker')+'<span>Effets sonores</span>';
-    const toggle=button('','mc-switch',()=>{setSound(!sound());syncToggle();});
-    toggle.setAttribute('role','switch');toggle.setAttribute('aria-label','Effets sonores');
-    function syncToggle() {toggle.setAttribute('aria-checked',String(sound()));toggle.replaceChildren(node('i'),node('span','',sound()?'Activés':'Coupés'));}
-    syncToggle();row.append(soundLabel,toggle);
+    function switchRow(title, sign, readValue, saveValue, onText, offText){
+      const row=node('div','mc-option-row');
+      const label=node('label','mc-option-label');
+      label.htmlFor='mc-toggle-'+sign;label.innerHTML=icon(sign);label.append(node('span','',title));
+      const toggle=button('','mc-switch',()=>{saveValue(!readValue());sync();});
+      toggle.id=label.htmlFor;toggle.setAttribute('role','switch');toggle.setAttribute('aria-label',title);
+      function sync(){
+        const enabled=readValue();
+        toggle.setAttribute('aria-checked',String(enabled));
+        toggle.replaceChildren(node('i'),node('span','',enabled?onText:offText));
+      }
+      sync();row.append(label,toggle);return row;
+    }
+    const soundRow=switchRow('Effets sonores','speaker',sound,setSound,'Activés','Coupés');
+    const aimRow=switchRow('Aide à la visée tactile','weapon',getTouchAim,setTouchAim,'Activée','Désactivée');
     const display=node('div','mc-option-row');
     const info=node('span','mc-option-label','Rendu actif');
     const graphics=state().graphics;
@@ -288,7 +375,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const actions=node('div','mc-form-actions');
     const controls=button('Commandes','mc-secondary',()=>open('help'));
     controls.innerHTML=icon('help')+'<span>Commandes</span>';
-    actions.append(controls,confirm);form.append(group,row,display,actions);
+    actions.append(controls,confirm);form.append(group,soundRow,aimRow,display,actions);
     form.addEventListener('submit',e=>{
       e.preventDefault();const name=username.value.trim();
       if(!name){username.setCustomValidity('Entre un nom de joueur.');username.reportValidity();return;}
@@ -380,27 +467,28 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     if(!up && lower==='escape'){close();return consume();}
     if(up && held && lower===wheelTrigger){
       held=false;
-      if(wheelDirty || performance.now()-openedAt>240)choose?.();
+      if(wheelDirty || performance.now()-openedAt>240)choose?.(true);
       return consume();
     }
     if(up)return true;
     const isWheel=current==='weapons' || current==='emotes';
     if(!editable && isWheel){
       const items=current==='weapons'?weapons:emotes;
+      if((lower==='enter' || lower===' ') && target?.closest?.('.mc-dismiss,.mc-hint-map'))return true;
       if(lower===wheelTrigger) {
-        if(!e.repeat && !held)choose?.();
+        if(!e.repeat && !held)choose?.(true);
         return consume();
       }
       if(lower==='enter' || lower===' '){choose?.();return consume();}
       if(['arrowleft','arrowup','arrowright','arrowdown'].includes(lower)){
         wheelDirty=true;setSelected(selected+(['arrowleft','arrowup'].includes(lower)?-1:1),true);return consume();
       }
-      const digit=/^Digit([1-6])$/.exec(e.code) || /^([1-6])$/.exec(e.key);
+      const digit=/^(?:Digit|Numpad)([1-6])$/.exec(e.code) || /^([1-6])$/.exec(e.key);
       if(digit && Number(digit[1])<=items.length){setSelected(Number(digit[1])-1);choose();return consume();}
     }
     if(!editable && current==='map' && lower==='m' && !e.repeat){close();return consume();}
     if(lower==='tab' && !isWheel){
-      const list=[...dialog.querySelectorAll('button:not([disabled]),input:not([hidden]),[tabindex="0"]')].filter(el=>el.getClientRects().length);
+      const list=[...dialog.querySelectorAll('button:not([disabled]),input:not([hidden]),select:not([disabled]),summary,[tabindex="0"]')].filter(el=>el.getClientRects().length);
       const first=list[0],last=list[list.length-1];
       if(e.shiftKey && (target===first || target===dialog)){last?.focus();return consume();}
       if(!e.shiftKey && target===last){first?.focus();return consume();}

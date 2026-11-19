@@ -1,4 +1,5 @@
 const paths={
+ lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/>',
  camera:'<path d="M3 7h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="3.5"/>',
  gamepad:'<path d="M7 7h10c2 0 3 1 4 5l1 5c0 2-2 3-4 1l-2-2H8l-2 2c-2 2-4 1-4-1l1-5c1-4 2-5 4-5zM8 10v4m-2-2h4"/><path d="M16 10h.01m2 3h.01" stroke-width="3"/>',
  map:'<path d="m2 5 7-2 6 3 7-2v15l-7 2-6-3-7 2zm7-2v15m6-12v15"/>',

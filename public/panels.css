@@ -161,3 +161,36 @@
 .gp-selection{display:flex;justify-content:space-between;align-items:center;gap:8px}.gp-where{display:grid;gap:2px;min-width:0}.gp-where strong{font-size:15px}.gp-where small{font:500 12px var(--ui,system-ui);color:#b8acb8;overflow-wrap:anywhere}.gp-selection button{flex:none}.gp-selection button:disabled{opacity:.45;cursor:default;box-shadow:none}
 @media(max-width:520px){.gp-local,.gp-atlas{gap:9px}.gp-stage{height:clamp(185px,30dvh,260px)}.gp-selection{align-items:stretch;flex-direction:column}.gp-selection button{align-self:stretch}.gp-poi{min-height:29px;font-size:11px!important;padding:3px 8px}.gp-mode{justify-self:stretch}.gp-mode button{flex:1}.gp-zoom button{width:30px;height:30px}}
 @media(max-height:480px){.gp-stage{height:155px}.gp-atlas,.gp-local{gap:8px}}
+
+/* Uncollected gear is inspectable so every player can find its drop. */
+.mc-weapons .mc-wheel-sectors .mc-locked{fill:#25232b;stroke:#514750}
+.mc-weapons .mc-wheel-sectors .mc-locked.mc-selected{fill:#3c343a;stroke:#d9b999;filter:none}
+.mc-choice.mc-locked .mc-item,.mc-hub.mc-locked .mc-item{filter:brightness(0) saturate(100%) invert(57%) sepia(6%) saturate(374%) hue-rotate(269deg);opacity:.8}
+.mc-lock-badge{display:none}
+.mc-locked .mc-lock-badge{display:grid;place-items:center;position:absolute;right:8%;bottom:16%;width:20px;height:20px;border:1px solid #ac9480;border-radius:50%;background:#2b2730;color:#e4c6a3}
+.mc-lock-badge .mc-icon{width:12px;height:12px}
+.mc-hub.mc-locked .mc-hub-detail{color:#e5c6a3;font-weight:700}
+.mc-drop-hint{width:min(100%,335px);display:flex;align-items:center;justify-content:space-between;gap:9px;padding:9px 11px;margin:7px 0 1px;border:1px solid #67594d;border-radius:5px;background:#302c30}
+.mc-drop-hint>div{display:grid;gap:2px;min-width:0}
+.mc-drop-caption{font-size:11px;color:#d7b99c}
+.mc-drop-hint strong{color:#ffebce;font-size:13px;line-height:1.25;font-weight:650;overflow-wrap:break-word}
+.mc-panels .mc-hint-map{border:1px solid #8f7762;border-radius:4px;background:#453c37;white-space:nowrap;color:#ffe1b5;font-size:13px;padding:6px 9px;min-height:34px}
+.mc-map-legend .mc-drop{width:7px;height:7px;transform:rotate(45deg);background:#f4ca83;border:1px solid #fff0cc}
+.mc-guide{display:grid;gap:17px}
+.mc-guide-section{display:grid;gap:8px}
+.mc-guide-section h3{color:var(--mc-cream);font:750 17px/1.25 var(--ui,system-ui);margin:0}
+.mc-guide p{font:400 14px/1.5 var(--ui,system-ui);color:#e2d7da}
+.mc-guide .mc-guide-aside{color:#c2b7c3;font-size:13px}
+.mc-guide-details{border-top:1px solid #544950}
+.mc-guide-details summary{color:#efd0a8;font-weight:700;font-size:14px;padding:10px 0 5px;cursor:pointer}
+.mc-guide-details summary:focus-visible{outline:2px solid var(--mc-cyan);outline-offset:2px}
+.mc-points-list{display:grid;grid-template-columns:1fr auto;gap:0;margin:8px 0;font-size:13px}
+.mc-points-list dt,.mc-points-list dd{border-bottom:1px solid #3b353d;padding:4px 0}
+.mc-points-list dd{margin:0;padding-left:14px;font-variant-numeric:tabular-nums;color:#f2d3a9}
+.mc-thresholds{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin:1px 0;padding:0}
+.mc-thresholds li{display:grid;place-items:center;gap:3px;padding:7px 2px;border:1px solid #5c504d;border-radius:4px;background:#37302f}
+.mc-thresholds strong{font-size:13px;color:#f4ca83}.mc-thresholds small{font-size:11px;color:#eee0d2}
+@media(pointer:coarse){.mc-panels .mc-hint-map{min-height:42px}.mc-guide-details summary{padding-block:12px}}
+@media(max-height:505px){.mc-drop-hint{padding-block:4px;margin-block:1px}.mc-weapons:has(.mc-drop-hint:not([hidden])) .mc-wheel{width:min(100%,47dvh)}}
+.mc-option-row label.mc-option-label{cursor:pointer;flex:1;min-height:44px}
+.mc-option-row .mc-switch{min-height:44px;flex-shrink:0}

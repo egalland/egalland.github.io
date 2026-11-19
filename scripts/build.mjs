@@ -16,7 +16,9 @@ for (const file of (await readdir('public')).sort()) {
   const contents = type.startsWith('text/') ? {text:bytes.toString('utf8')} : {encoded:bytes.toString('base64')};
   assets['/' + file] = {type,etag,...contents};
 }
-const api = await readFile('worker/game-api.js','utf8');
+const dropLogic = assets['/drop-id.js'].text.replace(/^export /gm,'');
+const api = (await readFile('worker/game-api.js','utf8'))
+  .replace("import { decodeDropId, isEligibleDropId } from '../public/drop-id.js';",()=>dropLogic);
 const geo = await readFile('worker/geo-api.js','utf8');
 const router = (await readFile('worker/index.js','utf8')).replace("import { handleApi } from './game-api.js';", '').replace("import { handleGeo } from './geo-api.js';", '');
 await mkdir('dist/server',{recursive:true});

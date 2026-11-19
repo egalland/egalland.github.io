@@ -2,6 +2,7 @@ import * as THREE from './three.js';
 import { createCity3D } from './city3d.js';
 import { createPuppet, createCar } from './puppets3d.js';
 import { createCanvasView } from './canvas-view.js';
+import { createPickupDisplay } from './pickup-models.js';
 import { cameraDistance, nearbyProps } from './paris-world.js';
 
 const clamp = (v,a,b) => Math.min(b,Math.max(a,v));
@@ -51,7 +52,7 @@ export function createView(canvas,spawn,onNotice) {
   scene.add(new THREE.HemisphereLight(0xffe6cf,0x978885,1.65));
   const sun=new THREE.DirectionalLight(0xffdcac,2.15);sun.position.set(-.38,.92,-.7);scene.add(sun);
   const fill=new THREE.DirectionalLight(0xe7dbff,.54);fill.position.set(.3,.5,1);scene.add(fill);
-  const city=createCity3D(scene);
+  const city=createCity3D(scene), pickupDisplay=createPickupDisplay(scene);
   const camera=new THREE.PerspectiveCamera(58,1,.08,6300);
   const shadows=makeShadow();scene.add(shadows);
   const shadowTransform=new THREE.Object3D(), projection=new THREE.Vector3(), cameraAim=new THREE.Vector3();
@@ -125,6 +126,7 @@ export function createView(canvas,spawn,onNotice) {
     sky.position.copy(camera.position);
     if(time-lastPropTick>.30 || snap){props=nearbyProps(p.x,p.y,320);lastPropTick=time;}
     city.update(p,time,{props,destroyed});
+    pickupDisplay.update(state.pickups,p,time);
     const candidates=state.entities.filter(e=>Number.isFinite(e.x)&&Number.isFinite(e.y)).sort((a,b)=>distance(a,p)-distance(b,p));
     const lowPower=scale<.81;
     const carLimit=lowPower?4:touch?6:8, pedestrianLimit=lowPower?5:touch?7:9;
@@ -159,6 +161,16 @@ export function createView(canvas,spawn,onNotice) {
     if(dt>.049)slowCount++;else slowCount=Math.max(0,slowCount-.5);
     if(slowCount>55 && scale>.68){scale=Math.max(.68,scale-.12);width=0;slowCount=0;}
   }
+  // World (east, south, elevation) to the last drawn viewport; depth is along the camera axis in metres.
+  function projectTarget(x,y,elevation=1){
+    if(!active||!inFrame||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(elevation))return null;
+    projection.set(x,elevation,y).applyMatrix4(camera.matrixWorldInverse);
+    const depth=-projection.z;
+    if(depth<camera.near||depth>camera.far)return null;
+    projection.applyMatrix4(camera.projectionMatrix);
+    if(Math.abs(projection.x)>1||Math.abs(projection.y)>1)return null;
+    return {x:(1+projection.x)/2,y:(1-projection.y)/2,depth};
+  }
   const ray=new THREE.Raycaster(),floor=new THREE.Plane(new THREE.Vector3(0,1,0),-.87),point=new THREE.Vector3();
   function aim(x,y,p){
     const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return null;
@@ -168,9 +180,9 @@ export function createView(canvas,spawn,onNotice) {
   }
   function contextLost(event){event.preventDefault();active=false;onNotice('Affichage 3D interrompu. Recharge la page pour reprendre.');}
   canvas.addEventListener('webglcontextlost',contextLost);
-  return {available:true,mode:'webgl',render,aim,effect,dispose(){
+  return {available:true,mode:'webgl',render,aim,projectTarget,effect,dispose(){
     active=false;canvas.removeEventListener('webglcontextlost',contextLost);labels.remove();
     for(const item of models.values())item.object.dispose?.();
-    city.dispose?.();renderer.dispose();
+    pickupDisplay.dispose();city.dispose?.();renderer.dispose();
   }};
 }

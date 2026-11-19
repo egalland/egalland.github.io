@@ -685,7 +685,7 @@ function mapView(w,h,player,full){
   }
   return {x:player.x,y:player.y,scale:Math.max(w/275,h/175)};
 }
-export function paintMap(canvas,player,{full=false,peers=[],vehicles=[],dpr=Math.min(2,globalThis.devicePixelRatio||1)}={}){
+export function paintMap(canvas,player,{full=false,peers=[],vehicles=[],pickups=[],dpr=Math.min(2,globalThis.devicePixelRatio||1)}={}){
   if(!canvas||!player)return;
   const rect=canvas.getBoundingClientRect?.(),w=Math.round(rect?.width||canvas.width),h=Math.round(rect?.height||canvas.height);
   if(!w||!h)return;
@@ -704,6 +704,14 @@ export function paintMap(canvas,player,{full=false,peers=[],vehicles=[],dpr=Math
     c.beginPath();c.arc(x,y,r,0,TAU);c.fillStyle=color;c.fill();
     if(stroke){c.strokeStyle=stroke;c.lineWidth=1.7;c.stroke();}
   };
+  // Keep pickup markers at a fixed screen size and below place names and players.
+  for(const drop of pickups){
+    const x=px(drop.x),y=py(drop.y),r=full?3.6:4.8;
+    if(x<-r||x>w+r||y<-r||y>h+r)continue;
+    c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y);c.lineTo(x,y+r);c.lineTo(x-r,y);c.closePath();
+    c.fillStyle='#f4ca83';c.fill();c.strokeStyle='#403344';c.lineWidth=1.4;c.stroke();
+    c.fillStyle='#42333a';c.fillRect(x-1,y-1,2,2);
+  }
   if(full){
     const labels=destinations.filter(d=>['etoile','maillot','neuilly','arche','concorde','louvre','sector'].includes(d.key));
     c.font='600 '+(w>450?11:9)+'px system-ui';c.textBaseline='middle';

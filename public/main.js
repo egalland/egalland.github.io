@@ -1,3 +1,4 @@
+import {createWanted,wantedRules,wantedThresholds} from './wanted.js';
 import {attachSectorTravel} from './sector-travel.js';
 import {createGame} from './game.js';
 import {createNet} from './net.js';
@@ -15,8 +16,42 @@ function guestName(){return defaultNames[Math.floor(Math.random()*defaultNames.l
 const name=read('name',guestName());
 write('name',name);
 const weapons=[['fist','Poings'],['pistol','Pistolet'],['smg','Mitraillette'],['shotgun','Fusil à pompe'],['yarn','Pelote']];
+const pursuitKey='maillecity.pursuit.v1';
+function loadPursuit(){
+  try{
+    const entry=JSON.parse(sessionStorage.getItem(pursuitKey)||'null');
+    if(!entry || !Number.isFinite(entry.savedAt))return null;
+    const elapsed=Math.max(0,(Date.now()-entry.savedAt)/1000);
+    return createWanted(entry.snapshot,-elapsed).snapshot(0);
+  }catch{return null;}
+}
+const starterWeapons=['fist','pistol'];
+const loadout=weapons.map(([id])=>id).filter(id=>starterWeapons.includes(id)||read('arsenal.'+id,'0')==='1');
+function saveLoadout(list) {
+  for(const [id] of weapons) if(!starterWeapons.includes(id)&&list.includes(id))write('arsenal.'+id,'1');
+}
+const weaponNames=new Map(weapons);
 const city=$('#city'),chat=$('#chat'),entry=$('#chatEntry');
-let settingsSound=read('sound','false')==='true',panels=null,game=null, state={weapon:'pistol',ammo:12,health:100,wanted:0,district:'Place de l’Étoile'}, timer=0;
+let settingsSound=read('sound','false')==='true',panels=null,game=null, state={weapon:'pistol',ammo:12,health:100,wanted:0,wantedPoints:0,wantedProgress:0,ownedWeapons:loadout,district:'Place de l’Étoile'}, timer=0;
+let touchAimEnabled=read('touchAimAssist','true')==='true';
+let fireGesture=null;
+const aimMarker=$('#touchAimMarker');
+function showAimLock(point) {
+  const visible=touchAimEnabled && fireGesture?.action==='touchFire' && point &&
+    Number.isFinite(point.x) && point.x>=0 && point.x<=1 &&
+    Number.isFinite(point.y) && point.y>=0 && point.y<=1;
+  if(visible){
+    aimMarker.style.left=(point.x*100)+'%';
+    aimMarker.style.top=(point.y*100)+'%';
+  }
+  aimMarker.hidden=!visible;
+}
+function setTouchAim(enabled) {
+  touchAimEnabled=Boolean(enabled);
+  write('touchAimAssist',String(touchAimEnabled));
+  game.setAimAssist(touchAimEnabled);
+  if(!touchAimEnabled)showAimLock(null);
+}
 const controlsAreTouch=()=>matchMedia('(pointer:coarse),(max-width:670px)').matches;
 renderIcons();
 drawBrand($('#brandMark').getContext('2d'));
@@ -44,13 +79,39 @@ function notify(text){const box=$('#notice');box.textContent=text;box.classList.
 function focusGame(){if(chat.contains(document.activeElement))document.activeElement.blur();city.focus({preventScroll:true});}
 function selectWeapon(id){game?.selectWeapon(id);focusGame();}
 const buttons=new Map();
+let lastWantedEvent=null,feedbackTimer=0;
 weapons.forEach(([id,label],i)=>{
   const b=document.createElement('button');b.className='slot';b.dataset.weapon=id;b.title=label+' ('+(i+1)+')';b.setAttribute('aria-label',label);
   const num=document.createElement('span');num.className='slot-n';num.textContent=i+1;
   const c=document.createElement('canvas');c.width=c.height=36;c.setAttribute('aria-hidden','true');drawItemIcon(c.getContext('2d'),id,0,0,36);
   const ammo=document.createElement('small');ammo.className='ammo';
-  b.append(num,c,ammo);$('#slots').append(b);buttons.set(id,b);b.onclick=()=>selectWeapon(id);
+  const lock=document.createElement('i');lock.className='slot-lock';lock.innerHTML=icon('lock');lock.hidden=true;
+  b.append(num,c,lock,ammo);$('#slots').append(b);buttons.set(id,b);b.onclick=()=>selectWeapon(id);
 });
+function showWanted() {
+  const stars=state.wanted, points=Math.floor(state.wantedPoints||0);
+  const next=wantedThresholds[stars];
+  const progress=Math.round(100*Math.max(0,Math.min(1,state.wantedProgress||0)));
+  const label='Indice de recherche, '+stars+' étoile'+(stars>1?'s':'')+' sur 5';
+  const detail=next ? points+' / '+next+' points' : 'Niveau maximal';
+  $('#stars div').style.clipPath='inset(0 '+(100-20*stars)+'% 0 0)';
+  $('#stars').setAttribute('aria-label',label);
+  $('#wantedRatio').textContent=next?points+'/'+next:'MAX';
+  const meter=$('#wantedMeter');
+  meter.title=next?detail+' pour la prochaine étoile':detail;
+  meter.setAttribute('aria-valuemin','0');
+  meter.setAttribute('aria-valuemax','100');
+  meter.setAttribute('aria-valuenow',String(progress));
+  meter.setAttribute('aria-valuetext',detail);
+  meter.firstElementChild.style.transform='scaleX('+Math.max(0,Math.min(1,state.wantedProgress||0))+')';
+  const event=state.wantedEvent;
+  if(event && event.id!==lastWantedEvent && wantedRules[event.action]){
+    lastWantedEvent=event.id;
+    const box=$('#wantedFeedback');
+    box.textContent='+'+event.points.toLocaleString('fr-FR',{maximumFractionDigits:1})+' · '+wantedRules[event.action].label;
+    box.hidden=false;clearTimeout(feedbackTimer);feedbackTimer=setTimeout(()=>box.hidden=true,2400);
+  }
+}
 function onState(next){
   state={...state,...next};
   $('#district').textContent=state.district;
@@ -62,17 +123,29 @@ function onState(next){
   ride.classList.toggle('near',Boolean(state.inVehicle||state.nearVehicle));
   ride.setAttribute('aria-label',state.inVehicle?'Sortir du véhicule':'Monter dans un véhicule');
   $('#hpBar').style.width=state.health+'%';$('#hpNum').textContent=state.health;
-  $('#stars div').style.clipPath='inset(0 '+(100-20*state.wanted)+'% 0 0)';
-  $('#stars').setAttribute('aria-label','Indice de recherche '+state.wanted+' sur 5');
-  $('#weaponLabel').textContent=weapons.find(w=>w[0]===state.weapon)?.[1]||'';
-  buttons.forEach((b,id)=>{const active=id===state.weapon;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));b.querySelector('.ammo').textContent=active?String(state.ammo??''):'';});
+  showWanted();
+  $('#weaponLabel').textContent=weaponNames.get(state.weapon)||'';
+  const owned=new Set(state.ownedWeapons||starterWeapons);
+  $('#ownedCount').textContent=owned.size+'/'+weapons.length;
+  for(const [i,[id,label]] of weapons.entries()){
+    const button=buttons.get(id),active=id===state.weapon,locked=!owned.has(id);
+    button.disabled=locked;button.classList.toggle('locked',locked);button.classList.toggle('active',active);
+    button.setAttribute('aria-label',locked?label+' à trouver':label);
+    button.setAttribute('aria-pressed',String(active));button.title=locked?label+' · À trouver sur la carte':label+' ('+(i+1)+')';
+    button.querySelector('.slot-lock').hidden=!locked;
+    button.querySelector('.ammo').textContent=active?String(state.ammo??''):'';
+  }
+  const hint=$('#pickupHint'),drop=state.nearPickup;
+  hint.hidden=!drop;
+  if(drop)hint.textContent=drop.online===false?'Ramassage disponible à la reconnexion':weaponNames.get(drop.weapon)+' · '+Math.max(0,Math.round(drop.distance))+' m';
+
 }
 function setName(value){const clean=net.setName(value);write('name',clean);$('#playerName').textContent=clean;}
 function setSound(value){settingsSound=Boolean(value);write('sound',String(settingsSound));game?.setSound(settingsSound);const sound=$('#sound');sound.setAttribute('aria-pressed',String(settingsSound));const label=settingsSound?'Couper le son':'Activer le son';sound.title=label;sound.setAttribute('aria-label',label);sound.querySelector('i').innerHTML=icon(settingsSound?'volume':'volumeOff');}
 $('#playerName').textContent=name;
-game=createGame({canvas:city,minimap:$('#minimap'),net,onState,onNotice:notify});
-panels=createPanels({game,net,getState:()=>({...state,name:net.name}),selectWeapon,setName,setSound,getSound:()=>settingsSound,notify,returnFocus:focusGame});
-onState(state);setSound(settingsSound);
+game=createGame({canvas:city,minimap:$('#minimap'),net,onState,onNotice:notify,onAimLock:showAimLock,loadout,onLoadoutChange:saveLoadout,initialPursuit:loadPursuit()});
+panels=createPanels({game,net,getState:()=>({...state,name:net.name}),selectWeapon,setName,setSound,getSound:()=>settingsSound,setTouchAim,getTouchAim:()=>touchAimEnabled,notify,returnFocus:focusGame});
+onState(state);setSound(settingsSound);game.setAimAssist(touchAimEnabled);
 document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>{if(document.activeElement===entry)entry.blur();panels.open(b.dataset.panel);}));
 $('#playNav').onclick=()=>{if(panels.isOpen())panels.close();chat.classList.remove('mobile-open');focusGame();};
 $('#sound').onclick=()=>setSound(!settingsSound);
@@ -100,13 +173,39 @@ function stopStick(){if(stickSprint){stickSprint=false;game.action('sprint',fals
 stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=stopStick;
 $('#recenter').onpointerdown=e=>{e.preventDefault();game.action('recenter');};
 $('#ride').onpointerdown=e=>{e.preventDefault();game.action('vehicle');};
-const fire=$('#fire');let aimStart=null;
-fire.onpointerdown=e=>{e.preventDefault();fire.setPointerCapture(e.pointerId);aimStart=[e.clientX,e.clientY];game.action('fire',true);};
-fire.onpointermove=e=>{if(!aimStart)return;const dx=e.clientX-aimStart[0],dy=e.clientY-aimStart[1],length=Math.hypot(dx,dy);if(length>5)game.setAim(dx/length,dy/length);};
-const releaseFire=()=>{aimStart=null;game.action('fire',false);game.setAim(0,0);};
+const fire=$('#fire');
+fire.onpointerdown=e=>{
+  if(fireGesture || e.button!==0)return;
+  e.preventDefault();
+  fire.setPointerCapture(e.pointerId);
+  fireGesture={id:e.pointerId,x:e.clientX,y:e.clientY,action:e.pointerType==='touch'?'touchFire':'fire'};
+  game.action(fireGesture.action,true);
+};
+fire.onpointermove=e=>{
+  if(fireGesture?.id!==e.pointerId)return;
+  const dx=e.clientX-fireGesture.x,dy=e.clientY-fireGesture.y,length=Math.hypot(dx,dy);
+  if(length>6)game.setAim(dx/length,dy/length);
+  else game.setAim(0,0);
+};
+function releaseFire(e) {
+  if(!fireGesture || (e?.pointerId!==undefined && e.pointerId!==fireGesture.id))return;
+  const {action}=fireGesture;
+  fireGesture=null;
+  game.action(action,false);
+  game.setAim(0,0);
+  showAimLock(null);
+}
 fire.onpointerup=fire.onpointercancel=fire.onlostpointercapture=releaseFire;
 window.addEventListener('blur',()=>{stopStick();releaseFire();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseFire();});
 city.addEventListener('pointerdown',()=>{if(controlsAreTouch())chat.classList.remove('mobile-open');});
+window.addEventListener('pagehide',()=>{
+  try{
+    const snapshot=game.getPursuitSnapshot();
+    if(snapshot.points>0)sessionStorage.setItem(pursuitKey,JSON.stringify({savedAt:Date.now(),snapshot}));
+    else sessionStorage.removeItem(pursuitKey);
+  }catch{}
+});
 window.addEventListener('pageshow',e=>{if(e.persisted)net.start();});
 attachSectorTravel(game,net,$('#sectorEdge'));
 net.start();
