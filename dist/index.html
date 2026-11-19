@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#242d65">
+  <meta name="description" content="A recreation of the Realevate landing page arrival: layered imagery, a rolling counter, a rising curtain and an oversized moving headline.">
+  <title>Realevate — Elevating Life</title>
+  <link rel="preload" href="assets/terrace.jpg" as="image">
+  <link rel="preload" href="assets/garden.jpg" as="image">
+  <link rel="preload" href="assets/tower.jpg" as="image">
+  <link rel="stylesheet" href="styles.css?v=3">
+  <script src="arrival.js?v=3" defer></script>
+</head>
+<body class="arriving">
+  <a class="skip-link" href="#selection-button">Skip to selection</a>
+
+  <main class="landing" id="landing" aria-label="Realevate — Elevating Life">
+    <header class="site-header arrival-content">
+      <button class="text-link about-link" data-dialog="about-dialog">About</button>
+      <a class="wordmark" href="./" aria-label="Realevate home">
+        <svg class="wordmark-sign" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15h12M8 11v8M14 6h9a6 6 0 0 1 0 12h-9V6m8 12 6 7M14 18v7"/></svg>
+        <span>REALEVATE</span>
+      </a>
+      <button class="text-link contact-link" data-dialog="contact-dialog">Contact</button>
+    </header>
+
+    <div class="headline-viewport" aria-hidden="true">
+      <div class="headline-reveal">
+        <div class="headline-track">
+          <span class="headline-unit">Elevating Life&nbsp;</span><span class="headline-unit">Elevating Life&nbsp;</span><span class="headline-unit">Elevating Life&nbsp;</span><span class="headline-unit">Elevating Life&nbsp;</span>
+        </div>
+      </div>
+    </div>
+    <h1 class="sr-only">Elevating Life</h1>
+
+    <div class="photo-stage" aria-hidden="true">
+      <img class="photo photo-garden" src="assets/garden.jpg" width="300" height="300" alt="">
+      <div class="photo-layer tower-layer"><img class="photo photo-tower" src="assets/tower.jpg" width="200" height="308" alt=""></div>
+      <div class="photo-layer terrace-layer"><img class="photo photo-terrace" src="assets/terrace.jpg" width="334" height="334" alt=""></div>
+    </div>
+
+    <section class="hero-copy arrival-content" aria-label="Introduction">
+      <p>Invest in Exceptional Real Estate Properties<br class="desktop-break"> in Cyprus, Montenegro, and Georgia.</p>
+      <span class="price-label">Starting from 100,000€</span>
+    </section>
+
+    <footer class="site-footer arrival-content">
+      <span class="copyright">Realevate® 2026</span>
+      <div class="footer-actions">
+        <button class="selection-button" id="selection-button" data-dialog="selection-dialog">Our Selection <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 2h5v5H2zm11 0h5v5h-5zM2 13h5v5H2zm11 0h5v5h-5z"/></svg></button>
+        <div class="menu-wrap">
+          <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="animation-menu"><span></span><span></span></button>
+          <div class="animation-menu" id="animation-menu" hidden>
+            <p>REALEVATE</p>
+            <button id="replay-button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6a7 7 0 1 1-1 7M4 2v5h5"/></svg>Rejouer l’arrivée</button>
+            <button data-dialog="selection-dialog">Our Selection <span>↗</span></button>
+            <button data-dialog="contact-dialog">Contact <span>↗</span></button>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <div class="intro-curtain" aria-hidden="true"></div>
+  <div class="intro-counter" aria-hidden="true"><div class="counter-digits"></div><span class="counter-line"></span></div>
+
+  <dialog id="selection-dialog" class="selection-dialog">
+    <div class="dialog-heading"><span class="small-label">REALEVATE · SELECTION</span><button class="close-button" data-close aria-label="Close selection">×</button></div>
+    <h2>A different<br>perspective.</h2>
+    <div class="selection-grid">
+      <figure><img src="assets/terrace.jpg" alt="A sunny terrace overlooking the sea" width="334" height="334"><figcaption><span>01 — The coast</span><span>↗</span></figcaption></figure>
+      <figure><img src="assets/tower.jpg" alt="A contemporary tower at dusk" width="200" height="308"><figcaption><span>02 — The skyline</span><span>↗</span></figcaption></figure>
+      <figure><img src="assets/garden.jpg" alt="An outdoor courtyard with warm evening lighting" width="300" height="300"><figcaption><span>03 — The courtyard</span><span>↗</span></figcaption></figure>
+    </div>
+    <p class="dialog-note" lang="fr">Trois architectures imaginaires illustrées pour cette édition.</p>
+  </dialog>
+
+  <dialog id="about-dialog" class="info-dialog" lang="fr">
+    <div class="dialog-heading"><span class="small-label">À PROPOS</span><button class="close-button" data-close aria-label="Fermer">×</button></div>
+    <h2>Elevating Life.</h2>
+    <p>Une reproduction de la composition et de l’animation d’arrivée présentées dans la vidéo.</p>
+    <button class="primary-button" data-replay>Rejouer l’arrivée <span>↻</span></button>
+  </dialog>
+
+  <dialog id="contact-dialog" class="info-dialog" lang="fr">
+    <div class="dialog-heading"><span class="small-label">CONTACT</span><button class="close-button" data-close aria-label="Fermer">×</button></div>
+    <h2>Let’s connect.</h2>
+    <p>Cette page est une démonstration visuelle. Aucun service immobilier ni formulaire de contact n’y est associé.</p>
+    <button class="primary-button" data-close>Retour à la page <span>↗</span></button>
+  </dialog>
+
+  <noscript><style>.intro-curtain,.intro-counter{display:none}.photo-stage{top:40.7%}.terrace-layer{clip-path:none}.arrival-content{opacity:1;transform:none}.hero-copy{transform:translate(-50%,0)}.headline-reveal{transform:none}.landing{visibility:visible}</style></noscript>
+</body>
+</html>
