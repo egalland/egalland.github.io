@@ -1,103 +1,133 @@
-# Projets d’Emmanuel
+# vinext-starter
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur donne aussi accès à Points, [Chrome](https://egalland.github.io/?theme=chrome) et [Dossier](https://egalland.github.io/?theme=dossier), le CV interactif. Les quatre vues partagent la sélection de projets et les liens. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
 
-## Organisation
+## Prerequisites
 
-- `index.html` : présentation Curseur et mini-démo Kikalmo.
-- `portfolio-assets/themes/construction.mjs` : curseurs animés, tracé des cadres droits, écriture puis transport avec inertie. Les éléments terminés restent stables.
-- `portfolio-assets/themes/choreography.mjs` : placement et durée tirés au hasard, inclinaison issue du mouvement, contournements ponctuels et deux incidents au maximum (chute et retournement 3D).
-- `portfolio-assets/portfolio.mjs` : ouverture de Curseur par défaut et passage vers les autres vues au projet en cours.
-- `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 17 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
-- `points/assets/` : ressources et polices originales conservées sans altération.
-- `portfolio/content.json` : source commune des projets et liens. `portfolio/cv.json` contient le parcours, les compétences et la formation affichés dans Dossier. `scripts/build-portfolio.mjs` génère les quatre vues depuis leurs gabarits.
-- `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
-- Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
-- Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.
-- `arrival/` : introduction du calendrier ; `tests/` : contrôles du calendrier et des routes.
-- `elec/` : configurateur pédagogique de tableau électrique en 3D ([démo](https://egalland.github.io/elec/), [sources et historique](https://github.com/egalland/elec)).
-- `redim/` et `livre/` : outils autonomes ; `kikalmo/` : accès au jeu multijoueur hébergé ; `sans-voyelles/` : ancienne adresse conservée.
+- Node.js `>=22.13.0`
+- Portable: Windows, macOS, or Linux; no Bash required
+- Managed Linux: managed Linux runtime with Bash, `flock`, `curl`, `sha256sum`, and GNU `timeout`
+- Git and `tar` (including Windows `tar.exe`) are required for publishing; portable publication does not require Bash
 
-## Applications
+## Sites Lifecycle
 
-| Jour | Application | Accès | Hébergement | Sources |
-|---|---|---|---|---|
-| 01 | One More Thing | [/one-more-thing/](https://egalland.github.io/one-more-thing/) | GitHub Pages | [egalland/one-more-thing](https://github.com/egalland/one-more-thing) |
-| 02 | Le Reliquaire | [https://inktober-2026.emmanuel-galland117.chatgpt.site/reliquaire/](https://inktober-2026.emmanuel-galland117.chatgpt.site/reliquaire/) | Serveur externe | [egalland/le-reliquaire](https://github.com/egalland/le-reliquaire) |
-| 03 | Micro · Habitudes | [/micro-habitudes/](https://egalland.github.io/micro-habitudes/) | GitHub Pages | [egalland/micro-habitudes](https://github.com/egalland/micro-habitudes) |
-| 04 | Cactocalypse | [/cactocalypse/](https://egalland.github.io/cactocalypse/) | GitHub Pages | [egalland/cactocalypse](https://github.com/egalland/cactocalypse) |
-| 05 | Ghost Slap | [/ghost-slap/](https://egalland.github.io/ghost-slap/) | GitHub Pages | [egalland/ghost-slap](https://github.com/egalland/ghost-slap) |
-| 06 | Le garde du pont | [/le-garde-du-pont/](https://egalland.github.io/le-garde-du-pont/) | GitHub Pages | [egalland/le-garde-du-pont](https://github.com/egalland/le-garde-du-pont) |
-| 07 | Panique | [/panique/](https://egalland.github.io/panique/) | GitHub Pages | [egalland/panique](https://github.com/egalland/panique) |
-| 08 | Carnet du compost | [/carnet-du-compost/](https://egalland.github.io/carnet-du-compost/) | GitHub Pages | [egalland/carnet-du-compost](https://github.com/egalland/carnet-du-compost) |
-| 09 | ASTRE BRUT | [/astre-brut/](https://egalland.github.io/astre-brut/) | GitHub Pages | [egalland/astre-brut](https://github.com/egalland/astre-brut) |
-| 10 | Archives du Voile | [/archives-du-voile/](https://egalland.github.io/archives-du-voile/) | GitHub Pages | [egalland/archives-du-voile](https://github.com/egalland/archives-du-voile) |
-| 12 | La fronde de Cthulhu | [/la-fronde-de-cthulhu/](https://egalland.github.io/la-fronde-de-cthulhu/) | GitHub Pages | [egalland/la-fronde-de-cthulhu](https://github.com/egalland/la-fronde-de-cthulhu) |
-| 13 | Priorités fragiles | [/priorites-fragiles/](https://egalland.github.io/priorites-fragiles/) | GitHub Pages | [egalland/priorites-fragiles](https://github.com/egalland/priorites-fragiles) |
-| 14 | Dames de porcelaine | [/dames-de-porcelaine/](https://egalland.github.io/dames-de-porcelaine/) | Serveur externe | [egalland/dames-de-porcelaine](https://github.com/egalland/dames-de-porcelaine) |
-| 15 | Petites victoires | [/petites-victoires/](https://egalland.github.io/petites-victoires/) | GitHub Pages | [egalland/petites-victoires](https://github.com/egalland/petites-victoires) |
-| 16 | Pas maladroits | [/pas-maladroits/](https://egalland.github.io/pas-maladroits/) | GitHub Pages | [egalland/pas-maladroits](https://github.com/egalland/pas-maladroits) |
-| 19 | Labyrinthe mouvant | [/labyrinthe-mouvant/](https://egalland.github.io/labyrinthe-mouvant/) | GitHub Pages | [egalland/labyrinthe-mouvant](https://github.com/egalland/labyrinthe-mouvant) |
-| 21 | Atelier Héros | [/atelier-heros/](https://egalland.github.io/atelier-heros/) | GitHub Pages | [egalland/atelier-heros](https://github.com/egalland/atelier-heros) |
-| 22 | Innsmouth — Le port oublié | [/phare/](https://egalland.github.io/phare/) | GitHub Pages | [egalland/egalland.github.io](https://github.com/egalland/egalland.github.io) |
+The Sites initializer copies the shared starter and selects managed-linux only when `SITES_MANAGED_LINUX_CONTAINER=1`; otherwise it selects portable. It saves the selection only in ignored `.sites-runtime/execution-profile.json`. Both profiles copy/configure first, then use the plugin's separate `install-dependencies.mjs` step to measure installation independently. Edit source under `app/` and follow the Sites skill for installation, preview, builds, and publishing.
 
-## Sauvegardes et hébergement
+Run `node <plugin-root>/scripts/configure-execution-profile.mjs` only when the profile is unknown for the current checkout and environment. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
 
-Atelier Héros et Priorités fragiles fonctionnent sur GitHub Pages avec une sauvegarde locale. Pour récupérer les données de leur ancienne adresse ChatGPT, exporter puis importer le fichier JSON dans la nouvelle version. Aucun transfert automatique entre origines.
+This starter does not use `wrangler.jsonc`.
 
-Le Reliquaire, Dames de porcelaine et Kikalmo utilisent un serveur pour leurs données ou salons partagés. Une page GitHub qui redirige vers eux ne constitue pas un hébergement autonome du jeu.
+Publish archives outside the source checkout or under its ignored `outputs/` directory. Local `.env*`, `.dev.vars*`, TypeScript build state, and tool runtime directories are ignored; keep the hosting manifest, migrations, and authored scripts in source control.
 
-## Statistiques
+`install:ci` runs `npm ci` once against the shared lockfile, disables parent-workspace discovery, and includes required dev/optional dependencies despite production/omit settings. Sharp defaults to prebuilt binaries unless explicitly configured otherwise. Do not overlap installers.
 
-Les durées et tarifs sont dans `inktober-2026/calendar.json`. Les estimations complétées le 23 octobre sont justifiées dans `inktober-2026/metrics-sources.json`. Les coûts sont des valorisations indicatives à 35 €/h et 40 €/h, pas des factures ou une économie mesurée. Les deux nouvelles estimations Atelier Héros et Innsmouth ont une confiance faible.
+- **Portable:** Preserve host HOME, npm cache, registry, proxy, temporary paths, retry/concurrency settings, and lifecycle-script policy. Use `--prefer-offline --no-audit --no-fund`.
+- **Managed Linux:** Use the existing project-local HOME/cache/tmp setup and Linux install lock, tarball preflight, and timeout. Restore the image-seeded npm cache only when its lockfile hash matches; retain network fallback. Builds keep their existing timeout. These helpers are not invoked by the portable profile.
 
-## Vérification
+`scripts/sites-env.mjs` preserves the caller's HOME, npm cache, proxy, XDG, and temporary-directory configuration while defaulting Wrangler and Miniflare state to the checkout. If npm reports an unwritable cache, select a writable path with `npm_config_cache` for that install. The `dev` and `start` scripts also keep Wrangler logs inside the checkout. Generated `.sites-runtime/` and `.wrangler/` directories are disposable and ignored by Git.
 
-```sh
-node tests/check-calendar.mjs
-node tests/check-routes.mjs
+On portable, `npm run dev` uses `vinext dev` with HMR, starting at port 5173. Vinext records the running server in ignored `.vinext/` state, rejects an ordinary duplicate launch, and recovers stale state after a stopped process; exactly simultaneous starts can race. Pass `--port <port>` or `--hostname <host>` after `npm run dev --` when needed; keep portable previews on loopback.
+
+For managed Linux browser QA, follow the Sites skill's managed preview reference. The daemon runs the project's Vite dev script with `--host 0.0.0.0 --port 4173 --strictPort`; use the CLI's returned URL. The ignored local profile survives the daemon's cleared environment.
+
+The portable profile simulates ChatGPT sign-in only for loopback development requests. Visit `/signin-with-chatgpt?return_to=/` to sign in as `local_seedy` (`seedy@sites.test`, display name `Seedy`) and `/signout-with-chatgpt?return_to=/` to sign out. The development cookie preserves that identity across server restarts. Mock auth is disabled in the managed-linux profile and is not included in production builds; hosted authentication remains dispatch-owned.
+
+The Worker uses `vinext/server/fetch-handler`, including Vinext's config-aware image handling. After building, `npm start` runs that Worker locally through Wrangler on `127.0.0.1`, sharing `.wrangler/state` with dev preview and local D1 migrations; it does not deploy the site or simulate sign-in. Use the URL printed by the server. Pass `npm start -- --port <port>` to select a different built-preview port.
+
+Local previews use Miniflare's placeholder `Request.cf` metadata without a network lookup. Set `CLOUDFLARE_CF_FETCH_ENABLED=true` to opt into fetching preview metadata; this setting does not change hosted request metadata.
+
+Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=true` to opt in.
+
+## Included Shape
+
+- edit site code under `app/`
+- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
+- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
+- `vite.config.ts` simulates declared bindings for local development
+- `worker/index.ts` is the production Worker entrypoint and preserves request-scoped connector bindings
+- `scripts/vite/` contains the maintained Vite integrations and the vendored Sites plugin license
+- `scripts/connector-preview/` contains the local connector preview Worker and session helpers
+- the remaining `scripts/` files select execution profiles and run installation, development, and builds; the plugin's helpers orchestrate the Sites lifecycle
+- `dist/` contains generated deployment output; `.vinext/`, `.wrangler/`, and `.sites-runtime/` contain ignored local tool state
+- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
+- `db/schema.ts` starts intentionally empty
+- `@cloudflare/workers-types` provides Worker types; `cloudflare-env.d.ts` declares optional `DB`/`BUCKET` bindings—update these declarations if binding names change
+- `examples/d1/` contains an optional D1 example surface
+- `drizzle.config.ts` supports local migration generation when needed
+
+## Workspace Auth Headers
+
+Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
+
+The user ID is stable for the same user on the same Site and different across Sites. Use it as the durable user key; use email and name for display or contact purposes.
+
+SIWC-authenticated workspace sites may also receive `oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty `name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by `oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+
+Treat the full name as optional and fall back to email when it is absent:
+
+```tsx
+import { headers } from "next/headers";
+
+export default async function Home() {
+  const requestHeaders = await headers();
+  const userId = requestHeaders.get("oai-authenticated-user-id");
+  const email = requestHeaders.get("oai-authenticated-user-email");
+  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
+  const fullName =
+    encodedFullName &&
+    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
+      "percent-encoded-utf-8"
+      ? decodeURIComponent(encodedFullName)
+      : null;
+
+  const displayName = fullName ?? email;
+  // ...
+}
 ```
 
-Les dépôts sources conservent leur historique. Les archives `source-history/atelier-heros.bundle` et `source-history/priorites-fragiles.bundle` contiennent aussi tous leurs commits, auteurs et dates, récupérables avec `git clone <archive.bundle>`. La publication du contenu Pages passe par un commit d’intégration via la connexion GitHub ; le push Git natif n’était pas authentifié.
+## Optional Dispatch-Owned ChatGPT Sign-In
 
-## Historique du portfolio
+Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs optional or required ChatGPT sign-in:
 
-Les 14 commits de la démo Chrome sont conservés dans `source-history/portfolio-chrome.bundle`. Pour restaurer le dépôt de la démo, exécuter `git clone source-history/portfolio-chrome.bundle chrome-original`. La version intégrée à GitHub Pages est servie depuis `chrome/` et lit les données communes du portfolio.
+- Use `getChatGPTUser()` for optional signed-in UI.
+- Use the returned `userId` as the stable user key for user-owned records; do not use email as a durable identifier.
+- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send anonymous visitors through Sign in with ChatGPT.
+- In a Server Component, start sign-in with `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper module is server-only; do not import it into a Client Component.
+- Do not use `fetch`, XHR, a client-side router, or a framework link that can prefetch the sign-in route. SIWC must start as a top-level navigation.
+- Never request the AuthAPI authorization endpoint directly. The dispatch-owned `/signin-with-chatgpt` route must start the SIWC flow.
+- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
+- Pass a same-origin relative `returnTo` path for the destination after sign-in or sign-out. The helper validates and safely encodes it.
+- Mark protected pages with `export const dynamic = "force-dynamic"` because they depend on per-request identity headers.
 
-Les huit commits disponibles du portfolio d’origine sont conservés exactement dans `source-history/portfolio-cursors.bundle`, avec leurs auteurs, dates, parents et identifiants Git. Le détail et les commandes de restauration figurent dans `source-history/portfolio-cursors.md`. La publication Pages est un commit d’intégration via la connexion GitHub, car le push Git natif n’est pas authentifié. Aucun commit antérieur n’a été reconstruit ou inventé.
+Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the OAuth cookies, and identity header injection. Do not implement app routes for those reserved paths. Routes that do not import and call the helper remain anonymous-compatible.
 
+SIWC establishes identity only; it does not prove workspace membership. Use the Sites hosting platform's access policy controls for workspace-wide restrictions, or enforce explicit server-side membership or allowlist checks.
 
-## Cartographie Market Plus
+Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
 
-La carte réelle des composants et de leurs dépendances est disponible à part sur [/map/](https://egalland.github.io/map/) : 259 composants, 925 liaisons, filtres par famille, recherche et fiches de dépendances. Elle reprend la vue « Explorer le code » de Point marché, avec son moteur Three.js et une projection 2D de secours. Les références et les quatre étapes de source disponibles sont conservées dans `map/SOURCE.md` et `map/source-history.patch`.
+## Local D1 migrations
 
-L’accueil conserve la présentation de Market Plus et son aperçu schématique, sans carte embarquée ni lien vers l’outil interne.
-
-## Thèmes du portfolio
-
-Pour changer le contenu, modifier `portfolio/content.json`, puis exécuter :
+For a D1-backed local preview, generate SQL with `npm run db:generate`. Build once through the Sites skill's build entrypoint (or `npm run build` for standalone use) to generate `dist/server/wrangler.json`, rebuilding if bindings change. From the project root, apply each pending migration in order:
 
 ```sh
-node scripts/build-portfolio.mjs
-node --test tests/portfolio-*.test.mjs
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_example.sql
 ```
 
-Le switch mémorise le choix et retrouve le projet consulté. Les liens `?theme=points` ouvrent la scène Points. `/?theme=dossier` ouvre le CV et `/dossier/` donne accès au même document. `/curseurs/` conserve son rôle de raccourci. Les vues sont des documents distincts : elles partagent le contenu, pas la grille de mise en page.
+Replace the filename with the pending migration and `DB` with your D1 binding name if different. Use `.wrangler/state`, not `.wrangler/state/v3`; Wrangler adds the versioned directories. Do not replay migrations already applied locally. This updates only the preview database; publishing applies production migrations separately.
 
-Curseurs commence par une zone vide. Les curseurs animés arrivent, tracent un cadre droit progressivement, écrivent le contenu, puis transportent le bloc. L’inclinaison apparaît pendant le transport et se résorbe après un dépassement amorti. Certains trajets contournent un panneau voisin pour donner l’impression d’un chantier encombré. Une ligne au maximum glisse et se fait rattraper ; un panneau au maximum est construit à l’envers puis retourné avec perspective. Le placement et le geste varient à chaque chargement. Le défilement active les prochaines zones sans reconstruire ni incliner les éléments terminés. Les travaux hors écran sont suspendus et repris à la même étape, sans révélation instantanée au retour ni à la remontée. Le focus sur un contrôle de saisie révèle immédiatement le contenu nécessaire ; une ancre vers une carte projet ne court-circuite pas sa construction.
+## Diagnostic Commands
 
-Points reprend la scène fixe d’avant Glitch : la molette, le tactile ou les flèches sélectionnent un tableau ; les mêmes particules se réorganisent en temps réel en sphère, lettrage, personnage, interfaces et objets. Les descriptions et liens proviennent de la même source que Curseurs. Les navigations utilisent des popovers natifs sans fond de modale : menu contextuel compact ancré au clic et poignées de sélection au survol pour Curseurs ; constellation, orbites et poussière de points pour Points. Échap et le clic extérieur ferment les outils ; le reste de la page reste utilisable.
+- `npm run install:ci`: perform the one locked dependency install
+- `npm run dev`: start the Vite/Vinext development server
+- `npm run build`: build the deployable Sites artifact
+- `npm run start`: preview the built Worker locally with D1/R2 support
+- `npm run db:generate`: generate Drizzle migrations after schema changes
 
-La pause mémorisée et les mouvements réduits sont respectés. Les animations s’arrêtent quand l’onglet est masqué. Sans JavaScript, les contenus et liens restent lisibles.
+When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
 
-Aucun sous-site n’est déplacé : `/inktober/`, `/inktober-2026/`, `/livre/`, `/redim/`, `/elec/`, `/map/` et les autres dossiers conservent leurs chemins. Market Plus ouvre uniquement la cartographie publique.
+The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
 
-Les huit commits du modèle Points sont conservés dans `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. Leur intégrité reste testée. La restauration ajoute un commit à l’historique existant.
+## Learn More
 
-Validation : tests de contenu partagé, routes, géométries, continuité des trajectoires aléatoires et cycle complet arrivée → tracé → écriture → transport, suspension hors écran et retour au repos des incidents. Contrôle navigateur de la scène Points, des changements de tableau, des deux outils de navigation et de la bascule vers Curseurs. Aucun téléphone physique testé.
-
-### Sélection du portfolio
-
-L’accueil présente quatre domaines de pratique. La rubrique Savoir-faire relie chaque geste à un projet. Pills, plateforme de critique culturelle, figure dans les deux vues avec [son dépôt public](https://github.com/egalland/Pills).
-
-L’Atelier contient uniquement Atelier du livre, Redim et Atlas. Four en route et Biscuit du jour sont retirés de la sélection, sans suppression de leurs sous-sites. Inktober dispose d’une section dédiée et de sa propre entrée dans les navigations Curseurs et Points. Les constantes de navigation Points correspondent aux 17 tableaux générés.
+- [vinext Documentation](https://github.com/cloudflare/vinext)
+- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
