@@ -1,0 +1,10 @@
+import {hasSkill} from './skills-tree.js';
+export const newStorefront=()=>({disabled:[],featured:[],channels:{}});
+export function normalizeStorefront(input,ids){const v=input||{},out=newStorefront();out.disabled=Array.isArray(v.disabled)?[...new Set(v.disabled.filter(id=>ids.includes(id)))]:[];out.featured=Array.isArray(v.featured)?[...new Set(v.featured.filter(id=>ids.includes(id)))].slice(0,5):[];for(const id of ids)if(v.channels?.[id])out.channels[id]={etsy:v.channels[id].etsy!==false,local:v.channels[id].local!==false,site:v.channels[id].site!==false};return out;}
+export const productEnabled=(s,id)=>!s.storefront.disabled.includes(id);
+export const productChannel=(s,id,channel)=>s.storefront.channels[id]?.[channel]!==false;
+export function setProductVisibility(s,id,enabled){s.storefront.disabled=s.storefront.disabled.filter(v=>v!==id);if(!enabled){s.storefront.disabled.push(id);s.storefront.featured=s.storefront.featured.filter(v=>v!==id);}return {ok:true};}
+export function featureProduct(s,id,enabled){const max=hasSkill(s,'merchandising')?5:3;if(enabled&&!s.storefront.featured.includes(id)){if(s.storefront.featured.length>=max)return {ok:false,message:'Tu peux mettre '+max+' produits en avant. Retire une vedette ou progresse en vitrine.'};s.storefront.featured.push(id);}if(!enabled)s.storefront.featured=s.storefront.featured.filter(v=>v!==id);return {ok:true};}
+export function setProductChannel(s,id,channel,enabled){if(!['etsy','local','site'].includes(channel))return {ok:false,message:'Canal inconnu.'};s.storefront.channels[id]={etsy:true,local:true,site:true,...s.storefront.channels[id],[channel]:enabled===true};return {ok:true};}
+export function merchandisingWeight(s,p){let weight=s.storefront.featured.includes(p.id)?(hasSkill(s,'merchandising')?2.2:1.8):1;if(s.campaign.channel!=='none'&&s.campaign.target===p.id)weight*=1.6;return weight;}
+export function weightedProduct(s,products,random){const weights=products.map(p=>merchandisingWeight(s,p)),total=weights.reduce((n,v)=>n+v,0);let ticket=random()*total;for(let i=0;i<products.length;i++){ticket-=weights[i];if(ticket<0)return products[i];}return products.at(-1);}

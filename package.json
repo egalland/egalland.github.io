@@ -1,0 +1,10 @@
+{
+  "name": "filament-atelier",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check dist/app.js && node --check dist/model.js && node --check dist/scene.js && node --check dist/character.js && node --check dist/appearance.js && node --check dist/audio.js && node --check dist/filaments.js && node --check dist/lifestyle.js && node --check dist/workshop-ui.js && node --check dist/idle-clock.js && node --check dist/living-space.js && node --check dist/machines.js && node --check dist/product-lab.js && node --check dist/idle-ui.js && node --check dist/creations.js && node --check dist/creations-ui.js && node --check dist/skills-tree.js && node --check dist/plate-layout.js && node --check dist/parcels.js && node --check dist/business-stats.js && node --check dist/storefront.js && node --check dist/advertising.js && node --check dist/management-ui.js && node --check dist/workshop-path.js && node --check dist/realism.js && node --check dist/presentation.js && node --check dist/simple-ui.js"
+  }
+}
