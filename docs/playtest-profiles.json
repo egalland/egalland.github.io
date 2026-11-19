@@ -1,0 +1,2189 @@
+{
+  "strategyVersion": 5,
+  "metricDefinitions": {
+    "minimumCredits": "Minimum observed across every five-second simulation step.",
+    "removedPieces": "Construction anchors in accepted demolition orders, counting a machine once regardless of its size. Current strategies must preserve belts during machine changes.",
+    "componentWaitSeconds": "Sum of reported warning durations across components. Concurrent waits overlap. Deliberate batch completion and manual pauses are excluded. This is not world downtime.",
+    "componentWaits": "Warning transitions persisting at least thirty simulation seconds."
+  },
+  "scope": "Two reproducible independent worlds (seeds strate-profile-regression/0 and /1), eight simulated hours each, four distinct agents, ordinary initial stock/costs and physical cargo. Not live-player UX or production capacity proof.",
+  "runs": [
+    {
+      "run": 0,
+      "actors": [
+        {
+          "profile": "industry",
+          "credits": 3132,
+          "research": [
+            "mecanique",
+            "cablage",
+            "electronique",
+            "laboratoires",
+            "motorisation"
+          ],
+          "advanced": [
+            "research-2",
+            "gears",
+            "wire",
+            "circuits",
+            "science"
+          ],
+          "sold": 1906
+        },
+        {
+          "profile": "logistics",
+          "credits": 11660,
+          "research": [
+            "mecanique",
+            "cablage",
+            "stockage",
+            "electronique",
+            "motorisation",
+            "maintenance",
+            "forage"
+          ],
+          "advanced": [
+            "gears",
+            "research-2",
+            "wire",
+            "freight",
+            "circuits",
+            "warehouse",
+            "truck",
+            "contract",
+            "workforce"
+          ],
+          "sold": 4969
+        },
+        {
+          "profile": "explorer",
+          "credits": 2379,
+          "research": [
+            "forage",
+            "mecanique",
+            "cablage"
+          ],
+          "advanced": [
+            "discover",
+            "research-2",
+            "gears",
+            "rig",
+            "rig-output",
+            "rig-delivery",
+            "town",
+            "outsourced"
+          ],
+          "sold": 1757
+        },
+        {
+          "profile": "sentinel",
+          "credits": 1666,
+          "research": [
+            "mecanique",
+            "camp-militaire",
+            "cablage"
+          ],
+          "advanced": [
+            "raid",
+            "gears",
+            "research-2",
+            "faction",
+            "army"
+          ],
+          "sold": 1727
+        }
+      ],
+      "metrics": [
+        {
+          "profile": "industry",
+          "minimumCredits": 91,
+          "removedPieces": 20,
+          "componentWaitSeconds": 90,
+          "componentWaits": 2
+        },
+        {
+          "profile": "logistics",
+          "minimumCredits": 348,
+          "removedPieces": 7,
+          "componentWaitSeconds": 1600,
+          "componentWaits": 12
+        },
+        {
+          "profile": "explorer",
+          "minimumCredits": 85,
+          "removedPieces": 0,
+          "componentWaitSeconds": 0,
+          "componentWaits": 0
+        },
+        {
+          "profile": "sentinel",
+          "minimumCredits": 53,
+          "removedPieces": 1,
+          "componentWaitSeconds": 0,
+          "componentWaits": 0
+        }
+      ],
+      "hourly": [
+        {
+          "hours": 1,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 192,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique"
+              ],
+              "produced": {
+                "acier": 56,
+                "lingot": 29,
+                "engrenage": 10,
+                "cable": 30,
+                "circuit": 6
+              },
+              "buildings": 57,
+              "sold": 226,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 723,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight"
+              ],
+              "research": [
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 66,
+                "lingot": 39,
+                "engrenage": 28,
+                "cable": 51
+              },
+              "buildings": 57,
+              "sold": 336,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 137,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 177,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 106,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire"
+              ],
+              "produced": {
+                "acier": 147,
+                "lingot": 18,
+                "engrenage": 20
+              },
+              "buildings": 42,
+              "sold": 157,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 2,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 168,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 148,
+                "lingot": 69,
+                "engrenage": 20,
+                "cable": 90,
+                "circuit": 18,
+                "science": 2
+              },
+              "buildings": 57,
+              "sold": 466,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 1244,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "circuits",
+                "warehouse"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 180,
+                "lingot": 57,
+                "engrenage": 57,
+                "cable": 105,
+                "circuit": 8,
+                "module": 2
+              },
+              "buildings": 58,
+              "sold": 800,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 531,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "town"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 407,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 257,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2",
+                "faction"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 166,
+                "lingot": 24,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 377,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 3,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 656,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 43,
+                "cable": 144,
+                "circuit": 35,
+                "science": 13,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 706,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 1494,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "circuits",
+                "warehouse",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 241,
+                "lingot": 67,
+                "engrenage": 75,
+                "cable": 138,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 1263,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 731,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "town",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 627,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 536,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2",
+                "faction",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 166,
+                "lingot": 24,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 607,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 4,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 1084,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 43,
+                "cable": 144,
+                "circuit": 35,
+                "science": 13,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 946,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 3020,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "circuits",
+                "warehouse",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 241,
+                "lingot": 67,
+                "engrenage": 75,
+                "cable": 138,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 1945,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 965,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "town",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 857,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 758,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2",
+                "faction",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 166,
+                "lingot": 24,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 827,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 5,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 1596,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 43,
+                "cable": 144,
+                "circuit": 35,
+                "science": 13,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1186,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 5180,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "circuits",
+                "warehouse",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 241,
+                "lingot": 67,
+                "engrenage": 75,
+                "cable": 138,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 2701,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 1125,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "town",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1077,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 834,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2",
+                "faction",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 166,
+                "lingot": 24,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 1057,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 6,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 2108,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 43,
+                "cable": 144,
+                "circuit": 35,
+                "science": 13,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1426,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 7340,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "circuits",
+                "warehouse",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 241,
+                "lingot": 67,
+                "engrenage": 75,
+                "cable": 138,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 3457,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 1519,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "town",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1307,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 886,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2",
+                "faction",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 166,
+                "lingot": 24,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 1277,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 7,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 2620,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 43,
+                "cable": 144,
+                "circuit": 35,
+                "science": 13,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1666,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 9500,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "circuits",
+                "warehouse",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 241,
+                "lingot": 67,
+                "engrenage": 75,
+                "cable": 138,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 4213,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 1953,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "town",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1527,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 1328,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2",
+                "faction",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 166,
+                "lingot": 24,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 1507,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 8,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 3132,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 43,
+                "cable": 144,
+                "circuit": 35,
+                "science": 13,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1906,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 11660,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "circuits",
+                "warehouse",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 241,
+                "lingot": 67,
+                "engrenage": 75,
+                "cable": 138,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 4969,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 2379,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "town",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 37,
+                "lingot": 18,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1757,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 1666,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "research-2",
+                "faction",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 166,
+                "lingot": 24,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 1727,
+              "errors": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "actors": [
+        {
+          "profile": "industry",
+          "credits": 2941,
+          "research": [
+            "mecanique",
+            "cablage",
+            "electronique",
+            "laboratoires",
+            "motorisation"
+          ],
+          "advanced": [
+            "research-2",
+            "gears",
+            "wire",
+            "circuits",
+            "science"
+          ],
+          "sold": 1841
+        },
+        {
+          "profile": "logistics",
+          "credits": 13569,
+          "research": [
+            "mecanique",
+            "cablage",
+            "stockage",
+            "electronique",
+            "motorisation",
+            "maintenance",
+            "forage"
+          ],
+          "advanced": [
+            "gears",
+            "research-2",
+            "wire",
+            "freight",
+            "warehouse",
+            "circuits",
+            "truck",
+            "contract",
+            "workforce"
+          ],
+          "sold": 5504
+        },
+        {
+          "profile": "explorer",
+          "credits": 2323,
+          "research": [
+            "forage",
+            "mecanique",
+            "cablage"
+          ],
+          "advanced": [
+            "discover",
+            "town",
+            "research-2",
+            "gears",
+            "rig",
+            "rig-output",
+            "rig-delivery",
+            "outsourced"
+          ],
+          "sold": 1763
+        },
+        {
+          "profile": "sentinel",
+          "credits": 1408,
+          "research": [
+            "mecanique",
+            "camp-militaire",
+            "cablage"
+          ],
+          "advanced": [
+            "raid",
+            "gears",
+            "faction",
+            "research-2",
+            "army"
+          ],
+          "sold": 1622
+        }
+      ],
+      "metrics": [
+        {
+          "profile": "industry",
+          "minimumCredits": 52,
+          "removedPieces": 19,
+          "componentWaitSeconds": 0,
+          "componentWaits": 0
+        },
+        {
+          "profile": "logistics",
+          "minimumCredits": 51,
+          "removedPieces": 9,
+          "componentWaitSeconds": 295,
+          "componentWaits": 2
+        },
+        {
+          "profile": "explorer",
+          "minimumCredits": 93,
+          "removedPieces": 0,
+          "componentWaitSeconds": 0,
+          "componentWaits": 0
+        },
+        {
+          "profile": "sentinel",
+          "minimumCredits": 51,
+          "removedPieces": 1,
+          "componentWaitSeconds": 0,
+          "componentWaits": 0
+        }
+      ],
+      "hourly": [
+        {
+          "hours": 1,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 252,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique"
+              ],
+              "produced": {
+                "acier": 58,
+                "lingot": 29,
+                "engrenage": 11,
+                "cable": 24,
+                "circuit": 4
+              },
+              "buildings": 56,
+              "sold": 211,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 51,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage"
+              ],
+              "produced": {
+                "acier": 122,
+                "lingot": 29,
+                "engrenage": 34,
+                "cable": 57
+              },
+              "buildings": 57,
+              "sold": 198,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 165,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 188,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 84,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire"
+              ],
+              "produced": {
+                "acier": 155,
+                "lingot": 19,
+                "engrenage": 21
+              },
+              "buildings": 42,
+              "sold": 145,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 2,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 52,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 147,
+                "lingot": 65,
+                "engrenage": 18,
+                "cable": 69,
+                "circuit": 14
+              },
+              "buildings": 57,
+              "sold": 404,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 167,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "warehouse",
+                "circuits"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance"
+              ],
+              "produced": {
+                "acier": 256,
+                "lingot": 63,
+                "engrenage": 71,
+                "cable": 129,
+                "circuit": 8,
+                "module": 2
+              },
+              "buildings": 59,
+              "sold": 660,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 533,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 413,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 211,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 165,
+                "lingot": 19,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 353,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 3,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 463,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 42,
+                "cable": 144,
+                "circuit": 35,
+                "science": 12,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 641,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 1569,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "warehouse",
+                "circuits",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 256,
+                "lingot": 65,
+                "engrenage": 77,
+                "cable": 135,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 1304,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 705,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 638,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 434,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 165,
+                "lingot": 19,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 563,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 4,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 781,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 42,
+                "cable": 144,
+                "circuit": 35,
+                "science": 12,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 881,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 3969,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "warehouse",
+                "circuits",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 256,
+                "lingot": 65,
+                "engrenage": 77,
+                "cable": 135,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 2144,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 701,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 863,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 764,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 165,
+                "lingot": 19,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 778,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 5,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 1309,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 42,
+                "cable": 144,
+                "circuit": 35,
+                "science": 12,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1121,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 6369,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "warehouse",
+                "circuits",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 256,
+                "lingot": 65,
+                "engrenage": 77,
+                "cable": 135,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 2984,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 1063,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1088,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 860,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 165,
+                "lingot": 19,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 993,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 6,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 1877,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 42,
+                "cable": 144,
+                "circuit": 35,
+                "science": 12,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1361,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 8769,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "warehouse",
+                "circuits",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 256,
+                "lingot": 65,
+                "engrenage": 77,
+                "cable": 135,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 3824,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 1511,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1313,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 748,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 165,
+                "lingot": 19,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 1202,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 7,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 2417,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 42,
+                "cable": 144,
+                "circuit": 35,
+                "science": 12,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1601,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 11169,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "warehouse",
+                "circuits",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 256,
+                "lingot": 65,
+                "engrenage": 77,
+                "cable": 135,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 4664,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 1961,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1538,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 1086,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 165,
+                "lingot": 19,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 1412,
+              "errors": 0
+            }
+          ]
+        },
+        {
+          "hours": 8,
+          "agents": [
+            {
+              "profile": "industry",
+              "credits": 2941,
+              "checks": 6,
+              "advanced": [
+                "research-2",
+                "gears",
+                "wire",
+                "circuits",
+                "science"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "electronique",
+                "laboratoires",
+                "motorisation"
+              ],
+              "produced": {
+                "acier": 161,
+                "lingot": 69,
+                "engrenage": 42,
+                "cable": 144,
+                "circuit": 35,
+                "science": 12,
+                "module": 4
+              },
+              "buildings": 57,
+              "sold": 1841,
+              "errors": 0
+            },
+            {
+              "profile": "logistics",
+              "credits": 13569,
+              "checks": 6,
+              "advanced": [
+                "gears",
+                "research-2",
+                "wire",
+                "freight",
+                "warehouse",
+                "circuits",
+                "truck",
+                "contract",
+                "workforce"
+              ],
+              "research": [
+                "mecanique",
+                "cablage",
+                "stockage",
+                "electronique",
+                "motorisation",
+                "maintenance",
+                "forage"
+              ],
+              "produced": {
+                "acier": 256,
+                "lingot": 65,
+                "engrenage": 77,
+                "cable": 135,
+                "circuit": 8,
+                "module": 4
+              },
+              "buildings": 59,
+              "sold": 5504,
+              "errors": 0
+            },
+            {
+              "profile": "explorer",
+              "credits": 2323,
+              "checks": 6,
+              "advanced": [
+                "discover",
+                "town",
+                "research-2",
+                "gears",
+                "rig",
+                "rig-output",
+                "rig-delivery",
+                "outsourced"
+              ],
+              "research": [
+                "forage",
+                "mecanique",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 34,
+                "lingot": 24,
+                "engrenage": 4
+              },
+              "buildings": 43,
+              "sold": 1763,
+              "errors": 0
+            },
+            {
+              "profile": "sentinel",
+              "credits": 1408,
+              "checks": 6,
+              "advanced": [
+                "raid",
+                "gears",
+                "faction",
+                "research-2",
+                "army"
+              ],
+              "research": [
+                "mecanique",
+                "camp-militaire",
+                "cablage"
+              ],
+              "produced": {
+                "acier": 165,
+                "lingot": 19,
+                "engrenage": 24
+              },
+              "buildings": 44,
+              "sold": 1622,
+              "errors": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

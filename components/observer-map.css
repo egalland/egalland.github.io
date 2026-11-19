@@ -1,0 +1,46 @@
+.obs-atlas{isolation:isolate;position:relative;display:block;width:100%;height:100%;min-height:340px;overflow:hidden;background:#142a2a;color:#f3edd8;font-family:inherit;--atlas-dark:#112423ed;--atlas-ink:#f1ecd8;--atlas-line:#b7cbb447}
+.obs-atlas canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline:none;z-index:0}
+.obs-atlas canvas:focus-visible{box-shadow:inset 0 0 0 3px #a5ddd2}
+.obs-atlas.is-dragging canvas{cursor:grabbing}
+.obs-atlas button{appearance:none;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--atlas-ink);font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.015em;min-height:0;line-height:1;cursor:pointer;text-transform:none;box-shadow:none;transition:color .15s,background .15s}
+.obs-atlas button:focus-visible{outline:2px solid #ffdb94;outline-offset:2px}
+.obs-atlas button:hover{color:#fff6df}
+.obs-atlas button:disabled{opacity:.35;cursor:default}
+.obs-atlas button svg{width:14px;height:14px;stroke-width:1.8}
+.obs-atlas-top,.obs-atlas-bottom{position:absolute;z-index:2;pointer-events:none;left:15px;right:15px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.obs-atlas-top{top:15px}
+.obs-atlas-bottom{bottom:15px;align-items:flex-end}
+.obs-atlas-top>*,.obs-atlas-bottom>*{pointer-events:auto}
+.obs-atlas-tabs,.obs-tour,.obs-atlas-nav,.obs-atlas-inspect,.obs-atlas-ore{background:var(--atlas-dark);border:1px solid var(--atlas-line);backdrop-filter:blur(7px);box-shadow:0 2px 7px #0a161c25}
+.obs-atlas-tabs{display:inline-flex;align-items:center;padding:3px;border-radius:7px;gap:2px}
+.obs-atlas-tabs button{height:26px;padding:0 9px;border:0;border-radius:4px;background:transparent;color:#b5c2b6}
+.obs-atlas-tabs button[aria-pressed=true]{background:#ddd3b4;color:#142b29}
+.obs-atlas-tabs button[aria-pressed=true]:hover{background:#f3e6c6;color:#142b29}
+.obs-atlas .obs-tour{height:32px;border-radius:6px;padding:0 10px}
+.obs-tour[aria-pressed=true]{color:#c4edda;border-color:#8ccbb270}
+.obs-tour i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#89928a}
+.obs-tour[aria-pressed=true] i{background:#93daad;box-shadow:0 0 8px #8cc9a77a}
+.obs-atlas-nav{position:absolute;z-index:2;right:15px;top:50%;transform:translateY(-50%);display:grid;grid-template-columns:1fr;border-radius:6px;overflow:hidden}
+.obs-atlas-nav button{height:30px;width:31px;padding:0;border:0;background:transparent}
+.obs-atlas-nav button+button{border-top:1px solid #aec7b328}
+.obs-atlas-nav button:not(:disabled):hover,.obs-atlas .obs-atlas-ore:hover,.obs-atlas .obs-tour:hover{background:#28443c}
+.obs-atlas-place{background:linear-gradient(90deg,#122523e6 0%,#122523b3 83%,transparent);padding:6px 18px 6px 8px;border-left:2px solid #c6aa70;max-width:68%;text-shadow:0 1px 2px #123}
+.obs-atlas-place span,.obs-atlas-place small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.obs-atlas-place span{font-size:11px;font-weight:650;line-height:1.45;letter-spacing:.025em}
+.obs-atlas-place span svg{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-2px;color:#d9bc80}
+.obs-atlas-place small{font-family:ui-monospace,monospace;margin:1px 0 0 0;font-size:9px;color:#c6d0c2;line-height:1.4}
+.obs-atlas .obs-atlas-ore{border-radius:5px;padding:0 8px;height:26px;font-size:10px;color:#c8d4c7;background:#142a28e8}
+.obs-atlas-ore i{width:6px;height:6px;border:1px solid #a19682;transform:rotate(45deg)}
+.obs-atlas-ore[aria-pressed=true] i{background:#d6a578;border-color:#edc697}
+.obs-atlas-inspect{display:flex;align-items:flex-start;gap:8px;position:absolute;left:15px;bottom:70px;max-width:75%;border-radius:5px;padding:7px 9px;z-index:2}
+.obs-atlas-inspect strong,.obs-atlas-inspect small{display:block}
+.obs-atlas-inspect strong{font-size:12px;font-weight:650}
+.obs-atlas-inspect small{font-size:10px;color:#c0d0bf;line-height:1.5}
+.obs-atlas-inspect button{border:0;background:none;padding:2px;color:#ccd4c5}
+@media(max-width:600px){
+ .obs-atlas{min-height:340px}
+ .obs-atlas-top,.obs-atlas-bottom{left:9px;right:9px}
+ .obs-atlas-top{top:9px}.obs-atlas-bottom{bottom:9px}
+ .obs-atlas-nav{right:9px}
+ .obs-atlas-inspect{left:9px;bottom:60px}
+}

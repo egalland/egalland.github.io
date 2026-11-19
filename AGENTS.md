@@ -1,15 +1,19 @@
-# Consignes de publication GitHub d’Emmanuel
+# STRATE — conventions de mise à jour
 
-## Historique complet — règle permanente
+- Chaque mise à jour de code ou d'art doit ouvrir un monde vierge. `scripts/prepare-release.mjs`, appelé au démarrage et au build, calcule un identifiant à partir des sources. `lib/world-store.ts` utilise cet identifiant pour le monde et ses chunks. Ne pas réutiliser un identifiant ancien pour conserver les données. Recharger une page ne doit jamais réinitialiser la version en cours.
+- Garder la DA laine / feutre, les couleurs turquoise, ocre et crème, et les volumes cohérents sous rotation. Les fibres et coutures restent attachées aux surfaces. Animer les mécanismes actifs, jamais la structure entière.
+- Avant publication : exécuter `node scripts/check-playtester.mjs`, les tests ciblés touchés, TypeScript et le build. Le rapport IA est dans `docs/playtest-report.json` ; ne pas remplacer des résultats bloqués par une réussite.
+- Alba [IA] est un vrai personnage du monde utilisant les commandes, coûts et stocks normaux. Aucun grant de ressources ni déblocage instantané. Son parcours initial ne prouve pas l'équilibrage de toute la partie ni la qualité de l'interface ; vérifier aussi les actions à la souris quand l'aperçu est disponible.
+- Garder l'accès du site tel qu'il est configuré.
 
-Quand Emmanuel demande de « push », publier ou transférer un projet sur GitHub, inclure **tout l’historique disponible depuis le début du projet**, et pas seulement l’état final.
+- Le journal D1 `game_activity` doit survivre aux remises à zéro : ne pas vider cette table en changeant de version. Conserver les filtres et la pagination, masquer les coordonnées des autres humains, ne jamais journaliser tokens/comptes/messages privés. Les écritures de journal doivent suivre le gagnant du compare-and-swap du monde.
+- L’observatoire accueille huit IA comportementales, avec quatre métiers et huit doctrines. Le propriétaire suit le monde, les agents emploient les commandes du moteur et leurs connaissances locales. Le journal privé et la carte omnisciente sont réservés au propriétaire. Avant d’augmenter l’effectif, exécuter `scripts/benchmark-ai.mjs` et distinguer ses mesures CPU locales d’une capacité de production garantie. Maintenir le rattrapage fractionné et les décisions espacées.
+- La caméra terrain doit rester utilisable dans la vue laine, avec des rotations orthogonales de 90°. Garder le sol discret et les gisements repérables, y compris hors écran par les raccourcis.
 
-- Rechercher et reprendre le dépôt de travail d’origine et ses commits avant l’export.
-- Privilégier un push Git natif qui conserve les identifiants, parents, auteurs, dates, messages, branches et tags disponibles.
-- Ne pas faire de squash, de réinitialisation d’historique ni d’export à un seul commit sans demande explicite.
-- Si le transfert exact n’est pas possible avec les outils disponibles, expliquer la limite ; conserver toutes les étapes et les références d’origine, et signaler clairement toute reconstruction.
-- Ne jamais inventer des commits antérieurs : indiquer les périodes d’historique manquantes.
-- Vérifier le contenu publié et l’historique distant avant d’annoncer le push terminé.
-- Lors d’un changement de nom ou d’adresse d’un projet, mettre à jour ses liens sur le calendrier GitHub Pages et garder les anciennes routes d’accès fonctionnelles si possible.
+## Revue obligatoire des IA à chaque mise à jour
 
-Cette règle vaut pour les futurs projets publiés ou référencés dans ce dépôt.
+- Avant une modification du jeu, lire les traces récentes pertinentes des IA et leurs intentions : distinguer une erreur du moteur, une mauvaise décision et une fonction non testée. Ajuster les stratégies lorsque les règles, coûts, recettes, trajets ou prérequis changent. Ne pas seulement changer les seuils du test pour accepter une régression.
+- Garder quatre métiers différents : industrie, logistique, exploration/extraction, milice. Les progrès doivent passer par les commandes publiques, les stocks réellement transportés et les prix normaux. Aucun grant de crédits, recherche forcée ou téléportation ajoutée pour réussir.
+- Le build exécute désormais `scripts/check-playtester.mjs` et refuse de publier si les deux mondes indépendants de huit heures ne passent pas. Ce test vérifie électronique produite, véhicule assemblé, fret depuis une foreuse, renforcement et combat de milice, faction, sauvegarde et rattrapage borné. Les constats sont dans `docs/playtest-profiles.json`.
+- Pour tout blocage observé : conserver un cas de régression pertinent, corriger la décision ou le moteur concerné, relancer les tests touchés et le scénario prolongé. Les résultats locaux ne prouvent ni la capacité en production, ni le confort des contrôles à la souris. Le bilan programmé reste un rapport : il ne modifie pas le monde.
+- Conserver les objectifs/intention de l’IA, cibles et recettes dans les traces. Séparer retours de cargaison et minerai neuf ; ne pas confondre prélèvement par lot terminé et panne de production.

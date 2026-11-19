@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {actEconomy,balance,economyView,settleWorkshops,ensureEconomy,RECIPES,RAW_GOODS} from '../lib/economy.ts';
+const now=2_000_000_000_000;
+const player=id=>({id,name:id,coins:100,inventory:{ferrite:24,cuivre:12,titane:0,prisme:0}});
+const world={players:['Alice','Ben','Celia'].map(player)},[a,b,c]=world.players;
+const act=(p,order)=>actEconomy(world,p,order,now);
+assert.deepEqual(RAW_GOODS,['ferrite','cuivre']);
+assert.equal(economyView(world,null).personal,null);
+act(a,{type:'workshopStart',recipe:'acier',batches:3});
+assert.equal(a.inventory.ferrite,18);
+settleWorkshops(world,now+7999);assert.equal(balance(a,'acier'),0);
+settleWorkshops(world,now+8000);assert.equal(balance(a,'acier'),1);
+settleWorkshops(world,now+8000);assert.equal(balance(a,'acier'),1);
+const copy=JSON.parse(JSON.stringify(world));settleWorkshops(copy,now+24000);settleWorkshops(copy,now+25000);
+assert.equal(balance(copy.players[0],'acier'),3);assert.equal(copy.players[0].economy.job,null);
+assert(Object.values(RECIPES).every(r=>!('titane' in r.inputs)&&!('prisme' in r.inputs)));
+settleWorkshops(world,now+24000);
+ensureEconomy(a).refined.acier=4;ensureEconomy(a).refined.module=1;ensureEconomy(a).refined.lingot=1;
+act(a,{type:'offerPost',give:'cuivre',quantity:3,want:'credits',price:12});const id=world.offers[0].id;
+assert.equal(a.inventory.cuivre,9);assert.throws(()=>act(a,{type:'offerTake',id}));assert.throws(()=>act(b,{type:'offerCancel',id}));
+act(b,{type:'offerTake',id});assert.equal(b.coins,88);assert.equal(b.inventory.cuivre,15);assert.equal(a.coins,112);
+assert.throws(()=>act(c,{type:'offerTake',id}));assert.throws(()=>act(a,{type:'offerCancel',id}));
+act(a,{type:'offerPost',give:'acier',quantity:2,want:'ferrite',price:1,recipient:'Ben'});const privateId=world.offers[0].id;
+assert.equal(economyView(world,c).offers.length,0);assert.equal(economyView(world,b).offers.length,1);assert.throws(()=>act(c,{type:'offerTake',id:privateId}));
+act(b,{type:'offerTake',id:privateId});assert.equal(balance(b,'acier'),2);assert.equal(b.inventory.ferrite,23);
+act(a,{type:'offerPost',give:'module',quantity:1,want:'acier',price:2});const refinedId=world.offers[0].id;
+act(b,{type:'offerTake',id:refinedId});assert.equal(balance(b,'acier'),0);assert.equal(balance(b,'module'),1);assert.equal(balance(a,'acier'),4);
+for(const bad of [{give:'__proto__'},{give:'titane'},{want:'prisme'},{price:Infinity},{quantity:.5},{recipient:'unknown'}]){
+ const before=JSON.stringify(world);assert.throws(()=>act(a,{type:'offerPost',give:'cuivre',quantity:1,want:'credits',price:5,...bad}));assert.equal(JSON.stringify(world),before);
+}
+console.log('PASS Two-ore recipes, reload-safe batch settlement, private barter, manufactured payments and atomic single-sale settlement.');

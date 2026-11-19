@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import ts from 'typescript';
+
+const source = await fs.readFile('lib/observation-clock.ts', 'utf8');
+const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
+const { observerClock, isObserverSpeed } = await import('data:text/javascript;base64,' + Buffer.from(outputText).toString('base64'));
+const world = { created: 1_000 };
+assert.deepEqual(observerClock(world, 2_000), { target: 1_000, speed: 4 });
+assert.deepEqual(observerClock(world, 3_000), { target: 5_000, speed: 4 });
+assert.deepEqual(observerClock(world, 3_000), { target: 5_000, speed: 4 });
+assert.deepEqual(observerClock(world, 3_000, 12), { target: 5_000, speed: 12 });
+assert.deepEqual(observerClock(structuredClone(world), 4_000), { target: 17_000, speed: 12 });
+assert.deepEqual(observerClock(world, 4_000, 1), { target: 17_000, speed: 1 });
+assert.deepEqual(observerClock(world, 4_500), { target: 17_500, speed: 1 });
+assert.deepEqual(observerClock(world, 3_500), { target: 17_000, speed: 1 });
+world.frontier = { time: 17_500 };
+assert.equal(observerClock(world, 3_500).target, 17_500);
+assert.equal(isObserverSpeed(0), false);
+assert.equal(isObserverSpeed('12'), false);
+console.log('Horloge commune vérifiée : changement de vitesse, onglets, rechargement et recul de l’horloge.');
