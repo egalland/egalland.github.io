@@ -28,6 +28,7 @@ let current = 0;
 let destination = 0;
 let trip = 0;
 let projectAnchors = [];
+let arrivalScrollTop;
 
 function targetFor(hash) {
  let id = hash.slice(1);
@@ -40,8 +41,11 @@ function targetFor(hash) {
 }
 
 function syncProject() {
+ if (viewport.scrollTop === arrivalScrollTop) return;
+ arrivalScrollTop = undefined;
  const top = viewport.getBoundingClientRect().top + 96;
- const project = projectAnchors.findLast(node => node.getBoundingClientRect().top <= top);
+ const atEnd = viewport.scrollTop > 0 && viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < 2;
+ const project = atEnd ? projectAnchors.at(-1) : projectAnchors.findLast(node => node.getBoundingClientRect().top <= top);
  updateLinks(project?.id || floors[current].id);
 }
 
@@ -65,6 +69,7 @@ function showFloor({index, target}, moveFocus, announce) {
  if (target !== floor.section) {
   viewport.scrollTop = target.getBoundingClientRect().top - viewport.getBoundingClientRect().top;
  }
+ arrivalScrollTop = viewport.scrollTop;
  updateLinks(target.id);
  if (moveFocus) {
   const heading = target.querySelector('h1, h2, h3') || target;
