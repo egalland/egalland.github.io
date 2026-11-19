@@ -1,4 +1,7 @@
 import Comparator from "../components/comparator";
+import { letterboxdConfigured } from "@/lib/letterboxd-client";
+
+export const dynamic = "force-dynamic";
 
 function Wordmark() {
   return <span className="dp-wordmark">
@@ -9,6 +12,8 @@ function Wordmark() {
 
 export default async function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { mode } = await searchParams;
+  const historyAvailable = await letterboxdConfigured();
+  const initialMode = mode === "recent" ? "rss" : mode === "import" ? "export" : "history";
   return <div className="dp-shell" id="haut">
     <header className="dp-mast">
       <div className="dp-mast-inner">
@@ -30,12 +35,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
           <img src="/salle-print.webp" alt="" fetchPriority="high" width="1500" height="750"/>
         </div>
       </section>
-      <Comparator initialMode={mode === "historique" ? "export" : "rss"}/>
+      <Comparator initialMode={initialMode} historyAvailable={historyAvailable}/>
       <section id="fonctionnement" className="dp-method" aria-labelledby="method-title">
         <h2 id="method-title">Mode<br className="dp-method-break"/> d’emploi</h2>
         <div className="dp-questions">
-        <details><summary>Que peut-on comparer avec deux pseudos&nbsp;?</summary><p>Chaque pseudo donne accès aux films présents dans le journal public récent de ce membre. Un film peut déjà avoir été vu sans apparaître dans ce flux.</p></details>
-        <details><summary>Comment comparer tous les films enregistrés&nbsp;?</summary><p>Depuis un navigateur sur ordinateur, chaque personne peut <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noreferrer">télécharger son export Letterboxd</a>. Dans « Historique complet », sélectionnez les deux ZIP. La chronologie utilise les dates consignées dans les journaux et conserve chaque revisionnage. Les films simplement marqués comme vus comptent dans le catalogue. Les fichiers restent sur votre appareil.</p></details>
+        <details><summary>Que peut-on comparer avec deux pseudos&nbsp;?</summary><p>{historyAvailable ? 'Le mode « Historique complet » parcourt les films vus et toutes les séances publiques de films des deux membres, y compris les revisionnages.' : 'L’accès de Double Programme à l’historique complet par pseudo est indisponible. Vous pouvez consulter le journal de chaque membre sur Letterboxd en saisissant son pseudo.'} Le mode « Activité récente » utilise uniquement les dernières entrées des flux publics.</p></details>
+        <details><summary>Que contient une comparaison par fichier&nbsp;?</summary><p>Dans « Importer », les deux ZIP permettent de comparer les films marqués comme vus et les séances datées, revisionnages compris. Depuis un navigateur sur ordinateur, chaque personne peut <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noreferrer">télécharger son export Letterboxd</a>. Les fichiers restent sur votre appareil.</p></details>
         <details><summary>Comment lire le score d’affinité&nbsp;?</summary><p>Il mesure la proximité de vos notes sur les films que vous avez tous les deux notés. Des notes identiques donnent 100 %. Un écart moyen d’une étoile donne environ 78 %. Le nombre de films pris en compte est indiqué à côté du score.</p></details>
         </div>
       </section>

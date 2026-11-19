@@ -2,6 +2,7 @@ export type Film = {
   title: string;
   year: string;
   rating: number | null;
+  lid?: string;
   url?: string;
   id?: string;
   tmdb?: string;
@@ -15,7 +16,7 @@ export type DiaryEntry = {
 
 export type Profile = {
   name: string;
-  source: "rss" | "export" | "demo";
+  source: "api" | "rss" | "export" | "demo";
   films: Film[];
   complete: boolean;
   diary?: DiaryEntry[];
@@ -44,6 +45,7 @@ function filmLink(value?: string) {
 
 function identities(film: Film) {
   const ids = new Map<string, string>();
+  if (film.lid) ids.set("lid", film.lid);
   for (const value of [film.id, film.url]) {
     const uri = filmLink(value);
     if (uri) ids.set(uri.includes("://boxd.it/") ? "short" : "slug", uri);

@@ -6,10 +6,12 @@ import { compareProfiles, importProfile, type Film, type Profile } from '@/lib/c
 import { demoProfiles, demoHistoryProfiles } from '@/lib/demo';
 import { HistoryView } from './history';
 import { readLocalFeed } from '@/lib/local-feed';
+import { loadHistoryProfile } from '@/lib/load-history';
 import './comparator.css';
 
 type Pair = [Profile, Profile];
-type Mode = 'rss' | 'export';
+type Mode = 'history' | 'rss' | 'export';
+const MODE_PARAM: Record<Mode, string> = { history: 'historique', rss: 'recent', export: 'import' };
 type ResultsTab = 'common' | 'agreements' | 'differences' | 'recommendations' | 'history';
 const SIDES = [0, 1] as const;
 const PAGE_SIZE = 15;
@@ -106,16 +108,27 @@ function Results({ profiles }: { profiles: Pair }) {
   const demo = a.source === 'demo';
   const tabs: [ResultsTab, string][] = [['common','Films en commun'], ['agreements','Accords'], ['differences','Désaccords'], ['recommendations','À découvrir']];
   if (showHistoryTab) tabs.unshift(['history', 'Chronologie']);
-  const scope = a.complete && b.complete ? 'Catalogues complets' : 'Données importées';
+  const resultLabel = {
+    api: 'Historique public des films · complet',
+    rss: 'Activité récente uniquement',
+    export: a.complete && b.complete ? 'Catalogues complets importés' : 'Données importées',
+    demo: 'Exemple · profils fictifs',
+  }[a.source];
+  const coverageText = {
+    api: 'La comparaison inclut les films vus et les séances publiques de films des deux profils. Chaque film compte une fois dans le score, même après plusieurs séances.',
+    rss: 'Le score utilise uniquement les dernières entrées des deux flux. Des films plus anciens ou simplement marqués comme vus peuvent manquer.',
+    export: a.complete && b.complete ? 'Les deux exports incluent la liste des films marqués comme vus.' : 'Les résultats portent sur les films présents dans les fichiers fournis. Un fichier de notes seul couvre uniquement les films notés.',
+    demo: '',
+  }[a.source];
   const empty = tab === 'common' ? 'Aucun film en commun dans les données comparées.' : tab === 'agreements' ? 'Il faut au moins un film que vous avez tous les deux noté.' : tab === 'differences' ? (comparison.ratedCount ? 'Vous avez attribué les mêmes notes à tous vos films co-notés.' : 'Aucun film co-noté à comparer.') : `Aucun film à proposer à ${recipient.name} avec ces données.`;
   return <div className="dp-output">
-    <div className="dp-results-head"><div className="dp-results-names"><span>{a.name}</span><i> & </i><span>{b.name}</span></div><span className="dp-source">{demo ? 'Exemple · profils fictifs' : a.source === 'rss' ? 'Journaux publics récents' : scope}</span></div>
+    <div className="dp-results-head"><div className="dp-results-names"><span>{a.name}</span><i> & </i><span>{b.name}</span></div><span className="dp-source">{resultLabel}</span></div>
     <div className="dp-stats">
       <div className="dp-stat dp-stat-main"><strong>{comparison.score === null ? '—' : <>{comparison.score}<small> %</small></>}</strong><span>Affinité des notes</span></div>
       <div className="dp-stat"><strong>{comparison.commonCount.toLocaleString('fr-FR')}</strong><span>{comparison.commonCount > 1 ? 'Films en commun' : 'Film en commun'}</span></div>
       <div className="dp-stat"><strong>{comparison.ratedCount.toLocaleString('fr-FR')}</strong><span>{comparison.ratedCount > 1 ? 'Films co-notés' : 'Film co-noté'}</span></div>
     </div>
-    <details className="dp-score-method"><summary><Info size={15} aria-hidden="true"/>Comprendre ce résultat<ChevronDown size={15} aria-hidden="true"/></summary><div><p>Le score mesure la proximité de vos notes sur les films co-notés. Des notes identiques donnent 100 %. Chaque demi-étoile d’écart moyen retire environ 11 points.</p><p>{a.name} · {plural(a.films.length,'film','films')} dans la comparaison. {b.name} · {plural(b.films.length,'film','films')}.</p>{!demo && <p>{a.source === 'rss' ? 'Les pseudos donnent accès aux entrées récentes des journaux publics. Les films plus anciens ou simplement marqués comme vus peuvent manquer.' : a.complete && b.complete ? 'Les deux exports incluent la liste des films marqués comme vus.' : 'Les résultats portent sur les films présents dans les fichiers fournis. Un fichier de notes seul couvre uniquement les films notés.'}</p>}</div></details>
+    <details className="dp-score-method"><summary><Info size={15} aria-hidden="true"/>Comprendre ce résultat<ChevronDown size={15} aria-hidden="true"/></summary><div><p>Le score mesure la proximité de vos notes sur les films co-notés. Des notes identiques donnent 100 %. Chaque demi-étoile d’écart moyen retire environ 11 points.</p><p>{a.name} · {plural(a.films.length,'film','films')} dans la comparaison. {b.name} · {plural(b.films.length,'film','films')}.</p>{!demo && <p>{coverageText}</p>}</div></details>
     {comparison.ratedCount < 5 && <p className="dp-sample">{comparison.ratedCount === 0 ? 'Aucun score d’affinité sans film co-noté.' : `Le score repose sur ${plural(comparison.ratedCount, 'film co-noté', 'films co-notés')}. Il peut beaucoup évoluer.`}</p>}
     <div className="dp-results-nav" aria-label="Vues de comparaison" role="group">{tabs.map(([key,label]) => <button type="button" aria-pressed={tab === key} onClick={() => {setTab(key); setVisible(PAGE_SIZE);}} key={key}>{label}</button>)}</div>
     {tab === 'history' ? <HistoryView profiles={profiles}/> : <>
@@ -126,7 +139,10 @@ function Results({ profiles }: { profiles: Pair }) {
   </div>;
 }
 
-export default function Comparator({ initialMode = 'rss' }: { initialMode?: Mode }) {
+export default function Comparator({ initialMode = 'history', historyAvailable = false }: {
+  initialMode?: Mode;
+  historyAvailable?: boolean;
+}) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [handles, setHandles] = useState<[string,string]>(['','']);
   const [files, setFiles] = useState<[File | null, File | null]>([null,null]);
@@ -136,6 +152,7 @@ export default function Comparator({ initialMode = 'rss' }: { initialMode?: Mode
   const names = handles.map(username);
   const [errors, setErrors] = useState<[string,string]>(['','']);
   const [loading, setLoading] = useState(false);
+  const [counts, setCounts] = useState<[number, number]>([0, 0]);
   const [profiles, setProfiles] = useState<Pair | null>(null);
   const [revision, setRevision] = useState(0);
   const controller = useRef<AbortController | null>(null);
@@ -145,18 +162,25 @@ export default function Comparator({ initialMode = 'rss' }: { initialMode?: Mode
   useEffect(() => () => { submission.current += 1; controller.current?.abort(); }, []);
   useEffect(() => { if (revision && output.current) { output.current.focus({preventScroll:true}); output.current.scrollIntoView({block:'start', behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}); } }, [revision]);
 
-  function resetPending() { submission.current += 1; controller.current?.abort(); setLoading(false); setErrors(['','']); }
+  const historyUnavailable = mode === 'history' && !historyAvailable;
+
+  function resetPending() {
+    submission.current += 1;
+    controller.current?.abort();
+    setLoading(false);
+    setProfiles(null);
+    setErrors(['','']);
+  }
   function toggleMode(next: Mode) {
     if (next === mode) return;
     resetPending();
-    setProfiles(null);
+    partial.current = [null, null];
     setMode(next);
     const url = new URL(window.location.href);
-    if (next === 'export') url.searchParams.set('mode', 'historique');
-    else url.searchParams.delete('mode');
+    url.searchParams.set('mode', MODE_PARAM[next]);
     window.history.replaceState(window.history.state, '', url);
   }
-  function showExample() { resetPending(); setProfiles(mode === 'export' ? demoHistoryProfiles : demoProfiles); setRevision(v => v + 1); }
+  function showExample() { resetPending(); setProfiles(mode === 'rss' ? demoProfiles : demoHistoryProfiles); setRevision(v => v + 1); }
   function changeHandle(side: 0 | 1, value: string) {
     resetPending();
     if (username(value) !== names[side]) {
@@ -167,27 +191,42 @@ export default function Comparator({ initialMode = 'rss' }: { initialMode?: Mode
     setHandles(previous => replaced(previous, side, value));
   }
 
+  function checkManualHandle(side: 0 | 1) {
+    if (!historyUnavailable) return;
+    if (handles[side].trim() && !names[side]) {
+      setErrors(previous => replaced(previous, side, 'Saisissez un pseudo Letterboxd ou le lien de son profil.'));
+    } else if (names[side] && names[0] === names[1]) {
+      setErrors(previous => replaced(previous, side, 'Choisissez deux profils différents pour voir leurs films en commun.'));
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (historyUnavailable) return;
     resetPending();
-    setProfiles(null);
     const current = submission.current;
     const fieldErrors: [string,string] = ['',''];
     for (const i of SIDES) {
-      if (mode === 'rss' && !names[i]) fieldErrors[i] = 'Saisissez un pseudo Letterboxd ou le lien de son profil.';
+      if (mode !== 'export' && !names[i]) fieldErrors[i] = 'Saisissez un pseudo Letterboxd ou le lien de son profil.';
       if (mode === 'export' && !files[i]) fieldErrors[i] = 'Choisissez un fichier ZIP ou CSV pour ce profil.';
     }
-    if (mode === 'rss' && names[0] && names[0] === names[1]) fieldErrors[1] = 'Choisissez un deuxième profil différent.';
+    if (mode !== 'export' && names[0] && names[0] === names[1]) fieldErrors[1] = 'Choisissez un deuxième profil différent.';
     if (fieldErrors.some(Boolean)) {
       setErrors(fieldErrors);
       inputs.current[fieldErrors[0] ? 0 : 1]?.focus();
       return;
     }
     setLoading(true);
+    setCounts([0, 0]);
     const request = new AbortController();
     controller.current = request;
     async function loadSide(side: 0 | 1) {
       if (mode === 'export') return importProfile(files[side]!, `Profil ${side === 0 ? 'A' : 'B'}`);
+      if (mode === 'history') {
+        return loadHistoryProfile(names[side], request.signal, count => {
+          if (current === submission.current) setCounts(previous => replaced(previous, side, count));
+        });
+      }
       if (feeds[side]) return readLocalFeed(feeds[side], names[side]);
       return partial.current[side] ?? fetchProfile(names[side], request.signal);
     }
@@ -216,22 +255,67 @@ export default function Comparator({ initialMode = 'rss' }: { initialMode?: Mode
 
   return <>
     <section className="dp-comparator" id="comparateur" aria-labelledby="dp-form-title">
-      <div className="dp-form-top"><h2 id="dp-form-title">Comparer deux profils</h2><div className="dp-modes" role="group" aria-label="Source des profils"><button type="button" aria-pressed={mode === 'rss'} onClick={() => toggleMode('rss')}><Users size={16} aria-hidden="true"/>Pseudos</button><button type="button" aria-pressed={mode === 'export'} onClick={() => toggleMode('export')}><Upload size={16} aria-hidden="true"/>Historique complet</button></div></div>
+      <div className="dp-form-top">
+        <h2 id="dp-form-title">Comparer deux profils</h2>
+        <div className="dp-modes" role="group" aria-label="Mode de comparaison">
+          <button type="button" aria-pressed={mode === 'history'} onClick={() => toggleMode('history')}><Users size={16} aria-hidden="true"/>Historique complet</button>
+          <button type="button" aria-pressed={mode === 'rss'} onClick={() => toggleMode('rss')}>Activité récente</button>
+          <button type="button" aria-pressed={mode === 'export'} onClick={() => toggleMode('export')}><Upload size={16} aria-hidden="true"/>Importer</button>
+        </div>
+      </div>
+      {historyUnavailable && <div className="dp-history-unavailable" role="status">
+        <Info size={19} aria-hidden="true"/>
+        <div><strong>Comparaison complète par pseudo indisponible</strong>
+          <p>Ce site n’a pas accès à l’API Letterboxd. Saisissez vos deux pseudos pour ouvrir vos journaux et retrouver vos films en commun sur Letterboxd.</p>
+        </div>
+      </div>}
       {mode === 'export' && <div className="dp-history-import-intro">
         <p>Choisissez <strong>le ZIP de chaque profil</strong> pour comparer tous les films marqués comme vus et parcourir les deux journaux de visionnage.</p>
         <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noopener noreferrer">Télécharger mon export Letterboxd <ExternalLink size={13} aria-hidden="true"/></a>
       </div>}
       <form onSubmit={submit} noValidate className="dp-form" aria-busy={loading}>
-        <div className="dp-field-row">{SIDES.map(i => <div className={`dp-field dp-side-${i}`} key={i}>
+        <div className={historyUnavailable ? 'dp-field-row dp-field-row-manual' : 'dp-field-row'}>{SIDES.map(i => <div className={`dp-field dp-side-${i}`} key={i}>
           <label className="dp-label" htmlFor={`dp-field-${i}`}><span className="dp-side-dot" aria-hidden="true"/>{i === 0 ? 'Premier profil' : 'Deuxième profil'}</label>
-          {mode === 'rss' ? <div className={`dp-input-box ${errors[i] ? 'dp-invalid' : ''}`}><AtSign size={17} aria-hidden="true"/><input id={`dp-field-${i}`} ref={el => {inputs.current[i]=el;}} type="text" placeholder={PROFILE_HINTS[i]} value={handles[i]} autoCapitalize="none" autoCorrect="off" autoComplete="off" spellCheck={false} aria-invalid={Boolean(errors[i])} aria-describedby={errors[i] ? `dp-error-${i}` : undefined} onChange={e => changeHandle(i, e.target.value)}/></div> : <div className={`dp-file-box ${errors[i] ? 'dp-invalid' : ''}`}><input type="file" id={`dp-field-${i}`} ref={el => {inputs.current[i]=el;}} accept=".zip,.csv" aria-invalid={Boolean(errors[i])} aria-describedby={errors[i] ? `dp-error-${i}` : undefined} onChange={e => {resetPending(); const next: [File|null, File|null] = [...files]; next[i]=e.target.files?.[0] ?? null; setFiles(next);}}/><span aria-hidden="true">{files[i] ? <Check size={17}/> : <FileArchive size={17}/>}<span>{files[i]?.name || 'Choisir un ZIP ou CSV'}</span></span></div>}
+          {mode !== 'export' ? <div className={`dp-input-box ${errors[i] ? 'dp-invalid' : ''}`}>
+            <AtSign size={17} aria-hidden="true"/>
+            <input id={`dp-field-${i}`} ref={el => { inputs.current[i] = el; }} type="text"
+              placeholder={PROFILE_HINTS[i]} value={handles[i]} autoCapitalize="none" autoCorrect="off"
+              autoComplete="off" spellCheck={false} aria-invalid={Boolean(errors[i])}
+              aria-describedby={errors[i] ? `dp-error-${i}` : undefined}
+              onChange={e => changeHandle(i, e.target.value)} onBlur={() => checkManualHandle(i)}/>
+          </div> : <div className={`dp-file-box ${errors[i] ? 'dp-invalid' : ''}`}>
+            <input type="file" id={`dp-field-${i}`} ref={el => { inputs.current[i] = el; }}
+              accept=".zip,.csv" aria-invalid={Boolean(errors[i])} aria-describedby={errors[i] ? `dp-error-${i}` : undefined}
+              onChange={e => {
+                const file = e.target.files?.[0] ?? null;
+                resetPending();
+                setFiles(previous => replaced(previous, i, file));
+              }}/>
+            <span aria-hidden="true">{files[i] ? <Check size={17}/> : <FileArchive size={17}/>}<span>{files[i]?.name || 'Choisir un ZIP ou CSV'}</span></span>
+          </div>}
+          {mode === 'history' && names[i] && <a className="dp-diary-link" href={`https://letterboxd.com/${encodeURIComponent(names[i])}/diary/`} target="_blank" rel="noopener noreferrer">Journal de @{names[i]} <ExternalLink size={14} aria-hidden="true"/></a>}
           {errors[i] && <div className="dp-error" id={`dp-error-${i}`} role="alert">{errors[i]}</div>}
           {mode === 'rss' && names[i] && <LocalFeedPicker handle={names[i]} side={i} open={feedOpen[i]} file={feeds[i]}
             onToggle={() => setFeedOpen(previous => replaced(previous, i, !previous[i]))}
             onFile={file => { resetPending(); partial.current[i] = null; setFeeds(previous => replaced(previous, i, file)); }} />}
-        </div>)}<button type="submit" className="dp-submit" disabled={loading}>{loading ? <span className="dp-spinner" aria-hidden="true"/> : <Layers size={18} aria-hidden="true"/>}{loading ? 'Comparaison…' : 'Comparer'}</button></div>
+        </div>)}{!historyUnavailable && <button type="submit" className="dp-submit" disabled={loading}>{loading ? <span className="dp-spinner" aria-hidden="true"/> : <Layers size={18} aria-hidden="true"/>}{loading ? 'Chargement…' : mode === 'rss' ? 'Comparer le récent' : 'Comparer'}</button>}</div>
       </form>
-      <div className="dp-form-foot"><p>{mode === 'rss' ? <><Info size={15} aria-hidden="true"/><span>Les pseudos comparent vos journaux récents. Pour remonter plus loin, choisissez « Historique complet ».</span></> : <><FileArchive size={15} aria-hidden="true"/><span>Les fichiers restent sur votre appareil. Un CSV seul compare uniquement ce qu’il contient (journal, films vus ou notes).</span></>}</p><button type="button" onClick={showExample} className="dp-demo"><Play size={13} fill="currentColor" aria-hidden="true"/>Voir un exemple</button></div>
+      {historyUnavailable && names[0] && names[1] && names[0] !== names[1] &&
+        <section className="dp-shared-films" aria-labelledby="dp-shared-title">
+          <h3 id="dp-shared-title">Films en commun sur Letterboxd</h3>
+          <p>Choisissez le compte auquel vous êtes connecté sur Letterboxd pour voir tous les films que vous avez tous les deux marqués comme vus. Cette liste compte chaque film une fois et ne détaille pas les séances.</p>
+          <div className="dp-shared-links">{SIDES.map(side =>
+            <a key={side} href={`https://letterboxd.com/${encodeURIComponent(names[1 - side])}/films/?filters=show-watched`} target="_blank" rel="noopener noreferrer">
+              Je suis @{names[side]} <ExternalLink size={14} aria-hidden="true"/>
+            </a>)}</div>
+        </section>}
+      {mode === 'history' && loading && <p className="dp-api-progress" role="status">Lecture en cours · {names.map((name, i) => `@${name} · ${plural(counts[i], 'entrée lue', 'entrées lues')}`).join(' / ')}</p>}
+      <div className="dp-form-foot">
+        {mode === 'history' && historyAvailable && <p><Info size={15} aria-hidden="true"/><span>La comparaison couvre les films marqués comme vus et toutes les séances publiques de films, revisionnages compris.</span></p>}
+        {mode === 'rss' && <p><Info size={15} aria-hidden="true"/><span>Le flux RSS couvre les dernières entrées de chaque journal.</span></p>}
+        {mode === 'export' && <p><FileArchive size={15} aria-hidden="true"/><span>Les fichiers restent sur votre appareil. Un CSV seul compare uniquement ce qu’il contient.</span></p>}
+        <button type="button" onClick={showExample} className="dp-demo"><Play size={13} fill="currentColor" aria-hidden="true"/>Voir un exemple</button>
+      </div>
     </section>
     {profiles && <section className="dp-comparison-result" id="resultats" ref={output} tabIndex={-1} aria-label="Résultat de la comparaison"><Results key={revision} profiles={profiles}/></section>}
   </>;
