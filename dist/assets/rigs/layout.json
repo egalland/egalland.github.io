@@ -1,0 +1,452 @@
+{
+  "b0-body": {
+    "width": 408,
+    "height": 405,
+    "source": [
+      69,
+      62,
+      408,
+      405
+    ]
+  },
+  "b0-head": {
+    "width": 427,
+    "height": 444,
+    "source": [
+      543,
+      42,
+      427,
+      444
+    ]
+  },
+  "b0-armL": {
+    "width": 288,
+    "height": 398,
+    "source": [
+      87,
+      498,
+      288,
+      398
+    ]
+  },
+  "b0-armR": {
+    "width": 290,
+    "height": 383,
+    "source": [
+      650,
+      500,
+      290,
+      383
+    ]
+  },
+  "b0-jaw": {
+    "width": 417,
+    "height": 159,
+    "source": [
+      88,
+      968,
+      417,
+      159
+    ]
+  },
+  "b0-leg": {
+    "width": 122,
+    "height": 261,
+    "source": [
+      727,
+      916,
+      122,
+      261
+    ]
+  },
+  "b0-footL": {
+    "width": 414,
+    "height": 278,
+    "source": [
+      93,
+      1207,
+      414,
+      278
+    ]
+  },
+  "b0-footR": {
+    "width": 377,
+    "height": 283,
+    "source": [
+      588,
+      1206,
+      377,
+      283
+    ]
+  },
+  "b1-body": {
+    "width": 246,
+    "height": 522,
+    "source": [
+      150,
+      13,
+      246,
+      522
+    ]
+  },
+  "b1-head": {
+    "width": 309,
+    "height": 538,
+    "source": [
+      676,
+      12,
+      309,
+      538
+    ]
+  },
+  "b1-armL": {
+    "width": 260,
+    "height": 407,
+    "source": [
+      83,
+      551,
+      260,
+      407
+    ]
+  },
+  "b1-armR": {
+    "width": 255,
+    "height": 387,
+    "source": [
+      674,
+      556,
+      255,
+      387
+    ]
+  },
+  "b1-jaw": {
+    "width": 352,
+    "height": 144,
+    "source": [
+      96,
+      1033,
+      352,
+      144
+    ]
+  },
+  "b1-leg": {
+    "width": 109,
+    "height": 251,
+    "source": [
+      724,
+      962,
+      109,
+      251
+    ]
+  },
+  "b1-footL": {
+    "width": 367,
+    "height": 289,
+    "source": [
+      112,
+      1213,
+      367,
+      289
+    ]
+  },
+  "b1-footR": {
+    "width": 356,
+    "height": 280,
+    "source": [
+      549,
+      1220,
+      356,
+      280
+    ]
+  },
+  "b2-body": {
+    "width": 446,
+    "height": 454,
+    "source": [
+      59,
+      28,
+      446,
+      454
+    ]
+  },
+  "b2-head": {
+    "width": 438,
+    "height": 425,
+    "source": [
+      577,
+      46,
+      438,
+      425
+    ]
+  },
+  "b2-armL": {
+    "width": 274,
+    "height": 411,
+    "source": [
+      97,
+      493,
+      274,
+      411
+    ]
+  },
+  "b2-armR": {
+    "width": 274,
+    "height": 411,
+    "source": [
+      656,
+      492,
+      274,
+      411
+    ]
+  },
+  "b2-jaw": {
+    "width": 400,
+    "height": 148,
+    "source": [
+      102,
+      982,
+      400,
+      148
+    ]
+  },
+  "b2-leg": {
+    "width": 130,
+    "height": 289,
+    "source": [
+      693,
+      898,
+      130,
+      289
+    ]
+  },
+  "b2-footL": {
+    "width": 419,
+    "height": 272,
+    "source": [
+      60,
+      1204,
+      419,
+      272
+    ]
+  },
+  "b2-footR": {
+    "width": 424,
+    "height": 284,
+    "source": [
+      561,
+      1204,
+      424,
+      284
+    ]
+  },
+  "b3-body": {
+    "width": 381,
+    "height": 433,
+    "source": [
+      122,
+      47,
+      381,
+      433
+    ]
+  },
+  "b3-head": {
+    "width": 385,
+    "height": 495,
+    "source": [
+      595,
+      16,
+      385,
+      495
+    ]
+  },
+  "b3-armL": {
+    "width": 258,
+    "height": 428,
+    "source": [
+      130,
+      517,
+      258,
+      428
+    ]
+  },
+  "b3-armR": {
+    "width": 342,
+    "height": 398,
+    "source": [
+      648,
+      523,
+      342,
+      398
+    ]
+  },
+  "b3-jaw": {
+    "width": 412,
+    "height": 156,
+    "source": [
+      98,
+      1023,
+      412,
+      156
+    ]
+  },
+  "b3-leg": {
+    "width": 125,
+    "height": 268,
+    "source": [
+      708,
+      951,
+      125,
+      268
+    ]
+  },
+  "b3-footL": {
+    "width": 382,
+    "height": 271,
+    "source": [
+      67,
+      1241,
+      382,
+      271
+    ]
+  },
+  "b3-footR": {
+    "width": 384,
+    "height": 279,
+    "source": [
+      610,
+      1239,
+      384,
+      279
+    ]
+  },
+  "a-body": {
+    "width": 268,
+    "height": 451,
+    "source": [
+      195,
+      26,
+      268,
+      451
+    ]
+  },
+  "a-head": {
+    "width": 390,
+    "height": 458,
+    "source": [
+      575,
+      19,
+      390,
+      458
+    ]
+  },
+  "a-upperArm": {
+    "width": 147,
+    "height": 311,
+    "source": [
+      260,
+      496,
+      147,
+      311
+    ]
+  },
+  "a-forearm": {
+    "width": 161,
+    "height": 301,
+    "source": [
+      638,
+      506,
+      161,
+      301
+    ]
+  },
+  "a-handOpen": {
+    "width": 293,
+    "height": 273,
+    "source": [
+      158,
+      826,
+      293,
+      273
+    ]
+  },
+  "a-handGrip": {
+    "width": 224,
+    "height": 274,
+    "source": [
+      664,
+      833,
+      224,
+      274
+    ]
+  },
+  "a-leg": {
+    "width": 214,
+    "height": 401,
+    "source": [
+      221,
+      1109,
+      214,
+      401
+    ]
+  },
+  "a-foot": {
+    "width": 328,
+    "height": 253,
+    "source": [
+      641,
+      1239,
+      328,
+      253
+    ]
+  },
+  "cockpit-console": {
+    "width": 773,
+    "height": 566,
+    "source": [
+      57,
+      126,
+      773,
+      566
+    ]
+  },
+  "cockpit-wheel": {
+    "width": 459,
+    "height": 527,
+    "source": [
+      915,
+      93,
+      459,
+      527
+    ]
+  },
+  "cockpit-seat": {
+    "width": 632,
+    "height": 601,
+    "source": [
+      1486,
+      70,
+      632,
+      601
+    ]
+  },
+  "walk-foot-far": {
+    "width": 935,
+    "height": 485,
+    "source": [
+      92,
+      119,
+      935,
+      485
+    ]
+  },
+  "walk-foot-near": {
+    "width": 936,
+    "height": 517,
+    "source": [
+      1157,
+      118,
+      936,
+      517
+    ]
+  }
+}
