@@ -1,5 +1,7 @@
 import {esc,fmt,euro} from './assets.js';
 
+export const CIRCUITS_PER_COFFRET=52;
+
 export const NETWORKS={
  electric:{name:'Électricité',origin:'Tableau électrique',color:'#c17716',unit:'Gaine et câble'},
  cold:{name:'Eau froide',origin:'Arrivée d’eau froide',color:'#267197',unit:'Tube eau froide'},
@@ -42,7 +44,7 @@ export function normalizeTechnical(raw,building,levels,levelMap){
   while(pointIds.has(id))id+='-';
   pointIds.add(id);
   const via=Object.fromEntries(Object.keys(NETWORKS).filter(k=>p.via?.[k]).map(k=>[k,coordinate(p.via[k])]));
-  return {id,kind:p.kind,name:safeName(p.name,POINTS[p.kind].name),levelId:level(p.levelId),source:typeof p.source==='string'?p.source.slice(0,120):'',...coordinate(p),via,circuit:String(p.circuit||'').trim().slice(0,50)};
+  return {id,kind:p.kind,name:safeName(p.name,POINTS[p.kind].name),levelId:level(p.levelId),source:typeof p.source==='string'?p.source.slice(0,120):'',...coordinate(p),via,disconnected:POINTS[p.kind].net.filter(key=>Array.isArray(p.disconnected)&&p.disconnected.includes(key)).slice(0,POINTS[p.kind].net.length-1),circuit:String(p.circuit||'').trim().slice(0,50)};
  });
  const prices={};
  for(const key of [...Object.keys(NETWORKS),...Object.keys(POINTS).map(k=>'point-'+k),'board','circuit']){
@@ -50,6 +52,22 @@ export function normalizeTechnical(raw,building,levels,levelMap){
   prices['labour-'+key]=finite(raw?.prices?.['labour-'+key],0,0,1e6);
  }
  return {points,origins,prices,excluded:(Array.isArray(raw?.excluded)?raw.excluded:[]).filter(x=>typeof x==='string').slice(0,450)};
+}
+
+export const hasNetwork=(point,key)=>POINTS[point.kind].net.includes(key)&&!point.disconnected?.includes(key);
+
+export function removeTechnicalPoints(technical,ids,key){
+ const targets=new Set(ids);
+ technical.points=technical.points.filter(point=>{
+  if(!targets.has(point.id))return true;
+  if(key&&POINTS[point.kind].net.some(other=>other!==key&&hasNetwork(point,other))){
+   point.disconnected=[...new Set([...(point.disconnected||[]),key])];
+   delete point.via[key];
+   return true;
+  }
+  if(point.source&&!technical.excluded.includes(point.source))technical.excluded.push(point.source);
+  return false;
+ });
 }
 
 export function nearestWall(rect,x,y){
@@ -126,18 +144,18 @@ export function technicalEstimate(s,levelId){
  for(const point of points){
   const item=POINTS[point.kind];
   inventory[point.kind]=(inventory[point.kind]||0)+1;
-  for(const key of item.net)metres[key]+=distance(networkRoute(s,point,key));
-  if(!item.circuit)continue;
+  for(const key of item.net.filter(key=>hasNetwork(point,key)))metres[key]+=distance(networkRoute(s,point,key));
+  if(!item.circuit||!hasNetwork(point,'electric'))continue;
   const id=point.circuit?'custom:'+point.circuit:item.dedicated?point.id:point.levelId+':'+item.circuit;
   if(!circuits.has(id))circuits.set(id,{name:point.circuit||item.circuit,points:[],level:point.levelId});
   circuits.get(id).points.push(point);
  }
  const prices=s.technical.prices;
- const boardCount=circuits.size?1:0;
+ const boardCount=Math.ceil(circuits.size/CIRCUITS_PER_COFFRET);
  const items=[
   ...Object.entries(metres).filter(([,v])=>v>0).map(([k,quantity])=>({key:k,name:NETWORKS[k].unit,quantity,unit:'m'})),
   ...Object.entries(inventory).map(([k,quantity])=>({key:'point-'+k,name:POINTS[k].name,quantity,unit:'u'})),
-  ...(boardCount?[{key:'board',name:'Coffret à prévoir',quantity:1,unit:'u'},{key:'circuit',name:'Départs à protéger',quantity:circuits.size,unit:'u'}]:[])
+  ...(boardCount?[{key:'board',name:'Coffrets indicatifs',quantity:boardCount,unit:'u'},{key:'circuit',name:'Départs à protéger',quantity:circuits.size,unit:'u'}]:[])
  ].map(item=>{
   const price=prices[item.key]||0,labour=prices['labour-'+item.key]||0;
   return {...item,price,labour,total:item.quantity*(price+labour)};
@@ -147,7 +165,7 @@ export function technicalEstimate(s,levelId){
 
 export function technicalOverlay(s,levelId,key){
  const network=NETWORKS[key],origin=networkOrigin(s,levelId,key);
- const points=s.technical.points.filter(p=>p.levelId===levelId&&POINTS[p.kind].net.includes(key));
+ const points=s.technical.points.filter(p=>p.levelId===levelId&&hasNetwork(p,key));
  return '<g data-technical-overlay>'+points.map(p=>{
   const route=networkRoute(s,p,key).map(q=>q.x+','+q.y).join(' ');
   return '<polyline points="'+route+'" stroke="'+network.color+'" stroke-width=".065" fill="none" stroke-linejoin="round" opacity=".88" pointer-events="none"/>';
@@ -157,19 +175,20 @@ export function technicalOverlay(s,levelId,key){
 function boardMarkup(s,estimate){
  const {circuits,points}=estimate;
  if(!circuits.length)return '<p>Ajoute ou génère des points électriques pour composer ton tableau.</p>';
- const electrical=points.filter(p=>POINTS[p.kind].net.includes('electric')).length;
+ const electrical=points.filter(p=>hasNetwork(p,'electric')).length;
  const tiles=circuits.map((c,i)=>'<li class="tech-breaker"><span>'+(i+1)+'</span><strong>'+esc(c.name)+'</strong></li>').join('');
  const rows=circuits.map((c,i)=>{
   const levels=[...new Set(c.points.map(p=>p.levelId))].map(id=>s.levels.find(l=>l.id===id)?.name).filter(Boolean);
-  return '<details class="tech-circuit"><summary><strong>'+(i+1)+'. '+esc(c.name)+'</strong><small>'+esc(levels.join(' / '))+' · '+c.points.length+' point'+(c.points.length===1?'':'s')+'</small></summary><div>'+c.points.map(p=>esc(p.name)).join(' · ')+'</div></details>';
+  return '<details class="tech-circuit"><summary><strong>'+(i+1)+'. '+esc(c.name)+'</strong><small>'+esc(levels.join(' / '))+' · '+c.points.length+' point'+(c.points.length===1?'':'s')+'</small></summary><div>'+c.points.map(p=>esc(p.name)).join(' · ')+'</div><div class="tech-actions"><button class="btn" data-panel-focus="'+i+'">Voir en 3D</button><button class="btn danger" data-circuit-remove="'+i+'">Retirer ce circuit</button></div></details>';
  }).join('');
- return '<p>Les points sont regroupés par usage et par niveau. Les appareils dédiés ont leur propre départ. Le nom du circuit d’un point permet de modifier la répartition.</p><div class="tech-board"><div><strong>Tableau prévisionnel</strong><small>'+circuits.length+' départs · '+electrical+' points électriques</small></div><ol class="tech-breakers">'+tiles+'</ol></div>'+rows+'<p class="tech-note">Calibres, protections, sections et implantation à valider par un électricien.</p>';
+ return '<p>Les points sont regroupés par usage et par niveau. Les appareils dédiés ont leur propre départ. Le nom du circuit d’un point permet de modifier la répartition.</p><div class="tech-board"><div><strong>Tableau prévisionnel</strong><small>'+circuits.length+' départs · '+electrical+' points électriques</small></div><button class="btn primary full" data-panel-focus="0">Ouvrir le tableau en 3D</button><ol class="tech-breakers">'+tiles+'</ol></div>'+rows+'<p class="tech-note">Calibres, protections, sections et implantation à valider par un électricien.</p>';
 }
 
 export function technicalScreen(s,levelId,key,tab){
  const estimate=technicalEstimate(s), here=technicalEstimate(s,levelId), network=NETWORKS[key], level=s.levels.find(l=>l.id===levelId);
+ const visiblePoints=here.points.filter(p=>hasNetwork(p,key));
  const body=tab==='plan'
-  ? '<div class="tech-networks">'+Object.entries(NETWORKS).map(([id,n])=>'<button class="btn '+(id===key?'primary':'')+'" data-tech-net="'+id+'">'+n.name+'</button>').join('')+'</div><p>Les tracés suivent les bords du bâtiment et des pièces. Tu peux déplacer les points et imposer un passage.</p><button class="btn full" data-tech-action="view">Voir le tracé sur le plan</button><div class="tech-actions"><button class="btn" data-tech-action="suggest">Proposer les points du niveau</button><button class="btn" data-tech-action="add">Ajouter un point</button><button class="btn" data-tech-action="origin">Placer · '+network.origin+'</button></div><p><strong>'+fmt(here.metres[key])+' m</strong> de trajets estimés · '+esc(level?.name||'')+'</p>'+here.points.filter(p=>POINTS[p.kind].net.includes(key)).map((p,i)=>'<button class="tech-row" data-tech-edit="'+esc(p.id)+'"><span>'+ (i+1)+'. '+esc(p.name)+'</span><small>'+(p.source?'Proposé':'Manuel')+' · Modifier</small></button>').join('')
+  ? '<div class="tech-networks">'+Object.entries(NETWORKS).map(([id,n])=>'<button class="btn '+(id===key?'primary':'')+'" data-tech-net="'+id+'">'+n.name+'</button>').join('')+'</div><p>Les tracés suivent les bords du bâtiment et des pièces. Tu peux déplacer les points et imposer un passage.</p><button class="btn full" data-tech-action="view">Voir le tracé sur le plan</button><div class="tech-actions"><button class="btn" data-tech-action="suggest">Proposer les points du niveau</button><button class="btn" data-tech-action="add">Ajouter un point</button><button class="btn" data-tech-action="origin">Placer · '+network.origin+'</button></div><p><strong>'+fmt(here.metres[key])+' m</strong> de trajets estimés · '+esc(level?.name||'')+'</p>'+(visiblePoints.length?'<button class="btn danger" data-tech-action="clear-network">Retirer les points de ce réseau</button>':'<p>Aucun point sur ce réseau à ce niveau.</p>')+(s.technical.origins[levelId]?.[key]?'<button class="btn" data-tech-action="reset-origin">Réinitialiser l’origine</button>':'')+visiblePoints.map((p,i)=>'<div class="tech-row tech-point-row"><button data-tech-edit="'+esc(p.id)+'"><strong>'+ (i+1)+'. '+esc(p.name)+'</strong><small>'+(p.source?'Proposé':'Manuel')+' · Modifier</small></button><button class="btn danger" data-tech-unlink="'+esc(p.id)+'" aria-label="Retirer '+esc(p.name)+' de '+esc(network.name)+'">Retirer</button></div>').join('')
   : tab==='board' ? boardMarkup(s,estimate)
   : '<p>Les métrés additionnent les trajets horizontaux de chaque point. Renseigne les prix de fourniture et de pose par mètre ou par équipement.</p>'+(estimate.items.length?estimate.items.map(i=>'<div class="tech-row"><span><strong>'+esc(i.name)+'</strong> · '+fmt(i.quantity)+' '+i.unit+'</span><div class="tech-unit-costs"><label>Fourniture (€/'+i.unit+')<input type="number" min="0" max="1000000" step=".01" value="'+i.price+'" data-tech-price="'+i.key+'"></label><label>Pose (€/'+i.unit+')<input type="number" min="0" max="1000000" step=".01" value="'+i.labour+'" data-tech-price="labour-'+i.key+'"></label><strong data-tech-total="'+i.key+'">'+euro(i.total)+'</strong></div></div>').join(''):'<p>Ajoute des points pour obtenir les quantités.</p>')+'<p><strong>Total estimé <span id="technical-estimate-total">'+euro(estimate.budget)+'</span></strong></p>';
 

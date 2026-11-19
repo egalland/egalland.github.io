@@ -1,6 +1,6 @@
 # Historique source
 
-Les dates de création et de validation des commits source sont conservées dans le bundle Git. Les commits sont attribués à Emmanuel Galland (\`egalland\`). Les identifiants de déploiement du Site ont été retirés, ce qui change les SHA.
+Les dates de création et de validation des commits source sont conservées dans le bundle Git. Les commits sont attribués à Emmanuel Galland (`egalland`). Les identifiants de déploiement du Site ont été retirés, ce qui change les SHA.
 
 | Commit source | Commit réattribué | Date d’origine |
 | --- | --- | --- |
@@ -12,3 +12,4 @@ Les dates de création et de validation des commits source sont conservées dans
 | `0870b7cb113da915eedffd7524e17af5fa9b1772` | `21885012cb0e2766abaeca949badb712a77c9a7b` | 2026-11-19T15:39:43Z |
 | `15dc00df6012bdec30f9c7031e654aeda375da14` | `174ce7c1ddfb1313f28c2b40be270b7ec0b22ee5` | 2026-11-19T16:11:18Z |
 | `6fa2bc81a9681fa89bf885bd8f9f5ddd1ff65574` | `4e46e612053603c854f5921f3d8b63ed65932203` | 2026-11-19T16:22:15Z |
+| `be56c3446f319245838299274a3089429a2be42b` | `0ca484767b8205db5dee86c32e8b9d1b26235eae` | 2026-11-19T16:35:56Z |
