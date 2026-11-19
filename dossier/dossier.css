@@ -177,19 +177,52 @@ html[data-lift="ready"] .lift-stage {
 .console-close {min-width: 39px; min-height: 32px}
 .lift-announcement {position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
 
-.lift-room {position: absolute; z-index: 1; inset: 0; overflow: hidden; background: #202e2c; cursor: grab; touch-action: pan-y}
-.lift-room[data-dragging] {cursor: grabbing}
+.lift-room {position: absolute; z-index: 1; inset: 0; overflow: hidden; background: #202e2c}
+.room-scroller {
+ position: absolute;
+ inset: 0;
+ overflow: auto hidden;
+ overscroll-behavior-x: contain;
+ scrollbar-width: thin;
+ scrollbar-color: #b6c6a8 #192520;
+ cursor: grab;
+}
+.room-scroller:focus-visible {outline-offset: -4px}
+.room-scroller[data-dragging] {cursor: grabbing; user-select: none}
+.room-track {position: relative; isolation: isolate; width: 190%; height: 100%}
 .room-scenery {
  position: absolute;
- inset: -7%;
- transform: translateX(var(--room-pan, 0%)) scale(var(--room-scale, 1));
+ inset: 0;
  background-color: #202e2c;
  background-image: radial-gradient(ellipse at 56% 44%, #566754, #17221c 66%);
  background-position: center;
  background-size: cover;
- transition: transform .28s ease-out;
 }
-.lift-room[data-dragging] .room-scenery {transition: none}
+.room-stops {position: absolute; inset: 0; pointer-events: none}
+.room-navigation {
+ position: absolute;
+ z-index: 3;
+ top: 14px;
+ right: 14px;
+ display: flex;
+ align-items: center;
+ border: 1px solid #a6bc9da6;
+ background: #13211ee8;
+ color: #f0ffe5;
+ font: 650 11px/1 var(--mono);
+}
+.room-navigation button {
+ width: 43px;
+ height: 38px;
+ border: 0;
+ background: none;
+ color: inherit;
+ cursor: pointer;
+ font: 600 18px/1 var(--mono);
+}
+.room-navigation button:hover:not([aria-disabled="true"]) {background: #d8efc3; color: #18241b}
+.room-navigation [aria-disabled="true"] {opacity: .45; cursor: default}
+.room-position {min-width: 44px; text-align: center}
 @media (prefers-reduced-motion: no-preference) {
  .lift-opening[data-shaft] .room-scenery {animation: shaft-motion .72s linear infinite}
  .lift-opening[data-travel="down"] .room-scenery {animation-direction: reverse}
@@ -230,8 +263,9 @@ html[data-lift="ready"] .lift-stage {
 .room-hotspot {
  position: absolute;
  z-index: 2;
- top: 49%;
- left: 52%;
+ top: 48%;
+ transform: translate(-50%, -50%);
+ pointer-events: auto;
  width: 46px;
  height: 46px;
  border: 1px solid #f0ffe7;
@@ -242,6 +276,19 @@ html[data-lift="ready"] .lift-stage {
  cursor: pointer;
  font: 400 24px/1 var(--mono);
  transition: box-shadow .2s, background .2s;
+}
+.room-hotspot-label {
+ position: absolute;
+ top: calc(100% + 10px);
+ left: 50%;
+ width: max-content;
+ max-width: 110px;
+ padding: 4px 6px;
+ transform: translateX(-50%);
+ border: 1px solid #b9ceab85;
+ background: #0b1714ed;
+ color: #f0f8ea;
+ font: 650 10px/1.25 var(--mono);
 }
 .room-hotspot:hover, .room-hotspot:focus-visible {box-shadow: 0 0 0 10px #edffd75e; background: #1f3929}
 .room-explore, .room-back {
@@ -316,7 +363,7 @@ html[data-lift="ready"] .lift-doors {
 }
 .lift-doors i + i {transform: translateX(101%); border-right: 8px solid #343e39; border-left: 5px solid #171e1b}
 .lift-opening[data-doors="closed"] .lift-doors i {transform: translateX(0)}
-.lift-opening[data-travel] .room-hotspot, .lift-opening[data-travel] .room-caption {visibility: hidden}
+.lift-opening[data-travel] :is(.room-stops, .room-caption, .room-navigation) {visibility: hidden}
 .cover {
  position: relative;
  isolation: isolate;
@@ -469,8 +516,10 @@ h1, h2, h3 {font-family: var(--display)}
  html[data-lift="ready"] .cover {min-height: 365px}
  .room-caption {padding: 14px}
  .room-name {font-size: clamp(29px, 9vw, 53px)}
- .room-hotspot {left: 47%; width: 44px; height: 44px}
- .room-scenery {inset: -8% -15%}
+ .room-hotspot {width: 44px; height: 44px}
+ .room-track {width: 290%}
+ .room-navigation {top: 8px; right: 8px}
+ .room-navigation button {width: 44px; height: 42px}
  .cover {min-height: 360px; padding: 20px 14px}
  .cover-art {background-position: 63% center}
  .cover h1 {font-size: clamp(32px, 9vw, 55px)}

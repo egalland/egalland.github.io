@@ -4,7 +4,13 @@ const root = document.documentElement;
 const cabin = document.querySelector('.lift-opening');
 const shell = document.querySelector('.lift');
 const room = document.querySelector('.lift-room');
-const hotspot = room.querySelector('.room-hotspot');
+const scroller = room.querySelector('.room-scroller');
+const stopsLayer = room.querySelector('.room-stops');
+const stopTemplate = document.querySelector('#room-stop-template');
+const roomNav = room.querySelector('.room-navigation');
+const previousStop = roomNav.querySelector('[data-room-step="-1"]');
+const nextStop = roomNav.querySelector('[data-room-step="1"]');
+const roomPosition = roomNav.querySelector('.room-position');
 const explore = room.querySelector('.room-explore');
 const roomName = room.querySelector('.room-name');
 const roomLevel = room.querySelector('.room-level');
@@ -35,6 +41,15 @@ const floors = [...panel.querySelectorAll('a')].map(link => ({
  action: link.dataset.action,
  section: document.querySelector(link.hash)
 }));
+const roomStops = {
+ home: [['home', 'Profil'], ['profile-role', 'Mon métier'], ['print-cv', 'CV imprimable']],
+ parcours: [['experience-1', 'Saint-Gobain'], ['experience-2', 'Frontend'], ['experience-4', 'Backend']],
+ competences: [['competences', 'Compétences'], ['tools', 'Outils'], ['formation', 'Formation']],
+ work: [['market-plus', 'Market Plus'], ['kikalmo', 'Kikalmo'], ['pills', 'Pills']],
+ atelier: [['livre', 'Atelier du livre'], ['redim', 'Redim'], ['atlas', 'Atlas']],
+ about: [['practice-1', 'Animer'], ['practice-3', 'Relier'], ['practice-4', 'Automatiser']],
+ contact: [['contact', 'Contact'], ['contact-github', 'GitHub']]
+};
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 let current = 0;
@@ -42,6 +57,48 @@ let destination = 0;
 let trip = 0;
 let projectAnchors = [];
 let arrivalScrollTop;
+let stops = [];
+let stopIndex = 0;
+let detailTrigger;
+
+const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+
+function syncPanorama() {
+ const progress = maxPan() ? scroller.scrollLeft / maxPan() : 0;
+ stopIndex = Math.round(progress * (stops.length - 1));
+ roomPosition.textContent = (stopIndex + 1) + ' / ' + stops.length;
+ previousStop.setAttribute('aria-disabled', String(stopIndex === 0));
+ nextStop.setAttribute('aria-disabled', String(stopIndex >= stops.length - 1));
+}
+
+function moveToStop(index, smooth = false) {
+ const position = Math.max(0, Math.min(index, stops.length - 1));
+ if (position === stopIndex && smooth) return;
+ scroller.scrollTo({
+  left: maxPan() * position / Math.max(1, stops.length - 1),
+  behavior: smooth && !reducedMotion.matches ? 'smooth' : 'instant'
+ });
+ syncPanorama();
+}
+
+function layoutStops() {
+ const distance = maxPan() / Math.max(1, stops.length - 1);
+ stops.forEach((stop, index) => {
+  stop.style.left = (scroller.clientWidth / 2 + index * distance) + 'px';
+ });
+}
+
+function renderStops(floor) {
+ detailTrigger = undefined;
+ stops = roomStops[floor.id].map(([id, name]) => {
+  const stop = stopTemplate.content.firstElementChild.cloneNode(true);
+  stop.dataset.target = id;
+  stop.querySelector('.room-hotspot-label').textContent = name;
+  return stop;
+ });
+ stopsLayer.replaceChildren(...stops);
+ layoutStops();
+}
 
 function targetFor(hash) {
  let id = hash.slice(1);
@@ -103,12 +160,11 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
   if (active) item.link.setAttribute('aria-current', 'location');
   else item.link.removeAttribute('aria-current');
  }
+ const newRoom = cabin.dataset.room !== floor.id;
  cabin.dataset.room = floor.id;
  cabin.dataset.doors = 'open';
  delete cabin.dataset.travel;
  delete cabin.dataset.shaft;
- room.style.removeProperty('--room-pan');
- room.style.removeProperty('--room-scale');
  indicator.textContent = floor.number;
  direction.textContent = '⤢';
  readout.textContent = index === 0 ? 'Rez-de-chaussée' : floor.name;
@@ -116,7 +172,11 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
  roomLevel.textContent = label.textContent;
  roomName.textContent = floor.roomName;
  explore.firstChild.textContent = floor.action + ' ';
- hotspot.setAttribute('aria-label', floor.action);
+ if (newRoom) {
+  renderStops(floor);
+  const linkedStop = stops.findIndex(stop => stop.dataset.target === target.id);
+  moveToStop(Math.max(0, linkedStop));
+ }
  const details = reveal || target !== floor.section;
  setDetails(details);
  projectAnchors = [...floor.section.querySelectorAll('.reel-entry')];
@@ -125,10 +185,10 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
   viewport.scrollTop = target.getBoundingClientRect().top - viewport.getBoundingClientRect().top;
  }
  arrivalScrollTop = viewport.scrollTop;
- updateLinks(target.id);
+ updateLinks(target.matches('.reel-entry') ? target.id : floor.id);
  if (moveFocus) {
   if (details) focusContent(target);
-  else hotspot.focus({preventScroll: true});
+  else scroller.focus({preventScroll: true});
  }
  if (announce) announcement.textContent = (index === 0 ? 'Rez-de-chaussée' : 'Étage ' + floor.number) + ' · ' + floor.roomName;
 }
@@ -174,18 +234,49 @@ document.addEventListener('click', event => {
  select(link.hash, {moveFocus: !panel.contains(link), reveal: link.classList.contains('skip')});
 });
 
-function exploreFloor() {
- if (cabin.dataset.travel) return;
- setDetails(true);
- focusContent(floors[current].section);
-}
+stopsLayer.addEventListener('click', event => {
+ const stop = event.target.closest('[data-target]');
+ if (!stop || cabin.dataset.travel) return;
+ detailTrigger = stop;
+ select('#' + stop.dataset.target, {moveFocus: true, reveal: true});
+});
 
-hotspot.addEventListener('click', exploreFloor);
-explore.addEventListener('click', exploreFloor);
+explore.addEventListener('click', () => {
+ if (cabin.dataset.travel) return;
+ detailTrigger = explore;
+ select(floors[current].link.hash, {moveFocus: true, reveal: true});
+});
+
 roomBack.addEventListener('click', () => {
  setDetails(false);
- explore.focus({preventScroll: true});
+ const floor = floors[current];
+ if (location.hash && location.hash !== floor.link.hash) history.replaceState(null, '', floor.link.hash);
+ updateLinks(floor.id);
+ (detailTrigger || scroller).focus({preventScroll: true});
 });
+
+roomNav.addEventListener('click', event => {
+ const button = event.target.closest('[data-room-step]');
+ if (!button || button.getAttribute('aria-disabled') === 'true') return;
+ moveToStop(stopIndex + Number(button.dataset.roomStep), true);
+});
+
+scroller.addEventListener('scroll', syncPanorama, {passive: true});
+scroller.addEventListener('keydown', event => {
+ if (event.target !== scroller || !['Home', 'End', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+ event.preventDefault();
+ const index = {Home: 0, End: stops.length - 1, ArrowLeft: stopIndex - 1, ArrowRight: stopIndex + 1}[event.key];
+ moveToStop(index, true);
+});
+
+scroller.addEventListener('wheel', event => {
+ if (event.ctrlKey || event.shiftKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY) || cabin.dataset.travel) return;
+ const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroller.clientWidth : 1);
+ const position = Math.max(0, Math.min(maxPan(), scroller.scrollLeft + delta));
+ if (Math.abs(position - scroller.scrollLeft) < 1) return;
+ event.preventDefault();
+ scroller.scrollLeft = position;
+}, {passive: false});
 
 display.addEventListener('click', () => setConsole(!shell.dataset.console));
 consoleClose.addEventListener('click', () => setConsole(false));
@@ -202,30 +293,33 @@ document.addEventListener('keydown', event => {
 });
 
 let drag;
-room.addEventListener('pointerdown', event => {
- if (event.button !== 0 || event.target.closest('button') || reducedMotion.matches) return;
- const offset = parseFloat(room.style.getPropertyValue('--room-pan')) || 0;
- drag = {id: event.pointerId, start: event.clientX, offset};
- room.setPointerCapture(event.pointerId);
- room.dataset.dragging = '';
+scroller.addEventListener('pointerdown', event => {
+ if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button') || cabin.dataset.travel) return;
+ drag = {id: event.pointerId, start: event.clientX, left: scroller.scrollLeft};
+ scroller.setPointerCapture(event.pointerId);
+ scroller.dataset.dragging = '';
 });
 
-room.addEventListener('pointermove', event => {
- if (drag?.id !== event.pointerId) return;
- const offset = drag.offset + (event.clientX - drag.start) * 32 / room.clientWidth;
- room.style.setProperty('--room-pan', Math.max(-8, Math.min(8, offset)) + '%');
- room.style.setProperty('--room-scale', '1.04');
+scroller.addEventListener('pointermove', event => {
+ if (drag?.id === event.pointerId) scroller.scrollLeft = drag.left + drag.start - event.clientX;
 });
 
 function stopDrag(event) {
  if (drag?.id !== event.pointerId) return;
  drag = undefined;
- delete room.dataset.dragging;
+ delete scroller.dataset.dragging;
 }
 
-room.addEventListener('pointerup', stopDrag);
-room.addEventListener('pointercancel', stopDrag);
-room.addEventListener('lostpointercapture', stopDrag);
+scroller.addEventListener('pointerup', stopDrag);
+scroller.addEventListener('pointercancel', stopDrag);
+scroller.addEventListener('lostpointercapture', stopDrag);
+
+new ResizeObserver(() => {
+ if (!stops.length) return;
+ const position = stopIndex;
+ layoutStops();
+ moveToStop(position);
+}).observe(scroller);
 
 panel.addEventListener('keydown', event => {
  const index = floors.findIndex(floor => floor.link === event.target);

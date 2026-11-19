@@ -66,7 +66,7 @@ save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template
 save('portfolio-assets/content.js','window.PORTFOLIO_CONTENT='+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 save('portfolio-assets/content.mjs','export default '+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 const cv = JSON.parse(fs.readFileSync(path.join(root, 'portfolio/cv.json'), 'utf8'));
-const experienceHtml = cv.experience.map(item => `<li><span class="period">${escape(item.period)}</span><div><h3>${escape(item.role)}</h3>${item.organization ? `<p class="organization">${escape(item.organization)}</p>` : ''}<p>${escape(item.description)}</p></div></li>`).join('\n');
+const experienceHtml = cv.experience.map((item, index) => `<li id="experience-${index + 1}"><span class="period">${escape(item.period)}</span><div><h3>${escape(item.role)}</h3>${item.organization ? `<p class="organization">${escape(item.organization)}</p>` : ''}<p>${escape(item.description)}</p></div></li>`).join('\n');
 const skillsHtml = cv.skills.map(item => `<dt>${escape(item.name)}</dt><dd>${escape(item.tools)}</dd>`).join('\n');
 const educationHtml = cv.education.map(item => `<li><span class="period">${escape(item.year)}</span><br><strong>${escape(item.name)}</strong>${item.description ? `<p>${escape(item.description)}</p>` : ''}</li>`).join('\n');
 const projectMarks = {'market-plus':'M+', kikalmo:'K', maison:'M', bodyos:'B·OS', pills:'P', livre:'L', redim:'R', atlas:'A', inktober:'INK'};
@@ -90,8 +90,8 @@ const atelierEntries = [...data.atelier.projects, data.inktober].map(project => 
  tags: [project.tagline],
  links: [{label: project.id === 'inktober' ? 'Explorer le calendrier' : 'Ouvrir ' + project.title, href: project.href, external: project.href.startsWith('https://')}]
 }));
-const practicesHtml = data.about.practices.map(item =>
- `<li><a href="${escape(item.href)}"><strong>${escape(item.verb)}</strong><span>${escape(item.words)}</span><small>${escape(item.project)} ↗</small></a></li>`
+const practicesHtml = data.about.practices.map((item, index) =>
+ `<li id="practice-${index + 1}"><a href="${escape(item.href)}"><strong>${escape(item.verb)}</strong><span>${escape(item.words)}</span><small>${escape(item.project)} ↗</small></a></li>`
 ).join('\n');
 save('dossier/index.html', render(fs.readFileSync(path.join(root, 'portfolio/dossier.template.html'), 'utf8'), {
  ...headerFields('dossier'),

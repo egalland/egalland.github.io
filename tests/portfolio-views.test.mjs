@@ -173,3 +173,18 @@ test('chaque étage possède un décor et un accès au contenu', () => {
   assert.match(html, new RegExp('<button class="' + control + '"'));
  }
 });
+
+test('le panorama dispose de commandes et de points liés à du contenu réel', () => {
+ const html = read('dossier/index.html');
+ const css = read('dossier/dossier.css');
+ const source = read('dossier/dossier.mjs');
+ const spots = source.match(/const roomStops = \{([\s\S]*?)\n\};/)[1];
+ assert.match(html, /class="room-scroller" tabindex="0"/);
+ assert.match(html, /class="room-track"/);
+ assert.match(css, /\.room-scroller \{[^}]+overflow: auto hidden/);
+ assert.match(html, /data-room-step="-1"/);
+ assert.match(html, /data-room-step="1"/);
+ for (const [, id] of spots.matchAll(/\['([a-z\d-]+)', /g)) {
+  assert.ok(html.includes('id="' + id + '"'), id);
+ }
+});
