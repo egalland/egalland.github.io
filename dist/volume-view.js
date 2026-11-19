@@ -4,7 +4,7 @@ import {SVGRenderer} from './vendor/SVGRenderer.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {RoundedBoxGeometry} from './vendor/RoundedBoxGeometry.js';
 import {compute,ROOM_TYPES,OBJECTS,objectRect,objectLevel,openingLevel,openingSegment,levelOf,unionCells,railingSegments,area} from './engine.js';
-import {wallPieces,levelOffsets} from './volume-geometry.js';
+import {wallPieces,levelOffsets,envelopeWalls} from './volume-geometry.js';
 
 // A depth-buffered scene: floors, walls, furniture and stairs share real coordinates.
 export class VolumeView{
@@ -140,13 +140,27 @@ export class VolumeView{
   const poolsOn=id=>s.objects.filter(o=>o.kind==='pool'&&objectLevel(s,o)===id).map(o=>objectRect(s,o));
   this.order=-100;
   for(const patch of unionCells([{x:0,y:0,w:B.w,l:B.l}],poolsOn(s.levels[0].id)))this.floor(this.content,patch,0,.2,'#d4dacf','plain');
+  const sliced=u.allLevels===false||u.exploded;
+  const ordered=[...C.levels].sort((a,b)=>a.elevation-b.elevation);
+  function shellTop(lev){return Math.min(B.h,ordered.find(l=>l.elevation>lev.elevation)?.elevation??B.h);}
+  const drawShellCeiling=(group,z)=>{this.order=100;this.box(group,-B.wallThickness/2,z-B.ceilingThickness,-B.wallThickness/2,B.w+B.wallThickness,B.ceilingThickness,B.l+B.wallThickness,'#ecebde');};
+  const drawEnvelopeParts=(group,lower,upper,z)=>{
+   const t=B.wallThickness;
+   for(const p of envelopeWalls(s,lower,upper)){
+    const mesh=p.axis==='h'?this.box(group,p.start,z+p.bottom,p.pos-t/2,p.length,p.height,t,'#d9dfd0'):this.box(group,p.pos-t/2,z+p.bottom,p.start,t,p.height,p.length,'#ccd6c5');
+    this.wallParts.push({mesh,p,z});
+   }
+   if(upper===B.h&&lower<upper&&B.shellCeiling&&u.overhead==='closed')drawShellCeiling(group,z+upper-lower);
+  };
+  if(!sliced){this.order=-5;drawEnvelopeParts(this.content,0,B.h,0);}
   for(const lev of [...levels].sort((a,b)=>a.elevation-b.elevation)){
    this.order=[...C.levels].sort((a,b)=>a.elevation-b.elevation).findIndex(l=>l.id===lev.id)*10;const z=offsets.get(lev.id),group=new THREE.Group();group.name=lev.name;this.content.add(group);
+   if(sliced){const order=this.order;drawEnvelopeParts(group,lev.elevation,shellTop(lev),z);this.order=order;}
    const pools=poolsOn(lev.id);
    if(lev.kind!=='ground')for(const r of unionCells(lev.deck,pools))this.floor(group,r,z,lev.thickness,'#e0cda8','wood');
    for(const q of lev.surfaces||[])for(const r of unionCells([q],[...lev.holes,...lev.rooms,...pools]))this.floor(group,r,z+.014,lev.kind==='ground'?.1:Math.max(.04,lev.thickness-.014),q.finish==='concrete'?'#cdd4c9':'#e0c9a0',q.finish,{type:'surface',id:q.id});
    for(const r of lev.rooms)for(const cell of unionCells([r],[...lev.holes,...pools]))this.floor(group,cell,z+.025,.035,ROOM_TYPES[r.type].color,r.type==='bath'?'tile':'wood',{type:'room',id:r.id});
-   this.order+=1;for(const p of wallPieces(s,lev)){
+   this.order+=1;for(const p of wallPieces(s,lev,{omitExterior:B.walls&&lev.elevation<B.h})){
     const h=p.height,mesh=p.axis==='h'?this.box(group,p.start,z+p.bottom,p.pos-.06,p.length,h,.12,'#e3e7d8'):this.box(group,p.pos-.06,z+p.bottom,p.start,.12,h,p.length,'#d5ddca');
     this.wallParts.push({mesh,p,z});
    }

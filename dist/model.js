@@ -1,10 +1,11 @@
+import {BUILDING_TYPES,normalizeTechnical} from './technical.js';
 import {SEED} from './seed.js';
 import {surfaceLimits} from './surfaces.js';
 import {ROOM_TYPES,OBJECTS} from './catalog.js';
 import {clamp,segmentOnRect} from './geometry.js';
 export const uid=()=>Math.random().toString(36).slice(2,10);
 const n=(v,f,a,b)=>Math.round(clamp(Number.isFinite(Number(v))?Number(v):f,a,b)*1e6)/1e6;
-export const defaults=()=>structuredClone(SEED);
+export const defaults=()=>({...structuredClone(SEED),technical:{points:[],origins:{},prices:{},excluded:[]}});
 export const levelOf=(s,id)=>s.levels.find(l=>l.id===id)||s.levels[0];
 export const objectLevel=(s,o)=>s.rooms.find(r=>r.id===o.roomId)?.levelId||o.levelId;
 export const openingLevel=(s,o)=>s.rooms.find(r=>r.id===o.roomId)?.levelId||o.levelId;
@@ -31,7 +32,9 @@ export function normalize(input){
  if(!input||!input.building||!Array.isArray(input.rooms))throw Error('Ce fichier ne contient pas de projet Atelier Habitat.');
  const raw=migrate(input),s=defaults(),D=defaults();s.name=String(raw.name||D.name).slice(0,70);
  for(const k of ['building','thermal','light','budget'])if(raw[k]&&typeof raw[k]==='object')for(const key of Object.keys(s[k]))if(Object.hasOwn(raw[k],key))s[k][key]=raw[k][key];
- for(const [k,a,b] of [['w',5,100],['l',5,100],['h',2.4,30],['price',0,1e8]])s.building[k]=n(s.building[k],D.building[k],a,b);
+ for(const [k,a,b] of [['w',5,100],['l',5,100],['h',2.4,30],['price',0,1e8],['wallThickness',.05,1],['ceilingThickness',.03,1]])s.building[k]=n(s.building[k],D.building[k],a,b);
+ s.building.kind=Object.hasOwn(BUILDING_TYPES,s.building.kind)?s.building.kind:'warehouse';
+ for(const key of ['walls','shellCeiling'])s.building[key]=s.building[key]!==false;
  const used=new Set(),safeId=id=>{let key=String(id||uid()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,35)||uid();while(used.has(key))key=uid();used.add(key);return key;};const levelsMap=new Map(),roomsMap=new Map();
  s.levels=raw.levels.slice(0,8).filter(l=>l&&typeof l==='object').map((l,i)=>{
   const id=safeId(i===0?'ground':l.id);levelsMap.set(String(l.id),id);let platform=null;
@@ -46,6 +49,7 @@ export function normalize(input){
  s.thermal.scope=s.thermal.scope==='all'?'all':'home';
  for(const [key,min,max] of [['lumens',100,50000],['watt',1,1000],['shoplumens',100,100000],['shopwatt',1,3000],['shoplux',50,2000],['hours',0,24],['factor',.1,1],['kwhPrice',0,3],['target',1,50]])s.light[key]=n(s.light[key],D.light[key],min,max);
  for(const [key,min,max] of [['fitout',0,5000],['partition',0,1000],['glazing',0,5000],['door',0,5000],['contingency',0,50],['fees',0,20],['structure',0,5000],['railing',0,2000],['terrace',0,5000]])s.budget[key]=n(s.budget[key],D.budget[key],min,max);
+ s.technical=normalizeTechnical(raw.technical,s.building,s.levels,levelsMap);
  s.orientation=n(raw.orientation,0,0,359);s.version=5;return s;
 }
 export function deckRects(s,levelId){const l=levelOf(s,levelId);return[...s.rooms.filter(r=>r.levelId===levelId),...(s.surfaces||[]).filter(q=>q.levelId===levelId),...(l.platform?[l.platform]:[])];}

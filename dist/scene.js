@@ -1,3 +1,5 @@
+import {technicalOverlay} from './technical.js';
+import {envelopeWalls} from './volume-geometry.js';
 import {equipmentHeight} from './equipment.js';
 import {ROOM_TYPES,OBJECTS,area,compute,objectRect,objectLevel,openingSegment,openingLevel,levelOf,boundarySegments,overlap,unionCells} from './engine.js';
 import {SURFACE_TYPES} from './surfaces.js';
@@ -5,7 +7,7 @@ import {rect,line,text,fmt,esc,objectGlyph} from './assets.js';
 export function plan2D(s,u,exporting=false){
  const B=s.building,C=compute(s),active=C.levels.find(l=>l.id===u.levelId)||C.levels[0],rooms=active.rooms,sel=u.selected;
  let out=`<defs><pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0H0V1" fill="none" stroke="#dce1d3" stroke-width=".015"/></pattern><pattern id="wood" width=".22" height="2" patternUnits="userSpaceOnUse"><path d="M0 0V2M.015 1h.19" fill="none" stroke="#9bac8214" stroke-width=".012"/></pattern><pattern id="tile" width=".45" height=".45" patternUnits="userSpaceOnUse"><path d="M.45 0H0V.45" stroke="#9db4a530" fill="none" stroke-width=".012"/></pattern><pattern id="hatch" width=".13" height=".13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V.13" stroke="#7e9b5d" stroke-width=".035"/></pattern><filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx=".02" dy=".04" stdDeviation=".035" flood-color="#32412c" flood-opacity=".15"/></filter><clipPath id="deckClip">${active.deck.map(r=>rect(r.x,r.y,r.w,r.l,'white','none',0,0)).join('')}</clipPath></defs>`;
- out+=rect(-.13,-.13,B.w+.26,B.l+.26,'#e7eade','#adba9e',.02,.02)+rect(0,0,B.w,B.l,active.kind==='ground'?'#e4e8df':'#eff1e8','#71816f',.13,0);
+ out+=rect(-.13,-.13,B.w+.26,B.l+.26,'#e7eade','#adba9e',.02,.02)+rect(0,0,B.w,B.l,active.kind==='ground'?'#e4e8df':'#eff1e8','#a4ad9c',.025,0);
  if(u.grid)out+=rect(0,0,B.w,B.l,'url(#grid)','none',0,0);
  for(const q of active.surfaces||[]){const color=SURFACE_TYPES[q.kind].color;out+=`<g data-entity="surface" data-id="${q.id}" tabindex="0" aria-label="${esc(q.name)}, surface ouverte de ${fmt(q.w*q.l)} mètres carrés">${rect(q.x,q.y,q.w,q.l,q.finish==='concrete'?'#d9ded3':color,'#a29170',.04,0)}${q.finish==='wood'?rect(q.x+.03,q.y+.03,Math.max(.1,q.w-.06),Math.max(.1,q.l-.06),'url(#wood)','none',0,0):''}${text(q.x+.16,q.y+.28,q.name,.21,'#655b43','font-weight="600"')}${text(q.x+.16,q.y+.53,`${fmt(q.w*q.l)} m² · ouvert`,.17,'#84785c')}</g>`;}
  if(active.kind!=='ground'&&u.ghost!==false){out+=`<g opacity=".16" pointer-events="none">${s.rooms.filter(r=>levelOf(s,r.levelId).elevation<active.elevation).map(r=>rect(r.x,r.y,r.w,r.l,'#c7cebc','#788a6d',.05,0)).join('')}</g>`;}
@@ -17,7 +19,9 @@ export function plan2D(s,u,exporting=false){
   const k=ROOM_TYPES[r.type],row=C.roomRows.find(q=>q.id===r.id);let fill=k.color;if(u.layer==='light')fill=row.area&&row.glass/row.area>=s.light.target/100?'#dce6bb':'#eee0ba';if(u.layer==='thermal')fill='#e1e7c9';
   out+=`<g data-entity="room" data-id="${r.id}" tabindex="0" aria-label="${esc(r.name)}, ${fmt(row.area)} mètres carrés" ${active.kind!=='ground'?'clip-path="url(#deckClip)"':''}>${rect(r.x,r.y,r.w,r.l,fill,'none',0,0)}${rect(r.x+.03,r.y+.03,r.w-.06,r.l-.06,r.type==='bath'?'url(#tile)':'url(#wood)','none',0,0)}</g>`;
  }
- for(const b of active.boundaries){const horiz=b.axis==='h';out+=line(horiz?b.a:b.pos,horiz?b.pos:b.a,horiz?b.b:b.pos,horiz?b.pos:b.b,'#697d60',b.partition?.075:.115,'pointer-events="none"');}
+ const wallTop=Math.min(B.h,active.elevation+1.05);
+ for(const p of envelopeWalls(s,wallTop-.004,wallTop)){const h=p.axis==='h';out+=line(h?p.start:p.pos,h?p.pos:p.start,h?p.start+p.length:p.pos,h?p.pos:p.start+p.length,'#71816f',B.wallThickness,'pointer-events="none"');}
+ for(const b of active.boundaries){if(B.walls&&b.external)continue;const horiz=b.axis==='h';out+=line(horiz?b.a:b.pos,horiz?b.pos:b.a,horiz?b.b:b.pos,horiz?b.pos:b.b,'#697d60',b.partition?.075:.115,'pointer-events="none"');}
  if(u.layer==='thermal')for(const b of active.boundaries.filter(b=>!b.partition)){const horiz=b.axis==='h';out+=line(horiz?b.a:b.pos,horiz?b.pos:b.a,horiz?b.b:b.pos,horiz?b.pos:b.b,'url(#hatch)',.22,'pointer-events="none"');}
  if(u.layer==='layout'||u.layer==='ceiling')for(const o of s.objects.filter(o=>(objectLevel(s,o)===active.id||o.kind==='stairs'&&o.targetLevelId===active.id)&&(u.layer==='ceiling'?OBJECTS[o.kind].group==='ceiling':OBJECTS[o.kind].group!=='ceiling')).sort((a,b)=>({ceiling:-2,pool:-1}[a.kind]??0)-({ceiling:-2,pool:-1}[b.kind]??0))){
   const p=objectRect(s,o),landing=o.kind==='stairs'&&o.targetLevelId===active.id;
@@ -40,6 +44,7 @@ export function plan2D(s,u,exporting=false){
  if(exporting)out+=text(B.w/2,B.l+.55,`${active.name.toLocaleUpperCase('fr')}  ·  +${fmt(active.elevation)} m  ·  ${fmt(active.home)} m² DE PIÈCES`,.17,'#8b9a79','text-anchor="middle" letter-spacing=".025"');
  if(sel&&!exporting){let r;if(sel.type==='room')r=rooms.find(r=>r.id===sel.id);if(sel.type==='object'){const o=s.objects.find(o=>o.id===sel.id);if(o&&(objectLevel(s,o)===active.id||o.targetLevelId===active.id))r=objectRect(s,o);}if(sel.type==='platform'&&sel.id===active.id)r=active.platform;if(sel.type==='surface')r=(active.surfaces||[]).find(q=>q.id===sel.id);if(r)out+=`<g pointer-events="none"><rect x="${r.x-.04}" y="${r.y-.04}" width="${r.w+.08}" height="${r.l+.08}" fill="none" stroke="#517447" stroke-width=".035" stroke-dasharray=".12 .065" rx=".04"/></g>${!u.mobile||u.tool==='select'&&u.mobileResize?`<g data-handle="1"><rect x="${r.x+r.w-(u.touchHandleSize||.22)/2}" y="${r.y+r.l-(u.touchHandleSize||.22)/2}" width="${u.touchHandleSize||.22}" height="${u.touchHandleSize||.22}" fill="transparent"/><rect x="${r.x+r.w-.11}" y="${r.y+r.l-.11}" width=".22" height=".22" rx=".035" fill="#4c6c41" stroke="#f7faed" stroke-width=".04" pointer-events="none"/></g>`:''}`;}
  if(u.draft&&!exporting)out+=`<rect x="${u.draft.x}" y="${u.draft.y}" width="${u.draft.w}" height="${u.draft.l}" fill="#bdd09b60" stroke="#517447" stroke-width=".04" stroke-dasharray=".13 .07" pointer-events="none"/>${text(u.draft.x+u.draft.w/2,u.draft.y+u.draft.l/2,`${fmt(u.draft.w)} × ${fmt(u.draft.l)} m`,.24,'#47613c','text-anchor="middle" pointer-events="none"')}`;
+ if(u.techNet)out+=technicalOverlay(s,active.id,u.techNet);
  return out;
 }
 function shade(hex,f){return '#'+hex.slice(1).match(/../g).map(x=>Math.max(0,Math.min(255,parseInt(x,16)+f)).toString(16).padStart(2,'0')).join('');}
@@ -50,6 +55,8 @@ export function volume(s,u){
  const box=(x,y,z,w,l,h,col)=>{let out='';const edges=[[[x,y,z],[x+w,y,z],[x+w,y,z+h],[x,y,z+h]],[[x+w,y,z],[x+w,y+l,z],[x+w,y+l,z+h],[x+w,y,z+h]],[[x+w,y+l,z],[x,y+l,z],[x,y+l,z+h],[x+w,y+l,z+h]],[[x,y+l,z],[x,y,z],[x,y,z+h],[x,y+l,z+h]]];for(let i=0;i<4;i++){const e=edges[i],mx=(e[0][0]+e[1][0])/2,my=(e[0][1]+e[1][1])/2;if(depth(mx,my)>=depth(x+w/2,y+l/2)-.01)out+=polygon(e,shade(col,i%2?-24:-12));}return out+polygon([[x,y,z+h],[x+w,y,z+h],[x+w,y+l,z+h],[x,y+l,z+h]],col);};
  let markup=box(0,0,-.2,B.w,B.l,.2,'#dce1d4');const labels=[];const add=(nodes,x,y,w,l,shape,entity=null)=>nodes.push({depth:depth(x+w/2,y+l/2),markup:`<g ${entity?`data-entity="${entity.type}" data-id="${entity.id}"`:''}>${shape}</g>`});
  const sorted=[...levels].sort((a,b)=>a.elevation-b.elevation);
+ const shellTop=Math.max(...sorted.map(l=>l.elevation));
+ const ceiling=!!B.shellCeiling&&u.overhead==='closed'&&(all||shellTop===Math.max(...C.levels.map(l=>l.elevation)));
  for(const lev of sorted){
   const z=lev.elevation+(u.exploded&&all?C.levels.indexOf(lev)*1.6:0),nodes=[];
   if(lev.kind!=='ground'){
@@ -57,7 +64,7 @@ export function volume(s,u){
    for(const d of lev.deck)markup+=box(d.x,d.y,z-lev.thickness,d.w,d.l,lev.thickness,'#cdbb98');
   }
   for(const r of lev.rooms)for(const d of unionCells([r],lev.holes))markup+=`<g data-entity="room" data-id="${r.id}">${box(d.x,d.y,z+.01,d.w,d.l,.05,ROOM_TYPES[r.type].color)}</g>`;
-  if(lev.kind==='ground'){const backN=depth(B.w/2,0)<0,backW=depth(0,B.l/2)<0;for(const [x,y,w,l,h] of [[-.08,-.08,B.w+.16,.12,backN?1:.22],[-.08,B.l-.04,B.w+.16,.12,backN?.22:1],[-.08,0,.12,B.l,backW?1:.22],[B.w-.04,0,.12,B.l,backW?.22:1]])add(nodes,x,y,w,l,box(x,y,0,w,l,h,'#b7c4ad'));}
+  if(B.walls&&lev.kind==='ground'){const backN=depth(B.w/2,0)<0,backW=depth(0,B.l/2)<0;for(const [x,y,w,l,h] of [[-.08,-.08,B.w+.16,.12,backN?1:.22],[-.08,B.l-.04,B.w+.16,.12,backN?.22:1],[-.08,0,.12,B.l,backW?1:.22],[B.w-.04,0,.12,B.l,backW?.22:1]])add(nodes,x,y,w,l,box(x,y,0,w,l,h,'#b7c4ad'));}
   for(const b of lev.boundaries){const horizontal=b.axis==='h',x=horizontal?b.a:b.pos,y=horizontal?b.pos:b.a,w=horizontal?b.b-b.a:.065,l=horizontal?.065:b.b-b.a;add(nodes,x,y,w,l,box(x,y,z+.065,w,l,.5,'#a1b18f'));}
   if(lev.kind!=='ground')for(const b of boundarySegments(lev.deck,B)){
    if(b.partition||b.external)continue;const mid=(b.a+b.b)/2,attached=lev.rooms.some(r=>b.axis==='v'?(Math.abs(r.x-b.pos)<.01||Math.abs(r.x+r.w-b.pos)<.01)&&mid>r.y&&mid<r.y+r.l:(Math.abs(r.y-b.pos)<.01||Math.abs(r.y+r.l-b.pos)<.01)&&mid>r.x&&mid<r.x+r.w);if(attached)continue;
@@ -88,6 +95,7 @@ export function volume(s,u){
   nodes.sort((a,b)=>a.depth-b.depth);markup+=`<g data-level="${lev.id}">${nodes.map(n=>n.markup).join('')}</g>`;
   const p=P(B.w+.5,B.l*.75,z);labels.push({x:p[0],y:p[1],label:`${lev.name} · +${fmt(lev.elevation)} m`});
  }
+ if(ceiling)markup+=box(0,0,B.h+(u.exploded&&all?(C.levels.length-1)*1.6:0)-B.ceilingThickness,B.w,B.l,B.ceilingThickness,'#ecebde');
  let lastLabelY=-Infinity;for(const label of labels.sort((a,b)=>a.y-b.y)){const y=Math.max(label.y,lastLabelY+.4);markup+=text(label.x,y,label.label,.21,'#708365','font-weight="550" pointer-events="none"');lastLabelY=y;}
- const maxZ=Math.max(2,...sorted.map(l=>l.elevation+(u.exploded&&all?C.levels.indexOf(l)*1.6:0)+2)),corners=[[0,0],[B.w+3.5,0],[B.w+3.5,B.l],[0,B.l]].flatMap(p=>[P(...p),P(...p,maxZ)]),xs=corners.map(p=>p[0]),ys=corners.map(p=>p[1]),bounds={x:Math.min(...xs)-1.1,y:Math.min(...ys)-.7,w:Math.max(...xs)-Math.min(...xs)+2.2,h:Math.max(...ys)-Math.min(...ys)+1.5};return{markup,bounds};
+ const maxZ=Math.max(ceiling?B.h+(u.exploded&&all?(C.levels.length-1)*1.6:0):2,...sorted.map(l=>l.elevation+(u.exploded&&all?C.levels.indexOf(l)*1.6:0)+2)),corners=[[0,0],[B.w+3.5,0],[B.w+3.5,B.l],[0,B.l]].flatMap(p=>[P(...p),P(...p,maxZ)]),xs=corners.map(p=>p[0]),ys=corners.map(p=>p[1]),bounds={x:Math.min(...xs)-1.1,y:Math.min(...ys)-.7,w:Math.max(...xs)-Math.min(...xs)+2.2,h:Math.max(...ys)-Math.min(...ys)+1.5};return{markup,bounds};
 }

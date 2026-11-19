@@ -10,7 +10,7 @@ Object.assign(OBJECTS, {
   pendant:{name:'Suspension',group:'ceiling',w:.42,l:.42,h:.65,price:0,color:'#bc9666',icon:'lightbulb'},
   hatch:{name:'Trappe de visite',group:'ceiling',w:.60,l:.60,h:.05,price:0,color:'#9ea995',icon:'grid'},
   vent:{name:'Bouche de ventilation',group:'ceiling',w:.25,l:.25,h:.06,price:0,color:'#8b9b97',icon:'grid'},
-  pool:{name:'Couloir de nage',group:'pool',w:2.8,l:12,h:1.45,price:0,color:'#58a8b5',icon:'bath',shop:true},
+  pool:{name:'Piscine',group:'pool',w:3,l:8,h:1.45,price:0,color:'#58a8b5',icon:'bath',shop:true},
   poolLadder:{name:'Échelle de piscine',group:'pool',w:.52,l:.63,price:0,color:'#80999b',icon:'stairs',shop:true},
   poolShower:{name:'Douche de piscine',group:'pool',w:.8,l:.8,price:0,color:'#819995',icon:'bath',shop:true},
   poolFilter:{name:'Bloc filtration',group:'pool',w:1.15,l:.7,price:0,color:'#768e81',icon:'cabinet',shop:true},

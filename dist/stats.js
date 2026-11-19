@@ -1,3 +1,4 @@
+import {technicalEstimate} from './technical.js';
 import {OBJECTS} from './catalog.js';
 import {area,overlap,unionArea,unionCells,boundarySegments,intersect,segmentOnRect} from './geometry.js';
 import {levelOf,objectLevel,openingLevel,openingSegment,objectRect,deckRects,stairHoles} from './model.js';
@@ -63,11 +64,15 @@ export function compute(s){
  const lots=[
   {key:'insulation',name:'Matériaux isolants',value:materials,color:'#799274',note:'Enveloppe des pièces, hors parois entre pièces chauffées'},
   {key:'partition',name:'Murs & cloisons',value:partitionArea*s.budget.partition,color:'#b4bc9b',note:'Parois dessinées, cloisons communes comptées une fois'},
-  {key:'fitout',name:'Réseaux & finitions',value:home*s.budget.fitout,color:'#c5ad89',note:'Surfaces cumulées par niveau, trémies retirées'},
+  {key:'fitout',name:'Aménagement & finitions',value:home*s.budget.fitout,color:'#c5ad89',note:'Surfaces cumulées par niveau, trémies retirées'},
   {key:'structure',name:'Planchers & garde-corps',value:structureCost,color:'#a6b4b6',note:'Planchers ajoutés, terrasses au sol et garde-corps ; escalier dans les équipements'},
   {key:'openings',name:'Menuiseries',value:s.openings.reduce((a,o)=>a+o.w*o.h*(o.kind==='window'?s.budget.glazing:s.budget.door),0),color:'#8ba5ad',note:'Toutes les ouvertures dessinées'},
   {key:'furniture',name:'Mobilier & escaliers',value:furniture,color:'#a897b1',note:'Montants modifiables par élément'}
  ];
+ if(s.technical?.points.length){
+  const {budget}=technicalEstimate(s);
+  lots.push({key:'networks',name:'Électricité & plomberie',value:budget,color:'#818eb2',note:'Métrés horizontaux ; fournitures et pose aux prix renseignés'});
+ }
  const works=lots.reduce((a,l)=>a+l.value,0),contingency=works*s.budget.contingency/100,fees=B.price*s.budget.fees/100,budget=B.price+works+contingency+fees,openingPairs=[];
  for(let i=0;i<s.openings.length;i++)for(let j=i+1;j<s.openings.length;j++){
   const oa=s.openings[i],ob=s.openings[j];if(openingLevel(s,oa)!==openingLevel(s,ob)||oa.sill>=ob.sill+ob.h||ob.sill>=oa.sill+oa.h)continue;
