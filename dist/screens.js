@@ -55,6 +55,15 @@ const screenIdeaCopy = {
   general: ['Tester ta propre idée', 'Décris ton client, choisis une expérience courte, puis décide de la suite.', 'Test libre']
 };
 
+// Layered paper forms give each plan a distinct silhouette at every screen size.
+function screenMotif(tone) {
+  const layers = {etsy:11, print:12, dev:10, general:14};
+  const count = layers[tone] || 10;
+  const strips = Array.from({length:count}, (_,i) =>
+    `<i style="--layer:${i}"></i>`).join('');
+  return `<span class="sc-motif sc-motif-${esc(tone)}" aria-hidden="true">${strips}</span>`;
+}
+
 function renderIdeas() {
   const active = state.activated;
   const shown = ideas.filter(idea => screenFilters.ideas === 'all' || active.includes(idea.id));
@@ -63,7 +72,7 @@ function renderIdeas() {
     const activated = active.includes(idea.id);
     const total = idea.steps.reduce((sum, step) => sum + step[1], 0);
     return `<article class="sc-idea" data-tone="${esc(idea.id)}">
-      <div class="sc-idea-top"><span class="sc-idea-emblem">${screenIcon(idea.id)}</span><span class="sc-status ${activated ? 'on' : ''}">${activated ? 'Plan activé' : need}</span></div>
+      <div class="sc-idea-top">${screenMotif(idea.id)}<span class="sc-idea-emblem">${screenIcon(idea.id)}</span><span class="sc-status ${activated ? 'on' : ''}">${activated ? 'Plan activé' : need}</span></div>
       <h2>${esc(title)}</h2><p>${esc(description)}</p>
       <div class="sc-idea-bottom"><div class="sc-inline-meta"><span>${screenIcon('list')}${idea.steps.length} actions</span><span>${screenIcon('clock')}${fmt(total)}</span></div>
       <button class="sc-link" data-activate="${esc(idea.id)}">${activated ? 'Revoir le plan' : 'Voir le plan'} ${screenIcon('arrow')}</button></div>
@@ -83,8 +92,9 @@ function screenContactCard(contact) {
   const open = !['won', 'lost'].includes(contact.status);
   const due = open && contact.follow ? (contact.follow === today() ? 'Relance aujourd’hui' : 'Relance ' + (contact.follow < today() ? 'échue le ' : 'le ') + screenDate(contact.follow)) : '';
   const id = esc(contact.id);
+  const hue = [...contact.name].reduce((n,letter)=>n+letter.codePointAt(0),0)%4;
   return `<article class="sc-contact">
-    <div class="sc-contact-head"><span class="sc-avatar" aria-hidden="true">${esc(initials.toUpperCase())}</span><div><button class="sc-contact-name" data-contact="${id}">${esc(contact.name)}</button><div class="sc-contact-stage" data-stage="${esc(contact.status)}">${esc(statuses[contact.status] || '')}</div></div><button class="sc-edit" data-contact="${id}" aria-label="Modifier le contact ${esc(contact.name)}">${screenIcon('tune')}</button></div>
+    <div class="sc-contact-head"><span class="sc-avatar" data-hue="${hue}" aria-hidden="true">${esc(initials.toUpperCase())}</span><div><button class="sc-contact-name" data-contact="${id}">${esc(contact.name)}</button><div class="sc-contact-stage" data-stage="${esc(contact.status)}">${esc(statuses[contact.status] || '')}</div></div><button class="sc-edit" data-contact="${id}" aria-label="Modifier le contact ${esc(contact.name)}">${screenIcon('tune')}</button></div>
     <p class="sc-offer">${esc(contact.offer)}</p>
     ${contact.channel || contact.note || contact.value ? `<details class="sc-details"><summary>Coordonnées et notes</summary><div>${contact.channel ? '<p>' + esc(contact.channel) + '</p>' : ''}${contact.value ? '<p>Devis envisagé · ' + screenAmount(contact.value) + '</p>' : ''}${contact.note ? '<p>' + esc(contact.note) + '</p>' : ''}</div></details>` : ''}
     <div class="sc-contact-foot">${due ? `<span class="sc-due ${screenFollowDue(contact) ? 'due' : ''}">${screenIcon('calendar')}${due}</span>` : ''}<div class="sc-card-actions"><button data-follow="${id}" class="sc-soft">${screenIcon('calendar')}Planifier une relance</button><button data-message="${id}" class="sc-soft">${screenIcon('mail')}Brouillon</button></div></div>
@@ -157,7 +167,7 @@ function renderStats() {
     <div class="sc-chips" aria-label="Période des résultats">${screenChip('stats','week','7 jours')}${screenChip('stats','month','Ce mois')}${screenChip('stats','all','Depuis le début')}</div>
     <div class="sc-stats-top"><section class="sc-net"><span>${screenIcon('wallet')}Résultat net saisi</span><strong>${screenAmount(income - expenses)}</strong><div><div><small>Encaissé</small><b>${screenAmount(income)}</b></div><div><small>Dépensé</small><b>${screenAmount(expenses)}</b></div></div></section>
     <section class="sc-effort"><span>${screenIcon('clock')}Temps investi</span><strong>${fmt(time)}</strong><p>${history.length} action${history.length === 1 ? '' : 's'} terminée${history.length === 1 ? '' : 's'}</p><small>${time ? screenAmount((income - expenses) / (time / 60)) + ' nets par heure saisie' : 'Le temps se renseigne en terminant une action.'}</small></section></div>
-    <div class="sc-stats-details">${screenTimeBreakdown(history, time)}<section class="sc-panel sc-goal"><div class="sc-panel-heading"><h2>Objectif du mois</h2><button data-settings class="sc-edit" aria-label="Modifier l’objectif du mois">${screenIcon('tune')}</button></div><strong>${screenAmount(received)} <small>/ ${screenAmount(goal)}</small></strong><div class="sc-track"><i style="width:${goalPercent}%"></i></div><p>${goalPercent >= 100 ? 'Objectif atteint' : screenAmount(Math.max(0,goal - received)) + ' à encaisser pour atteindre ton objectif'}</p></section></div>
+    <div class="sc-stats-details">${screenTimeBreakdown(history, time)}<section class="sc-panel sc-goal"><div class="sc-panel-heading"><h2>Objectif du mois</h2><button data-settings class="sc-edit" aria-label="Modifier l’objectif du mois">${screenIcon('tune')}</button></div><div class="sc-goal-result"><div class="sc-gauge" style="--ratio:${goalPercent}%" aria-label="${goalPercent} % de l’objectif"><b aria-hidden="true">${goalPercent}<small>%</small></b></div><div><strong>${screenAmount(received)}</strong><span>sur ${screenAmount(goal)}</span></div></div><p>${goalPercent >= 100 ? 'Objectif atteint' : screenAmount(Math.max(0,goal - received)) + ' à encaisser pour atteindre ton objectif'}</p></section></div>
     <section class="sc-panel"><div class="sc-panel-heading"><h2>Journal</h2></div><div class="sc-chips" aria-label="Type de journal">${screenChip('journal','ledger','Montants',ledger.length)}${screenChip('journal','history','Actions',history.length)}</div>${screenJournal(ledgerMode ? ledger : history, ledgerMode)}</section></div>`;
 }
 

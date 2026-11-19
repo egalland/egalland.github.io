@@ -42,8 +42,9 @@ function render() {
     displayedView = view;
     history.pushState(null,'','#'+routes[view]);
   }
+  const count = state.tasks.filter(item => item.date <= today()).length;
   $('#nav').innerHTML = Object.entries(navNames).map(([key,name]) =>
-    `<button data-view="${key}" ${view===key?'aria-current="page" class="active"':''}>${glyph(key==='plan'?'calendar':key)}<span>${name}</span></button>`
+    `<button data-view="${key}" ${view===key?'aria-current="page" class="active"':''}>${glyph(key==='plan'?'calendar':key)}<span>${name}</span>${key==='plan' && count ? `<b class="nav-count">${count}</b>` : ''}</button>`
   ).join('');
   const draw = {plan:renderPlan,ideas:renderIdeas,contacts:renderContacts,stats:renderStats};
   $('#content').innerHTML = draw[view]();
@@ -68,7 +69,7 @@ function focusCard() {
     <h2>${title}</h2>
     ${t?`<div class="focus-meta"><span>${glyph('clock',15)} ${fmt(t.min)}</span><span>${esc(cats[t.cat])}</span></div>`:'<p>Aucune action prévue pour aujourd’hui.</p>'}
     <button class="start-action" ${t?`data-focus="${esc(t.id)}"`:'data-view="ideas"'}>${glyph(t?'play':'spark',16)} ${active?'Ouvrir le chrono':t?'Démarrer':'Explorer les pistes'}</button>
-    </div><img class="cap-art" alt="" src="cap.svg"></section>`;
+    </div><div class="sculpture-stage" aria-hidden="true"><img class="sculpture studio-sculpture" width="760" height="700" src="sculpture.webp" alt="" fetchpriority="high"></div></section>`;
 }
 function weekData() {
   const day = new Date(today()+'T12:00:00').getDay();
@@ -82,12 +83,12 @@ function weekCard() {
   const days = weekData();
   const total = days.reduce((s,d)=>s+d.done,0);
   const peak = Math.max(30,...days.map(d=>d.done+d.plan));
-  const initials = ['L','M','M','J','V','S','D'];
+  const initials = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
   return `<section class="week-card"><div class="wk-head"><h2>Ma semaine</h2><small>${compactDate(days[0].date)} – ${compactDate(days[6].date)}</small></div>
-    <div class="wk-number">${fmt(total)} <span>réalisées</span></div>
+    <div class="wk-number">${fmt(total)} <span>de travail réalisé</span></div>
     <div class="bars">${days.map((d,i)=>`<button class="bar-day ${d.date===today()?'is-today':''}" data-day="${d.date}" aria-label="Voir ${esc(fullDate(d.date))}, ${fmt(d.done)} effectuées et ${fmt(d.plan)} à faire">
-      <span class="bar-column"><b style="height:${100*d.plan/peak}%"></b><i style="height:${100*d.done/peak}%"></i></span>
-      <span>${initials[i]}</span></button>`).join('')}</div><div class="legend"><span><i></i>Réalisé</span><span><i></i>À faire</span></div></section>`;
+      <span class="chart-value" aria-hidden="true">${fmt(d.done+d.plan)}</span><span class="bar-column"><b style="height:${100*d.plan/peak}%"></b><i style="height:${100*d.done/peak}%"></i></span>
+      <span class="day-label">${initials[i]}</span></button>`).join('')}</div><div class="legend"><span><i></i>Réalisé</span><span><i></i>À faire</span></div></section>`;
 }
 function taskRow(t) {
   const overdue = t.date<today();
@@ -124,7 +125,7 @@ function overview() {
 function renderPlan() {
   const remaining = Math.max(0,state.settings.budget-trackedMinutes(today()));
   return `<div class="agenda-heading"><div><div class="agenda-date">${glyph('sun',15)} ${fullDate(today())}</div><h1>Mon agenda<span>.</span></h1><p><b>${fmt(remaining)}</b> disponibles aujourd’hui</p></div>
-    <button class="add-action" data-new>${glyph('plus',18)}<span>Nouvelle action</span></button></div>
+    <button class="add-action" data-new>${glyph('plus',18)}<span class="new-full">Nouvelle action</span><span class="new-short">Ajouter</span></button></div>
     <div class="agenda-grid">${focusCard()}${weekCard()}${taskList()}${overview()}</div>`;
 }
 document.addEventListener('click', event=>{

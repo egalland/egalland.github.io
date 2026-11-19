@@ -1,0 +1,89 @@
+/* Élan Studio · surfaces, app shell and agenda */
+:root {
+  --bg:#f4f3f8; --surface:#fff; --ink:#241f31; --muted:#716b7d;
+  --line:#e1dfe8; --forest:#33283f; --green:#5c487b; --orange:#cd4c26;
+  --accent:#ff895b; --lavender:#e4ddf6;
+  --studio-font:'DM Sans','Inter',system-ui,sans-serif;
+}
+body { background:var(--bg); font-family:var(--studio-font); }
+button,input,textarea,select{font-family:inherit}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8a67d6;outline-offset:3px}
+.wordmark {font-family:var(--studio-font);font-weight:800;letter-spacing:-.09em;color:#271e32;gap:0}
+.wordmark .brand-period {color:#f27c50}
+.brand-sign {width:29px;height:30px;display:inline-flex;align-items:center;justify-content:center;gap:2px;margin:0 11px 0 4px;transform:skew(-19deg) rotate(7deg)}
+.brand-sign i {width:5px;border-radius:2px;background:#f27748;display:block}
+.brand-sign i:nth-child(1){height:12px}.brand-sign i:nth-child(2){height:21px}.brand-sign i:nth-child(3){height:29px}.brand-sign i:nth-child(4){height:17px}
+.space-label {font-size:10px;text-transform:uppercase;letter-spacing:.13em;font-weight:700;color:#88808f}
+.profile b {font-size:13px;text-align:left;font-weight:650;color:#332c3d}
+.profile b small {display:block;font-size:10px;font-weight:450;color:#746e7c;margin-top:3px}
+.profile span.avatar {background:#e3daf3;color:#4e3b6a;border-color:#d6cce7;font-weight:700}
+.profile i {font-style:normal;color:#83778c}
+#nav button {color:#665e71;font-weight:550}
+#nav button.active {background:#e7e2f1;color:#332343}
+.nav-count {min-width:23px;border-radius:20px;background:#fff8;color:#59416c;font-size:10px;font-weight:700;line-height:20px}
+@media(min-width:921px) {
+  body{--rail:clamp(172px,15.8vw,224px);padding-left:var(--rail)}
+  header.topbar{position:fixed;inset:0 auto 0 0;height:auto;width:var(--rail);border:0;border-right:1px solid #dfdce7;background:#f9f8fc;z-index:12}
+  .topbar-inside{display:flex;flex-direction:column;align-items:stretch;gap:0;width:auto;padding:32px clamp(14px,1.4vw,25px) 20px;height:100dvh}
+  .wordmark{align-self:flex-start;font-size:39px;margin:0 0 50px 6px}
+  .space-label{margin:0 0 12px 12px}
+  #nav{display:grid;align-self:stretch;gap:5px;width:100%}
+  #nav button{width:100%;justify-content:flex-start;font-size:14px;height:46px;padding:0 13px;gap:11px;border-radius:10px}
+  .nav-count{margin-left:auto}
+  .profile{border-top:1px solid var(--line);margin:auto 0 0;display:flex;align-items:center;justify-content:flex-start;padding:19px 0 0;gap:9px;min-height:53px}
+  .profile i{margin-left:auto}
+  main#content{width:min(1370px,calc(100% - clamp(52px,7vw,126px)));padding-top:34px}
+}
+@media(max-width:920px){.space-label,.profile b,.profile i,.nav-count{display:none}.topbar{background:#fbfaff}.topbar-inside{gap:12px}.brand-sign{width:25px;margin-right:8px}}
+.agenda-heading{margin-bottom:24px}
+.agenda-date{color:#72677d;letter-spacing:.09em;font-size:10px}
+.agenda-date svg{color:#8c789e}.agenda-heading h1{letter-spacing:-.075em;font-weight:650;font-size:clamp(40px,4.5vw,64px);line-height:1.02;margin-top:10px}
+.agenda-heading h1 span{color:#b198e2}.agenda-heading p{color:#736a7e;font-size:13px}.agenda-heading p b{color:#53435d}
+.add-action,.start-action{gap:8px;border-radius:999px;font-weight:650;transition:transform .23s ease,background .23s ease,box-shadow .23s ease}
+.add-action{background:#2c2336;color:white;padding:0 18px;min-height:45px;font-size:13px}
+.add-action:hover{background:#493557;box-shadow:0 4px 16px #30203f20}
+.add-action:active,.start-action:active{transform:scale(.96)}
+.agenda-grid{grid-template-columns:minmax(0,1.75fr) minmax(255px,1fr);gap:24px 19px}
+.focus-card{min-height:268px;border-radius:23px;padding:clamp(23px,2.5vw,38px);background:radial-gradient(ellipse at 87% 95%,#503951 0,transparent 58%),linear-gradient(120deg,#201925,#35253e);box-shadow:0 9px 24px -20px #27132a;color:#fffdfa;isolation:isolate}
+.focus-card::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-2;opacity:.25;background-image:radial-gradient(#c5adc2 0.7px,transparent .85px);background-size:13px 13px;mask-image:linear-gradient(105deg,transparent 18%,#000 90%)}
+.focus-copy{width:62%}.focus-eyebrow{width:fit-content;font-size:9px;letter-spacing:.12em;font-weight:700;color:#f0e3ee}
+.focus-eyebrow i{background:#ff996a;box-shadow:0 0 0 4px #fc8a6320;width:6px;height:6px;margin-right:3px}
+.focus-card h2{font-size:clamp(27px,2.7vw,43px);line-height:1.04;font-weight:550;letter-spacing:-.055em;margin:16px 0 13px;text-wrap:balance;overflow-wrap:anywhere}
+.focus-meta{color:#e1d8e3;font-size:12px}.focus-meta span+span{border-color:#827185}
+.start-action{background:#ffa075;color:#271b1b;min-height:43px;margin-top:18px;padding:0 18px;font-size:13px}
+.start-action:hover{background:#ffb994;box-shadow:0 4px 20px #ff905032}.start-action svg{fill:currentColor;stroke-width:1}
+.sculpture-stage{position:absolute;right:-3.5%;top:4%;width:48%;height:94%;display:grid;place-items:center;z-index:-1;pointer-events:none}
+.sculpture-stage img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 14px 12px #18091d48)}
+.week-card{align-self:stretch;min-height:268px;border-radius:22px;padding:22px 23px 19px;background:#e8e2f4;border:1px solid #ded7e9}
+.wk-head{gap:6px}.wk-head h2,.overview .block-title h2{font-size:18px;color:#382c46;letter-spacing:-.05em}.wk-head small{font-size:10px;color:#6b5c7d;text-align:right}
+.wk-number{margin-top:10px;font-size:31px;line-height:1.1;color:#382b46;letter-spacing:-.07em}.wk-number span{font-size:11px;color:#6b5c7d}
+.bars{position:relative;gap:4px;margin:14px 0 10px}.bar-day{position:relative;color:#6f607e;font-weight:650;gap:5px;border-radius:4px}.bar-column{width:min(25px,88%);height:79px;background:repeating-linear-gradient(to top,transparent 0 16px,#dfd8ec 16px 17px),#ffffff38;border-radius:4px}
+.bar-column b,.legend span+span i{background:repeating-linear-gradient(-45deg,#b2a2cd 0 2px,#cec1e1 2px 4px)}.bar-column i,.legend i{background:#674884}
+.day-label{padding:2px 4px;border-radius:4px}.is-today .day-label{background:#44334e;color:#fff}
+.chart-value{position:absolute;left:50%;top:-16px;z-index:2;transform:translate(-50%,4px);opacity:0;pointer-events:none;border-radius:5px;background:#34263e;color:white;font:600 10px var(--studio-font);white-space:nowrap;padding:4px 7px;transition:opacity .18s,transform .18s}
+.bar-day:hover .chart-value,.bar-day:focus-visible .chart-value{opacity:1;transform:translate(-50%,0)}
+.legend{color:#675771;font-size:11px}
+.actions-block .block-title h2{font-size:25px;color:#292132}.count-pill{border-radius:8px;background:#e9e3f1;font-size:11px;color:#76578c}
+.text-tool,.filter-button{color:#685575}.text-tool:hover,.filter-button:hover{color:#37223f}
+.scope-tabs{background:#e9e6ef}.scope-tabs button{color:#756e80}.scope-tabs button[aria-pressed=true]{background:white;color:#392845}.list-controls{margin:9px 0 12px}
+.action-list{border-radius:17px;border-color:#e1dce7}.action-row{padding:13px 11px 13px 7px;transition:background .2s}.action-row+.action-row{border-color:#eeeaf2}.action-row:hover{background:#faf8fc}
+.complete-target i{border-radius:50%;width:22px;height:22px;border:1.5px solid #c4bbcc}.complete-target:hover i{border-color:#816397;background:#f2edf7}.complete-target,.row-start{color:#655078}
+.task-detail strong{color:#302837;font-weight:600}.track-chip{border-radius:20px;padding:3px 8px}.track-chip.dev{background:#ece6f8;color:#66478e}.track-chip.etsy{background:#fae5db;color:#984b30}.track-chip.print{background:#deece8;color:#3c6c64}
+.action-details,.list-total{color:#756c7c}.late{color:#9a5b45}.row-start svg{border-color:#e2dbe8;background:#f7f4fa;padding:8px}.row-start:hover svg{background:#e8dff2}
+.overview{border-radius:20px;padding:22px;border-color:#e0dae6;background:#fff}.overview .block-title>svg{color:#8e779f}.glance-icon{border-radius:12px}.pale{color:#6a4586;background:#eee6fa}.clay{color:#9e563b;background:#fae6dc}.money-line{background:#ece6f2}.money-line i{background:#8565a1}
+@media(min-width:701px) and (max-width:1100px){.focus-card{padding:22px}.wk-head{align-items:flex-start;flex-direction:column}.agenda-grid{grid-template-columns:minmax(0,1.6fr) minmax(215px,1fr)}.week-card{padding:18px}}
+@media(max-width:700px){
+  .topbar{height:53px;background:#f8f7fb;border-color:#e4dfe9}.wordmark{font-size:31px}.brand-sign{height:26px;transform:scale(.88) skew(-19deg) rotate(7deg);margin-left:0}
+  #nav{inset:auto max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:#292031f5;border:1px solid #50445a;border-radius:22px;padding:5px;gap:2px;box-shadow:0 6px 24px #291b382e;backdrop-filter:blur(14px)}
+  #nav button{color:#d4cbdc;height:48px;font-size:10px;gap:3px;border-radius:16px;font-weight:500}#nav button.active{background:#ebe3f6;color:#34253f;font-weight:700}#nav svg{width:19px;height:19px}
+  main#content{padding-top:19px;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+  .agenda-heading{margin-bottom:16px}.agenda-heading h1{font-size:39px;margin:6px 0 3px}.agenda-heading p{font-size:12px}.agenda-date{font-size:9px;letter-spacing:.065em}.add-action{font-size:12px;padding:0 12px;min-height:42px}
+  .agenda-grid{gap:18px}.focus-card{min-height:192px;padding:20px;border-radius:19px}.focus-copy{width:64%}.focus-card h2{font-size:clamp(22px,5.8vw,31px);line-height:1.08;margin:11px 0}.focus-meta{font-size:10px;gap:6px}.focus-eyebrow{font-size:8px}.start-action{min-height:40px;font-size:12px;margin-top:13px}.sculpture-stage{right:-5%;width:45%;height:90%;top:7%}
+  .actions-block .block-title h2{font-size:22px}.week-card{min-height:0;padding:18px}.wk-number{font-size:27px}.bar-column{height:64px}.action-row{padding:11px 3px 11px 0}.complete-target{min-width:40px}.complete-target i{width:20px;height:20px}
+  .track-chip{padding:3px 6px}.list-controls{margin:3px 0 10px}.task-detail strong{font-size:14px}
+}
+@media(max-width:355px){.focus-card{padding:16px}.focus-copy{width:67%}.agenda-heading h1{font-size:34px}.focus-meta{font-size:9px}}
+.new-short{display:none}
+@media(max-width:700px){.add-action .new-full{display:none}.add-action .new-short{display:inline;font-size:12px}.agenda-heading h1{white-space:nowrap;font-size:clamp(32px,9.3vw,39px)}.add-action .new-short:after{content:none}.add-action{flex:none;white-space:nowrap}}
+/* Use the device's local UI typefaces immediately, including on a slow mobile connection. */
+:root{--studio-font:'DM Sans',Inter,Roboto,'Helvetica Neue',Arial,sans-serif}

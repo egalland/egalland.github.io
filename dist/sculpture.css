@@ -1,0 +1,17 @@
+.studio-sculpture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: 52% 55%;
+  pointer-events: none;
+  user-select: none;
+  animation: sculpture-orbit 12s cubic-bezier(.45,0,.55,1) infinite;
+}
+@keyframes sculpture-orbit {
+  0%, 100% { transform: translate3d(0,2%,0) rotate(-7deg); }
+  50% { transform: translate3d(-1%,-2%,0) rotate(3deg); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .studio-sculpture { animation: none; transform: rotate(-3deg); }
+}

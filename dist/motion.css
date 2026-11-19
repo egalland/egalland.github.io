@@ -1,0 +1,69 @@
+/* A continuous marker follows the current section across desktop and touch navigation. */
+@media(min-width:701px) {#nav.motion-relative {position:relative}}
+#nav.motion-nav::after {
+  content:""; position:absolute; left:0; top:0; z-index:2; width:18px; height:2px;
+  border-radius:10px; background:#ff7845; pointer-events:none;
+  transform:translate3d(var(--marker-x,0px),var(--marker-y,0px),0);
+}
+#toast.motion-completed {
+  padding-left:44px;
+}
+#toast.motion-completed::before {
+  content:""; position:absolute; left:14px; top:calc(50% - 10px);
+  width:20px; height:20px; border-radius:50%; background-color:#ff8b54;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='m5.8 10.1 2.8 2.8 5.7-6' fill='none' stroke='%232b1b1d' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.motion-sparks {position:fixed; z-index:99; pointer-events:none; width:0; height:0}
+.motion-sparks i {position:absolute; inset:-2px auto auto -2px; height:4px; width:5px; border-radius:2px}
+#modal #focusDial {position:relative}
+#modal #focusDial::after {
+  content:""; position:absolute; inset:-6px; border-radius:50%;
+  border:1px solid color-mix(in srgb, #a384ed 30%, transparent);
+  pointer-events:none;
+}
+#modal #focusDial::before {
+  content:""; position:absolute; inset:-6px; z-index:1; border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(circle at 50% 3px,#ff8c55 0 2.5px,transparent 3.5px);
+}
+@media(prefers-reduced-motion:no-preference) {
+  #nav.motion-nav::after {transition:transform .38s cubic-bezier(.18,.8,.22,1)}
+  #nav button:active svg, .row-start:active svg, .complete-target:active i {scale:.89}
+  #nav button svg,.complete-target i,.row-start svg {transition:scale .18s ease, color .16s ease}
+  .add-action,.start-action,.sc-primary,#modal .primary,#modal .secondary {
+    transition:scale .2s cubic-bezier(.2,.8,.3,1), background-color .18s ease, box-shadow .22s ease;
+  }
+  :is(.add-action,.start-action,.sc-primary,#modal .primary,#modal .secondary):active {scale:.97}
+  #modal #focusDial::before {animation:elan-clock-orbit 16s linear infinite}
+  #modal #focusDial.paused::before {animation-play-state:paused}
+  #toast.motion-completed::before {animation:elan-check-in .4s cubic-bezier(.2,.85,.28,1.22)}
+  @keyframes elan-clock-orbit {to {transform:rotate(360deg)}}
+  @keyframes elan-check-in {0% {scale:.5} 65% {scale:1.12} 100% {scale:1}}
+  /* The native dialog retains its focus handling and close events throughout the transition. */
+  @supports (transition-behavior:allow-discrete) and (overlay:auto) {
+    #modal {--exit-shift:12px; opacity:0; translate:0 var(--exit-shift); scale:.986;
+      transition:opacity .17s ease,translate .24s cubic-bezier(.17,.71,.24,1),scale .24s cubic-bezier(.17,.71,.24,1),overlay .24s allow-discrete,display .24s allow-discrete}
+    #modal[open] {opacity:1;translate:0 0;scale:1;animation:none}
+    #modal::backdrop {opacity:0;transition:opacity .2s ease,overlay .24s allow-discrete,display .24s allow-discrete}
+    #modal[open]::backdrop {opacity:1}
+    @starting-style {
+      #modal[open] {opacity:0;translate:0 var(--exit-shift);scale:.986}
+      #modal[open]::backdrop {opacity:0}
+    }
+    @media(max-width:700px){#modal{--exit-shift:34px;transform-origin:bottom center}}
+  }
+}
+@media(pointer:fine) and (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .action-row .task-detail strong,.sc-link svg,.glance>svg {transition:color .16s ease,translate .22s cubic-bezier(.2,.8,.3,1)}
+  .sc-link:hover svg,.glance:hover>svg {translate:3px 0}
+}
+@media(prefers-reduced-motion:reduce) {
+  #nav.motion-nav::after,#modal,#modal[open],#modal::backdrop {transition:none!important;animation:none!important}
+  .motion-sparks {display:none}
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+  .sculpture-stage {
+    transform: perspective(620px) translate3d(var(--sculpt-x,0px),var(--sculpt-y,0px),0) rotateY(var(--sculpt-angle,0deg));
+    transition:transform .4s cubic-bezier(.19,.75,.22,1);
+  }
+}
