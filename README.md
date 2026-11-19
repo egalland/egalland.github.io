@@ -1,12 +1,12 @@
 # Historiques Git du 19 novembre 2026
 
-Les archives contiennent les dates d’origine des 33 commits des quatre projets. Tous les commits sont attribués à Emmanuel Galland, compte GitHub `egalland`. Chaque projet contient un journal des demandes retrouvées dans `PROMPTS.md`.
+Les archives contiennent les dates d’origine des 34 commits des quatre projets. Tous les commits sont attribués à Emmanuel Galland, compte GitHub `egalland`. Chaque projet contient un journal des demandes retrouvées dans `PROMPTS.md`.
 
 | Projet | Commits d’origine |
 | --- | ---: |
 | Maille City | 17 |
 | Double Programme | 5 |
-| Atelier Habitat | 8 |
+| Atelier Habitat | 9 |
 | Élan | 3 |
 
 Télécharger les fichiers de cette branche. Reconstituer le bundle de Maille City à partir de ses deux parties, puis vérifier l’empreinte et cloner le dépôt.
