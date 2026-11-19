@@ -1,5 +1,4 @@
 import {drawItemIcon, drawAvatar} from './sprites.js';
-import {normalizeRoom} from './net.js';
 import {metadata} from './paris-data.js';
 import {coreDestinations} from './paris-world.js';
 import {mountAtlas,sectorURL,historicURL} from './grand-paris.js';
@@ -77,15 +76,15 @@ function weaponCanvas(id,size) {
   paintCanvas(c,(ctx,s)=>drawItemIcon(ctx,id,0,0,s),size);
   return c;
 }
-function getInvite(room) {
-  const url=new URL(location.pathname,location.origin),original=new URL(location.href);
-  url.searchParams.set('salon',room);
+function gameShareURL() {
+  const url=new URL(location.pathname,location.origin);
   if(metadata.sector){
-    url.searchParams.set('lon',Number(metadata.sector.lon).toFixed(5));
-    url.searchParams.set('lat',Number(metadata.sector.lat).toFixed(5));
-    url.searchParams.set('lieu',metadata.sector.name||'Paris');
-  }else if(original.searchParams.get('halte'))url.searchParams.set('halte',original.searchParams.get('halte'));
-  return url.href;
+    const {lon,lat,name}=metadata.sector;
+    const sector=sectorURL(url.href,lon,lat,name);
+    if(sector)return sector;
+  }
+  const halt=new URL(location.href).searchParams.get('halte');
+  return coreDestinations.some(d=>d.key===halt)?historicURL(url.href,halt):url.href;
 }
 
 export function createPanels({game,net,getState,selectWeapon,setName,setSound,getSound,notify,returnFocus}) {
@@ -122,7 +121,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const header=node('header','mc-header');
     const info=node('div','mc-heading');
     const iconWrap=node('span','mc-sign');
-    iconWrap.innerHTML=icon({weapons:'weapon',emotes:'emotes',map:'map',settings:'gear',room:'users',help:'help'}[kind]);
+    iconWrap.innerHTML=icon({weapons:'weapon',emotes:'emotes',map:'map',settings:'gear',players:'users',help:'help'}[kind]);
     const words=node('div','mc-titlegroup');
     words.append(node('p','mc-eyebrow',label));
     const currentTitle=node('h2','mc-title',title);
@@ -226,7 +225,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const go=node('button','mc-primary','S’y rendre');go.type='submit';
     row.addEventListener('submit',e=>{
       e.preventDefault();
-      if(metadata.sector){net.stop();location.assign(historicURL(location.href,net.room,target.value));return;}
+      if(metadata.sector){net.stop();location.assign(historicURL(location.href,target.value));return;}
       if(game.travel(target.value)!==false){close();notify?.('Arrivée · '+target.selectedOptions[0].textContent);}
     });
     row.append(target,go);travel.append(label,row);
@@ -240,7 +239,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
       localButton.setAttribute('aria-pressed',String(!region));regionButton.setAttribute('aria-pressed',String(region));
       if(region&&!built){
         mountAtlas(regional,{position:game.getPosition?.(),visit:point=>{
-          const url=sectorURL(location.href,net.room,point.lon,point.lat,point.name);
+          const url=sectorURL(location.href,point.lon,point.lat,point.name);
           if(url){net.stop();location.assign(url);}
         }});
         built=true;
@@ -297,83 +296,61 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     });username.addEventListener('input',()=>username.setCustomValidity(''));
     body.append(form);sheet.append(body);
   }
-  function roomPanel() {
-    const sheet=frame('room','Multijoueur','Salon de jeu');
+  function playersPanel() {
+    const sheet=frame('players','Multijoueur','Joueurs');
     const body=node('div','mc-body mc-stack');
-    const statusRow=node('div','mc-room-current');
-    const section=node('div','mc-room-labels');
-    section.append(node('small','mc-field-label','Salon actuel'));
-    const roomName=node('strong','mc-room-name');section.append(roomName);
-    const badge=node('span','mc-status');statusRow.append(section,badge);
-    const invite=button('','mc-primary mc-invite',async()=>{
-      const link=getInvite(net.room || 'public');
+    const banner=node('div','mc-roster-heading'),count=node('strong','mc-online-count'),connection=node('span','mc-status');
+    count.setAttribute('aria-live','polite');banner.append(count,connection);
+    const roster=node('ul','mc-roster');roster.setAttribute('aria-label','Joueurs dans le monde');
+    const fallback=node('input','mc-input');fallback.readOnly=true;fallback.hidden=true;fallback.setAttribute('aria-label','Lien du jeu à copier');
+    const feedback=node('p','mc-inline-feedback');feedback.setAttribute('role','status');
+    const shareLabel=metadata.sector?'Copier le lien du quartier':'Copier le lien du jeu';
+    const share=button('','mc-primary mc-share-world',async()=>{
+      const link=gameShareURL();
       try {
         if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(link);
         else {
-          const tmp=node('textarea');tmp.value=link;document.body.append(tmp);tmp.select();const ok=document.execCommand('copy');tmp.remove();
-          if(!ok)throw Error('clipboard');
+          const field=node('textarea');field.value=link;document.body.append(field);field.select();
+          const copied=document.execCommand('copy');field.remove();if(!copied)throw Error('clipboard');
         }
-        notify?.('Lien d’invitation copié.');feedback.textContent='Lien d’invitation copié.';
+        feedback.textContent='Lien copié.';fallback.hidden=true;
       } catch {
         fallback.value=link;fallback.hidden=false;fallback.focus();fallback.select();
-        feedback.textContent='Copie ce lien pour inviter tes amis.';
+        feedback.textContent='Copie ce lien pour partager le jeu.';
       }
     });
-    invite.innerHTML=icon('copy')+'<span>Copier le lien d’invitation</span>';
-    const fallback=node('input','mc-input');fallback.readOnly=true;fallback.hidden=true;fallback.setAttribute('aria-label','Lien d’invitation');
-    const feedback=node('p','mc-inline-feedback');feedback.setAttribute('role','status');
-    const row=node('div','mc-roster-heading');row.append(node('span','mc-field-label','Joueurs connectés'));
-    const count=node('span','mc-count');row.append(count);
-    const roster=node('ul','mc-roster');
-    const form=node('form','mc-field mc-room-form');
-    const roomField=node('input','mc-input');roomField.id='mc-room-code';roomField.required=true;roomField.maxLength=32;roomField.autocomplete='off';roomField.spellcheck=false;roomField.placeholder='Code du salon';
-    const join=node('button','mc-secondary','Rejoindre');join.type='submit';
-    const inputRow=node('div','mc-join-row');inputRow.append(roomField,join);
-    form.append(fieldLabel('Créer ou rejoindre un salon',roomField.id),inputRow);
-    const joinNote=node('p','mc-inline-feedback');joinNote.setAttribute('role','status');form.append(joinNote);
-    form.addEventListener('submit',async e=>{
-      e.preventDefault();
-      if(!/[a-z0-9]/i.test(roomField.value.normalize('NFKD'))){roomField.setCustomValidity('Entre un code avec au moins une lettre ou un chiffre.');roomField.reportValidity();return;}
-      const target=normalizeRoom(roomField.value);
-      join.disabled=true;joinNote.textContent='Connexion au salon…';
-      try{
-        await net.setRoom(target);
-        if(current!=='room')return;
-        roomField.value='';
-        const ok=net.status==='online';
-        joinNote.textContent=ok?'Tu as rejoint le salon '+net.room+'.':net.status==='full'?'Ce salon est complet.':'Connexion au salon en attente.';
-        renderCurrent?.();
-      }catch{joinNote.textContent='Le salon est indisponible.';}
-      finally{join.disabled=false;}
-    });
-    roomField.addEventListener('input',()=>roomField.setCustomValidity(''));
-    const inviteBlock=node('div','mc-invite-block');inviteBlock.append(invite,fallback,feedback);
-    const people=node('div','mc-people');people.append(row,roster);
-    body.append(statusRow,inviteBlock,people,form);sheet.append(body);
-    let rosterSig='';
+    share.innerHTML=icon('copy')+'<span>'+shareLabel+'</span>';
+    const shareGroup=node('div','mc-share-block');shareGroup.append(share,fallback,feedback);
+    body.append(banner,roster,shareGroup);sheet.append(body);
+    let previous='';
     renderCurrent=()=>{
-      roomName.textContent=net.room==='public'?'Salon public':'# '+(net.room || 'public');
-      const st=net.status || 'connecting';
-      badge.classList.toggle('mc-online',st==='online');
-      badge.textContent=({online:'En ligne',connecting:'Connexion…',full:'Complet',offline:'Hors ligne'})[st] || 'Hors ligne';
-      const players=net.players?.() || [];
-      count.textContent=players.length+' / '+(net.capacity || 16);
-      const sig=st+JSON.stringify(players.map(p=>[p.id,p.name,p.variant]));
-      if(sig===rosterSig)return;
-      rosterSig=sig;roster.replaceChildren();
-      if(!players.length){roster.append(node('li','mc-roster-empty',st==='offline'?'Connexion au serveur interrompue.':'En attente du serveur…'));return;}
-      players.forEach(p=>{
-        const el=node('li','mc-person');const face=node('canvas','mc-face');face.setAttribute('aria-hidden','true');
-        paintCanvas(face,(ctx,s)=>drawAvatar(ctx,0,0,s,p.variant || 'fox'),30);
-        el.append(face,node('span','mc-person-name',p.name || 'Joueur'));
-        if(p.id===net.id)el.append(node('small','mc-self','Vous'));
-        roster.append(el);
-      });
+      const status=net.status||'connecting',online=status==='online';
+      const players=online?(net.players?.()||[]):[];
+      connection.classList.toggle('mc-online',online);
+      connection.textContent=online?'En ligne':status==='offline'?'Hors ligne':'Connexion…';
+      const total=players.length;
+      const counter=online?total+' joueur'+(total===1?'':'s')+' en ligne':'Présence mondiale';
+      if(count.textContent!==counter)count.textContent=counter;
+      const signature=status+JSON.stringify(players.map(p=>[p.id,p.name,p.variant]));
+      if(signature===previous)return;
+      previous=signature;roster.replaceChildren();
+      if(!players.length){
+        const empty=online?'Aucun joueur connecté.':status==='offline'?'La liste sera actualisée à la reconnexion.':'Recherche des joueurs…';
+        roster.append(node('li','mc-roster-empty',empty));return;
+      }
+      const sorted=[...players].sort((a,b)=>Number(b.id===net.id)-Number(a.id===net.id)||(a.name||'').localeCompare(b.name||'','fr'));
+      for(const person of sorted) {
+        const entry=node('li','mc-person'),face=node('canvas','mc-face');face.setAttribute('aria-hidden','true');
+        paintCanvas(face,(ctx,s)=>drawAvatar(ctx,0,0,s,person.variant||'fox'),30);
+        entry.append(face,node('span','mc-person-name',person.name||'Joueur'));
+        if(person.id===net.id)entry.append(node('small','mc-self','Vous'));
+        roster.append(entry);
+      }
     };
-    renderCurrent();interval=setInterval(()=>renderCurrent?.(),650);
+    renderCurrent();interval=setInterval(()=>renderCurrent?.(),900);
   }
   function open(kind) {
-    const kinds=['weapons','emotes','map','settings','room','help'];
+    const kinds=['weapons','emotes','map','settings','players','help'];
     if(!kinds.includes(kind))return;
     if(current===kind){close();return;}
     const activeFocus=current?previousFocus:document.activeElement;
@@ -383,7 +360,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     else if(kind==='map')mapPanel();
     else if(kind==='settings')settingsPanel();
     else if(kind==='help')helpPanel();
-    else roomPanel();
+    else playersPanel();
     dialog.focus({preventScroll:true});
   }
   function handleKey(e,phase='down') {

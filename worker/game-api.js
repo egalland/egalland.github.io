@@ -11,6 +11,7 @@ const SCHEMA = [
     op TEXT NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, data TEXT NOT NULL,
     at INTEGER NOT NULL, UNIQUE (room,player,op))`,
   'CREATE INDEX IF NOT EXISTS mc_events_room ON mc_events (room,seq)',
+  'CREATE INDEX IF NOT EXISTS mc_chat_history ON mc_events (room,seq) WHERE type=\'chat\'',
   'CREATE INDEX IF NOT EXISTS mc_events_age ON mc_events (at)',
   `CREATE TABLE IF NOT EXISTS mc_items (
     room TEXT NOT NULL, kind TEXT NOT NULL, item TEXT NOT NULL,
@@ -18,7 +19,8 @@ const SCHEMA = [
     PRIMARY KEY (room,kind,item))`,
   'CREATE INDEX IF NOT EXISTS mc_items_age ON mc_items (at)'
 ];
-const CAPACITY = 16;
+// Keep the public Paris records in place. Earlier named games remain isolated in storage.
+const WORLD_KEY = 'paris:public';
 const GONE = 25_000;
 const MAX_BATCH = 20;
 const EVENT_RETENTION = 86_400_000;
@@ -102,30 +104,31 @@ function shared(rows) {
   return world;
 }
 async function join(db,b,now) {
-  const {room,id,token}=b, name=clean(b.name,24)||'Kikalmo';
+  const {id,token}=b, name=clean(b.name,24)||'Kikalmo';
+  const room=WORLD_KEY;
   const q=(sql,...args)=>db.prepare(sql).bind(...args);
   const results=await db.batch([
     q('DELETE FROM mc_members WHERE seen<?',now-GONE),
     q('DELETE FROM mc_events WHERE at<?',now-EVENT_RETENTION),
     q('DELETE FROM mc_items WHERE at<?',now-ITEM_RETENTION),
     q(`INSERT INTO mc_members (room,id,secret,name,state,joined,seen)
-       SELECT ?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM mc_members WHERE room=? AND id=?)
-       OR (SELECT count(*) FROM mc_members WHERE room=?) < ?
-       ON CONFLICT (room,id) DO UPDATE SET seen=excluded.seen,name=excluded.name,state=excluded.state
+       VALUES (?,?,?,?,?,?,?)
+       ON CONFLICT (room,id) DO UPDATE SET seen=excluded.seen,name=excluded.name,
+       state=CASE WHEN excluded.state='{}' THEN mc_members.state ELSE excluded.state END
        WHERE mc_members.secret=excluded.secret`,
-       room,id,token,name,JSON.stringify(playerState(b.state)),now,now,room,id,room,CAPACITY),
+       room,id,token,name,JSON.stringify(playerState(b.state)),now,now),
     q('SELECT 1 AS ok FROM mc_members WHERE room=? AND id=? AND secret=?',room,id,token),
     q(MEMBERS_SQL,room,now-GONE),
     q('SELECT seq,player,name,type,data,at FROM mc_events WHERE room=? AND type=\'chat\' ORDER BY seq DESC LIMIT 30',room),
     q('SELECT COALESCE(MAX(seq),0) AS last FROM mc_events WHERE room=?',room),
     q('SELECT kind,item,data,owner FROM mc_items WHERE room=?',room)
   ]);
-  if (!results[4].results.length) return json({error:'full'},409);
+  if (!results[4].results.length) return json({error:'session'},403);
   return json({now,players:roster(results[5].results),history:events(results[6].results.reverse()),
     cursor:results[7].results[0].last,world:shared(results[8].results)});
 }
 async function sync(db,b,now) {
-  const {room,id,token}=b;
+  const {id,token}=b,room=WORLD_KEY;
   const q=(sql,...args)=>db.prepare(sql).bind(...args);
   const member=await q('SELECT name,seen,state FROM mc_members WHERE room=? AND id=? AND secret=? AND seen>?',room,id,token,now-GONE).first();
   if (!member) return json({error:'rejoin'},401);
@@ -165,11 +168,11 @@ async function sync(db,b,now) {
     if (ITEM_TYPES.has(type)) {
       // Use the stored payload and sequence. Retrying an older operation cannot rewind a car.
       stmts.push(q(`INSERT INTO mc_items (room,kind,item,seq,owner,data,at)
-        SELECT room,type,?,seq,CASE WHEN type='vehicle' THEN json_extract(data,'$.owner') ELSE '' END,data,at
-        FROM mc_events WHERE room=? AND player=? AND op=?
+        SELECT room,type,json_extract(data,'$.id'),seq,CASE WHEN type='vehicle' THEN json_extract(data,'$.owner') ELSE '' END,data,at
+        FROM mc_events WHERE room=? AND player=? AND op=? AND type=?
         ON CONFLICT (room,kind,item) DO UPDATE SET
         seq=excluded.seq,owner=excluded.owner,data=excluded.data,at=excluded.at
-        WHERE excluded.seq>mc_items.seq`,data.id,room,id,op));
+        WHERE excluded.seq>mc_items.seq`,room,id,op,type));
     }
   }
   const membersIndex=stmts.length;
@@ -186,23 +189,23 @@ async function sync(db,b,now) {
 }
 export async function handleApi(request, env) {
   const pathname=new URL(request.url).pathname;
-  const paris=pathname.startsWith('/api/paris/');
-  const path=paris ? pathname.replace('/api/paris/','/api/') : pathname;
-  if (!['/api/join','/api/sync','/api/leave'].includes(path)) return json({error:'route'},404);
+  const match=/^\/api(?:\/(world|paris))?\/(join|sync|leave)$/.exec(pathname);
+  if(!match)return json({error:'route'},404);
+  const [,generation,operation]=match;
+  if(!generation)return json({error:'update_required'},410);
   if (request.method!=='POST') return json({error:'method'},405);
-  if (!env.DB) return json({error:'storage'},503);
   const raw=await request.text();
   if (raw.length>32_000) return json({error:'length'},413);
   let b;
   try {b=JSON.parse(raw);} catch {return json({error:'json'},400);}
-  if (!b || typeof b.room!=='string' || !/^[a-z0-9][a-z0-9-]{0,31}$/.test(b.room) ||
-      !UUID.test(b.id) || !UUID.test(b.token)) return json({error:'session'},400);
-  // Older open tabs still use pixel coordinates and their original rooms.
-  if (paris) b.room='paris:'+b.room;
+  if (!b || typeof b!=='object' || Array.isArray(b)) return json({error:'session'},400);
+  if(generation==='paris' && b.room!==undefined && b.room!=='public')return json({error:'update_required'},410);
+  if (!UUID.test(b.id) || !UUID.test(b.token)) return json({error:'session'},400);
+  if (!env.DB) return json({error:'storage'},503);
   await ready(env.DB);
-  if (path==='/api/join') return join(env.DB,b,Date.now());
-  if (path==='/api/leave') {
-    await env.DB.prepare('DELETE FROM mc_members WHERE room=? AND id=? AND secret=?').bind(b.room,b.id,b.token).run();
+  if (operation==='join') return join(env.DB,b,Date.now());
+  if (operation==='leave') {
+    await env.DB.prepare('DELETE FROM mc_members WHERE room=? AND id=? AND secret=?').bind(WORLD_KEY,b.id,b.token).run();
     return json({left:true});
   }
   return sync(env.DB,b,Date.now());

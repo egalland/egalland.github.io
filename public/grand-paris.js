@@ -1,4 +1,5 @@
 import {areas} from './atlas-outlines.js';
+import {worldURL} from './world-link.js';
 
 const departments={'75':'Paris','92':'Hauts-de-Seine','93':'Seine-Saint-Denis','94':'Val-de-Marne'};
 const colors={'75':'#c3a58f','92':'#7faaa1','93':'#a69eb3','94':'#a3a98a'};
@@ -35,20 +36,18 @@ export function areaAt(lon,lat) {
   }
   return null;
 }
-export function sectorURL(currentUrl,room,lon,lat,name) {
+export function sectorURL(currentUrl,lon,lat,name) {
   if(!Number.isFinite(lon)||!Number.isFinite(lat))return null;
   const area=areaAt(round(lon),round(lat));if(!area)return null;
-  const url=new URL(currentUrl);
+  const url=worldURL(currentUrl);
   url.searchParams.delete('halte');url.searchParams.set('lon',lon.toFixed(5));url.searchParams.set('lat',lat.toFixed(5));
   url.searchParams.set('lieu',String(name||area.name).slice(0,90));
-  if(room)url.searchParams.set('salon',room);
   return url.href;
 }
-export function historicURL(currentUrl,room,key) {
-  const url=new URL(currentUrl);
+export function historicURL(currentUrl,key) {
+  const url=worldURL(currentUrl);
   for(const k of ['lon','lat','lieu'])url.searchParams.delete(k);
   url.searchParams.set('halte',key);
-  if(room)url.searchParams.set('salon',room);
   return url.href;
 }
 const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};

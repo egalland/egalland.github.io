@@ -23,10 +23,10 @@
   <nav class="topnav" aria-label="Navigation du jeu">
     <button class="nav-current" id="playNav" aria-current="page"><i data-icon="gamepad"></i>Jouer</button>
     <button data-panel="map"><i data-icon="map"></i>Carte</button>
-    <button data-panel="room"><i data-icon="people"></i>Salon</button>
+    <button data-panel="players"><i data-icon="people"></i>Joueurs</button>
   </nav>
   <div class="header-tools">
-    <button class="online-chip" id="online" data-panel="room" title="Voir les joueurs du salon"><b class="status-dot"></b><span id="onlineLabel">Connexion…</span></button>
+    <button class="online-chip" id="online" data-panel="players" title="Voir les joueurs connectés dans le monde" aria-label="Voir les joueurs connectés dans le monde"><b class="status-dot"></b><span id="onlineLabel">Connexion…</span></button>
     <span class="tool-divider"></span>
     <button class="tool" id="sound" aria-label="Activer le son" title="Activer le son"><i data-icon="volumeOff"></i></button>
     <button class="tool" data-panel="settings" aria-label="Réglages" title="Réglages"><i data-icon="settings"></i></button>
@@ -58,10 +58,10 @@
     <div class="inventory-cap"><span><i data-icon="pack"></i>ÉQUIPEMENT</span><span id="weaponLabel">Pistolet</span></div>
     <div class="inventory-slots" id="slots"></div>
   </section>
-  <aside class="hud chat" id="chat" aria-label="Chat du salon">
-    <button class="chat-head" id="chatToggle" aria-expanded="true"><span><i data-icon="chat"></i>Chat du salon</span><i data-icon="chevronDown"></i></button>
+  <aside class="hud chat" id="chat" aria-label="Chat mondial">
+    <button class="chat-head" id="chatToggle" aria-expanded="true"><span><i data-icon="chat"></i>Chat mondial</span><i data-icon="chevronDown"></i></button>
     <div class="chat-body"><div class="chat-log" id="chatLog" role="log" aria-live="polite"></div>
-    <form id="chatForm"><input id="chatEntry" aria-label="Message au salon" placeholder="Écrire un message…" autocomplete="off" enterkeyhint="send" maxlength="180"><button aria-label="Envoyer le message" title="Envoyer"><i data-icon="send"></i></button></form></div>
+    <form id="chatForm"><input id="chatEntry" aria-label="Message pour le chat mondial" placeholder="Écrire un message…" autocomplete="off" enterkeyhint="send" maxlength="180"><button aria-label="Envoyer le message" title="Envoyer"><i data-icon="send"></i></button></form></div>
   </aside>
   <div id="touchControls" aria-label="Commandes tactiles">
     <div class="stick" id="stick" role="group" aria-label="Joystick de déplacement"><span></span><b></b></div>

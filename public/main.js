@@ -14,7 +14,6 @@ const defaultNames=['Renard','Filou','Roussi','Ficelle','Moka','Capucine','Noise
 function guestName(){return defaultNames[Math.floor(Math.random()*defaultNames.length)]+' '+String(Math.floor(Math.random()*900)+100);}
 const name=read('name',guestName());
 write('name',name);
-const queryRoom=new URL(location.href).searchParams.get('salon')||'public';
 const weapons=[['fist','Poings'],['pistol','Pistolet'],['smg','Mitraillette'],['shotgun','Fusil à pompe'],['yarn','Pelote']];
 const city=$('#city'),chat=$('#chat'),entry=$('#chatEntry');
 let settingsSound=read('sound','false')==='true',panels=null,game=null, state={weapon:'pistol',ammo:12,health:100,wanted:0,district:'Place de l’Étoile'}, timer=0;
@@ -30,19 +29,17 @@ function appendChat({name,text,system=false}){
   while(log.children.length>60)log.firstElementChild.remove();
   log.scrollTop=log.scrollHeight;
 }
-function roomWelcome(room){$('#chatLog').replaceChildren();appendChat({system:true,text:room==='public'?'Tu as rejoint le salon public.':'Salon « '+room+' » rejoint.'});}
 function updateOnline(status,players){
   $('#online').dataset.status=status;
-  $('#onlineLabel').textContent=status==='online'?Math.max(1,players.length)+' en ligne':status==='full'?'Salon complet':status==='offline'?'Hors ligne':'Connexion…';
-  $('#online').setAttribute('aria-label','Salon multijoueur, '+$('#onlineLabel').textContent);
+  $('#onlineLabel').textContent=status==='online'?players.length+' en ligne':status==='offline'?'Hors ligne':'Connexion…';
+  $('#online').setAttribute('aria-label','Joueurs dans le monde, '+$('#onlineLabel').textContent);
   panels?.refresh();
 }
-let welcomed='';
-const net=createNet({room:queryRoom,name,onStatus:st=>{
-  if(st==='online' && welcomed!==net.room){welcomed=net.room;if(!$('#chatLog').children.length)roomWelcome(net.room);}
+let welcomed=false;
+const net=createNet({name,onStatus:st=>{
+  if(st==='online' && !welcomed){welcomed=true;appendChat({system:true,text:'Tu as rejoint le monde partagé.'});}
   updateOnline(st,net.players());
 },onPlayers:players=>updateOnline(net.status,players),onChat:appendChat});
-net.onReset(()=>{welcomed='';$('#chatLog').replaceChildren();});
 function notify(text){const box=$('#notice');box.textContent=text;box.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>box.classList.remove('show'),2800);}
 function focusGame(){if(chat.contains(document.activeElement))document.activeElement.blur();city.focus({preventScroll:true});}
 function selectWeapon(id){game?.selectWeapon(id);focusGame();}
@@ -74,7 +71,7 @@ function setName(value){const clean=net.setName(value);write('name',clean);$('#p
 function setSound(value){settingsSound=Boolean(value);write('sound',String(settingsSound));game?.setSound(settingsSound);const sound=$('#sound');sound.setAttribute('aria-pressed',String(settingsSound));const label=settingsSound?'Couper le son':'Activer le son';sound.title=label;sound.setAttribute('aria-label',label);sound.querySelector('i').innerHTML=icon(settingsSound?'volume':'volumeOff');}
 $('#playerName').textContent=name;
 game=createGame({canvas:city,minimap:$('#minimap'),net,onState,onNotice:notify});
-panels=createPanels({game,net,getState:()=>({...state,name:net.name,room:net.room}),selectWeapon,setName,setSound,getSound:()=>settingsSound,notify,returnFocus:focusGame});
+panels=createPanels({game,net,getState:()=>({...state,name:net.name}),selectWeapon,setName,setSound,getSound:()=>settingsSound,notify,returnFocus:focusGame});
 onState(state);setSound(settingsSound);
 document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>{if(document.activeElement===entry)entry.blur();panels.open(b.dataset.panel);}));
 $('#playNav').onclick=()=>{if(panels.isOpen())panels.close();chat.classList.remove('mobile-open');focusGame();};
@@ -82,7 +79,7 @@ $('#sound').onclick=()=>setSound(!settingsSound);
 function openChat(){if(panels.isOpen())panels.close();chat.classList.add('mobile-open');chat.classList.remove('collapsed');$('#chatToggle').setAttribute('aria-expanded','true');entry.focus({preventScroll:true});}
 $('#chatKey').onclick=openChat;$('#chatMobile').onclick=()=>{if(chat.classList.contains('mobile-open')){chat.classList.remove('mobile-open');focusGame();}else openChat();};
 $('#chatToggle').onclick=()=>{if(controlsAreTouch()){chat.classList.remove('mobile-open');focusGame();return;}chat.classList.toggle('collapsed');$('#chatToggle').setAttribute('aria-expanded',String(!chat.classList.contains('collapsed')));};
-$('#chatForm').onsubmit=e=>{e.preventDefault();const value=entry.value.trim();if(!value)return;if(net.sendChat(value)){entry.value='';focusGame();}else notify('Le chat sera disponible à la connexion au salon.');};
+$('#chatForm').onsubmit=e=>{e.preventDefault();const value=entry.value.trim();if(!value)return;if(net.sendChat(value)){entry.value='';focusGame();}else notify('Le chat mondial sera disponible à la reconnexion.');};
 window.addEventListener('keydown',e=>{
   if(panels.handleKey(e,'down')){e.stopImmediatePropagation();return;}
   if(e.target===entry){if(e.key==='Escape'){e.preventDefault();chat.classList.remove('mobile-open');focusGame();}return;}

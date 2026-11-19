@@ -4,107 +4,138 @@ import { localDatabase } from '../scripts/local-db.mjs';
 import { handleApi } from '../worker/game-api.js';
 import { createNet } from '../public/net.js';
 
-const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 async function until(condition) {
-  const start=Date.now();
+  const deadline=Date.now()+3500;
   while (!condition()) {
-    if (Date.now()-start>3500) assert.fail('The expected room update never arrived.');
+    if (Date.now()>deadline) assert.fail('The expected shared-world update did not arrive.');
     await sleep(15);
   }
 }
-test('Independent clients share their room, chat, map changes and vehicles across reconnects',async()=>{
-  const DB=localDatabase(),sessions=[];
-  const fetcher=(url,init)=>handleApi(new Request('https://example.test'+url,init),{DB});
-  function client(name,room) {
-    const messages=[],events=[],options={name,room,fetcher,pollMs:20,onChat:m=>messages.push(m)};
-    const net=createNet(options);
-    net.onEvent(e=>events.push(e));
-    net.publish({x:102,y:44,angle:0,type:'fox'});
-    sessions.push(net);
-    return {net,messages,events};
+const session = name => ({name,id:crypto.randomUUID(),token:crypto.randomUUID()});
+const api = (DB,path,body) => handleApi(new Request('https://game.test'+path,{
+  method:'POST',body:JSON.stringify(body)
+}),{DB});
+async function accepted(response) {
+  const r=await response;
+  const data=await r.json();
+  assert.equal(r.status,200,JSON.stringify(data));
+  return data;
+}
+
+test('Independent browsers in distant sectors exchange positions, global chat, damage, dispatch and car ownership',async()=>{
+  const DB=localDatabase(),clients=[],outstanding=new Set();
+  function client(name,x,y,oldLink) {
+    const messages=[],events=[];
+    const fetcher=(url,init)=>{
+      const body=JSON.parse(init.body);
+      if(oldLink) body.room=oldLink;
+      const req=api(DB,url,body);
+      outstanding.add(req);req.finally(()=>outstanding.delete(req));return req;
+    };
+    const net=createNet({name,pollMs:20,fetcher,onChat:m=>messages.push(m)});
+    net.onEvent(e=>events.push(e));net.publish({x,y,angle:0,type:'fox'});
+    const c={net,messages,events};clients.push(c);return c;
   }
   try {
-    const alice=client('Filou','atelier'),bob=client('Mousse','atelier'),other=client('Isolé','rue');
-    await Promise.all(sessions.map(n=>n.start()));
-    await until(()=>alice.net.peers().length===1 && bob.net.peers().length===1);
-    assert.deepEqual(alice.net.peers().map(p=>p.name),['Mousse']);
-    assert.equal(other.net.peers().length,0);
-    alice.net.publish({x:120,y:97,angle:Math.PI,vehicle:null});
-    assert.ok(alice.net.sendChat('Salut les renards !'));
-    alice.net.emit('destroy',{id:'p-7-8'});
-    alice.net.emit('vehicle',{id:'auto-3',x:120,y:97,angle:0,occupied:true});
-    alice.net.emit('emote',{symbol:'👋'});
-    const incident={id:'dispatch-swat-1',kind:'swat',x:50,y:60,started:Date.now(),level:3};
-    alice.net.emit('npc',incident);
-    await until(()=>bob.net.peers()[0]?.x===120 && bob.net.world().vehicles['auto-3']?.owner===alice.net.id && bob.messages.length && bob.events.some(e=>e.type==='emote'));
-    assert.deepEqual(bob.net.world().destroyed,['p-7-8']);
-    assert.deepEqual(bob.net.world().npcs[incident.id],incident);
-    assert.equal(bob.messages[0].text,'Salut les renards !');
-    assert.equal(alice.messages.length,1);
-    assert.deepEqual(other.net.world().destroyed,[]);
-    assert.equal(other.messages.length,0);
-    bob.net.emit('vehicle',{id:'auto-3',x:12,y:1,occupied:true});
-    await until(()=>bob.events.some(e=>e.type==='vehicleDenied'));
-    assert.equal(bob.net.world().vehicles['auto-3'].owner,alice.net.id);
-    alice.net.emit('vehicle',{id:'auto-3',x:200,y:300,angle:1,occupied:false});
-    await until(()=>bob.net.world().vehicles['auto-3']?.x===200);
-    bob.net.emit('vehicle',{id:'auto-3',x:200,y:300,occupied:true});
-    await until(()=>alice.net.world().vehicles['auto-3']?.owner===bob.net.id);
-    await other.net.setRoom('Atélier');
-    assert.equal(other.net.room,'atelier');
-    assert.deepEqual(other.net.world().destroyed,['p-7-8']);
-    assert.equal(other.net.world().vehicles['auto-3'].owner,bob.net.id);
-    assert.equal(other.messages[0].name,'Filou');
-    assert.equal(other.net.peers().length,2);
-    await bob.net.setRoom('rue');
-    await until(()=>alice.net.peers().length===1 && alice.net.peers()[0].name==='Isolé');
-    assert.equal(bob.net.peers().length,0);
-    assert.deepEqual(bob.net.world().destroyed,[]);
-    assert.equal(alice.net.players().some(p=>p.name==='Mousse'),false);
-  } finally {sessions.forEach(n=>n.stop());}
-});
-test('Retries are idempotent and an unrelated token cannot write as another player',async()=>{
-  const DB=localDatabase(),room='place',id=crypto.randomUUID(),token=crypto.randomUUID();
-  async function call(path,extra={}) {
-    const body=JSON.stringify({room,id,token,name:'Lune',state:{x:12,y:48},cursor:0,...extra});
-    return handleApi(new Request('https://example.test/api/'+path,{method:'POST',body}),{DB});
+    const paris=client('Filou',3200,660,'ancien-groupe-A'),cergy=client('Mousse',-24000,-15800),east=client('Miel',24000,12800,'ancien-groupe-B');
+    await Promise.all(clients.map(c=>c.net.start()));
+    await until(()=>clients.every(c=>c.net.peers().length===2));
+    assert.equal(cergy.net.peers().find(p=>p.id===paris.net.id).x,3200);
+    assert.equal(paris.net.peers().find(p=>p.id===east.net.id).y,12800);
+    paris.net.publish({x:3212,y:663,angle:1.2,vehicle:null});
+    assert.ok(paris.net.sendChat('Salut à toute l’Île-de-France !'));
+    paris.net.emit('destroy',{id:'p-arc-7'});
+    paris.net.emit('vehicle',{id:'auto-3',x:3212,y:663,angle:1.2,occupied:true});
+    paris.net.emit('emote',{symbol:'👋'});
+    const incident={id:'dispatch-swat-1',kind:'swat',x:3212,y:663,started:Date.now(),level:3};
+    paris.net.emit('npc',incident);
+    await until(()=>[cergy,east].every(c=>c.net.peers().some(p=>p.id===paris.net.id&&p.x===3212)
+      &&c.net.world().vehicles['auto-3']?.owner===paris.net.id&&c.events.some(e=>e.type==='emote')&&c.net.world().npcs[incident.id]&&c.messages.length===1));
+    for (const c of [cergy,east]) {
+      assert.equal(c.messages[0].text,'Salut à toute l’Île-de-France !');
+      assert.deepEqual(c.net.world().destroyed,['p-arc-7']);
+      assert.deepEqual(c.net.world().npcs[incident.id],incident);
+    }
+    assert.equal(paris.messages.length,1);
+    east.net.emit('vehicle',{id:'auto-3',x:24000,y:12800,occupied:true});
+    await until(()=>east.events.some(e=>e.type==='vehicleDenied'));
+    assert.equal(east.net.world().vehicles['auto-3'].owner,paris.net.id);
+    paris.net.emit('vehicle',{id:'auto-3',x:3220,y:670,occupied:false});
+    await until(()=>east.net.world().vehicles['auto-3'].occupied===false);
+    cergy.net.emit('vehicle',{id:'auto-3',x:3220,y:670,occupied:true});
+    await until(()=>east.net.world().vehicles['auto-3'].owner===cergy.net.id);
+    east.net.stop();
+    await until(()=>paris.net.peers().every(p=>p.id!==east.net.id));
+    const back=client('Miel',24000,12800);
+    assert(await back.net.start());assert.equal(back.messages[0].name,'Filou');
+    assert.deepEqual(back.net.world().destroyed,['p-arc-7']);assert.equal(back.net.world().vehicles['auto-3'].owner,cergy.net.id);
+  } finally {
+    for (const c of clients)c.net.stop();
+    await Promise.allSettled([...outstanding]);DB.close();
   }
-  assert.equal((await call('join')).status,200);
-  const write=op=>({events:[{op,type:'chat',data:{text:'Une fois'}}]});
-  await call('sync',write('1'));
-  const retry=await (await call('sync',write('1'))).json();
-  assert.equal(retry.events.filter(e=>e.type==='chat').length,1);
-  const unauth=await call('sync',{...write('2'),token:crypto.randomUUID()});
-  assert.equal(unauth.status,401);
-  const check=await (await call('sync')).json();
-  assert.equal(check.events.length,1);
 });
-test('A full room enforces its cap, permits a reconnect and reclaims an expired slot',async()=>{
+
+test('The public Paris history survives the change; named private histories and their pending requests stay private',async()=>{
   const DB=localDatabase();
-  const sessions=Array.from({length:17},()=>({room:'complet',id:crypto.randomUUID(),token:crypto.randomUUID()}));
-  const join=s=>handleApi(new Request('https://example.test/api/join',{
-    method:'POST',body:JSON.stringify(s)
-  }),{DB});
   try {
-    for (const s of sessions.slice(0,16)) assert.equal((await join(s)).status,200);
-    assert.equal((await join(sessions[16])).status,409);
-    assert.equal((await join(sessions[1])).status,200);
-    await DB.prepare('UPDATE mc_members SET seen=? WHERE id=?').bind(Date.now()-60_000,sessions[0].id).run();
-    const res=await join(sessions[16]);
-    assert.equal(res.status,200);
-    const {players}=await res.json();
-    assert.equal(players.length,16);
-    assert.equal(players.some(p=>p.id===sessions[0].id),false);
+    const first=session('Place publique'),second=session('Ancien lien');
+    await accepted(api(DB,'/api/world/join',first));
+    const stored=(room,op,text)=>DB.prepare(`INSERT INTO mc_events (room,player,op,name,type,data,at) VALUES (?,?,?,?,?,?,?)`)
+      .bind(room,first.id,op,'Archives','chat',JSON.stringify({text}),Date.now()).run();
+    await stored('paris:public','before-public','Bienvenue à Paris');
+    await stored('paris:cercle','before-private','Un ancien échange privé');
+    await stored('public','pixel-public','Ancien jeu en pixels');
+    await DB.prepare('INSERT INTO mc_items(room,kind,item,seq,owner,data,at) VALUES(?,?,?,?,?,?,?)')
+      .bind('paris:cercle','destroy','private-bin',2,'','{}',Date.now()).run();
+    for(const [route,room] of [['world','cercle'],['paris','public'],['paris',undefined],['world',{}]]) {
+      const entered=await accepted(api(DB,'/api/'+route+'/join',{...second,room}));
+      assert.deepEqual(entered.history.map(e=>e.data.text),['Bienvenue à Paris']);assert.deepEqual(entered.world.destroyed,[]);
+    }
+    const pending={op:'pending',type:'chat',data:{text:'Un message destiné à mon ancien cercle'}};
+    for(const path of ['/api/join','/api/sync','/api/leave','/api/paris/join','/api/paris/sync','/api/paris/leave']){
+      const res=await api(DB,path,{...second,room:'cercle',events:[pending]});
+      assert.equal(res.status,410,path);assert.deepEqual(await res.json(),{error:'update_required'});
+    }
+    const visible=await accepted(api(DB,'/api/world/sync',{...first,cursor:0}));
+    assert.equal(visible.players.length,2);
+    assert.deepEqual(visible.events.filter(e=>e.type==='chat').map(e=>e.data.text),['Bienvenue à Paris']);
+    const privateRows=await DB.prepare('SELECT count(*) AS n FROM mc_events WHERE room=?').bind('paris:cercle').first();
+    assert.equal(privateRows.n,1);
   } finally {DB.close();}
 });
 
-test('Paris rooms and old top-down rooms use separate coordinate spaces',async()=>{
+test('More than sixteen players coexist, old public clients see them and reconnection keeps the same player',async()=>{
   const DB=localDatabase();
-  const enter=(path,name)=>handleApi(new Request('https://example.test'+path,{method:'POST',body:JSON.stringify({
-    room:'public',name,id:crypto.randomUUID(),token:crypto.randomUUID(),state:{x:10,y:20}
-  })}),{DB}).then(r=>r.json());
-  assert.equal((await enter('/api/join','Classic')).players.length,1);
-  assert.deepEqual((await enter('/api/paris/join','Paris')).players.map(p=>p.name),['Paris']);
-  const second=await enter('/api/paris/join','Neuilly');
-  assert.deepEqual(second.players.map(p=>p.name).sort(),['Neuilly','Paris']);
+  try {
+    const crowd=Array.from({length:24},(_,i)=>({...session('Joueur '+i),state:{x:1000*i,y:-40*i}}));
+    const joined=await Promise.all(crowd.map(c=>accepted(api(DB,'/api/world/join',c))));
+    assert.equal(joined.at(-1).players.length,24);
+    const reconnect=await accepted(api(DB,'/api/paris/join',{...crowd[5],state:undefined,room:'public'}));
+    assert.equal(reconnect.players.length,24);
+    const again=reconnect.players.find(p=>p.id===crowd[5].id);
+    assert.equal(again.x,5000);assert.equal(again.joinedAt,joined[5].players.find(p=>p.id===crowd[5].id).joinedAt);
+    await accepted(api(DB,'/api/world/leave',crowd[0]));
+    await DB.prepare('UPDATE mc_members SET seen=? WHERE room=? AND id=?').bind(Date.now()-60_000,'paris:public',crowd[1].id).run();
+    const active=await accepted(api(DB,'/api/world/sync',crowd[2]));
+    assert.equal(active.players.length,22);assert(!active.players.some(p=>p.id===crowd[0].id||p.id===crowd[1].id));
+  } finally {DB.close();}
+});
+
+test('Retries do not duplicate chat, rewind vehicles or change the identity of a destroyed item',async()=>{
+  const DB=localDatabase();
+  try {
+    const alice=session('Lune'),send=events=>accepted(api(DB,'/api/world/sync',{...alice,cursor:0,events}));
+    await accepted(api(DB,'/api/world/join',alice));
+    const chat={op:'1',type:'chat',data:{text:'Une fois'}},destroy={op:'2',type:'destroy',data:{id:'bin-one'}};
+    const car={op:'3',type:'vehicle',data:{id:'auto',occupied:true,x:18,y:28}};
+    await send([chat,destroy,car]);await send([{op:'4',type:'vehicle',data:{id:'auto',occupied:false,x:78,y:18}}]);
+    const retried=await send([chat,{...destroy,data:{id:'bin-two'}},car]);
+    assert.equal(retried.events.filter(e=>e.type==='chat').length,1);
+    assert.equal((await api(DB,'/api/world/join',{...alice,token:crypto.randomUUID()})).status,403);
+    assert.equal((await api(DB,'/api/world/sync',{...alice,token:crypto.randomUUID(),events:[chat]})).status,401);
+    const view=await accepted(api(DB,'/api/world/join',session('Témoin')));
+    assert.deepEqual(view.world.destroyed,['bin-one']);assert.equal(view.world.vehicles.auto.x,78);assert.equal(view.world.vehicles.auto.owner,'');
+    assert.equal(view.history.length,1);
+  } finally {DB.close();}
 });

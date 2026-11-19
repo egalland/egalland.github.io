@@ -437,11 +437,22 @@ function alongPath(path,d){
   const a=path.path[low-1],b=path.path[low],k=clamp((d-lengths[low-1])/(lengths[low]-lengths[low-1]||1),0,1);
   return {x:a[0]+(b[0]-a[0])*k,y:a[1]+(b[1]-a[1])*k,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
 }
-const routeRecords=streetList.map(road=>({...pathGeometry(road.path),road,key:hash(road.id)})).filter(p=>p.length>2);
+// Clipping a long IGN section can restart path-relative furniture numbers in another tile.
+const clippedKey=(road)=>{
+  if(!sector)return '';
+  const first=road.path[0],last=road.path.at(-1);
+  const onEdge=([x,y])=>x<=landBounds.minX+1||x>=landBounds.maxX-1||y<=landBounds.minY+1||y>=landBounds.maxY-1;
+  return onEdge(first)||onEdge(last)?hash(first.join(',')+';'+last.join(',')).toString(36):'';
+};
+const routeRecords=streetList.map(road=>{
+  const part=clippedKey(road),id=part?road.id+':'+part:road.id;
+  return {...pathGeometry(road.path),road,id,part,key:hash(road.id)};
+}).filter(p=>p.length>2);
 export const props=[];
 const heights={tree:3.5,lamp:5,bollard:.87,bench:.85,hydrant:.85,bin:1.1,postbox:1.2};
 const radii={tree:.42,lamp:.20,bollard:.22,bench:.85,hydrant:.31,bin:.34,postbox:.36};
-function putProp(road,side,index,type,p){
+function putProp(path,side,index,type,p){
+  const road=path.road;
   const r=radii[type],offset=road.w*.5+(type==='tree'?1.9:1.16);
   const x=p.x-Math.sin(p.angle)*offset*side,y=p.y+Math.cos(p.angle)*offset*side;
   if(destinations.some(d=>Math.hypot(x-d.x,y-d.y)<8))return;
@@ -453,7 +464,7 @@ function putProp(road,side,index,type,p){
     if(seg.road.id===road.id || seg.road.kind==='path')continue;
     if(lineDist2(x,y,seg.a,seg.b)<sq(Math.max(1,seg.road.w*.5-.2)))return;
   }
-  const item={id:'g'+road.id+'-'+(side===1?'d':'g')+'-'+index,type,x,y,r,h:heights[type],angle:p.angle};
+  const item={id:'g'+path.id+'-'+(side===1?'d':'g')+'-'+index,type,x,y,r,h:heights[type],angle:p.angle};
   props.push(item);decor.insert(item,{minX:x-r,maxX:x+r,minY:y-r,maxY:y+r});
 }
 const ordered=routeRecords.slice().sort((a,b)=>(b.road.kind==='primary')-(a.road.kind==='primary') || (b.road.w-a.road.w) || a.key-b.key);
@@ -466,7 +477,7 @@ for(const path of ordered){
   for(const side of [-1,1]){
     let serial=0;
     for(let d=7+(path.key%13)+(side>0?3:0);d<path.length-6;d+=step){
-      const type=kinds[(path.key+serial+(side>0?2:0))%kinds.length];putProp(road,side,serial,type,alongPath(path,d));serial++;
+      const type=kinds[(path.key+serial+(side>0?2:0))%kinds.length];putProp(path,side,serial,type,alongPath(path,d));serial++;
     }
   }
 }
@@ -552,7 +563,9 @@ for(const {p} of trafficSeeds.values()){
   const left=offsetLine(v,widths,-1).reverse(),right=offsetLine(v,widths,1);
   const loop=pathGeometry([...right,...left,right[0]]);
   if(loop.length<40)continue;
-  const rec={...loop,key:p.key,road:p.road,count:Math.max(1,Math.round(loop.length/208))};
+  const clipped=sections.some(e=>e.p.part);
+  const id=clipped?p.road.id+':'+hash(sections.map(e=>e.p.id).join('/')).toString(36):p.road.id;
+  const rec={...loop,id,key:p.key,road:p.road,count:Math.max(1,Math.round(loop.length/208))};
   circulation.insert(rec,bounds(loop.path,4));
 }
 function addPatrol(patrol,id,name){
@@ -571,12 +584,12 @@ for(const {p} of walkerSeeds.values()){
       const pos=alongPath(p,d),off=(p.road.w*.5+1.9)*side;
       const x=pos.x-Math.sin(pos.angle)*off,y=pos.y+Math.cos(pos.angle)*off;
       if(testPose(x,y,{radius:.28})){
-        if(run.length)addPatrol(run,p.road.id+':'+side+':'+(number++),p.road.name);
+        if(run.length)addPatrol(run,p.id+':'+side+':'+(number++),p.road.name);
         run=[];continue;
       }
       run.push([x,y]);
     }
-    if(run.length)addPatrol(run,p.road.id+':'+side+':'+number,p.road.name);
+    if(run.length)addPatrol(run,p.id+':'+side+':'+number,p.road.name);
   }
 }
 const flocks=['pedestrian','pedestrian','pedestrian','pedestrian','police','pedestrian','pedestrian','firefighter','pedestrian','medic','pedestrian','swat','pedestrian','pedestrian'];
@@ -595,7 +608,7 @@ export function routeAgents(x,y,radius=140,epochMs=Date.now()){
       p.angle=Math.atan2(ahead.y-back.y,ahead.x-back.x);
       if(sq(x-p.x)+sq(y-p.y)>r2 || testPose(p.x,p.y,{radius:.42},false))continue;
       const type=fleet[(route.key+i*2)%fleet.length];
-      consider(cars,{...p,id:'v'+route.road.id+'-'+i,type,kind:type,color:tintedCars[(route.key+i)%tintedCars.length],speed:base,moving:true});
+      consider(cars,{...p,id:'v'+route.id+'-'+i,type,kind:type,color:tintedCars[(route.key+i)%tintedCars.length],speed:base,moving:true});
     }
   }
   for(const route of footPatrol.area(x,y,radius)){

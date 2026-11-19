@@ -1,15 +1,17 @@
 import {sectorInfo} from './paris-world.js';
+import {worldURL} from './world-link.js';
 import {areaAt} from './grand-paris.js';
 
 const transferKey='maillecity.travel.v1';
 export function attachSectorTravel(game,net,button) {
   const current=new URL(location.href);
-  const key=url=>[url.searchParams.get('lon'),url.searchParams.get('lat'),url.searchParams.get('salon')||'public'].join('|');
+  const key=url=>[url.searchParams.get('lon'),url.searchParams.get('lat')].join('|');
   try {
     const raw=sessionStorage.getItem(transferKey);
     sessionStorage.removeItem(transferKey);
     const transfer=raw&&JSON.parse(raw);
-    if(transfer?.key===key(current)&&Date.now()-transfer.at<180000)game.restoreTravelState(transfer.state);
+    const previousKey=typeof transfer?.key==='string'?transfer.key.split('|').slice(0,2).join('|'):null;
+    if(previousKey===key(current)&&Date.now()-transfer.at<180000)game.restoreTravelState(transfer.state);
     else if(current.searchParams.get('halte'))game.travel(current.searchParams.get('halte'));
   } catch { /* Browser storage can be disabled. The sector has its own street spawn. */ }
   let next=null;
@@ -27,7 +29,7 @@ export function attachSectorTravel(game,net,button) {
   }
   button.onclick=()=>{
     if(!next)return;
-    const dest=new URL(location.href);dest.searchParams.delete('halte');
+    const dest=worldURL(location.href);dest.searchParams.delete('halte');
     dest.searchParams.set('lon',next.lon);dest.searchParams.set('lat',next.lat);dest.searchParams.set('lieu',next.name);
     try{sessionStorage.setItem(transferKey,JSON.stringify({key:key(dest),at:Date.now(),state:game.exportTravelState()}));}catch{}
     net.stop();location.assign(dest.href);

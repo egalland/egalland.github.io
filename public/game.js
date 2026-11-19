@@ -15,6 +15,7 @@ const weapons={
   shotgun:{mag:5,interval:.72,range:22,damage:16,reload:1.55},
   yarn:{mag:6,interval:.52,range:40,damage:13,reload:1.15}
 };
+const PEER_RANGE=212;
 const services={police:'police',firefighter:'firetruck',medic:'ambulance',swat:'swat'};
 const dimensions=e=>['ambulance','firetruck','swat'].includes(e.type)?{halfLength:2.55,halfWidth:1.04}:{halfLength:2.06,halfWidth:.90};
 const softProp=o=>o && ['bollard','bench','bin','hydrant','postbox','crate','lamp','tree'].includes(o.type);
@@ -68,7 +69,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
   }
   function stun(actor){
     if(actor.stunned)return;
-    const state={id:actor.id,x:actor.x,y:actor.y,stunnedUntil:epoch+16000};
+    const state={id:actor.id,x:actor.x,y:actor.y,type:actor.type,angle:actor.angle,color:actor.color,stunnedUntil:epoch+16000};
     npcShared.set(actor.id,state);emit('npc',state);actor.stunned=true;
     crime(['police','swat'].includes(actor.type)?1.05:.56,'medic');
   }
@@ -93,7 +94,12 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
     if(damageLock>0)return;damageLock=.75;impact=1;p.health=Math.max(0,p.health-n);
     tone(120,.14,'triangle',.05,60);
     if(p.health<=0){
-      if(car)dropCar(true);heat=p.wanted=0;p.health=100;damageLock=4;
+      if(car){
+        if(!travelClaim||travelClaim.sent){const parked={...car,x:p.x,y:p.y,angle:p.angle,moving:false,occupied:false,speed:0,owner:''};
+          carsShared.set(car.id,{...parked,protect:epoch+1600});emit('vehicle',parked);}
+        dropCar(true);
+      }
+      heat=p.wanted=0;p.health=100;damageLock=4;
       placeAt(levelPlace||SPAWN);onNotice('Les secours t’ont remis sur pied.');
     }
   }
@@ -133,12 +139,14 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
       if(!current||!(current.protect>epoch))carsShared.set(id,d);
     }
     for(const [id,d] of Object.entries(world.npcs||{})){if(d.kind){if(d.started>epoch-34000&&(!incidents.has(id)||incidents.get(id).started<d.started))incidents.set(id,d);}
-      else if(!npcShared.has(id)||npcShared.get(id).stunnedUntil<d.stunnedUntil)npcShared.set(id,d);}
+      else if(d.stunnedUntil>epoch && (!npcShared.has(id)||npcShared.get(id).stunnedUntil<d.stunnedUntil))npcShared.set(id,d);}
   }
   function updateRemote(dt){
     remotes=[];const k=blend(10,dt);
     for(const e of peers.values()){
-      const d=e.data,large=dist(e,d)>18;
+      const d=e.data;
+      if(dist(d,p)>PEER_RANGE){e.x=d.x;e.y=d.y;e.angle=d.angle||0;continue;}
+      const large=dist(e,d)>18;
       const ahead=clamp((epoch-(d.updatedAt||epoch))/1000,0,.10);
       const tx=d.x+(d.vx||0)*ahead,ty=d.y+(d.vy||0)*ahead;e.x+=(tx-e.x)*(large?1:k);e.y+=(ty-e.y)*(large?1:k);
       e.angle=turnTo(e.angle,d.angle||0,12,dt);e.walk+=dt*(d.sprinting?14:9);
@@ -162,7 +170,11 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
       cars.push({...carPos,id,type:vehicleType,angle:a+Math.PI,isCar:true,speed:progress<1?4:0,moving:progress<1,siren:true});
     }
     if(age<3)return;
-    const target=['police','swat'].includes(role)&&p.wanted&&dist(p,d)<24?p:d,at=offset(d,a,parkDistance),distance=dist(at,target)||1;
+    // Every client chases the player attached to this dispatch, using the same world-space incident.
+    const sourceId=d.id.slice(('unit-'+role+'-').length);
+    const suspect=sourceId===(net?.id||'self')?p:peers.get(sourceId)?.data;
+    const target=(role==='police'||role==='swat')&&suspect?.wanted&&dist(suspect,d)<24?suspect:d;
+    const at=offset(d,a,parkDistance),distance=dist(at,target)||1;
     const f=clamp((age-3)*(role==='swat'?2.4:1.7)/distance,0,1),q={x:at.x+(target.x-at.x)*f,y:at.y+(target.y-at.y)*f};
     if(blocked(q.x,q.y,.36,destroyed)){q.x=at.x;q.y=at.y;}
     actors.push({...q,id:d.id+'-foot',type:role,angle:Math.atan2(target.y-at.y,target.x-at.x),moving:f<1,move:f<1,speed:f<1?1.7:0,walk:t*8});
@@ -180,7 +192,15 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
       if(d.occupied&&(peers.has(d.owner)||d.owner===net?.id))continue;
       cars.push({...d,angle:d.angle||0,isCar:true,moving:false,speed:0});}
     for(const [id,d] of incidents){if(epoch-d.started>30000)incidents.delete(id);else serviceResponse(d,time);}
-    for(const actor of actors){const s=npcShared.get(actor.id);if(s?.stunnedUntil>epoch){actor.x=s.x;actor.y=s.y;actor.stunned=true;actor.moving=actor.move=false;actor.speed=0;}}
+    // Keep the downed person at the recorded contact while their normal patrol continues on the clock.
+    for(const [id,state] of npcShared){
+      if(state.stunnedUntil<=epoch){npcShared.delete(id);continue;}
+      if(dist(state,p)>130)continue;
+      let actor=actors.find(e=>e.id===id);
+      if(actor && dist(actor,state)>36)continue;
+      if(!actor){actor={...state,type:state.type||'pedestrian'};actors.push(actor);}
+      Object.assign(actor,{x:state.x,y:state.y,moving:false,move:false,stunned:true,speed:0});
+    }
     const near=[...actors,...cars,...remotes].filter(e=>dist(e,p)<9);
     obstacles=near.filter(e=>!e.stunned).map(collisionBody);
     nearCar=null;if(!car){let best=5.65;for(const v of cars){const d=dist(v,p);if(d<best){nearCar=v;best=d;}}}
@@ -349,7 +369,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
   function frame(t){
     if(!isRunning)return;
     const dt=clamp((t-previousFrame)/1000,.001,.075);
-    previousFrame=t;time+=dt;epoch=net?.roomTime?.()||Date.now();
+    previousFrame=t;time+=dt;epoch=net?.serverTime?.()||Date.now();
     popTick-=dt;if(popTick<=0){syncPeers();popTick=.24;}
     population(dt);
     if(!drag && Math.abs(driftX)+Math.abs(driftY)>.002){
@@ -428,7 +448,10 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
   const detachEvent=net?.onEvent?.(e=>{
     const d=e.data||{};
     if(e.type==='emote')bubbles.set(e.player,{symbol:String(d.symbol||''),until:epoch+3600});
-    if(e.type==='hit'&&d.target===net?.id)damage(clamp(d.damage||0,0,35));
+    if(e.type==='hit'&&d.target===net?.id){
+      const sender=(net?.peers?.()||[]).find(peer=>peer.id===e.player);
+      if(sender&&dist(sender,p)<=weapons.pistol.range+16)damage(clamp(d.damage||0,0,35));
+    }
     if(e.type==='destroy'){if(!destroyed.has(d.id)){const o=nearbyProps(p.x,p.y,125).find(o=>o.id===d.id);if(o)view.effect('burst',o.x,o.y);}destroyed.add(d.id);}
     if(e.type==='vehicle')carsShared.set(d.id,d);
     if(e.type==='vehicleDenied'&&d.id===car?.id){
@@ -438,10 +461,6 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
     if(e.type==='npc'){if(d.kind)incidents.set(d.id,d);else npcShared.set(d.id,d);}
     if(e.type==='shot'&&dist(d,p)<125)view.effect(d.kind==='yarn'?'yarn':d.kind==='fist'?'fist':'shot',d.x,d.y,d.angle||0,d.length||1);
   });
-  const detachReset=net?.onReset?.(()=>{
-    travelClaim=null;car=null;nearCar=null;carsShared.clear();destroyed.clear();peers.clear();incidents.clear();npcShared.clear();bubbles.clear();arrivalChecked=false;
-    levelPlace=null;heat=p.wanted=0;p.health=100;score=0;reloading=cooldown=0;placeAt(SPAWN);
-  });
   ready=true;sendHud(true);
   if(view.available){syncPeers();population(.016);publish();frame(previousFrame+.1);}
   return {available:view.available,destinations,travel,exportTravelState,restoreTravelState,emote,selectWeapon,action,setPaused(v){paused=!!v;if(paused)resetInputs();},
@@ -449,8 +468,8 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},bu
     setAim(x,y){aimX=clamp(Number(x)||0,-1,1);aimY=clamp(Number(y)||0,-1,1);},
     setSound(v){sound=!!v;if(sound)unlock();},
     getPosition(){return {x:p.x,y:p.y,angle:p.angle,district:district()};},
-    drawFullMap(target){paintMap(target,p,{full:true,peers:remotes,vehicles:cars});},
-    destroy(){isRunning=false;cancelAnimationFrame(frameId);detachReset?.();detachEvent?.();view.dispose();
+    drawFullMap(target){paintMap(target,p,{full:true,peers:net?.peers?.()||remotes,vehicles:cars});},
+    destroy(){isRunning=false;cancelAnimationFrame(frameId);detachEvent?.();view.dispose();
       window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',resetInputs);document.removeEventListener('visibilitychange',visibility);
       canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);
       canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('contextmenu',menu);audio?.close().catch(()=>{});

@@ -1,18 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SPAWN, getTravelPoint, nearbyProps } from '../public/paris-world.js';
+import { SPAWN, getTravelPoint, nearbyProps, blocked } from '../public/paris-world.js';
 import { createGame } from '../public/game.js';
 
-test('Chase-camera controls, car possession, room effects and travel share the real Paris world',()=>{
+test('Chase-camera controls, car possession, shared effects and travel share the real Paris world',()=>{
   const saved={};for(const k of ['document','window','requestAnimationFrame','cancelAnimationFrame'])saved[k]=globalThis[k];
   const surface=()=>Object.assign(new EventTarget(),{focus(){},setPointerCapture(){}});
   const canvas=surface();let frame,stamp=performance.now(),epoch=1782250000000;
   globalThis.document=Object.assign(surface(),{hidden:false});globalThis.window=surface();
   globalThis.requestAnimationFrame=callback=>{frame=callback;return 1;};globalThis.cancelAnimationFrame=()=>{};
-  const shots=[],emitted=[],received=[],observed=[];let roomCallback,eventCallback,viewState;
+  const shots=[],emitted=[],received=[],observed=[];let eventCallback,viewState;
   let pose, aim=SPAWN.angle;
-  const net={id:'test',status:'online',peers:()=>[],roomTime:()=>epoch,world:()=>({}),publish:v=>pose=v,
-    onReset:fn=>{roomCallback=fn;},onEvent:fn=>{eventCallback=fn;},emit:(a,b)=>emitted.push([a,b])};
+  const testPeers=[];
+  const net={id:'test',status:'online',peers:()=>testPeers,serverTime:()=>epoch,world:()=>({}),publish:v=>pose=v,
+    onEvent:fn=>{eventCallback=fn;},emit:(a,b)=>emitted.push([a,b])};
   const view={available:true,mode:'webgl',aim:()=>aim,effect:(...v)=>shots.push(v),render:s=>viewState=s,dispose(){}};
   const step=(n=1)=>{for(let i=0;i<n;i++){stamp+=1000/60;epoch+=1000/60;frame(stamp);}};
   let game;
@@ -41,7 +42,7 @@ test('Chase-camera controls, car possession, room effects and travel share the r
     const prop=nearbyProps(pose.x,pose.y,45)[0];
     assert(prop);eventCallback({type:'destroy',data:{id:prop.id},player:'other'});step();
     assert(viewState.destroyed.has(prop.id));
-    roomCallback();step(4);assert(!viewState.destroyed.has(prop.id));assert.equal(pose.x,SPAWN.x);
+    assert(game.travel(SPAWN.key));step(4);assert(viewState.destroyed.has(prop.id));assert.equal(pose.x,SPAWN.x);
     const target=nearbyProps(SPAWN.x,SPAWN.y,20).sort((a,b)=>Math.hypot(a.x-SPAWN.x,a.y-SPAWN.y)-Math.hypot(b.x-SPAWN.x,b.y-SPAWN.y))[0];
     assert(target);aim=Math.atan2(target.y-SPAWN.y,target.x-SPAWN.x);
     game.selectWeapon('pistol');step(16);
@@ -49,6 +50,24 @@ test('Chase-camera controls, car possession, room effects and travel share the r
     canvas.dispatchEvent(Object.assign(new Event('pointerup'),{button:0,pointerType:'mouse',pointerId:1}));
     step(2);assert(emitted.some(([kind,data])=>kind==='destroy'&&data.id===target.id));
     assert(viewState.destroyed.has(target.id));
+    const here=game.getPosition();
+    const otherSpot=Array.from({length:12},(_,i)=>({x:here.x+3*Math.cos(i*Math.PI/6),y:here.y+3*Math.sin(i*Math.PI/6)}))
+      .find(q=>!blocked(q.x,q.y,.45));
+    assert(otherSpot);
+    for(let i=0;i<32;i++)testPeers.push({id:'distant-'+i,x:here.x+4000+i,y:here.y});
+    testPeers.push({...otherSpot,id:'nearby-fox',wanted:1});
+    step(18);
+    const visiblePeers=viewState.entities.filter(e=>e.peer);
+    assert.deepEqual(visiblePeers.map(e=>e.id),['nearby-fox']);
+    eventCallback({type:'npc',player:'nearby-fox',data:{id:'unit-police-nearby-fox',kind:'police',...here,started:epoch-13000,level:1}});
+    step();
+    const officer=viewState.entities.find(e=>e.id==='unit-police-nearby-fox-foot');
+    assert(officer);assert.ok(Math.hypot(officer.x-otherSpot.x,officer.y-otherSpot.y)<.1);
+    const health=viewState.p.health;
+    eventCallback({type:'hit',player:'distant-0',data:{target:'test',damage:10}});
+    assert.equal(viewState.p.health,health);
+    eventCallback({type:'hit',player:'nearby-fox',data:{target:'test',damage:10}});
+    assert.equal(viewState.p.health,health-10);
   } finally{
     game?.destroy();for(const [k,v] of Object.entries(saved)){if(v===undefined)delete globalThis[k];else globalThis[k]=v;}
   }
@@ -61,7 +80,7 @@ test('A sector crossing preserves equipment and reacquires the same car after th
   globalThis.requestAnimationFrame=cb=>(queued=cb,1);globalThis.cancelAnimationFrame=()=>{};
   const step=n=>{for(let i=0;i<n;i++){stamp+=1000/60;epoch+=1000/60;queued(stamp);}};
   const shared={vehicles:{}},peers=[],claims=[];
-  const net={id:'first',status:'online',world:()=>shared,peers:()=>peers,roomTime:()=>epoch,
+  const net={id:'first',status:'online',world:()=>shared,peers:()=>peers,serverTime:()=>epoch,
     publish:s=>{pose=s;},emit:(k,d)=>{if(k==='vehicle')claims.push(d);return true;}};
   function start(){
     return createGame({canvas:new EventTarget(),net,onState:s=>{state=s;},buildView:()=>({

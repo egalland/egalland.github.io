@@ -1,3 +1,7 @@
+import {worldURL} from './world-link.js';
+
+const canonical=worldURL(location.href);
+if(canonical.href!==location.href)history.replaceState(history.state,'',canonical.href);
 // The loading scene remains interactive if a module fails on a slow mobile connection.
 const retry=document.getElementById('retryLoad');
 retry.onclick=()=>location.reload();
