@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>STRATE · Rapport des agents</title><link rel="stylesheet" href="style.css"></head>
+<body><main><h1>STRATE · Rapport des agents</h1><p>Modifiez le journal fictif pour comparer les ventes, les blocages et le temps de suspension des usines. La simulation se calcule dans votre navigateur.</p><form><fieldset><legend>Journal de simulation</legend><label>Usines par agent<input required type="number" name="factoryCount" value="2" min="1" max="1000" step="1"></label><p><label>Événements JSON<textarea required name="events" spellcheck="false">[
+  {"name":"Agent Démo","at":"2000-01-01T00:00:00Z","action":"join"},
+  {"name":"Agent Démo","at":"2000-01-01T00:02:00Z","action":"factory/pause","order":{"target":"A"}},
+  {"name":"Agent Démo","at":"2000-01-01T00:03:00Z","action":"factory/pause","order":{"target":"B"}},
+  {"name":"Agent Démo","at":"2000-01-01T00:08:00Z","action":"factory/pause","order":{"target":"B"}},
+  {"name":"Agent Démo","at":"2000-01-01T00:10:00Z","action":"townSell/","before":{"credits":1},"after":{"credits":4}}
+]</textarea></label></p></fieldset><button type="submit">Analyser le journal</button></form><p role="alert" id="error"></p><section aria-live="polite" aria-atomic="true"><h2>Résultats par agent</h2><div id="output"></div></section><noscript>Activez JavaScript pour utiliser les calculs interactifs.</noscript></main><script type="module" src="web.mjs"></script></body></html>
