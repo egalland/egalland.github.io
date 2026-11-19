@@ -1,5 +1,5 @@
 import {enableStripScroll} from './strip-scroll.mjs';
-import {themeSwitch} from '/portfolio-assets/theme-switch.mjs';
+import {themeSwitch} from '/portfolio-assets/theme-switch.mjs?v=dossier1';
 import {setChromeType,lightType} from './chrome-type.js?v=theme-url1';
 import {chapters as entries,chapterFromHash,renderChapters} from './chapters.js?v=theme-url1';
 import {makeChainMenu} from './chain-menu.js?v=header1';

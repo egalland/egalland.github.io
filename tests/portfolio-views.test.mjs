@@ -50,7 +50,7 @@ test('les anciennes adresses gardent le thème et la section dans le document co
 });
 test('les dossiers des applications restent hors du périmètre des modifications',()=>{
  const changed=execFileSync('git',['diff','--name-only','48359f09fe15e09fd8c8e3409ed302b7a66d11e0'],{cwd:root,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- for(const name of changed)assert.match(name,/^(?:index\.html|README\.md|source-history\/portfolio-chrome\.bundle|chrome\/|portfolio-assets\/|points\/|curseurs\/|portfolio\/|scripts\/|tests\/portfolio-)/,name);
+ for(const name of changed)assert.match(name,/^(?:index\.html|README\.md|source-history\/portfolio-chrome\.bundle|chrome\/|dossier\/|portfolio-assets\/|points\/|curseurs\/|portfolio\/|scripts\/|tests\/portfolio-)/,name);
 });
 
 test('Points retrouve ses tableaux indépendants avec les mêmes contenus et liens',()=>{
@@ -87,7 +87,7 @@ test('les URL de thème et les anciens dossiers conservent projet et paramètres
    location:{href,replace:url=>{target=url}},history:{state:null,replaceState:(_,__,url)=>{target=url}}});
   return target;
  };
- for(const theme of ['chrome','points']){
+ for(const theme of ['chrome','points','dossier']){
   const canonical='https://egalland.github.io/?theme='+theme+'&lang=fr#pills';
   const doc=run(canonical,'curseurs');
   assert.equal(new URL(doc).pathname,'/'+theme+'/');
@@ -97,9 +97,9 @@ test('les URL de thème et les anciens dossiers conservent projet et paramètres
  assert.equal(run('https://egalland.github.io/','curseurs'),null);
 });
 
-test('les trois en-têtes partagent le même sélecteur et gardent le projet dans les liens',async()=>{
+test('les quatre en-têtes partagent le même sélecteur et gardent le projet dans les liens',async()=>{
  const {themeUrl}=await import('../portfolio-assets/theme-switch.mjs');
- const views={curseurs:'index.html',points:'points/index.html',chrome:'chrome/index.html'};
+ const views={curseurs:'index.html',points:'points/index.html',chrome:'chrome/index.html',dossier:'dossier/index.html'};
  for(const [current,file] of Object.entries(views)){
   const html=read(file);
   const header=html.match(/<header\b[\s\S]*?<\/header>/)[0];
@@ -118,6 +118,33 @@ test('les trois en-têtes partagent le même sélecteur et gardent le projet dan
     assert.equal(url.searchParams.get('theme'),target);
     assert.equal(url.searchParams.get('lang'),'fr');
    }
+  }
+ }
+});
+
+test('Dossier affiche les éléments du CV, les projets communs et des ancres uniques', () => {
+ const html = read('dossier/index.html');
+ const cv = JSON.parse(read('portfolio/cv.json'));
+ const shown = text(html);
+ const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+ assert.equal(new Set(ids).size, ids.length);
+ for (const [, id] of html.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.includes(id), id);
+ for (const item of [...data.projects, ...data.atelier.projects, data.inktober]) {
+  assert.ok(ids.includes(item.id), item.id);
+  assert.ok(shown.includes(item.description), item.id);
+  for (const href of item.links?.map(link => link.href) ?? [item.href]) assert.ok(html.includes('href="' + href + '"'), href);
+ }
+ for (const item of cv.experience) assert.ok(shown.includes(item.role), item.role);
+ for (const item of cv.education) assert.ok(shown.includes(item.name), item.name);
+ assert.ok(html.includes('href="https://egalland.github.io/?theme=dossier"'));
+ assert.ok(html.includes('id="print-cv"'));
+});
+
+test('les ancres propres au CV pointent vers Pratiques dans les autres vues', async () => {
+ const {themeUrl} = await import('../portfolio-assets/theme-switch.mjs');
+ for (const theme of ['curseurs', 'points', 'chrome']) {
+  for (const section of ['parcours', 'competences']) {
+   assert.equal(themeUrl(theme, section, 'https://egalland.github.io/?theme=dossier'), '/?theme=' + theme + '#about');
   }
  }
 });

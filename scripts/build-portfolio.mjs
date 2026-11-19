@@ -48,7 +48,7 @@ const dockHtml=`<nav class="project-dock" aria-label="Accès direct aux projets"
 const positions=[[18,18],[50,8],[82,18],[86,50],[82,82],[50,92],[18,82],[14,50]];
 const nodes=PROJECT_GROUPS.map(({id},i)=>`<a class="particle-destination" href="#${id}" style="--nx:${positions[i][0]}%;--ny:${positions[i][1]}%;--order:${i}"><span class="particle-cluster" aria-hidden="true">${Array.from({length:9},(_,n)=>`<i style="--dot:${n}"></i>`).join('')}</span><span>${escape(groupLabels.get(id))}</span></a>`).join('');
 const menuHtml=`<div id="projectMenu" popover="auto" aria-label="Constellation des projets"><div class="constellation-heading mono"><span>CHOISIR UNE ORBITE</span><button class="close-menu" aria-label="Fermer la navigation">×</button></div><nav class="constellation" aria-label="Projets et pratiques"><div class="constellation-orbit" aria-hidden="true"></div><div class="constellation-dust" aria-hidden="true">${Array.from({length:25},(_,i)=>`<i style="--x:${(i*37+13)%100}%;--y:${(i*53+7)%100}%;--delay:${-i*.37}s"></i>`).join('')}</div>${nodes}<a class="constellation-home" href="#home" aria-label="Retour à l’accueil"><span>eg.</span><small>ACCUEIL</small></a></nav><div class="constellation-tools"><button id="restartButton">↺ Recommencer</button><button id="motionButton" aria-pressed="false">Ⅱ Pause</button></div></div>`;
-const themes = {curseurs:'Curseur', points:'Points', chrome:'Chrome'};
+const themes = {curseurs:'Curseur', points:'Points', chrome:'Chrome', dossier:'Dossier'};
 function themeSwitchHtml(current) {
  const items = Object.entries(themes).map(([id, label]) => id === current
   ? `<span data-theme-choice="${id}" aria-current="page">${label}</span>`
@@ -65,4 +65,43 @@ save('points/index.html',render(fs.readFileSync(path.join(root,'portfolio/points
 save('index.html',render(fs.readFileSync(path.join(root,'portfolio/page.template.html'),'utf8'),{...data,...headerFields('curseurs')}));
 save('portfolio-assets/content.js','window.PORTFOLIO_CONTENT='+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
 save('portfolio-assets/content.mjs','export default '+JSON.stringify(data).replaceAll('<','\\u003c')+';\n');
-console.log('Generated the Curseur and Points pages and the shared portfolio content.');
+const cv = JSON.parse(fs.readFileSync(path.join(root, 'portfolio/cv.json'), 'utf8'));
+const experienceHtml = cv.experience.map(item => `<li><span class="period">${escape(item.period)}</span><div><h3>${escape(item.role)}</h3>${item.organization ? `<p class="organization">${escape(item.organization)}</p>` : ''}<p>${escape(item.description)}</p></div></li>`).join('\n');
+const skillsHtml = cv.skills.map(item => `<dt>${escape(item.name)}</dt><dd>${escape(item.tools)}</dd>`).join('\n');
+const educationHtml = cv.education.map(item => `<li><span class="period">${escape(item.year)}</span><br><strong>${escape(item.name)}</strong>${item.description ? `<p>${escape(item.description)}</p>` : ''}</li>`).join('\n');
+const projectMarks = {'market-plus':'M+', kikalmo:'K', maison:'M', bodyos:'B·OS', pills:'P', livre:'L', redim:'R', atlas:'A', inktober:'INK'};
+function reelEntry(project) {
+ const details = data.details[project.id === 'market-plus' ? 'market' : project.id];
+ const features = details?.features.map(feature => `<li>${escape(feature)}</li>`).join('');
+ return `<article class="reel-entry" id="${project.id}" aria-labelledby="${project.id}-title">
+  <div class="project-copy">
+   <p class="eyebrow">${escape(project.category)}${project.status ? ' · ' + escape(project.status.replace('● ', '')) : ''}</p>
+   <h3 id="${project.id}-title">${escape(project.title)}</h3>
+   <p class="project-summary">${escape(project.description)}</p>
+   <p class="project-tags">${escape(project.tags.join(' / '))}</p>${project.links.length ? `
+   <div class="project-links">${project.links.map(item => link(item)).join('')}</div>` : ''}${features ? `
+   <details><summary>Détails du projet</summary><ul>${features}</ul></details>` : ''}
+  </div>
+  <figure class="frame" aria-hidden="true"><span>${escape(projectMarks[project.id] || project.title.slice(0, 1))}</span></figure>
+ </article>`;
+}
+const atelierEntries = [...data.atelier.projects, data.inktober].map(project => ({
+ ...project,
+ tags: [project.tagline],
+ links: [{label: project.id === 'inktober' ? 'Explorer le calendrier' : 'Ouvrir ' + project.title, href: project.href, external: project.href.startsWith('https://')}]
+}));
+const practicesHtml = data.about.practices.map(item =>
+ `<li><a href="${escape(item.href)}"><strong>${escape(item.verb)}</strong><span>${escape(item.words)}</span><small>${escape(item.project)} ↗</small></a></li>`
+).join('\n');
+save('dossier/index.html', render(fs.readFileSync(path.join(root, 'portfolio/dossier.template.html'), 'utf8'), {
+ ...headerFields('dossier'),
+ profile: data.profile,
+ cv,
+ experienceHtml,
+ skillsHtml,
+ educationHtml,
+ projectsHtml: data.projects.map(reelEntry).join('\n'),
+ atelierHtml: atelierEntries.map(reelEntry).join('\n'),
+ practicesHtml
+}));
+console.log('Generated the four portfolio views and their shared content.');

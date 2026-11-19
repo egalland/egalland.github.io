@@ -1,4 +1,4 @@
-import {themeSwitch} from '/portfolio-assets/theme-switch.mjs';
+import {themeSwitch} from '/portfolio-assets/theme-switch.mjs?v=dossier1';
 import {magneticDestination,formationProgress,cursorForce,springStep,projectFor,nextProjectFor,PROJECT_STARTS,LAST_SCENE} from './motion-core.mjs?v=pratiques1';
 import {resamplePoints,particlePosition} from './point-motion.mjs';
 import imageAssets from './assets/images.mjs';

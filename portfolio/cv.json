@@ -1,0 +1,36 @@
+{
+  "role": "Analyste Tarif & Référentiel · Développeur web",
+  "summary": "Je conçois des outils qui rendent les données plus faciles à traiter, les tâches répétitives plus simples et les interfaces agréables à utiliser.",
+  "experience": [
+    {
+      "period": "Depuis mars 2025",
+      "role": "Analyste Tarif & Référentiel",
+      "organization": "Saint-Gobain DMBP",
+      "description": "Simulations tarifaires, intégration et contrôle des données articles et prix. Automatisation des extractions SAP, des traitements Excel et de la préparation des points marché."
+    },
+    {
+      "period": "2022",
+      "role": "Développeur frontend freelance",
+      "description": "Développement d’interfaces web et intégration de fonctionnalités côté client."
+    },
+    {
+      "period": "2021",
+      "role": "Développeur React",
+      "description": "Développement frontend en CDI."
+    },
+    {
+      "period": "Avant 2021",
+      "role": "Développeur backend freelance",
+      "description": "Développement d’applications et de services avec Node.js."
+    }
+  ],
+  "skills": [
+    {"name": "Tarif & données", "tools": "Référentiels articles, simulations tarifaires, SAP, Excel, Power Query, Power Pivot, Jira"},
+    {"name": "Automatisation", "tools": "VBA, JavaScript, imports de données, contrôles, tableaux de bord"},
+    {"name": "Développement web", "tools": "React, Node.js, Express, MongoDB, SQL, Three.js"}
+  ],
+  "education": [
+    {"year": "2019", "name": "Formation en développement web", "description": "Projet de formation · Pills"},
+    {"year": "2016", "name": "Licence informatique"}
+  ]
+}

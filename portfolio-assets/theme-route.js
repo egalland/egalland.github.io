@@ -4,7 +4,7 @@
  const url=new URL(location.href);
  if(view==='curseurs'){
   const requested=url.searchParams.get('theme');
-  if(requested!=='chrome'&&requested!=='points')return;
+  if(!['chrome','points','dossier'].includes(requested))return;
   document.documentElement.dataset.routing=requested;
   document.documentElement.style.visibility='hidden';
   url.pathname='/'+requested+'/';

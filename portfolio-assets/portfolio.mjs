@@ -1,7 +1,7 @@
-import {themeSwitch,themeUrl} from './theme-switch.mjs';
+import {themeSwitch,themeUrl} from './theme-switch.mjs?v=dossier1';
 import './portfolio-content.mjs?v=pratiques1';
 import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=crew2';
-import {createPortfolioMenu} from './context-menu.mjs?v=chrome1';
+import {createPortfolioMenu} from './context-menu.mjs?v=dossier1';
 
 const root=document.documentElement,status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');
@@ -37,7 +37,7 @@ const manager=createThemeManager({
  }
 });
 async function choose(theme,{save=true}={}){
- if(theme==='points'||theme==='chrome'){
+ if(['points','chrome','dossier'].includes(theme)){
   const id=(started?readingPosition()?.el.id:null)||location.hash.slice(1)||'home';
   location.assign(themeUrl(theme,id));return;
  }
@@ -67,4 +67,4 @@ preference.addEventListener('change',()=>choose(selected,{save:false}));
 addEventListener('pagehide',()=>manager.stop());
 addEventListener('pageshow',event=>{if(event.persisted)choose(selected,{save:false});});
 const requested=new URL(location.href).searchParams.get('theme')||'curseurs';
-choose(requested,{save:!['points','chrome','curseurs'].includes(requested)});
+choose(requested,{save:!['points','chrome','dossier','curseurs'].includes(requested)});

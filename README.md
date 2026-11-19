@@ -1,16 +1,16 @@
 # Projets d’Emmanuel
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur permet aussi de parcourir les vues Points et [Chrome](https://egalland.github.io/?theme=chrome). Elles partagent les textes et liens, tout en conservant leur propre structure visuelle. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur donne aussi accès à Points, [Chrome](https://egalland.github.io/?theme=chrome) et [Dossier](https://egalland.github.io/?theme=dossier), le CV interactif. Les quatre vues partagent la sélection de projets et les liens. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
 
 ## Organisation
 
 - `index.html` : présentation Curseur et mini-démo Kikalmo.
 - `portfolio-assets/themes/construction.mjs` : curseurs animés, tracé des cadres droits, écriture puis transport avec inertie. Les éléments terminés restent stables.
 - `portfolio-assets/themes/choreography.mjs` : placement et durée tirés au hasard, inclinaison issue du mouvement, contournements ponctuels et deux incidents au maximum (chute et retournement 3D).
-- `portfolio-assets/portfolio.mjs` : ouverture de Curseur par défaut et passage vers Points ou Chrome au projet en cours.
+- `portfolio-assets/portfolio.mjs` : ouverture de Curseur par défaut et passage vers les autres vues au projet en cours.
 - `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 17 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
 - `points/assets/` : ressources et polices originales conservées sans altération.
-- `portfolio/content.json` : source commune des textes, projets et liens. `scripts/build-portfolio.mjs` génère les deux présentations depuis `portfolio/page.template.html` et `portfolio/points.template.html`.
+- `portfolio/content.json` : source commune des projets et liens. `portfolio/cv.json` contient le parcours, les compétences et la formation affichés dans Dossier. `scripts/build-portfolio.mjs` génère les quatre vues depuis leurs gabarits.
 - `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
 - Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
 - Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.
@@ -82,7 +82,7 @@ node scripts/build-portfolio.mjs
 node --test tests/portfolio-*.test.mjs
 ```
 
-Le switch mémorise le choix et retrouve le projet consulté. Les liens `?theme=points` ouvrent la scène Points ; `/curseurs/` conserve son rôle de raccourci. Les vues sont des documents distincts : elles partagent le contenu, pas la grille de mise en page.
+Le switch mémorise le choix et retrouve le projet consulté. Les liens `?theme=points` ouvrent la scène Points. `/?theme=dossier` ouvre le CV et `/dossier/` donne accès au même document. `/curseurs/` conserve son rôle de raccourci. Les vues sont des documents distincts : elles partagent le contenu, pas la grille de mise en page.
 
 Curseurs commence par une zone vide. Les curseurs animés arrivent, tracent un cadre droit progressivement, écrivent le contenu, puis transportent le bloc. L’inclinaison apparaît pendant le transport et se résorbe après un dépassement amorti. Certains trajets contournent un panneau voisin pour donner l’impression d’un chantier encombré. Une ligne au maximum glisse et se fait rattraper ; un panneau au maximum est construit à l’envers puis retourné avec perspective. Le placement et le geste varient à chaque chargement. Le défilement active les prochaines zones sans reconstruire ni incliner les éléments terminés. Les travaux hors écran sont suspendus et repris à la même étape, sans révélation instantanée au retour ni à la remontée. Le focus sur un contrôle de saisie révèle immédiatement le contenu nécessaire ; une ancre vers une carte projet ne court-circuite pas sa construction.
 

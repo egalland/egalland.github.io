@@ -2,7 +2,7 @@ export function themeUrl(theme, chapter, current = location.href) {
  const url = new URL(current);
  url.pathname = '/';
  url.searchParams.set('theme', theme);
- url.hash = ({work:'market-plus', atelier:'livre', chrome:'home'})[chapter] || chapter;
+ url.hash = ({work:'market-plus', atelier:'livre', chrome:'home', parcours:theme==='dossier'?'parcours':'about', competences:theme==='dossier'?'competences':'about'})[chapter] || chapter;
  return url.pathname + url.search + url.hash;
 }
 
