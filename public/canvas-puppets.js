@@ -1,9 +1,12 @@
+import {yarnPalette,paintKnit} from './wool-art.js';
+import {puppetAppearance} from './puppet-dyes.js';
 import {motionSeed,posedLimb,sampleLocomotion} from './locomotion-pose.js';
 import { drawStreetVehicle, isStreetVehicle } from './street-vehicles.js';
 import { vehicleSpec } from './vehicle-types.js';
+import {bodyFabric as carColors,serviceFabric as carFleet,fleetFabric as trim} from './vehicle-fabric.js';
 // Painterly silhouettes for the software-rendered chase camera. All distances in
 // these drawings are local to the puppet, so silhouettes stay stable at any zoom.
-const outline='#382b35', gold='#edbb61', ivory='#ffdfab';
+const outline=yarnPalette.ink, gold='#e9ba69', ivory='#fbe3b5';
 const paths=new Map();
 const textiles=new WeakMap();
 function shape(ctx,description,fill,stroke=outline,width=1.55,woven=false){
@@ -13,17 +16,13 @@ function shape(ctx,description,fill,stroke=outline,width=1.55,woven=false){
   if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke(p);}
 }
 function cloth(c){
+  if(!c.createPattern)return null;
   if(textiles.has(c))return textiles.get(c);
-  const tile=typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(9,7):
+  const tile=typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(24,24):
     (typeof document!=='undefined'?document.createElement('canvas'):null);
   if(!tile){textiles.set(c,null);return null;}
-  tile.width=9;tile.height=7;const pen=tile.getContext('2d');
-  pen.lineWidth=.9;pen.lineCap='round';pen.strokeStyle='rgba(255,242,203,.24)';
-  pen.beginPath();pen.moveTo(.4,1);pen.quadraticCurveTo(1,4.2,2.8,4.8);
-  pen.moveTo(4.5,1);pen.quadraticCurveTo(4,3.6,3,4.8);
-  pen.moveTo(6.2,4.6);pen.lineTo(7.4,7);pen.stroke();
-  pen.strokeStyle='rgba(49,31,47,.17)';pen.beginPath();pen.moveTo(4,1.5);pen.lineTo(3,4.9);
-  pen.moveTo(8.7,4.9);pen.lineTo(7.9,6.8);pen.stroke();
+  tile.width=tile.height=24;
+  paintKnit(tile.getContext('2d'),0,0,24,24,{step:4,opacity:.52,seed:12});
   const result=c.createPattern(tile,'repeat');textiles.set(c,result);return result;
 }
 function bead(c,x,y,rx,ry,fill,edge=outline,width=1.3,angle=0){
@@ -38,35 +37,70 @@ function stitch(c,points,width,color){
   c.lineWidth=width;c.strokeStyle=color;c.stroke();
 }
 function hash(value){let n=0;for(const c of String(value??''))n=(n*31+c.charCodeAt(0))>>>0;return n;}
-const civilians=[
-  ['bunny','#d8b7b0','#f4d9c3','#947599'],['bear','#a16e58','#edc29b','#699295'],
-  ['cat','#8a8897','#e6d9c7','#a8788e'],['fox','#d68547','#ffe1ad','#4b8e98'],
-  ['bear','#ba8368','#f3d1ac','#739876'],['cat','#ab958b','#f7ddbb','#b07765']
-];
-const uniforms={police:['#476487','#b8bccc'],medic:['#e6d9bd','#4b9b92'],firefighter:['#ad5550','#e8c069'],swat:['#4c5261','#85929b']};
+const patches=new Map();
+// Paint fixed felt panels once at close-up resolution. The puppet carries the
+// lighting, knitted loops and piping through every bone transform.
+function panel(c,description,dye,bounds){
+  if(!c.drawImage||typeof document==='undefined'){
+    shape(c,description,dye,outline,1.65,true);return;
+  }
+  const key=description+dye;
+  let image=patches.get(key);
+  if(!image){
+    const [x,y,w,h]=bounds,scale=3;
+    image=document.createElement('canvas');image.width=Math.ceil(w*scale);image.height=Math.ceil(h*scale);
+    const g=image.getContext('2d');
+    g.scale(scale,scale);g.translate(-x,-y);g.lineJoin=g.lineCap='round';
+    let path=paths.get(description);if(!path){path=new Path2D(description);paths.set(description,path);}
+    g.save();g.clip(path);
+    g.fillStyle=dye;g.fillRect(x,y,w,h);
+    const down=g.createLinearGradient(x+w*.2,y,x+w*.84,y+h);
+    down.addColorStop(0,'rgba(255,243,209,.55)');down.addColorStop(.33,'rgba(255,241,207,.13)');
+    down.addColorStop(.58,'rgba(69,43,59,.035)');down.addColorStop(1,'rgba(65,44,62,.46)');
+    g.fillStyle=down;g.fillRect(x,y,w,h);
+    const light=g.createRadialGradient(x+w*.28,y+h*.23,0,x+w*.36,y+h*.38,w*.61);
+    light.addColorStop(0,'rgba(255,239,202,.3)');light.addColorStop(.75,'rgba(255,239,202,0)');light.addColorStop(1,'rgba(56,42,56,.13)');
+    g.fillStyle=light;g.fillRect(x,y,w,h);
+    paintKnit(g,x,y,w,h,{step:3.8,opacity:.47,seed:43});
+    g.strokeStyle='rgba(65,41,53,.22)';g.lineWidth=4;g.stroke(path);
+    // The pale cord catches the same upper-left light around each padded panel.
+    g.save();g.translate(.65,1.05);g.strokeStyle='rgba(254,236,199,.44)';g.lineWidth=1.12;g.stroke(path);g.restore();
+    g.restore();g.strokeStyle=outline;g.lineWidth=1.55;g.stroke(path);
+    patches.set(key,image);
+  }
+  c.drawImage(image,...bounds);
+}
 function ear(c,s,kind,furry,front,roll) {
   c.save();c.translate(s*13,-75);c.rotate(s*(.14+roll*.03));c.scale(s,1);
-  if(kind==='bunny'){
-    shape(c,'M-4 5 Q-8 -12 -7 -26 Q-3 -34 1 -29 Q10 -15 7 3 Z',furry,outline,1.5,true);
+  if(kind==='rabbit'){
+    panel(c,'M-4 5 Q-8 -12 -7 -26 Q-3 -34 1 -29 Q10 -15 7 3 Z',furry,[-10,-34,21,42]);
     if(front<.35)shape(c,'M-3 -1 Q-5 -14 -3 -22 Q3 -21 4 -3 Z','#d59793',null);
   } else if(kind==='bear'){
     bead(c,2,-2,8,9,furry);if(front<.4)bead(c,2,-2,4.8,5,'#ad897f',null);
   } else {
-    shape(c,'M-7 6 Q-4 -8 5 -23 Q11 -21 11 4 Z',furry,outline,1.7,true);
+    panel(c,'M-7 6 Q-4 -8 5 -23 Q11 -21 11 4 Z',furry,[-9,-26,23,35]);
     shape(c,'M2 -17 L5 -23 Q8 -24 9 -17 L9 -13 Z','#644545',null);
     if(front<.55)shape(c,'M-1 -1 L5 -15 Q8 -12 7 -2 Z','#efd4ac',null);
   }
   c.restore();
 }
-function hat(c,type){
+function hat(c,type,rear,profile){
   if(type==='medic'){
-    shape(c,'M-18 -73 Q-15 -89 0 -89 Q17 -88 20 -72 Q7 -77 -18 -73 Z','#ebdfc8',outline,1.6,true);
+    panel(c,'M-18 -73 Q-15 -89 0 -89 Q17 -88 20 -72 Q7 -77 -18 -73 Z','#ebdfc8',[-21,-91,44,22]);
+    shape(c,'M-17 -77 Q-1 -81 17 -77 L19 -73 Q1 -76 -18 -73 Z','#4d807c',outline,.7,true);
     shape(c,'M-2 -86 H2 V-82 H6 V-78 H2 V-74 H-2 V-78 H-6 V-82 H-2 Z','#4f9d93',null);
   } else if(type==='firefighter'||type==='swat'){
-    shape(c,'M-20 -73 Q-20 -90 -3 -92 Q15 -92 20 -76 L24 -73 Q14 -69 -21 -70 L-25 -72 Z',type==='swat'?'#565b69':'#d4a24f',outline,1.8,true);
+    panel(c,'M-20 -73 Q-20 -90 -3 -92 Q15 -92 20 -76 L24 -73 Q14 -69 -21 -70 L-25 -72 Z',type==='swat'?'#565b69':'#d4a24f',[-27,-95,54,29]);
     stitch(c,[[-16,-76],[0,-78],[17,-76]],2.2,type==='swat'?'#7c8893':'#f6d282');
+    if(type==='swat'){
+      if(rear<.16){
+        c.save();c.translate(profile*6,0);
+        shape(c,'M-17 -70 Q-13 -75 0 -74 Q13 -75 17 -70 L14 -60 Q10 -57 4 -61 L0 -63 L-4 -61 Q-11 -57 -15 -61 Z','#6e8792',outline,1.35,true);
+        stitch(c,[[-11,-69],[-3,-71],[5,-71]],1.1,'#d4d7c5');c.restore();
+      }else stitch(c,[[-14,-72],[-7,-71],[8,-71],[15,-72]],1.4,'#606b76');
+    }
   } else if(type==='police'){
-    shape(c,'M-21 -77 L-17 -84 Q0 -94 17 -84 L21 -77 L13 -72 L-18 -73 Z','#47627c',outline,1.6,true);
+    panel(c,'M-21 -77 L-17 -84 Q0 -94 17 -84 L21 -77 L13 -72 L-18 -73 Z','#456278',[-24,-93,48,25]);
     shape(c,'M-20 -75 Q0 -79 19 -76 L23 -72 Q11 -69 -17 -72 Z',outline,null);
     bead(c,3,-81,3,3.5,gold,null);
   }
@@ -81,35 +115,48 @@ function drawTail(c,coat,phase,rear,side){
 }
 export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
   if(!o||!Number.isFinite(height)||height<1)return;
-  const t=Number(time)||0,id=hash(o.id??o.seed),type=o.type||'pedestrian',hero=['fox','player'].includes(type)||o.local||o.player;
-  const [animal,fur,cream,shirt]=hero?['fox','#d9823c',ivory,'#348e8d']:civilians[id%civilians.length];
-  const dress=uniforms[type]?.[0]||shirt,trim=uniforms[type]?.[1]||(hero?gold:'#d9c389');
+  const t=Number(time)||0,role=o.local||o.player?'fox':o.type||'pedestrian';
+  const {type,animal,pelt,coat:dress,trim,service}=puppetAppearance(role,o.color,o.id!=null?String(o.id):o.seed??0);
+  const hero=type==='fox';
+  const {fur,cream}=pelt;
   const pose=o.pose||o,rear=Math.cos(viewAngle||0),profile=Math.sin(viewAngle||0);
   const gait=sampleLocomotion(pose,t,motionSeed(o.id??o.seed));
   const {phase,run}=gait,stride=gait.step*gait.pace,lift=gait.bob*50;
-  const sx=height/(animal==='bunny'?106:100);
+  const sx=height/(animal==='rabbit'?106:100);
   const firing=Number(pose.fire)||0,react=Math.min(1,Math.abs(Number(pose.impact)||0));
   function faceAndHat(){
   ear(c,-1,animal,fur,rear,stride);ear(c,1,animal,fur,rear,-stride);
-  shape(c,animal==='fox'||animal==='cat'?foxHead:roundHead,fur,outline,1.8,true);
+  panel(c,animal==='fox'||animal==='cat'?foxHead:roundHead,fur,[-32,-85,64,49]);
   if(rear>.3){
-    shape(c,'M-18 -60 Q-21 -52 -24 -50 L-19 -49 L-21 -45 L-15 -47 L-11 -43 Q-14 -48 -11 -52 Z',cream,null,0,true);
-    shape(c,'M18 -60 Q21 -52 24 -50 L19 -49 L21 -45 L15 -47 L11 -43 Q14 -48 11 -52 Z',cream,null,0,true);
-    stitch(c,[[-6,-71],[-2,-66],[1,-71]],1.2,'#ab643b');stitch(c,[[1,-69],[4,-65],[7,-70]],1.1,'#ab643b');
+    const tufted=animal==='fox'||animal==='cat';
+    if(tufted){
+      shape(c,'M-21 -57 Q-21 -52 -24 -50 L-19 -49 L-21 -46 L-15 -47 L-12 -44 Q-14 -49 -12 -51 Z',cream,null,0,true);
+      shape(c,'M21 -57 Q21 -52 24 -50 L19 -49 L21 -46 L15 -47 L12 -44 Q14 -49 12 -51 Z',cream,null,0,true);
+    }
+    shape(c,'M-7 -78 Q-9 -70 -6 -63 Q-4 -58 -4 -54',null,pelt.shade,.7);
+    for(let i=0;i<4;i++){const yy=-75+5.2*i,xx=i<2?-7.7:-7.2+(i-2)*1.8;
+      stitch(c,[[xx-1.6,yy+.2],[xx+1.3,yy+1.35]],.85,cream);}
+
   }
   if(rear<.62){
     const facing=rear<0?1:Math.max(.15,1-rear),offset=profile*12,eyeWidth=1-Math.abs(profile)*.42;
     c.save();c.translate(offset,0);c.scale(eyeWidth,1);
     for(const s of [-1,1]){
       if(Math.abs(profile)>.73&&s*profile<0)continue;
-      bead(c,s*7.4,-58,4.5,6.3,'#fff0c9',outline,.8);
+      if(animal==='raccoon')bead(c,s*7.8,-58.5,7.2,7,pelt.shade,null,0,s*.15);
+      const ex=s*7.4;
+      stitch(c,[[ex-3,-66],[ex,-67],[ex+2.2,-66.6]],1.35,pelt.shade);
+      bead(c,ex,-58,4.5,6.3,'#fff0c9',outline,.8);
       bead(c,s*7.5+profile*1.2,-57.3,2.2,4.1,outline,null);
       bead(c,s*7.6+profile*1.2-.3,-59.4,.75,1,'#fffbde',null);
     }
-    bead(c,0,-49,11*facing+3,6,cream,null);bead(c,0,-52,3.8,2.7,outline,null);
+    bead(c,0,-48.5,11*facing+3,6.2,cream,null);
+    bead(c,0,-52,3.8,2.7,outline,null);stitch(c,[[-1.5,-53],[-.4,-53.4],[.5,-53.3]],.65,'#ead1ac');
+    for(const s of [-1,1])for(let k=0;k<2;k++){
+      const px=s*(4.4+k*2.35);stitch(c,[[px-.55,-47.7-k*.6],[px+.5,-47.2-k*.6]],.7,pelt.shade);}
     shape(c,'M0 -50 Q0 -45 4 -46',null,outline,1);c.restore();
   }
-  if(uniforms[type])hat(c,type);
+  if(service)hat(c,type,rear,profile);
   }
   c.save();c.translate(x,groundY);c.scale(sx,sx);c.lineJoin='round';c.lineCap='round';
   if(pose.ragdoll?.head){
@@ -155,7 +202,8 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
     hose(c,hip,knee,foot,5.8,'#4c4856');
     const [toe,endY]=foot;
     bead(c,toe+profile*2,endY,6.4,3.2,'#4b4546',outline,1.3,profile*.08);
-    stitch(c,[[toe-4,endY+2],[toe+3.6,endY+2]],1.2,'#9c8068');
+    stitch(c,[[toe-4,endY+2],[toe+3.6,endY+2]],1.2,'#ac896d');
+    stitch(c,[[toe-2,endY-1.8],[toe+.8,endY-.9]],.75,'#bea185');
   };
   const frontFoot=rear>.58?0:gait.footSide;
   if(frontFoot!==-1)leg(-1);if(frontFoot!==1)leg(1);
@@ -164,7 +212,26 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
   c.scale(1-stretch*.5,1+stretch);c.translate(0,22);
   const tailSide=profile>.2?-1:1;
   if(animal==='fox' && rear<.20)drawTail(c,fur,phase,rear,tailSide);
-  const chest=()=>shape(c,'M-12 -44 Q-15 -37 -15 -26 Q-14 -20 -9 -18 Q1 -15 12 -20 Q17 -27 12 -40 Q9 -45 1 -46 Z',dress,outline,1.8,true);
+  const chest=()=>{
+    panel(c,'M-12 -44 Q-15 -37 -15 -26 Q-14 -20 -9 -18 Q1 -15 12 -20 Q17 -27 12 -40 Q9 -45 1 -46 Z',dress,[-18,-48,37,34]);
+    shape(c,'M-12 -39 Q0 -35 12 -39',null,trim,1.65);
+    if(type==='medic'&&rear<=.2){
+      shape(c,'M-10 -41 L-6 -42 L10 -23 L7 -21 Z',trim,outline,.7,true);
+      shape(c,'M3 -31 Q8 -33 13 -31 L12 -24 Q9 -22 4 -24 Z','#b0aaa0',outline,.8);
+      stitch(c,[[8,-30],[8,-25]],1.2,trim);stitch(c,[[5.8,-27.5],[10.2,-27.5]],1.2,trim);
+    }else if(type==='medic'&&rear>.2){ // The medic carries a stitched first-aid satchel.
+      shape(c,'M-9 -34 Q-10 -38 -4 -38 H6 Q10 -37 10 -33 L9 -23 Q2 -20 -8 -24 Z','#dbc8a7',outline,1.2,true);
+      stitch(c,[[-.2,-34],[-.2,-26]],2.2,trim);
+      stitch(c,[[-4,-30],[3.5,-30]],2.2,trim);
+    }else if(type==='firefighter'){
+      shape(c,'M-13 -26 Q0 -21 13 -26',null,trim,2.6);
+    }else if(rear<.2){
+      stitch(c,[[profile*3,-35],[profile*3,-22]],.9,'#78636b');
+      for(const yy of [-32,-26]){bead(c,profile*3,yy,1.35,1.35,trim,outline,.45);}
+    }else if(!hero){
+      shape(c,'M-12 -31 Q0 -25 13 -31',null,'rgba(56,45,60,.53)',1.05);
+    }
+  };
   function arm(s){
     const l=s<0?gait.left:gait.right,free=1-gait.effort;
     const wave=s>0&&pose.emote?free:0,fire=s>0?firing*free:0;
@@ -173,7 +240,10 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
     const length=1+(l.armStretch||0);
     const [a,b,h]=posedLimb([s*12*Math.sin(gait.twist),39,s*12*Math.cos(gait.twist)],raised,l.elbow,(7.6+2.7*reach)*length,(7+2.4*reach)*length,s,3.6+10*l.splay+wave*2).map(screen);
     hose(c,a,b,h,4.5,dress);
-    bead(c,h[0],h[1]+1,4.8,4.6,'#f2d9b7',outline,1.2);
+    bead(c,h[0],h[1]-1.1,4.7,2.6,trim,outline,1);
+    bead(c,h[0],h[1]+1,4.8,4.6,ivory,outline,1.2);
+    stitch(c,[[h[0]+s*.5,h[1]+.3],[h[0]+s*.7,h[1]+2.5]],.65,'#a88674');
+    stitch(c,[[h[0]+s*2,h[1]+.1],[h[0]+s*2.3,h[1]+2]],.65,'#a88674');
     bead(c,h[0]-s*3,h[1]-1.1,2.0,2.5,'#f2d9b7',null);
   }
   const nearArm=profile>0?1:-1;
@@ -183,9 +253,12 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
   if(gait.effort<.1&&coveredArm!==-nearArm)arm(-nearArm);
   if(hero){
     c.save();c.translate(0,Math.sin(phase-.4)*.9*gait.pace+.2*gait.breath);c.rotate(stride*.029);
-    shape(c,'M-9 -44 Q-20 -39 -19 -25 L-22 -20 Q-18 -19 -15 -21 Q-7 -17 2 -18 Q12 -18 17 -21 L22 -20 Q19 -25 17 -35 Q14 -43 7 -45 Z','#367e80',outline,1.45,true);
+    panel(c,'M-9 -44 Q-20 -39 -19 -25 L-22 -20 Q-18 -19 -15 -21 Q-7 -17 2 -18 Q12 -18 17 -21 L22 -20 Q19 -25 17 -35 Q14 -43 7 -45 Z',dress,[-24,-47,49,32]);
     shape(c,'M-17 -24 Q-6 -20 0 -21 Q10 -20 17 -24',null,gold,1.7);
-    if(rear>.05)shape(c,'M0 -39 L4 -34 L0 -29 L-4 -34 Z',null,'#e6c16a',1.2);
+    if(rear>.05){
+      shape(c,'M-4 -38 Q0 -39 4 -38 L3 -36 L2.6 -31 L4 -29 Q0 -28 -4 -29 L-2.6 -31 L-3 -36 Z',trim,outline,.7);
+      for(let j=0;j<3;j++)stitch(c,[[-2.3,-35.8+j*1.6],[2.3,-34.4+j*1.6]],.65,'#835e55');
+    }
     c.restore();
   }
   if(animal==='fox'&&rear>=.20)drawTail(c,fur,phase,rear,tailSide);
@@ -195,11 +268,23 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
   c.restore();if(gait.effort>=.1){if(coveredArm!==-nearArm)arm(-nearArm);if(coveredArm!==nearArm)arm(nearArm);}
   c.restore();if(frontFoot)leg(frontFoot);c.restore();
 }
-const carColors=['#b86b70','#429d9b','#deac59','#887eae','#b08163','#7798aa'];
-const carFleet={police:'#527598',firetruck:'#ab4e48',ambulance:'#e6d6b6',swat:'#4b5260',taxi:'#b15c65',bus:'#408d82'};
 function colorGrade(value,n){const hex=String(value).replace('#','');if(!/^[0-9a-f]{6}$/i.test(hex))return '#a38b89';const rgb=parseInt(hex,16);return 'rgb('+[16,8,0].map(v=>Math.max(0,Math.min(255,Math.round(((rgb>>v)&255)*n)))).join(',')+')';}
-function poly(c,pts,fill,stroke=outline,width=.035,woven=false){
-  c.beginPath();c.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)c.lineTo(...pts[i]);c.closePath();c.fillStyle=fill;c.fill();
+function carFace(c,pts,fill,stroke,width,woven,curve=.055){
+  // Rounded cutouts keep a seam between coloured panels. The pattern is
+  // painted in vehicle metres, so a distant car never shows screen-sized yarn.
+  c.beginPath();
+  for(let i=0;i<pts.length;i++){
+    const v=pts[i],prev=pts[(i+pts.length-1)%pts.length],next=pts[(i+1)%pts.length];
+    const a=Math.hypot(prev[0]-v[0],prev[1]-v[1]),b=Math.hypot(next[0]-v[0],next[1]-v[1]);
+    const r=Math.min(curve,a*.28,b*.28),t=r/(a||1),u=r/(b||1);
+    const x=v[0]+(prev[0]-v[0])*t,y=v[1]+(prev[1]-v[1])*t;
+    if(i)c.lineTo(x,y);else c.moveTo(x,y);
+    c.quadraticCurveTo(v[0],v[1],v[0]+(next[0]-v[0])*u,v[1]+(next[1]-v[1])*u);
+  }
+  c.closePath();c.fillStyle=fill;c.fill();
+  if(woven){
+    c.save();c.scale(.014,.014);c.globalAlpha*=.77;c.fillStyle=woven;c.fill();c.restore();
+  }
   if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}
 }
 export function drawCanvasCar(c,o,x,groundY,height,time=0,viewAngle=0){
@@ -214,28 +299,74 @@ export function drawCanvasCar(c,o,x,groundY,height,time=0,viewAngle=0){
   const spec=vehicleSpec(type),factor=height/spec.height,length=spec.halfLength,width=spec.halfWidth;
   const bob=drive?.012*Math.sin(t*12+id%7):0,lean=Math.max(-.08,Math.min(.08,(Number(pose.steer??pose.turn)||0)*.04));
   const project=(a,y,z)=>{const depth=a*cs-z*sn,s=1/(1+depth*.035);return [(a*sn+z*cs)*s,(-y-depth*.19+lean*z)*s];};
-  const face=(points,fill,edge=outline,lw=.025)=>poly(c,points.map(p=>project(...p)),fill,edge,lw);
+  const weave=height>=39&&typeof c.createPattern==='function'?cloth(c):null;
+  const detailed=height>=29;
+  const face=(points,fill,edge=trim.ink,lw=.018,woven=weave,round=.055)=>carFace(c,points.map(p=>project(...p)),fill,edge,lw,woven,round);
+  function glass(a,b,d,e,front=false){
+    const points=[a,b,d,e];
+    face(points,front?trim.frontPane:trim.pane,trim.ink,.035);
+    if(!detailed)return;
+    const uv=(u,v)=>a.map((coord,i)=>(coord*(1-u)+b[i]*u)*(1-v)+(e[i]*(1-u)+d[i]*u)*v);
+    face([uv(.07,.12),uv(.22,.12),uv(.47,.91),uv(.33,.91)],trim.gleam,null,0,null,.007);
+    face([uv(.25,.13),uv(.29,.13),uv(.54,.91),uv(.50,.91)],'#b4ccbb',null,0,null,.006);
+    line(uv(.08,.05),uv(.90,.05),.014,trim.binding);
+  }
   const line=(a,b,w,col)=>stitch(c,[project(...a),project(...b)],w,col);
-  const marker=(a,y,z,rx,ry,color)=>{const p=project(a,y,z);bead(c,p[0],p[1],rx,ry,color,outline,.013);};
+  const beadAt=(p,rx,ry,color,edge,lw=.012,tilt=0)=>{
+    c.beginPath();c.ellipse(p[0],p[1],Math.max(.002,rx),Math.max(.002,ry),tilt,0,Math.PI*2);
+    c.fillStyle=color;c.fill();if(edge){c.strokeStyle=edge;c.lineWidth=lw;c.stroke();}
+  };
+  const marker=(a,y,z,rx,ry,color)=>beadAt(project(a,y,z),rx,ry,color,trim.ink);
+  const diagonalThread=(a,b,n,color)=>{
+    if(!detailed)return;
+    const at=t=>a.map((v,i)=>v+(b[i]-v)*t);
+    c.beginPath();for(let i=0;i<n;i++){
+      const p=project(...at((i+.11)/n)),q=project(...at((i+.61)/n));
+      c.moveTo(p[0],p[1]);c.lineTo(q[0],q[1]);
+    }
+    c.strokeStyle=color;c.lineWidth=.022;c.stroke();
+  };
   c.save();c.translate(x,groundY);c.scale(factor,factor);c.lineJoin='round';c.lineCap='round';
   function wheel(a,z){
     const p=project(a,.33,z);const width=.13+.25*Math.abs(sn),ang=drive?t*(4+Math.abs(speed)*.4):.6;
-    bead(c,p[0],p[1],width,.36,'#363342',outline,.025);
-    bead(c,p[0],p[1],width*.69,.24,'#d8c9b2',outline,.014);
-    bead(c,p[0],p[1],width*.43,.15,'#807e89',null);
-    stitch(c,[[p[0]-Math.cos(ang)*width*.30,p[1]-Math.sin(ang)*.11],[p[0]+Math.cos(ang)*width*.30,p[1]+Math.sin(ang)*.11]],.04,'#cbb29a');
+    beadAt(p,width,.36,trim.tyre,trim.ink,.038);
+    beadAt([p[0],p[1]-.012],width*.78,.278,trim.binding,trim.welt,.022);
+    beadAt(p,width*.58,.199,trim.welt,trim.ink,.018);
+    beadAt(p,width*.37,.133,trim.brass,trim.thread,.012);
+    for(const sign of [-1,1])beadAt([p[0]+sign*Math.cos(ang)*width*.15,p[1]+sign*Math.sin(ang)*.067],.017,.021,trim.ink);
+    if(detailed){
+      c.beginPath();
+      for(let i=0;i<8;i++){
+        const a=ang+i*Math.PI*.25,theta=a+.24;
+        c.moveTo(p[0]+Math.cos(a)*width*.89,p[1]+Math.sin(a)*.32);
+        c.lineTo(p[0]+Math.cos(theta)*width*.91,p[1]+Math.sin(theta)*.323);
+      }
+      c.strokeStyle=trim.welt;c.lineWidth=.025;c.stroke();
+    }
   }
   for(const a of [-length*.65,length*.65])wheel(a,-zSign*width*.88);
-  const low=.39+bob,high=(bus?1.23:van?1.2:sport?.73:.96)+bob,lo=-length,hi=length,w=width;
-  const bodyRing=[[lo+.18,-w],[hi-.23,-w],[hi,-w*.74],[hi,w*.74],[hi-.23,w],[lo+.18,w],[lo,w*.74],[lo,-w*.74]];
-  for(let i=0;i<8;i++){
-    const a=bodyRing[i],b=bodyRing[(i+1)%8],depth=((a[0]+b[0])*.5*cs-(a[1]+b[1])*.5*sn);
-    if(depth>=.09)continue;
-    face([[a[0],low,a[1]*.94],[b[0],low,b[1]*.94],[b[0],high-.045,b[1]],[a[0],high-.045,a[1]]],i%2?shade:paint);
+  const low=.35+bob,high=(bus?1.23:van?1.2:sport?.73:.96)+bob,lo=-length,hi=length,w=width;
+  const stations=[[-1,.67,.13,.13],[-.92,.92,.01,.04],[-.72,1,0,0],[-.18,1,0,.012],[.45,.98,0,.012],[.78,.95,.017,.029],[.92,.86,.041,.072],[1,.65,.10,.14]];
+  const rail=(level,side)=>stations.map(([f,width,bottom,drop])=>{
+    const a=length*f,end=side*w*width;
+    if(level===0)return [a,low+bottom,end*.87];
+    if(level===1)return [a,low+.145+bottom*.38,end];
+    if(level===2)return [a,high-drop-.105,end*1.03];
+    return [a,high-drop,end*.90];
+  });
+  const sill=rail(0,zSign),waist=rail(1,zSign),shoulder=rail(2,zSign),deck=rail(3,zSign),away=rail(3,-zSign);
+  const strip=(a,b,fill)=>face([...a,...b.slice().reverse()],fill,null);
+  face([...deck,...away.slice().reverse()],light,trim.ink,.025);
+  strip(sill,waist,shade);strip(waist,shoulder,paint);strip(shoulder,deck,light);
+  const capIndex=nearEnd<0?0:stations.length-1,opposite=rail(2,-zSign),otherWaist=rail(1,-zSign),otherSill=rail(0,-zSign);
+  face([sill[capIndex],otherSill[capIndex],otherWaist[capIndex],opposite[capIndex],away[capIndex],deck[capIndex],shoulder[capIndex],waist[capIndex]],paint,trim.ink,.022);
+  const axles=[-length*.65,length*.65];
+  for(const a of axles){
+    wheel(a,zSign*w*.95);
+    const fender=[[-.47,.38],[-.43,.62],[-.27,.78],[.04,.83],[.37,.74],[.50,.58],[.48,.44],[.31,.55],[.14,.63],[-.10,.65],[-.29,.57]];
+    face(fender.map(([x,h])=>[a+x,h+bob,zSign*w*.99]),paint,trim.ink,.018);
+    if(detailed)diagonalThread([a-.21,.74+bob,zSign*w],[a+.23,.73+bob,zSign*w],4,trim.binding);
   }
-  face(bodyRing.map(([a,z])=>[a,high-.045,z]),light);
-  for(const a of [-length*.65,length*.65])wheel(a,zSign*w*.90);
-  line([-.78,low+.19,zSign*w],[1.0,low+.19,zSign*w],.035,'#dac7ad');
   const rear=bus?-length+.08:van?-length+.12:compact?-1.43:sport?-1.5:-length*.63;
   const front=bus?length-.08:van?.87:compact?.86:.98;
   const backTop=bus?rear+.05:van?rear+.06:compact?-1.02:-.68,frontTop=bus?front-.05:van?.18:compact?.23:sport?.14:.40;
@@ -245,36 +376,62 @@ export function drawCanvasCar(c,o,x,groundY,height,time=0,viewAngle=0){
   if(bus){
     for(let i=0;i<7;i++){
       const left=rear+.22+i*1.12,right=left+.99,door=side>0&&(i===3||i===6);
-      face([[left,door?.52:1.42,side*wa],[right,door?.52:1.42,side*wa],[right,maxH-.27,side*roof],[left,maxH-.27,side*roof]],door?'#699ba4':'#a7c9c3');
+      glass([left,door?.52:1.42,side*wa],[right,door?.52:1.42,side*wa],[right,maxH-.27,side*roof],[left,maxH-.27,side*roof],!door);
       line([left+.50,door?.52:2.03,side*wa],[left+.50,maxH-.28,side*roof],.038,'#5b7272');
     }
     line([rear+.2,1.15,side*w],[front-.24,1.15,side*w],.19,'#eddfc4');
   }else if(van){
-    face([[rear+.15,1.32,side*(wa+.009)],[rear+.72,1.32,side*(wa+.009)],[rear+.72,1.70,side*roof],[rear+.15,1.70,side*roof]],'#638991');
-    face([[-.24,1.31,side*(wa+.009)],[.49,1.31,side*(wa+.009)],[.15,1.72,side*roof],[-.24,1.72,side*roof]],'#72a2ab');
+    glass([rear+.15,1.32,side*(wa+.009)],[rear+.72,1.32,side*(wa+.009)],[rear+.72,1.70,side*roof],[rear+.15,1.70,side*roof]);
+    glass([-.24,1.31,side*(wa+.009)],[.49,1.31,side*(wa+.009)],[.15,1.72,side*roof],[-.24,1.72,side*roof],true);
   }else{
     for(const [tb,tf,bb,bf] of [[backTop+.03,-.12,rear+.18,-.12],[-.035,frontTop-.02,-.035,front-.17]])
-      face([[bb,high+.10,side*(wa+.01)],[bf,high+.10,side*(wa+.01)],[tf,maxH-.10,side*(roof+.02)],[tb,maxH-.10,side*(roof+.02)]],'#78a2aa');
+      glass([bb,high+.10,side*(wa+.01)],[bf,high+.10,side*(wa+.01)],[tf,maxH-.10,side*(roof+.02)],[tb,maxH-.10,side*(roof+.02)],bb>-.1);
   }
   const far=pBack?rear:front,top=pBack?backTop:frontTop;
   face([[far,high-.04,-wa],[far,high-.04,wa],[top,maxH,roof],[top,maxH,-roof]],paint);
-  face([[far+(pBack?.09:-.08),high+.12,-wa*.79],[far+(pBack?.09:-.08),high+.12,wa*.79],[top+(pBack?.0:.01),maxH-.08,roof*.88],[top+(pBack?.0:.01),maxH-.08,-roof*.88]],pBack?'#608791':'#8fb0b2');
+  glass([far+(pBack?.09:-.08),high+.12,-wa*.79],[far+(pBack?.09:-.08),high+.12,wa*.79],[top,maxH-.08,roof*.88],[top,maxH-.08,-roof*.88],!pBack);
   face([[backTop,maxH,-roof],[frontTop,maxH,-roof],[frontTop,maxH,roof],[backTop,maxH,roof]],type==='police'||(!van&&id%3===0)?'#e0cab0':light);
   const end=pBack?lo:hi;
-  for(const s of [-1,1])marker(end*.97,high-.18,s*w*.62,.115,.10,pBack?'#f28770':'#f6e1a7');
+  if(van&&pBack){
+    // Real canvas rear doors: inset glass, a centre fold, and a service patch.
+    const back=rear-.015,y0=high+.08,y1=maxH-.15;
+    face([[back,y0,-wa*.92],[back,y0,wa*.92],[back,y1,roof*.93],[back,y1,-roof*.93]],paint,trim.ink,.021);
+    for(const s of [-1,1]){
+      const z=s*wa*.47;
+      glass([back,y0+.23,z-.19],[back,y0+.23,z+.19],[backTop,y1-.03,z+.17],[backTop,y1-.03,z-.17]);
+    }
+    line([back,high-.015,0],[backTop,maxH-.07,0],.024,trim.welt);
+    if(type==='ambulance'){
+      face([[back,y0+.05,-.32],[back,y0+.05,-.05],[back,y0+.23,-.05],[back,y0+.23,-.32]],'#548579',null);
+      line([back,y0+.14,-.265],[back,y0+.14,-.10],.032,trim.thread);
+      line([back,y0+.073,-.18],[back,y0+.206,-.18],.032,trim.thread);
+    }
+  }
+  const lensX=end*.986;
+  for(const s of [-1,1]){
+    marker(lensX,high-.205,s*w*.57,.137,.112,pBack?trim.welt:trim.brass);
+    const pin=project(lensX,high-.205,s*w*.57),r=.097*(1-.36*Math.abs(sn));
+    beadAt(pin,r,.077,pBack?trim.stop:trim.lamp,trim.ink,.012);
+    if(detailed){
+      for(const d of [-1,1])beadAt([pin[0]+d*r*.32,pin[1]-.003],r*.118,.012,trim.welt);
+      stitch(c,[[pin[0]-r*.24,pin[1]-.024],[pin[0]+r*.25,pin[1]-.032]],.013,trim.thread);
+    }
+  }
+  diagonalThread([end,high-.17,-w*.38],[end,high-.17,w*.38],7,trim.binding);
+  line([end,high-.22,-w*.22],[end,high-.22,w*.22],.042,pBack?trim.binding:trim.ink);
+
   line([end,.47,-w*.68],[end,.47,w*.68],.082,'#d9c5a9');
   face([[end,.50,-.19],[end,.50,.19],[end,.62,.19],[end,.62,-.19]],'#e5d7b3',outline,.011);
   for(let i=-1;i<3;i++)line([end,.535,i*.065],[end,.58,i*.065],.016,'#665965');
-  // Alternating purls run along the coloured door panels, visibly catching the light.
-  const thread=colorGrade(paint,1.20);
-  for(let row=0;row<2;row++){
-    const start=bus?-length+.38:-length*.61,finish=bus?length-.34:length*.57;
-    for(let a=start+.09*row;a<finish;a+=.19){
-      const yy=low+.24+row*.087,s=side*w*.996;
-      line([a,yy,s],[a+.046,yy-.031,s],.013,thread);
-      line([a+.046,yy-.031,s],[a+.09,yy,s],.015,thread);
-    }
-  }
+  const sideZ=side*w*1.015;
+  if(!bus&&!van){
+    // The door is a padded applique with a pale hem catching the light.
+    const a=-length*.33,b=length*.35;
+    face([[a-.36,high-.15,sideZ],[b+.39,high-.16,sideZ],[b+.18,high-.23,sideZ],[a+.05,high-.27,sideZ]],trim.binding,null,.0,null);
+    face([[a,high-.11,sideZ],[b,high-.11,sideZ],[b-.15,low+.13,sideZ],[a+.06,low+.13,sideZ]],paint,shade,.036);
+    diagonalThread([a+.05,high-.15,sideZ],[b-.06,high-.15,sideZ],8,trim.binding);
+    line([a+.13,high-.19,sideZ],[a+.31,high-.19,sideZ],.038,trim.thread);
+  }else diagonalThread([-length*.84,high-.12,sideZ],[length*.79,high-.12,sideZ],bus?22:14,trim.thread);
   if(['firetruck','ambulance','swat','police'].includes(type)){
     for(const s of [-1,1])marker(-.08,maxH+.085,s*.30,.12,.085,Math.sin(t*10+s*2)>0?'#83e2ec':'#5c89aa');
     line([-.98,high-.12,side*w], [.53,high-.12,side*w],.096,type==='firetruck'?'#e6b451':type==='ambulance'?'#489987':'#d0c5b5');

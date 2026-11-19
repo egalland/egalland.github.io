@@ -1,7 +1,11 @@
+import {yarnPalette} from './wool-art.js';
+import {puppetAppearance} from './puppet-dyes.js';
+import {puppetKnit} from './puppet-material.js';
 import {motionSeed,sampleLocomotion} from './locomotion-pose.js';
 import * as THREE from './three.js';
 import { createStreetVehicle, isStreetVehicle } from './street-vehicles.js';
 import { vehicleSpec } from './vehicle-types.js';
+import {bodyFabric as carPaint,serviceFabric as fleetPaint,fleetFabric as carYarn} from './vehicle-fabric.js';
 import { createRagdollRig } from './ragdoll-render.js';
 
 // All figures face +X and stand on y=0. The scenery and the game camera use metres.
@@ -12,38 +16,10 @@ const geo={
 };
 const TAU=Math.PI*2;
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
-const palettes={
-  fox:{fur:'#e98c37',cream:'#ffdfa2',shade:'#aa5138',inner:'#e69182'},
-  cat:{fur:'#aca5c0',cream:'#f5dfcb',shade:'#766785',inner:'#eaa4a1'},
-  rabbit:{fur:'#dad1b9',cream:'#fff0ce',shade:'#b39f98',inner:'#e6aaa1'},
-  bear:{fur:'#b78157',cream:'#f1d0a0',shade:'#80583e',inner:'#d9a583'},
-  raccoon:{fur:'#a4a6b2',cream:'#f2e6d2',shade:'#59586c',inner:'#c99fa0'}
-};
-const colors={ink:'#342831',boot:'#543f45',sole:'#372e35',glove:'#ffe6b6',trim:'#f9bf5d',teal:'#1e8785',deepTeal:'#27535e'};
+const colors={ink:yarnPalette.ink,boot:'#543f45',sole:'#392f3b',glove:'#fbe3b5',trim:'#e9ba69',teal:'#378784',deepTeal:yarnPalette.petrol};
 
-// A seamless stockinette repeat. Each V is made from two strands with a twisted fibre ridge.
-function knitTexture(){
-  const size=128,data=new Uint8Array(size*size*4);
-  for(let py=0;py<size;py++)for(let px=0;px<size;px++){
-    const gy=py/16, row=Math.floor(gy), fy=gy-row;
-    const gx=px/16+.055*Math.sin(gy*TAU),fx=gx-Math.floor(gx)-.5;
-    const axis=.073+.31*fy;
-    const dst=Math.abs(Math.abs(fx)-axis);
-    const thread=Math.exp(-34*dst*dst),groove=Math.exp(-200*dst*dst);
-    const coil=.5+.5*Math.cos(TAU*(fy*3.6+Math.abs(fx)*6.2+(fx<0?.12:0)));
-    const tip=Math.min(1,Math.min(fy+.12,1.14-fy)*4.5);
-    const n=(((px*733+py*1777)^(px*187+py*31))&7)-3;
-    const v=Math.round(clamp(181+thread*(42+13*coil)*tip+groove*10+n,165,252));
-    const i=(py*size+px)*4;data[i]=v;data[i+1]=v;data[i+2]=Math.min(255,v+1);data[i+3]=255;
-  }
-  const texture=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);
-  texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
-  texture.colorSpace=THREE.SRGBColorSpace;texture.generateMipmaps=true;
-  texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;
-  texture.anisotropy=2;texture.needsUpdate=true;return texture;
-}
 const surfaces={
-  yarn:new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true,map:knitTexture()}),
+  yarn:new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true,map:puppetKnit()}),
   plain:new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true}),
   glow:new THREE.MeshBasicMaterial({color:0xffffff,vertexColors:true}),
 };
@@ -177,15 +153,6 @@ function addFoxCape(torso){
   for(const part of [...badge.children]){part.applyMatrix4(badge.matrix);cape.add(part);}cape.remove(badge);
   return cape;
 }
-const outfitPalette=['#9b6696','#2d8a88','#c97063','#b6894f','#54839c','#7f9a77','#867ab0','#d39b59'];
-function hashSeed(s){
-  if(typeof s==='number'&&Number.isFinite(s))return Math.abs(Math.floor(s));
-  let h=2166136261;for(const c of String(s??''))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;
-}
-const profileColors={
-  police:['#344f75','#b9dbe1','#eebd5a'],swat:['#394255','#666f80','#7899a8'],
-  medic:['#eee8cd','#77b6a6','#427a77'],firefighter:['#414b5b','#ecc654','#cca754']
-};
 function serviceUniform(torso,head,type,cloth,edge){
   const brass='#ffd173';
   if(type==='police'){
@@ -194,7 +161,8 @@ function serviceUniform(torso,head,type,cloth,edge){
     cord(torso,[[.20,.12,-.12],[.217,.04,0],[.18,-.09,.11]],.018,'#baa779');
     ball(torso,.189,.12,-.11,.018,.048,.038,brass);
   }else if(type==='medic'){
-    ball(head,0,.342,0,.261,.08,.255,'#eee6d2');
+    ball(head,0,.342,0,.261,.08,.255,'#eee6d2');ball(head,0,.303,0,.250,.022,.249,'#4d807c');
+    cord(torso,[[.14,.158,-.141],[.196,.017,-.018],[.164,-.128,.129]],.019,edge);
     addPart(head,geo.box,.25,.348,0,.023,.067,.024,'#317e70');addPart(head,geo.box,.246,.348,0,.025,.023,.067,'#317e70');
     ball(torso,-.165,-.003,.08,.151,.197,.187,'#f1e0bd');
     addPart(torso,geo.box,-.309,.03,.09,.018,.091,.027,'#3a8975');
@@ -212,8 +180,9 @@ function serviceUniform(torso,head,type,cloth,edge){
     for(const s of [-1,1])cord(torso,[[.135,.19,s*.14],[.167,.061,s*.1],[.133,-.058,s*.16]],.014,edge);
   }
 }
-function makeBody(type,animal,cloth,seed,high){
-  const isFox=type==='fox'||type==='player',pal=palettes[animal],out=profileColors[type]||[cloth,isFox?'#74c1ac':'#ddd3ba','#efbc6e'];
+function makeBody(look,high){
+  const {type,animal,pelt:pal,coat:cloth,trim:edge,service}=look;
+  const isFox=type==='fox',out=[cloth,edge];
   const group=new THREE.Group(),core=joint(group,'core',0,.69,0),torso=joint(core,'torso',0,.065,0);
   const head=joint(core,'head',.025,.49,0);
   const fur=pal.fur;
@@ -234,6 +203,17 @@ function makeBody(type,animal,cloth,seed,high){
     }
     ball(head,.309,.094,0,.059,.039,.06,colors.ink);
     if(isFox){ball(core,-.254,-.096,.12,.23,.09,.095,fur,.1,.3,.32);ball(core,-.44,-.016,.216,.123,.075,.07,pal.cream);}
+    if(service){
+      const tone=type==='firefighter'?'#deb05e':type==='medic'?'#efe3c6':cloth;
+      ball(head,0,.333,0,.286,.103,.285,tone);
+      if(type==='police'||type==='swat')ball(head,.115,.287,0,.20,.030,.235,colors.ink);
+      else if(type==='firefighter')ball(head,-.016,.287,0,.318,.028,.318,'#b38755');
+      if(type==='medic'){
+        ball(torso,-.152,0,.035,.11,.146,.14,'#d9c6a3');
+        addPart(torso,geo.box,-.263,.015,.036,.014,.074,.022,edge);
+        addPart(torso,geo.box,-.264,.015,.036,.014,.021,.073,edge);
+      }
+    }
     batchGroup(head);batchGroup(core);batchGroup(torso);
     return group;
   }
@@ -263,7 +243,18 @@ function makeBody(type,animal,cloth,seed,high){
   // Wrap raised strand seams behind the head. They read from the follow camera when the face is hidden.
   for(const s of [-1,1])for(let i=0;i<3;i++){
     const z=s*(.047+.058*i),x=-.26+.02*i,y=.172+.009*i;
-    cord(head,[[x+.009,y+.018,z-.014],[x-.005,y-.007,z],[x+.004,y+.018,z+.015]],.0055,i===2?pal.cream:'#f1b871');
+    cord(head,[[x+.009,y+.018,z-.014],[x-.005,y-.007,z],[x+.004,y+.018,z+.015]],.0055,i===2?pal.cream:pal.shade);
+  }
+  // Raised, turned hems show up on the back and the side in the chase camera.
+  // The same seam runs across civilian jackets, uniform coats and the hero cape collar.
+  const collar=[];
+  for(let j=0;j<=16;j++){
+    const a=j*TAU/16;collar.push([.133*Math.cos(a),.181-.018*Math.max(0,Math.cos(a)),.162*Math.sin(a)]);
+  }
+  cord(torso,collar,.012,out[1]);
+  if(!service&&!isFox){
+    cord(torso,[[-.151,.089,-.114],[-.182,.048,0],[-.151,.089,.114]],.006,'#77636c');
+    for(const y of [-.06,.025,.104])ball(torso,.192,y,0,.012,.022,.024,out[1],0,0,0,'plain');
   }
   serviceUniform(torso,head,type,out[0],out[1]);
   if(isFox){
@@ -313,17 +304,13 @@ function bakeStaticHierarchy(root){
   batchGroup(g);return g;
 }
 const peopleTemplates=new Map();
-function normalizeRole(role){return role==='player'?'fox':role==='ambulance'?'medic':role==='firetruck'?'firefighter':role;}
 export function createPuppet(type='fox',color,seed=0){
-  type=normalizeRole(type);const pick=hashSeed(seed);
-  const animal=type==='fox'?'fox':type==='medic'?'rabbit':type==='swat'?'raccoon':type==='firefighter'?'bear':type==='police'?'cat':['rabbit','bear','cat','raccoon'][pick%4];
-  // Use a fixed atelier palette, including coats selected by other clients.
-  const sewnColors=['#9b6696','#2d8a88','#c97063','#b6894f','#54839c','#7f9a77','#867ab0','#d39b59'];
-  const choice=(pick+(typeof color==='string'?hashSeed(color)%8:0))%8;
-  const cloth=type==='fox'?colors.teal:profileColors[type]?.[0]||sewnColors[choice];
+  const look=puppetAppearance(type,color,seed);
+  type=look.type;
+  const {animal,coat:cloth,pick}=look;
   const key=type+'|'+animal+'|'+cloth;
   if(!peopleTemplates.has(key)){
-    peopleTemplates.set(key,{near:makeBody(type,animal,cloth,pick,true),far:bakeStaticHierarchy(makeBody(type,animal,cloth,pick,false))});
+    peopleTemplates.set(key,{near:makeBody(look,true),far:bakeStaticHierarchy(makeBody(look,false))});
   }
   const template=peopleTemplates.get(key),near=template.near.clone(true),far=template.far.clone(true);
   const group=new THREE.Group(),lod=new THREE.LOD();group.add(lod);lod.addLevel(near,0);lod.addLevel(far,type==='fox'?48:29,.12);
@@ -440,9 +427,7 @@ function carSideWindow(front,side) {
   geometry.setIndex(side>0?[0,2,1,0,3,2]:[0,1,2,0,2,3]);geometry.computeVertexNormals();
   carShapeCache.set(key,geometry);return geometry;
 }
-const carPaint=['#b44954','#35a7a4','#eac257','#827eb9','#c68b6d','#6e98b2','#bd6a85','#7fa083'];
-const fleetPaint={police:'#496f9d',ambulance:'#e7dbbe',firetruck:'#b64241',swat:'#3d4b63',taxi:'#b15c65',bus:'#408d82'};
-const carCloth = '#f4dcb4', carDark = '#303443', carCream = '#f8e5c1';
+const carCloth=carYarn.binding,carDark=carYarn.ink,carCream=carYarn.thread;
 function carPart(group,geom,x,y,z,sx,sy,sz,color,rx=0,ry=0,rz=0,style='yarn'){
   return addPart(group,geom,x,y,z,sx,sy,sz,color,rx,ry,rz,style);
 }
@@ -461,6 +446,10 @@ function carTrim(g,a,b,r,c){
   const item=carPart(g,geo.cylinder,mid.x,mid.y,mid.z,r,dir.length(),r,c);
   item.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());return item;
 }
+function lensThread(g,x,y,z,spacing){
+  for(const side of [-1,1])carBall(g,x,y,z+side*spacing,.006,.013,.011,carYarn.welt);
+  carBox(g,x+.003,y+.002,z,.008,.009,spacing*1.6,carYarn.thread);
+}
 function carGrille(g,x,y,wide){
   carBall(g,x,y,0,.088,.24,wide,'#464656');
   for(let i=-3;i<=3;i++)carBox(g,x+.090,y,i*wide*.213,.012,.32*(1-.18*Math.abs(i)/3),.028,'#e3cba0');
@@ -472,6 +461,7 @@ function carBumpers(g,xfront,xrear,width){
       carBall(g,x,.45,s*width*.91,.077,.061,.076,'#f3dec2');
       carBox(g,x+dir*.075,.46,s*width*.43,.09,.14,.16,'#707681');
     }
+    lacedSeam(g,[x+dir*.035,.70,-width*.42],[x+dir*.035,.70,width*.42],6);
     carBox(g,x+dir*.077,.53,0,.02,.12,.42,carCream);
     carBox(g,x+dir*.091,.525,-.16,.006,.09,.065,'#387298');
     for(let i=0;i<4;i++)carBox(g,x+dir*.091,.535,-.07+i*.052,.006,.058,.018,'#525260');
@@ -489,10 +479,11 @@ function carChassis(g,paint,service,variant){
   ],.77);
   const capColor=service==='police'?'#e8dfc8':service==='taxi'||variant%3===0?carCloth:paint;
   carPart(g,shell,0,0,0,1,1,1,capColor);
-  for(const k of ['front','rear'])carPart(g,carWindshield('glass-'+k,k),0,0,0,1,1,1,k==='front'?'#699fa8':'#527985',0,0,0,'plain');
+  for(const k of ['front','rear'])trimmedGlass(g,carWindshield('glass-'+k,k),k==='front'?carYarn.frontPane:carYarn.pane);
   for(const s of [-1,1]){
-    for(const front of [true,false])carPart(g,carSideWindow(front,s),0,0,0,1,1,1,front?'#6797a0':'#517e8e',0,0,0,'plain');
+    for(const front of [true,false])trimmedGlass(g,carSideWindow(front,s),front?carYarn.pane:carYarn.shadePane);
     // Contrast piping at the rocker, waist and skirt.
+    lacedSeam(g,[-1.06,.74,s*.85],[.85,.74,s*.85],9);
     carBox(g,-.11,.50,s*.829,2.59,.06,.07,'#2e3445');
     carTrim(g,[-1.57,.87,s*.831],[1.51,.86,s*.794],.024,'#e8c9a3');
     carBox(g,.23,.97,s*.823,.18,.034,.04,carCloth);
@@ -500,7 +491,8 @@ function carChassis(g,paint,service,variant){
     carBall(g,1.65,.83,s*.615,.217,.169,.174,capColor);
     carBall(g,1.79,.855,s*.635,.125,.119,.13,'#ffe8ab','glow');
     carBall(g,-1.74,.83,s*.677,.104,.11,.12,'#8a3c48');
-    carBall(g,-1.81,.85,s*.686,.064,.074,.08,'#ff8a75','glow');
+    carBall(g,-1.81,.85,s*.686,.064,.074,.08,carYarn.stop,'glow');
+    lensThread(g,1.909,.855,s*.635,.033);lensThread(g,-1.871,.85,s*.686,.022);
     for(const xx of [-1.22,1.27])carBall(g,xx,.63,s*.72,.555,.25,.188,paint);
     carBox(g,.686,1.08,s*.80,.13,.07,.11,capColor);
     if(service==='police'){
@@ -513,16 +505,47 @@ function carChassis(g,paint,service,variant){
   carGrille(g,1.91,.72,.40);
   carBumpers(g,1.98,-1.94,.86);
 }
+// Cut every pane from the same three tones of felt. Bake the jamb, a pair of
+// diagonal highlights and the lower cord into the rigid body material batch.
 function carPanel(g,points,color){
-  const [a,b,c]=points.map(p=>new THREE.Vector3(...p));
-  const normal=b.clone().sub(a).cross(c.clone().sub(a));
-  const center=points.reduce((v,p)=>[v[0]+p[0],v[1]+p[1],v[2]+p[2]],[0,0,0]);
-  const reverse=normal.x*center[0]+normal.z*center[2]<0;
-  const geometry=new THREE.BufferGeometry();
-  geometry.setAttribute('position',new THREE.Float32BufferAttribute(points.flat(),3));
-  geometry.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1,0,1],2));
-  geometry.setIndex(reverse?[0,2,1,0,3,2]:[0,1,2,0,2,3]);geometry.computeVertexNormals();
-  return carPart(g,geometry,0,0,0,1,1,1,color,0,0,0,'plain');
+  const space=points.map(p=>new THREE.Vector3(...p)),[a,b,c,d]=space;
+  const normal=b.clone().sub(a).cross(c.clone().sub(a)).normalize();
+  const outward=normal.x*(a.x+c.x)+normal.z*(a.z+c.z)>=0;
+  if(!outward)normal.multiplyScalar(-1);
+  const vertices=[],inks=[],uv=[],indices=[],sample=new THREE.Vector3(),other=new THREE.Vector3();
+  function patch(corners,tint,raise){
+    const offset=vertices.length/3,col=new THREE.Color(tint);
+    for(const [u,v] of corners){
+      sample.lerpVectors(a,b,u).lerp(other.lerpVectors(d,c,u),v).addScaledVector(normal,raise);
+      vertices.push(sample.x,sample.y,sample.z);inks.push(col.r,col.g,col.b);uv.push(u,v);
+    }
+    for(const i of outward?[0,1,2,0,2,3]:[0,2,1,0,3,2])indices.push(offset+i);
+  }
+  patch([[0,0],[1,0],[1,1],[0,1]],carYarn.shadePane,0);
+  patch([[.03,.06],[.97,.06],[.95,.95],[.05,.95]],color,.003);
+  patch([[.08,.08],[.18,.08],[.45,.93],[.33,.93]],carYarn.gleam,.006);
+  patch([[.23,.10],[.255,.10],[.52,.92],[.495,.92]],'#b6ccba',.006);
+  patch([[.06,.025],[.94,.025],[.92,.055],[.08,.055]],carYarn.binding,.006);
+  const geom=new THREE.BufferGeometry();
+  geom.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  geom.setAttribute('color',new THREE.Float32BufferAttribute(inks,3));geom.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  geom.setIndex(indices);geom.computeVertexNormals();
+  return carPart(g,geom,0,0,0,1,1,1,'#ffffff');
+}
+function trimmedGlass(g,original,tint){
+  const attr=original.attributes.position;
+  carPanel(g,[0,3,2,1].map(i=>[attr.getX(i),attr.getY(i),attr.getZ(i)]),tint);
+}
+function lacedSeam(g,from,to,steps){
+  // Low-poly stitches share one geometry and the body's existing yarn batch.
+  const p=new THREE.Vector3(...from),span=new THREE.Vector3(...to).sub(p),at=new THREE.Vector3();
+  const length=span.length()/steps*.55;
+  const axis=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1,0,0),span.clone().normalize());
+  for(let i=0;i<steps;i++){
+    at.copy(p).addScaledVector(span,(i+.5)/steps);
+    const stitch=carBox(g,at.x,at.y,at.z,length,.023,.026,carYarn.binding);
+    stitch.quaternion.copy(axis);
+  }
 }
 function townCar(g,type,paint){
   const sport=type==='sport',l=sport?2.12:1.71,w=sport?.94:.79;
@@ -549,10 +572,12 @@ function townCar(g,type,paint){
     for(const [foot,tip] of [[rear,rearTop],[front,frontTop],[sport?-.58:-.60,sport?-.37:-.52]])
       carTrim(g,[foot,belt+.032,s*glass],[tip,roof-.017,s*top],.032,paint);
     carTrim(g,[rear+.005,belt+.05,s*glass],[front-.005,belt+.05,s*glass],.022,'#ecd8a2');
+    lacedSeam(g,[-.86,belt-.13,s*(w+.008)],[.49,belt-.13,s*(w+.008)],7);
     carBox(g,-.28,belt-.055,s*w,.20,.028,.027,'#d3c4a1');
     carBox(g,0,.41,s*w*.99,2*l*.70,.05,.045,sport?'#344350':'#dbceb5');
     carBall(g,l-.12,belt-.16,s*w*.68,.09,sport?.047:.10,sport?.17:.114,'#ffeba0','glow');
-    carBall(g,-l+.08,belt-.12,s*w*.68,.045,sport?.047:.10,.121,'#ed786b','glow');
+    carBall(g,-l+.08,belt-.12,s*w*.68,.045,sport?.047:.10,.121,carYarn.stop,'glow');
+    lensThread(g,l-.035,belt-.16,s*w*.68,.033);lensThread(g,-l+.036,belt-.12,s*w*.68,.028);
     if(sport){
       carBox(g,-1.50,belt+.105,s*.58,.08,.2,.07,'#3b3e49',0,0,-.16);
       carBox(g,1.42,belt-.087,s*.19,.77,.035,.075,'#e8d8ad',0,0,-.06);
@@ -576,15 +601,19 @@ function cityBus(g,paint){
       const x=-3.45+i*1.13;
       const door=s>0 && (i===3||i===6);
       carBox(g,x,door?1.54:1.83,s*w,door?.94:1.00,door?1.79:.91,.041,'#354f60');
-      carBox(g,x,1.89,s*(w+.023),.90,.72,.012,door?'#71a7ab':i%2?'#99c4bf':'#77a9ac');
+      const z=s*(w+.031);
+      carPanel(g,[[x-.45,1.53,z],[x+.45,1.53,z],[x+.45,2.25,z],[x-.45,2.25,z]],door?carYarn.pane:i%2?carYarn.frontPane:carYarn.pane);
       if(door)carBox(g,x,1.48,s*(w+.032),.060,1.77,.018,'#586c70');
       else carBox(g,x,2.08,s*(w+.032),.92,.027,.018,'#dde4cb');
     }
     carBall(g,4.16,.84,s*.78,.094,.10,.14,'#f9dfa4','glow');
-    carBall(g,-4.16,1.04,s*.91,.055,.17,.092,'#e67e76','glow');
+    carBall(g,-4.16,1.04,s*.91,.055,.17,.092,carYarn.stop,'glow');
+    lensThread(g,4.251,.84,s*.78,.039);lensThread(g,-4.213,1.04,s*.91,.025);
   }
   for(const s of [-1,1]){
-    carBox(g,s*(l-.026),1.82,0,.035,1.0,1.92,s>0?'#9abfc0':'#6e929a',0,0,0,'plain');
+    const cap=s*(l-.005);
+    carPanel(g,[[cap,1.32,-.96],[cap,1.32,.96],[cap,2.32,.96],[cap,2.32,-.96]],s>0?carYarn.frontPane:carYarn.pane);
+    lacedSeam(g,[cap,1.10,-.83],[cap,1.10,.83],9);
     carBox(g,s*(l-.014),2.43,0,.04,.28,1.51,'#33444b');
     for(const [y,z,ww] of [[2.49,-.48,.16],[2.48,-.11,.18],[2.42,-.11,.17],[2.36,-.11,.18],[2.40,.34,.24],[2.40,.62,.09]]){
       carBox(g,s*(l+.009),y,z,.016,.021,ww,'#eec16e');
@@ -616,7 +645,8 @@ function carVan(g,type,paint){
     carBox(g,.24,1.49,s*.883,.37,.34,.044,'#6e9ca1',0,0,-.22);
     carBall(g,1.9,1.03,s*.65,.23,.15,.19,paint);
     carBall(g,2.09,1.04,s*.66,.096,.10,.12,'#ffe4a1','glow');
-    carBall(g,-2.389,1.14,s*.77,.075,.125,.12,'#ff8e77','glow');
+    carBall(g,-2.389,1.14,s*.77,.075,.125,.12,carYarn.stop,'glow');
+    lensThread(g,2.183,1.04,s*.66,.03);lensThread(g,-2.462,1.14,s*.77,.028);
     if(type==='ambulance'){
       carBox(g,-1.33,1.48,s*.969,.10,.34,.025,carCream);
       carBox(g,-1.33,1.48,s*.971,.32,.10,.027,carCream);
@@ -624,17 +654,32 @@ function carVan(g,type,paint){
     for(const xx of [-1.55,1.43])carBall(g,xx,.66,s*.83,.62,.26,.22,paint);
   }
   // Driver's forward glass leans from the roof down to the hood.
-  carBox(g,.455,1.556,0,.050,.549,1.50,'#80a7ad',0,0,.56,'plain');
+  carPanel(g,[[.634,1.314,-.75],[.634,1.314,.75],[.334,1.790,.71],[.334,1.790,-.71]],carYarn.frontPane);
   carBox(g,.48,1.56,0,.065,.548,.04,paint,0,0,.56);
   carGrille(g,2.266,.84,.47);carBumpers(g,2.34,-2.45,.97);
   carBox(g,-2.405,1.22,0,.040,1.09,.041,'#776a6d');
-  carBox(g,-2.430,1.60,-.39,.036,.37,.55,'#56747f');
-  carBox(g,-2.430,1.60,.39,.036,.37,.55,'#56747f');
+  for(const side of [-1,1]){
+    const z=side*.39,x=-2.448;
+    carPanel(g,[[x,1.42,z-.28],[x,1.42,z+.28],[x,1.79,z+.28],[x,1.79,z-.28]],carYarn.pane);
+    lacedSeam(g,[x,1.06,z-.24],[x,1.06,z+.24],3);
+  }
+  if(type==='ambulance'){
+    carBox(g,-2.456,1.14,0,.026,.36,.10,carYarn.thread);
+    carBox(g,-2.457,1.14,0,.028,.11,.35,carYarn.thread);
+  }
   if(type==='firetruck'){
     for(const s of [-1,1])carTrim(g,[-2.29,2.11,s*.32],[.20,2.11,s*.32],.050,carCloth);
     for(let j=0;j<9;j++)carTrim(g,[-2.13+j*.27,2.11,-.32],[-2.13+j*.27,2.11,.32],.025,carCloth);
   }
   if(type==='swat')for(let j=0;j<3;j++)carBox(g,-1.89+j*.48,2.00,0,.29,.13,1.1,'#3b424d');
+}
+const spoolWelt=new THREE.TorusGeometry(1,.045,4,24);
+function buttonWheel(g,r,side){
+  carPart(g,spoolWelt,0,0,side*.121,r*.86,r*.86,.23,carYarn.welt);
+  for(let i=0;i<8;i++){
+    const theta=Math.PI*i*.25;
+    carBox(g,Math.cos(theta)*r*.65,Math.sin(theta)*r*.65,side*.153,.066,.021,.016,carYarn.brass,0,0,theta+.82);
+  }
 }
 function carWheel(radius,side,service) {
   const wheel=new THREE.Group();
@@ -647,6 +692,7 @@ function carWheel(radius,side,service) {
     const angle=k*Math.PI*2/3;
     carBall(wheel,Math.cos(angle)*radius*.41,Math.sin(angle)*radius*.41,side*.161,.026,.026,.012,'#545766');
   }
+  buttonWheel(wheel,radius,side);
   batchGroup(wheel);return wheel;
 }
 function carServiceDetails(g,type,isVan){

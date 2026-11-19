@@ -90,3 +90,32 @@ test('the software renderer draws each silhouette and emits different articulate
   }
   assert.notDeepEqual(poses[0],poses[1]);assert.notDeepEqual(poses[1],poses[2]);
 });
+
+test('the same cut felt is visible on the front and rear windows of the main vehicle and service bodies',async()=>{
+  const {createRequire}=await import('node:module');
+  const require=createRequire(import.meta.url);
+  const native=require(require.resolve('@napi-rs/canvas',{paths:[process.cwd(),process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES].filter(Boolean)}));
+  const {drawCanvasCar}=await import('../public/canvas-puppets.js');
+  const {fleetFabric}=await import('../public/vehicle-fabric.js');
+  const {Color}=await import('../public/three.js');
+  const rgb=parseInt(fleetFabric.gleam.slice(1),16),r=rgb>>16,g=(rgb>>8)&255,b=rgb&255;
+  const tint=new Color(fleetFabric.gleam);
+  for(const type of ['car','bus','ambulance']){
+    const model=createCar(type,'#487d81');let embroideredVertices=0;
+    model.group.traverse(o=>{
+      if(!o.isMesh)return;
+      const a=o.geometry.attributes.color;
+      for(let i=0;i<a.count;i++)if(Math.abs(a.getX(i)-tint.r)+Math.abs(a.getY(i)-tint.g)+Math.abs(a.getZ(i)-tint.b)<.003)
+        embroideredVertices++;
+    });
+    model.dispose();
+    assert.ok(embroideredVertices>=12,type+' front and rear cutwork in the shared geometry');
+    for(const bearing of [.50,-2.65]){
+      const canvas=native.createCanvas(460,230),ctx=canvas.getContext('2d');
+      drawCanvasCar(ctx,{id:'yarn',type,color:'#487d81'},230,180,105,0,bearing);
+      const data=ctx.getImageData(0,0,460,230).data;let visible=0;
+      for(let i=0;i<data.length;i+=4)if(data[i+3]>240&&Math.hypot(data[i]-r,data[i+1]-g,data[i+2]-b)<7)visible++;
+      assert.ok(visible>28,type+' visible felt at '+bearing);
+    }
+  }
+});

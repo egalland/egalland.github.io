@@ -1,10 +1,10 @@
-.kikalmo-link{box-sizing:border-box;width:min(400px,calc(100vw - 28px));max-height:88dvh;overflow:auto;padding:25px;color:#fff1db;background:#28252f;border:1px solid #806776;border-radius:17px;box-shadow:0 20px 75px #17102082;font-family:var(--ui,system-ui)}
+.kikalmo-link{box-sizing:border-box;width:min(400px,calc(100vw - 28px));max-height:88dvh;overflow:auto;padding:25px;color:#fff1db;background:var(--weft),#283c3f;border:1px solid #a09077;border-radius:17px;box-shadow:0 20px 75px #17102082;font-family:var(--ui,system-ui)}
 .kikalmo-link::backdrop{background:#1915218c;backdrop-filter:blur(3px)}
 .kikalmo-link button{color:inherit;cursor:pointer;font:inherit}.kikalmo-link button:focus-visible{outline:2px solid #fad493;outline-offset:3px}
-.kikalmo-link .link-close{position:absolute;top:11px;right:11px;width:36px;height:36px;border:1px solid #685761;background:#332d39;border-radius:50%;font-size:23px}
+.kikalmo-link .link-close{position:absolute;top:11px;right:11px;width:36px;height:36px;border:1px solid #859182;background:#354c4d;border-radius:50%;font-size:23px}
 .link-eyebrow{font-size:10px;letter-spacing:.16em;color:#e1b686;font-weight:700}.kikalmo-link h2{font:italic 32px/1.1 var(--display,Georgia);margin:12px 0 21px}
-.link-summary{display:flex;align-items:center;gap:14px;padding:10px;background:#35303b;border:1px solid #574a58;border-radius:10px}
-.link-summary canvas{width:65px;height:65px;object-fit:contain}.link-name,.link-source{display:block}.link-source{font-size:13px;color:#c6b8ba;margin-top:3px}
-.link-explain,.link-status{font-size:14px;line-height:1.45;color:#d9ccd0;margin:15px 0}.link-status:empty{display:none}.link-status{color:#f4cd99}
+.link-summary{display:flex;align-items:center;gap:14px;padding:10px;background:#344c4d;border:1px solid #758275;border-radius:10px}
+.link-summary canvas{width:65px;height:65px;object-fit:contain}.link-name,.link-source{display:block}.link-source{font-size:13px;color:#c9d0c2;margin-top:3px}
+.link-explain,.link-status{font-size:14px;line-height:1.45;color:#dee0cd;margin:15px 0}.link-status:empty{display:none}.link-status{color:#f4cd99}
 .kikalmo-link .link-primary,.kikalmo-link .link-secondary,.kikalmo-link .link-unlink{display:block;border-radius:7px;padding:10px 12px;width:100%;font-size:14px;font-weight:650}
-.kikalmo-link .link-primary{color:#2b2431;background:#ecc597;border:1px solid #f5d3ad}.kikalmo-link .link-secondary{margin-top:7px;background:#38313c;border:1px solid #796576}.kikalmo-link .link-unlink{margin-top:7px;background:transparent;border:0;color:#dfbfca}.kikalmo-link [hidden]{display:none}
+.kikalmo-link .link-primary{color:#2b2431;background:#ecc597;border:1px solid #f5d3ad}.kikalmo-link .link-secondary{margin-top:7px;background:#384e4c;border:1px solid #87927e}.kikalmo-link .link-unlink{margin-top:7px;background:transparent;border:0;color:#dfbfca}.kikalmo-link [hidden]{display:none}

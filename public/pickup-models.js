@@ -5,7 +5,9 @@ import {pickupStyle,pickupPatch,pickupMarkerWidth,pickupRange,pickupLift,pickupP
 export function createPickupDisplay(scene){
   const instances=new Map(),styles=new Map();
   const bobbin=new T.CylinderGeometry(.44,.44,.26,18),cap=new T.CylinderGeometry(.55,.55,.09,20);
-  const ring=new T.RingGeometry(.70,.77,40);ring.rotateX(-Math.PI/2);
+  const shadow=new T.CircleGeometry(.59,24);shadow.rotateX(-Math.PI/2);
+  const shade=new T.MeshBasicMaterial({color:'#403e41',transparent:true,opacity:.22,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
+  const spindle=new T.CylinderGeometry(.033,.046,1.13,7);
   const fine=new T.TorusGeometry(.446,.016,4,22);fine.rotateX(Math.PI/2);
   const wood=new T.MeshLambertMaterial({color:'#ae896f'});
   const toy={box:new T.BoxGeometry(1,1,1),ball:new T.SphereGeometry(1,10,7),loop:new T.TorusGeometry(1,.16,5,16),
@@ -16,7 +18,7 @@ export function createPickupDisplay(scene){
     texture.colorSpace=T.SRGBColorSpace;
     const materials={
       cloth:new T.MeshLambertMaterial({color:thread}),
-      accent:new T.MeshBasicMaterial({color:accent,toneMapped:false,side:T.DoubleSide}),
+      accent:new T.MeshLambertMaterial({color:accent}),
       stitch:new T.MeshLambertMaterial({color:trim}),
       artwork:new T.SpriteMaterial({map:texture,alphaTest:.12,transparent:false,toneMapped:false,depthTest:true,depthWrite:true}),
     };
@@ -69,13 +71,13 @@ export function createPickupDisplay(scene){
   }
   function create(kind){
     const materials=palette(kind),group=new T.Group();
-    const base=mesh(ring,materials.accent,.11);
-    group.add(base,mesh(cap,wood,.12),mesh(bobbin,materials.cloth,.28),mesh(cap,wood,.45));
+    const base=mesh(shadow,shade,.065);
+    group.add(base,mesh(cap,wood,.12),mesh(bobbin,materials.cloth,.28),mesh(cap,wood,.45),mesh(spindle,wood,.88));
     for(let n=0;n<4;n++)group.add(mesh(fine,n===0||n===3?materials.stitch:materials.accent,.19+n*.058));
-    const model=miniature(kind,materials);group.add(model);
+    const model=miniature(kind,materials);model.scale.setScalar(.86);model.position.x=.29;group.add(model);
     const sprite=new T.Sprite(materials.artwork);sprite.scale.set(pickupMarkerWidth,pickupMarkerWidth*.8,1);group.add(sprite);
     group.name='Équipement · '+kind;scene.add(group);
-    return {kind,group,base,sprite,model};
+    return {kind,group,sprite,model};
   }
   function update(list,player,t){
     for(const item of instances.values())item.keep=false;
@@ -89,15 +91,14 @@ export function createPickupDisplay(scene){
       const phase=t*2.36+item.phase,lift=pickupLift(t,item.phase);
       item.sprite.position.y=lift;
       item.model.position.y=.80+.055*Math.sin(phase);item.model.rotation.y=t*.81+item.phase;item.model.rotation.z=.07*Math.sin(phase*.7);
-      const pulse=1+.065*Math.sin(phase);item.base.scale.set(pulse,1,pulse);
-      item.sprite.scale.set(pickupMarkerWidth*(1+.017*Math.sin(phase)),pickupMarkerWidth*.8*(1-.016*Math.sin(phase)),1);
+
     }
     for(const [id,item] of instances)if(!item.keep){item.group.removeFromParent();instances.delete(id);}
   }
   return {update,dispose(){
     for(const item of instances.values())item.group.removeFromParent();
     for(const mats of styles.values()){mats.artwork.map.dispose();for(const m of Object.values(mats))m.dispose();}
-    for(const geometry of [bobbin,cap,ring,fine,...Object.values(toy)])geometry.dispose();
-    wood.dispose();instances.clear();styles.clear();
+    for(const geometry of [bobbin,cap,shadow,spindle,fine,...Object.values(toy)])geometry.dispose();
+    wood.dispose();shade.dispose();instances.clear();styles.clear();
   }};
 }

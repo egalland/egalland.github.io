@@ -1,3 +1,6 @@
+import {canopyDyes} from './street-props-art.js';
+import {streetFabric} from './street-fabric.js';
+import {feltSlate as slates,shopCloths as stripMaterials} from './paris-applique.js';
 import {terrainHeight,buildingGround,waterLevel} from './terrain-height.js';
 import {terracePanels} from './street-terraces.js';
 import {propWearProfile,propWearStage,trackPropWear} from './prop-wear.js';
@@ -11,10 +14,8 @@ const specialParisIds=new Set(parisLandmarks.flatMap(item=>item.ids));
 const arc={x:3296.7,z:693.2,yaw:1.126};
 const grande={x:-1034.4,z:-1399.0,yaw:1.019};
 const tau=Math.PI*2, white='#ffffff';
-const stones=['#f0dfbd','#f7dcc5','#e7deca','#e3d3cd','#f4dfce','#e3d3bf','#f0deca','#d6c9bf'];
-const slates=['#666778','#526878','#697186','#736879','#536575'];
+const stones=['#fffbef','#ffe8cc','#f9eedd','#ffeddd','#f4e6cf','#f8eae0','#fff6e5','#ecdfd8'];
 const masonry=[ '#ead5ad','#d9bc9d','#f5e1b9','#b39183','#997e80' ];
-const stripMaterials=['#c58079','#729e96','#ab786e','#70869c','#87976e','#b48a71'];
 const materialColors=new Map();
 function color(val){
   if(!materialColors.has(val))materialColors.set(val,new T.Color(val));
@@ -118,7 +119,7 @@ function ring(batch,x,z,inner,outer,h,col,mat='plain',n=80){
 }
 // Each landmark uses the geographic footprint center, the local z axis follows the historical axis.
 function historicArch() {
-  const b=new Batch(), p='#e4ccaa', shade='#aa8b83',light='#f3dfb8';
+  const b=new Batch(), p='#e4ccaa', shade='#987d77',light='#f3dfb8';
   for(const side of [-1,1])for(const sideZ of [-1,1]){
     const x=14.91*side,z=7.61*sideZ;
     b.box(x,0,z,15.18,1.1,6.78,'#b7a09a');
@@ -146,8 +147,9 @@ function historicArch() {
     for(const z of [-11.02,11.02]){
       b.face('felt',[ax,ay,z],[cx,cy,z],[cx,top,z],[ax,top,z],p);
       const med=Math.sign(z)*.15;
-      const at=(a,r)=>[Math.cos(a)*r,low+Math.sin(a)*r,z+med];
+      const at=(a,r,layer=1)=>[Math.cos(a)*r,low+Math.sin(a)*r,z+med*layer];
       b.face('felt',at(a,r+.10),at(c-.008,r+.10),at(c-.008,r+1.1),at(a,r+1.1),i%3===0?light:'#d8ba9b');
+      b.face('felt',at(a+.018,r+.34,1.4),at(c-.03,r+.53,1.4),at(c-.03,r+.7,1.4),at(a+.018,r+.51,1.4),'#f2dbb5');
     }
   }
   b.box(0,32,0,45,5.4,22,p);
@@ -212,6 +214,12 @@ function futureArch(){
   b.box(0,89,0,106.8,20.2,109,face);b.box(0,88.4,0,64,.62,109,deep);
   for(let x=-49;x<52;x+=5)b.box(x,89,-54.7,.32,19,.62,trim,'plain');
   b.box(0,108.4,0,107.4,1.25,110,silver);
+  // Blanket stitches bind the curved corners of the light felt inner face.
+  for(const sign of [-1,1])for(const z of [-54.72,54.72]){
+    for(let y=3.5;y<88;y+=4.7){
+      b.face('felt',[sign*32.18,y,z],[sign*33.65,y+.8,z],[sign*33.65,y+1.25,z],[sign*32.18,y+.45,z],'#91a6ad');
+    }
+  }
   return b;
 }
 const pyramid={x:(2.33585-2.25)*73190,z:(48.88-48.86101)*111320};
@@ -267,7 +275,7 @@ function addBuilding(b,building,detail){
   if(!detail){
     for(let i=0;i<count;i++){
       const a=poly[i],c=poly[(i+1)%count],len=Math.hypot(a[0]-c[0],a[1]-c[1]);
-      b.wall(glass?'glass':'facade',a,c,0,h-.5,stone,Math.max(1,Math.round(len/(glass?4.8:4))),Math.max(1,Math.round(h/(glass?4:3.6))));
+      b.wall(glass?'glass':'facade',a,c,0,h-.5,stone,Math.max(1,Math.round(len/(glass?4.8:7.1))),Math.max(1,Math.round(h/(glass?4:3.6))));
     }
     flatWithHoles(b,'plain',poly,building.holes,h-.48,glass?'#9398a8':roof);
     return;
@@ -275,7 +283,6 @@ function addBuilding(b,building,detail){
   const mansard=!glass&&h>9&&!building.holes?.length, pinch=mansard?Math.min(.14,2.4/Math.max(11,Math.sqrt(Math.abs(T.ShapeUtils.area(poly.map(p=>new T.Vector2(...p))))))):0;
   const inset=poly.map(([x,z])=>[x+(cx-x)*pinch,z+(cz-z)*pinch]);
   const floorCount=Math.max(1,Math.round((eaves-3.6)/3.15));
-  const shopMat='shop'+((id>>>2)%8);
   const cross=T.ShapeUtils.area(poly.map(p=>new T.Vector2(...p)))>0?1:-1;
   for(let i=0;i<count;i++){
     const a=poly[i],d=poly[(i+1)%count],r=inset[i],s=inset[(i+1)%count],dx=d[0]-a[0],dz=d[1]-a[1],length=Math.hypot(dx,dz);
@@ -284,9 +291,14 @@ function addBuilding(b,building,detail){
     if(h<6.8){
       b.wall('felt',a,d,0,eaves,stone,length/4,1);b.wall('roof',a,d,eaves,h,roof,length/3,1);continue;
     }
-    const base=Math.min(3.65,eaves*.55), win=Math.max(1,Math.round(length/3.55));
-    if(length>4.1)b.wall(shopMat,a,d,.02,base,white,Math.max(1,Math.round(length/8.8)),1);
-    else b.wall('felt',a,d,0,base,stone,1,1);
+    const base=Math.min(3.65,eaves*.55), win=Math.max(1,Math.round(length/7.1));
+    if(length>4.1){
+      const shops=Math.max(1,Math.round(length/8.8));
+      for(let k=0;k<shops;k++){
+        const aa=[a[0]+dx*k/shops,a[1]+dz*k/shops],bb=[a[0]+dx*(k+1)/shops,a[1]+dz*(k+1)/shops];
+        b.wall('shop'+((id%8+i*3+k*5)%8),cross>0?bb:aa,cross>0?aa:bb,.02,base,white);
+      }
+    }else b.wall('felt',a,d,0,base,stone,1,1);
     b.wall('facade',a,d,base,eaves,stone,win,floorCount);
     const uv=[[0,0],[win,0],[win,1],[0,1]];
     b.face('roof',[a[0],eaves,a[1]],[d[0],eaves,d[1]],[s[0],h,s[1]],[r[0],h,r[1]],roof,uv);
@@ -315,7 +327,9 @@ function addBuilding(b,building,detail){
             fa=[oa[0]+outX*.95,oa[1]+outZ*.95],fb=[ob[0]+outX*.95,ob[1]+outZ*.95];
           const c=st%2?awColor:'#e9d2af';
           b.face('felt',[oa[0],base-.46,oa[1]],[ob[0],base-.46,ob[1]],[fb[0],base-.94,fb[1]],[fa[0],base-.94,fa[1]],c);
-          b.wall('felt',fa,fb,base-1.2,base-.94,c);
+          const sag=[(fa[0]+fb[0])*.5,base-1.35,(fa[1]+fb[1])*.5];
+          b.wall('felt',fa,fb,base-1.15,base-.94,c);
+          b.tri('felt',[fa[0],base-1.15,fa[1]],[fb[0],base-1.15,fb[1]],sag,c);
         }
       }
     }
@@ -346,13 +360,13 @@ function addRoad(b,seg){
   // Rounded joins keep adjacent curb strips contiguous where a road bends.
   const pad=Math.min(1.15,w*.13,len*.07),a1=[a[0]-dx/len*pad,a[1]-dz/len*pad],d1=[d[0]+dx/len*pad,d[1]+dz/len*pad];
   if(path){
-    strip(b,'pave',a1,d1,Math.max(1.45,w),.027,'#c9b5b2',4);return;
+    strip(b,'pave',a1,d1,Math.max(1.45,w),.027,'#f5e9d2',streetFabric.paving.meters);return;
   }
   const bridge=s.bridge;
   const y=bridge?.071:.038;
-  strip(b,'pave',a1,d1,w+Math.min(6,w*.6),y-.018,white,4);
-  strip(b,'road',a1,d1,w+.28,y-.002,'#c0aeb1',6.2);
-  strip(b,'road',a1,d1,w,y,white,6.2);
+  strip(b,'pave',a1,d1,w+Math.min(6,w*.6),y-.018,white,streetFabric.paving.meters);
+  strip(b,'road',a1,d1,w+.40,y-.002,'#dfceaf',streetFabric.road.meters);
+  strip(b,'road',a1,d1,w,y,white,streetFabric.road.meters);
   if(w>5&&(!bridge || w>9)){
     const nx=dx/len,nz=dz/len,spacing=Math.max(9,Math.min(13,len/2));
     for(let s0=3;s0+1.85<len;s0+=spacing){
@@ -423,20 +437,32 @@ function frayDecoration(batch,kind,stage){
     pos[i]+=upper*spec.lean;pos[i+2]+=upper*spec.lean*.31;pos[i+1]-=upper*spec.drop;
   }
 }
-function decoration(kind,variant,stage) {
+function decoration(kind,variant,stage,distant=false) {
   const b=new Batch(),metal='#3c4e54',edge='#596967',brass='#ca9972';
   if(terracePanels[kind]){
     for(const panel of terracePanels[kind])b.face('felt',...panel.points,panel.color);
   }else if(kind==='tree'){
-    const colors=[['#7e9f80','#94ad87','#aec39a'],['#94966d','#b1a676','#c5b88b'],['#698d80','#81a99a','#acc1a3']][variant%3];
-    b.tube([0,.03,0],[.14,3.73,0],.24,.14,'#866957',8);
+    const colors=canopyDyes[variant%3];
+    b.tube([0,.03,0],[.14,3.73,0],.24,.14,'#806457',9);
     b.tube([.09,2.25,0],[-.83,3.9,.15],.13,.07,'#806659',6);
     b.tube([.11,2.63,0],[.74,3.98,-.3],.115,.07,'#806659',6);
-    b.ball(.07,4.67,0,1.82,2.04,1.69,colors[0],10,6);
-    if(stage!==2)b.ball(-.89,4.28,.39,1.07,1.43,1.05,colors[1],8,5);
-    b.ball(.74,4.93,.08,1.22,1.52,1.12,colors[1],8,5);
-    b.ball(-.25,5.58,-.18,1.1,1.28,1.08,colors[2],9,5);
-    b.tube([0,.04,0],[0,.12,0],.71,.68,'#797275',10);
+    // Twist the two plies up the trunk without adding a separate mesh or material.
+    let prev=null;
+    for(let i=0;!distant&&i<=21;i++){
+      const t=i/21,h=.16+2.83*t,r=.228-.076*t,a=t*4.3*tau;
+      const point=[.11*t+Math.cos(a)*r,h,Math.sin(a)*r];
+      if(prev)b.tube(prev,point,.022,.022,'#b49579',4);
+      prev=point;
+    }
+    const lon=distant?7:10,lat=distant?4:6;
+    b.ball(.05,4.6,0,1.60,1.60,1.45,colors[1],lon,lat);
+    if(stage!==2)b.ball(-1.04,4.27,.32,.99,1.15,1.05,colors[1],lon,lat);
+    b.ball(1.01,4.64,.08,1.09,1.16,1.05,colors[1],lon,lat);
+    b.ball(-.38,5.73,-.18,1.08,1.09,1.13,colors[2],lon,lat);
+    if(!distant)b.ball(.51,5.47,-.39,.93,1.09,1.02,colors[2],lon,lat);
+    b.ball(-.24,4.55,1.03,.93,.88,.70,colors[2],lon,lat);
+    if(!distant)b.ball(.45,4.72,-.99,.87,.87,.69,colors[1],lon,lat);
+    b.tube([0,.04,0],[0,.12,0],.68,.65,'#716369',10);
   }else if(kind==='lamp'){
     b.tube([0,0,0],[0,.34,0],.32,.23,metal,9);
     b.tube([0,.3,0],[0,1.21,0],.17,.115,edge,9);
@@ -455,24 +481,50 @@ function decoration(kind,variant,stage) {
       b.tube([-.36,.16,side*.414],[stage===2?-.01:.36,stage===2?.38:.7,side*.414],.05,.05,'#cea77f',4);
     }
   }else if(kind==='bench'){
-    b.box(0,.46,0,1.70,.13,.49,'#a67864');
-    if(stage===2){
-      b.box(-.48,.81,.2,.74,.30,.10,'#ac8064');
-      b.box(.47,.88,.2,.76,.27,.10,'#b68a6c');
-    }else b.box(0,.83,.2,1.70,.34,.10,'#b68a6c');
-    for(const x of [-.61,.61]){b.box(x,.01,.01,.085,.49,.52,metal);b.box(x,.35,.18,.072,.60,.07,metal);}
+    // Padded slats with rounded welts and contrasting fastening buttons.
+    for(const z of [-.17,0,.17]){
+      b.box(0,.45,z,1.68,.102,.153,'#b58365');
+      b.tube([-.835,.535,z-.070],[.835,.535,z-.070],.018,.018,'#d4a982',5);
+    }
+    for(const h of [.81,1.035]){
+      const runs=stage===2?[[-.84,-.13],[.10,.84]]:[[-.84,.84]];
+      for(const [start,end] of runs){
+        const sag=stage===2&&start>0?.045:0;
+        b.box((start+end)*.5,h+sag,.20,end-start,.124,.101,'#bb8969');
+        for(const side of [-1,1])b.tube([start,h+.094+sag,.20+side*.047],
+          [end,h+.094+sag,.20+side*.047],.024,.024,'#d3a782',5);
+      }
+      for(const x of [-.62,.62])b.ball(x,h+.057,.142,.024,.025,.014,'#765d54',6,3);
+    }
+    for(const x of [-.62,.62]){
+      b.box(x,.015,.01,.095,.49,.48,metal);
+      b.tube([x,.46,.13],[x,1.12,.24],.04,.037,metal,6);
+      b.tube([x,.50,-.20],[x,.68,-.17],.031,.031,metal,6);
+      b.tube([x,.68,-.17],[x,.68,.18],.032,.032,edge,6);
+    }
   }else if(kind==='hydrant'){
     b.tube([0,0,0],[0,.72,0],.21,.2,'#ad5c67',8);b.ball(0,.71,0,.235,.23,.235,'#c66c6b');
-    b.tube([stage===2?-.19:-.3,.45,0],[.3,.45,0],.10,.10,'#875767',8);
+    b.tube([stage===2?-.19:-.3,.45,0],[.3,.45,0],.11,.11,'#b77569',8);
+    b.tube([0,.06,0],[0,.12,0],.23,.22,'#925a5f',9);
+    b.tube([0,.58,0],[0,.62,0],.22,.22,'#d79a79',10);
+    b.tube([0,.46,-.25],[0,.46,.25],.103,.103,'#975b61',8);
   }else if(kind==='postbox'){
-    b.tube([0,0,0],[0,.79,0],.085,.068,metal,6);b.box(0,.77,0,.59,.62,.39,'#d6ac65');b.box(0,1.17,.2,.36,.035,.02,'#555363');
+    b.tube([0,0,0],[0,.79,0],.085,.068,metal,6);b.box(0,.77,0,.59,.62,.39,'#cc9b5a');
+    b.box(0,1.30,0,.63,.07,.42,'#d7ae70');
+    for(const z of [-.20,.20]){b.box(0,1.18,z,.36,.043,.02,'#4c4a55');b.box(0,1,z,.13,.073,.024,'#f2d5a0');}
   }else if(kind==='bin'){
     b.tube([0,.03,0],[0,.88,0],.27,.34,'#557570',12);
+    for(let i=0;i<9;i++){
+      const a=i*tau/9,c=Math.cos(a),s=Math.sin(a);
+      b.tube([.27*c,.11,.27*s],[.337*c,.79,.337*s],.013,.014,'#839884',4);
+    }
     const lid=stage===2?.14:0;
     b.tube([lid,.89,0],[lid,.96,0],.36,.31,metal,12);
     b.tube([lid,.955,0],[lid,.969,0],.26,.26,'#333e49',12);
   }else{
-    b.tube([0,0,0],[0,.71,0],.13,.11,metal,8);b.ball(0,.74,0,.135,.14,.135,'#a59088',8,4);
+    b.tube([0,0,0],[0,.71,0],.13,.11,metal,8);b.ball(0,.74,0,.135,.14,.135,'#788e85',8,4);
+    b.tube([0,.60,0],[0,.65,0],.124,.124,'#efd096',8);
+    b.tube([0,.024,0],[0,.067,0],.146,.143,edge,8);
   }
   frayDecoration(b,kind,stage);
   return b;
@@ -546,18 +598,18 @@ function groundTile(batch,x0,z0,n,lakes,parks){
   }
   for(let j=0;j<n;j++)for(let i=0;i<n;i++){
     const k=j*(n+1)+i,a=points[k],b=points[k+n+1],c=points[k+n+2],d=points[k+1];
-    const park=green.some(q=>containsArea(q,a[0]+step*.5,a[2]+step*.5)),tex=park?4.7:5.3;
+    const park=green.some(q=>containsArea(q,a[0]+step*.5,a[2]+step*.5)),tex=park?streetFabric.park.meters:streetFabric.paving.meters;
     const uv=[a,b,c,d].map(p=>[p[0]/tex,p[2]/tex]);
-    batch.face(park?'felt':'pave',a,b,c,d,park?'#aebe91':'#e7d6c9',uv);
+    batch.face(park?'park':'pave',a,b,c,d,park?white:'#f4e5d4',uv);
   }
 }
 function makeGround(b) {
-  b.quad('pave',[[-13000,-12000],[-13000,13000],[17000,13000],[17000,-12000]],-.12,'#e7d6c9',5.3);
+  b.quad('pave',[[-13000,-12000],[-13000,13000],[17000,13000],[17000,-12000]],-.12,'#f4e5d4',streetFabric.paving.meters);
 
   for(const w of water){
     const poly=distinct(w.poly);if(poly.length<3)continue;
     b.base=waterLevel(w);
-    flatWithHoles(b,'water',poly,w.holes,.004,'#769ca6');
+    flatWithHoles(b,'water',poly,w.holes,.004,white,streetFabric.water.meters);
     for(let i=0;i<poly.length;i++){
       const a=poly[i],d=poly[(i+1)%poly.length];
       const bank=Math.max(0,Math.min(5,terrainHeight(a[0],a[1])-b.base));
@@ -659,9 +711,9 @@ export function createCity3D(scene){
     targets=next.filter(t=>!chunks.has(t.key)||chunks.get(t.key).detail!==t.detail).sort((a,b)=>a.dist-b.dist);
     lastX=pos.x;lastZ=pos.y;
   }
-  function propSet(kind,variant,stage){
-    const k=kind+variant+'/'+stage;if(propModels.has(k))return propModels.get(k);
-    const group=decoration(kind,variant,stage).mesh(materials),instances=[];
+  function propSet(kind,variant,stage,distant){
+    const k=kind+variant+'/'+stage+'/'+distant;if(propModels.has(k))return propModels.get(k);
+    const group=decoration(kind,variant,stage,distant).mesh(materials),instances=[];
     for(const templ of group.children){
       const mesh=new T.InstancedMesh(templ.geometry,templ.material,460);mesh.count=0;mesh.frustumCulled=false;
       mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);root.add(mesh);instances.push(mesh);
@@ -673,8 +725,9 @@ export function createCity3D(scene){
     for(const prop of pickProps(state?.props,pos,220)){
       if(state.destroyed?.has?.(prop.id))continue;
       const type=prop.type||prop.kind||'bollard',h=hash(prop.id),variant=type==='tree'?h%3:0;
-      const stage=propWearStage(state.propHealth?.get(prop.id)),k=type+variant+'/'+stage;
-      if(!propGroups.has(k))propGroups.set(k,{items:[],type,variant,stage});
+      const stage=propWearStage(state.propHealth?.get(prop.id));
+      const distant=type==='tree'&&(prop.x-pos.x)**2+(prop.y-pos.y)**2>58*58,k=type+variant+'/'+stage+'/'+distant;
+      if(!propGroups.has(k))propGroups.set(k,{items:[],type,variant,stage,distant});
       propGroups.get(k).items.push(prop);
       const tree=type==='tree',lamp=type==='lamp',radius=tree?1.38:lamp?.42:.45;
       helper.position.set(prop.x+radius*.55,terrainHeight(prop.x+radius*.55,prop.y+radius*.13)+.105,prop.y+radius*.13);helper.rotation.set(-Math.PI/2,0,-.30);
@@ -683,8 +736,8 @@ export function createCity3D(scene){
     }
     groundShadows.count=shadowIndex;groundShadows.instanceMatrix.needsUpdate=true;
     for(const list of propModels.values())for(const m of list)m.count=0;
-    for(const {items,type,variant,stage} of propGroups.values()){
-      const meshes=propSet(type,variant,stage);
+    for(const {items,type,variant,stage,distant} of propGroups.values()){
+      const meshes=propSet(type,variant,stage,distant);
       items.forEach((p,i)=>{
         const h=hash(p.id),scale=type==='tree'?.87+(h%41)/100:1;
         helper.position.set(p.x,terrainHeight(p.x,p.y),p.y);helper.rotation.set(0,p.angle===undefined?(h%628)/100:-p.angle,0);helper.scale.setScalar(scale);helper.updateMatrix();

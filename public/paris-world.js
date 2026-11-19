@@ -1,3 +1,4 @@
+import {yarnPalette} from './wool-art.js';
 // Local coordinates are metres, east and south. All map layers share the IGN projection in paris-data.
 import { buildings, streets, water, green, metadata } from './paris-data.js';
 
@@ -886,8 +887,8 @@ export function routeAgents(x,y,radius=140,epochMs=Date.now()){
 const mapStreets=new Grid(112),mapParks=new Grid(160);
 for(const park of green)mapParks.insert({...park},bounds(park.poly));
 for(const s of streetList)mapStreets.insert({road:s},bounds(s.path,s.w*.5+2));
-const mapPalette={land:'#272838',inside:'#37384a',building:'#655c73',industrial:'#645b66',commercial:'#655f7e',water:'#386778',
-  path:'#797986',residential:'#898494',secondary:'#a99bac',primary:'#ccb5a4',motorway:'#988e9d'};
+const mapPalette={land:'#252e35',inside:'#374348',building:'#605e64',industrial:'#66616a',commercial:'#6f6470',
+  water:'#39737d',path:'#7e8a85',residential:'#a29991',secondary:'#c1ac94',primary:'#ecd19e',motorway:'#ae9f96'};
 function makeMapCanvas(w,h){
   if(typeof OffscreenCanvas!=='undefined')return new OffscreenCanvas(w,h);
   const c=document.createElement('canvas');c.width=w;c.height=h;return c;
@@ -906,7 +907,7 @@ function drawSolid(ctx,b,color){
 function drawBaseMap(ctx,x,y,radius,scale,full){
   ctx.beginPath();traceRing(ctx,boundary);ctx.fillStyle=mapPalette.inside;ctx.fill();
   ctx.save();ctx.clip();
-  for(const park of mapParks.area(x,y,radius))drawSolid(ctx,park,'#4b6b62');
+  for(const park of mapParks.area(x,y,radius))drawSolid(ctx,park,'#47685d');
   const shapes=terrain.area(x,y,radius),paths=mapStreets.area(x,y,radius);
   for(const s of shapes){
     if(s.type==='water')drawSolid(ctx,s,mapPalette.water);
@@ -922,6 +923,10 @@ function drawBaseMap(ctx,x,y,radius,scale,full){
       ctx.beginPath();ctx.moveTo(...road.path[0]);
       for(let i=1;i<road.path.length;i++)ctx.lineTo(...road.path[i]);
       ctx.stroke();
+      if(!full && k==='primary' && ctx.lineWidth*scale>3.4){
+        ctx.save();ctx.lineWidth=.85/scale;ctx.setLineDash([2.4/scale,3.2/scale]);
+        ctx.strokeStyle='#867460';ctx.stroke();ctx.restore();
+      }
     }
   }
   ctx.globalAlpha=1;ctx.restore();
@@ -967,7 +972,7 @@ export function paintMap(canvas,player,{full=false,peers=[],vehicles=[],pickups=
     const x=px(drop.x),y=py(drop.y),r=full?3.6:4.8;
     if(x<-r||x>w+r||y<-r||y>h+r)continue;
     c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y);c.lineTo(x,y+r);c.lineTo(x-r,y);c.closePath();
-    c.fillStyle='#f4ca83';c.fill();c.strokeStyle='#403344';c.lineWidth=1.4;c.stroke();
+    c.fillStyle='#efd28d';c.fill();c.strokeStyle=yarnPalette.ink;c.lineWidth=1.4;c.stroke();
     c.fillStyle='#42333a';c.fillRect(x-1,y-1,2,2);
   }
   if(full){
@@ -989,8 +994,8 @@ export function paintMap(canvas,player,{full=false,peers=[],vehicles=[],pickups=
   }
   for(const p of peers){
     const x=px(p.x),y=py(p.y);
-    if(x>=0&&x<=w&&y>=0&&y<=h)circle(x,y,3.5,'#ff93ba','#38283b');
+    if(x>=0&&x<=w&&y>=0&&y<=h)circle(x,y,3.5,'#f2a89a',yarnPalette.ink);
   }
   c.save();c.translate(px(player.x),py(player.y));c.rotate(player.angle||0);c.beginPath();c.moveTo(7,0);c.lineTo(-5,5);c.lineTo(-2,0);c.lineTo(-5,-5);c.closePath();
-  c.fillStyle='#99ffdc';c.fill();c.strokeStyle='#273332';c.lineWidth=1.7;c.stroke();c.restore();
+  c.fillStyle='#a6ecd0';c.fill();c.strokeStyle='#1f423f';c.lineWidth=1.7;c.stroke();c.restore();
 }

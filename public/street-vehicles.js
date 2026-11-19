@@ -1,7 +1,9 @@
 import {appearanceKey,getKikalmoLook,zones} from './kikalmo-avatar.js';
+import {fleetFabric} from './vehicle-fabric.js';
 import {vehicleSpec} from './vehicle-types.js';
 
-const ink='#3a3441',cream='#f4d9a6',rubber='#393647',seat='#614a46',brass='#dbab60',iron='#787d80',wood='#b27b50';
+const {ink,thread:cream,tyre:rubber,brass,silver:iron}=fleetFabric;
+const seat='#694b46',wood='#b27b50';
 const colors={scooter:'#79a7a0',cargo:'#4f8886',pickup:'#a16458'};
 export const isStreetVehicle=type=>Object.hasOwn(colors,type);
 const occupied=e=>!!(e.self||e.peer||e.occupied||(!e.parked&&e.routeId));
@@ -25,7 +27,14 @@ function makeWheel(x,z,r,width,front,spoked){
       const a=i*Math.PI/(spoked?6:3),dx=Math.cos(a)*r*.62,dy=Math.sin(a)*r*.62;
       rod(parts,[-dx,-dy,edge+side*.017],[dx,dy,edge+side*.017],spoked?.009:.018,spoked?cream:brass);
     }
-    disc(parts,[0,0,edge+side*.022],r*.22,.017,brass);
+    disc(parts,[0,0,edge+side*.022],r*.30,.017,brass);
+    if(!spoked){
+      const z=edge+side*.032;
+      for(const sign of [-1,1]){
+        disc(parts,[sign*r*.115,sign*r*.045,z],r*.041,.008,ink);
+      }
+      rod(parts,[-r*.11,-r*.045,z],[r*.11,r*.045,z],r*.022,cream);
+    }
   }
   return wheel;
 }
@@ -33,6 +42,13 @@ function parcel(parts,x,y,z,l,h,w,paper){
   box(parts,[x,y+h/2,z],[l,h,w],paper);
   box(parts,[x,y+h/2+.003,z],[.041,h+.014,w+.014],cream);
   box(parts,[x,y+h+.008,z],[l+.006,.012,.043],cream);
+  // A cross-tied pair of wool loops makes the parcel readable from behind the carrier.
+  for(const s of [-1,1]){
+    const top=y+h+.018,m=Math.min(l,w)*.22;
+    rod(parts,[x,top,z],[x+s*m,top+.063,z-.038],.016,cream);
+    rod(parts,[x+s*m,top+.063,z-.038],[x+s*m*.68,top+.083,z+.05],.016,cream);
+    rod(parts,[x+s*m*.68,top+.083,z+.05],[x,top,z],.015,cream);
+  }
 }
 function makeRider(x,saddle,grip,foot){
   const node=section('conducteur',[x,saddle,0]),parts=node.parts;
@@ -66,11 +82,14 @@ function makeScooter(paint){
   egg(p,[-.51,.46,0],[.483,.254,.261],paint);
   egg(p,[-.55,.497,0],[.353,.092,.273],cream);
   egg(p,[-.49,.523,0],[.361,.107,.282],paint);
-  egg(p,[-.33,.718,0],[.35,.092,.206],seat);
+  egg(p,[-.33,.690,0],[.353,.078,.211],cream);
+  egg(p,[-.33,.722,0],[.35,.085,.206],seat);
   box(p,[.088,.268,0],[.65,.065,.394],cream);box(p,[.082,.305,0],[.55,.028,.37],ink);
   for(const s of [-1,1]){
     rod(p,[.29,.32,s*.16],[.473,.78,s*.168],.055,paint);
-    for(let i=0;i<4;i++)rod(p,[-.62+i*.068,.54,s*.268],[-.60+i*.068,.49,s*.271],.010,cream);
+    rod(p,[-.85,.47,s*.207],[-.62,.407,s*.25],.017,cream);
+    rod(p,[-.62,.407,s*.25],[-.35,.412,s*.25],.017,cream);
+    for(let i=0;i<4;i++)rod(p,[-.62+i*.068,.54,s*.268],[-.588+i*.068,.498,s*.271],.012,cream);
   }
   egg(p,[.424,.54,0],[.142,.255,.222],paint);
   rod(p,[.473,.77,0],[.57,.98,0],.048,iron);
@@ -78,7 +97,9 @@ function makeScooter(paint){
   rod(f,[0,.31,0],[-.02,1.04,0],.043,paint);
   egg(f,[.035,.52,0],[.33,.09,.152],paint);
   egg(f,[.008,1.046,0],[.12,.10,.132],paint);
-  egg(f,[.101,1.047,0],[.052,.082,.097],'#fff0ac');
+  egg(f,[.101,1.047,0],[.055,.088,.099],brass);
+  egg(f,[.132,1.047,0],[.038,.070,.082],fleetFabric.lamp);
+  for(const s of [-1,1])egg(f,[.165,1.047,s*.028],[.008,.009,.009],ink);
   rod(f,[-.007,1.06,-.075],[-.089,1.055,-.336],.024,iron);rod(f,[-.007,1.06,.075],[-.089,1.055,.336],.024,iron);
   for(const s of [-1,1]){
     rod(f,[-.089,1.055,s*.276],[-.089,1.055,s*.371],.032,seat);
@@ -101,7 +122,12 @@ function makeCargo(paint){
     rod(p,[-.52,.29,s*.145],[-.45,.24,s*.146],.024,iron);
     box(p,[-.45,.23,s*.175],[.113,.035,.118],ink);
   }
-  for(const end of [-.014,1.229])box(p,[end,.716,0],[.056,.399,.746],wood);
+  for(const end of [-.014,1.229]){
+    box(p,[end,.716,0],[.056,.399,.746],wood);
+    const sign=end>0?1:-1, x=end+sign*.032;
+    box(p,[x,.848,0],[.015,.105,.56],cream);
+    for(let i=-2;i<=2;i++)box(p,[x+sign*.007,.848,i*.09],[.012,.018,.047],seat);
+  }
   parcel(p,.42,.515,-.089,.53,.473,.49,'#b26a4d');
   parcel(p,.922,.516,.059,.373,.496,.39,'#a3a26d');
   rod(f,[0,.84,0],[-.021,1.132,0],.022,iron);
@@ -131,9 +157,14 @@ function makePickup(paint){
     egg(p,[.949,1.41,s*.943],[.056,.047,.037],cream);
   }
   box(p,[-2.273,1.058,0],[.124,.45,1.71],paint);
+  box(p,[-2.337,1.205,0],[.02,.032,1.54],cream);
+  for(let i=-3;i<=3;i++)box(p,[-2.34,1.11,.174*i],[.019,.021,.095],cream);
+  for(const s of [-1,1])box(p,[-2.341,.974,s*.64],[.015,.087,.071],brass);
   box(p,[-.16,1.29,0],[.117,.75,1.61],paint);
   box(p,[-.224,1.465,0],[.024,.29,1.11],'#536f77');
-  box(p,[1.108,1.474,0],[.075,.408,1.457],'#80959a');
+  box(p,[1.108,1.474,0],[.075,.408,1.457],fleetFabric.frontPane);
+  rod(p,[1.151,1.312,-.525],[1.151,1.637,-.273],.024,fleetFabric.gleam);
+  rod(p,[1.151,1.32,-.418],[1.151,1.637,-.17],.011,fleetFabric.gleam);
   egg(p,[.484,1.706,0],[.79,.153,.903],paint);
   box(p,[1.672,.996,0],[1.047,.414,1.58],paint);
   egg(p,[1.718,1.164,0],[.605,.108,.843],paint);

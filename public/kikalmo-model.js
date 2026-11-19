@@ -1,3 +1,4 @@
+import {puppetKnit} from './puppet-material.js';
 import {motionSeed,sampleLocomotion,linkedPose,kikalmoAnchors as anchors} from './locomotion-pose.js';
 import * as THREE from './three.js';
 import {appearanceKey,getKikalmoLook,kikalmoFrame,zones} from './kikalmo-avatar.js';
@@ -8,7 +9,7 @@ const shape=new THREE.SphereGeometry(1,12,9);
 const colors=new Map(),clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const joints=['hips','chest','head','leftShoulder','rightShoulder','leftHip','rightHip'];
 function material(color){
-  if(!colors.has(color))colors.set(color,new THREE.MeshLambertMaterial({color}));
+  if(!colors.has(color))colors.set(color,new THREE.MeshLambertMaterial({color,map:puppetKnit()}));
   return colors.get(color);
 }
 // A small repeat knitted in both directions around the stuffed perimeter. Its

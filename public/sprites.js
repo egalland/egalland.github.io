@@ -406,60 +406,7 @@ export function drawVehicle(ctx, vehicle, time = 0) {
   ctx.restore();
 }
 
-const ITEMS = {
-  fist: [
-    '                        ','                        ','                        ',
-    '          xxx           ','       xxxxhhxxx        ','      xhhxchhxchxx      ',
-    '    xxxhhxchhxchhhhx    ','    xhhchhchhchhchhx    ','   xhhhcchchhchhchhx    ',
-    '   xhhhcchchhchhcchx    ','   xcchccscscscssscx    ','   xcccssscccssssx      ',
-    '    xccsccccccssx       ','    xcccchcccsssx       ','     xccchhccssx        ',
-    '      xsvcccssx         ','      xvvvvvvx          ','      xveveeex          ',
-    '      xevvevex          ','       xxxxxx           '
-  ],
-  pistol: [
-    '                        ','                        ','                        ',
-    '                        ','                    xx  ','       xx          xlhx ',
-    '      xllllllllllllllhx ','    xxhhhhhhhhhhhhhhhlx ','    xllllddldldddddddlx ',
-    '   xdddvvvvddddddddddxx ','    xxvvvsxxxxxxxxxxxx  ','     xsvvsx  xdx        ',
-    '     xsvvsx  xx         ','    xsvvsxxxxx          ','    xsvvsx              ',
-    '   xsvvsx               ','   xsvvsvx              ','   xddssx               ',
-    '    xxxx                ','                        '
-  ],
-  smg: [
-    '                        ','                        ','              xxx       ',
-    '             xhhx    xx ','     xx  xxxxxxxxxx xhx ','    xllx xlhhhhhhhlllhxx',
-    '    xddxxxllldldlddddlhx','   xddlllldllddddddddlxx','  xddxxxxxvvvsddvvsxxxx ',
-    '  xdxx   xvvvscxvvsx    ','  xx     xsdvsxsvvsx    ','         xsvvsxxvvssx   ',
-    '        xsvvsx  xvvssx  ','        xsvvsx  xvvssx  ','        xsssx    xssssx ',
-    '         xxx      xxxx  ','                        ','                        ',
-    '                        ','                        '
-  ],
-  shotgun: [
-    '                        ','                        ','                        ',
-    '                        ','                     xxx','                  xxxhhl',
-    '               xxxhhhhdd','            xxxhhhdddxxx','          xxhhhdddxxccx ',
-    '        xxhhdddxxcccsx  ','      xxhhdddxxccssxx   ','     xdddddxxccssxx     ',
-    '    xcccvdxxxxxx        ','   xchcvcx              ','  xccsvcx               ',
-    ' xccsvcx                ','xchsvcx                 ','xssscx                  ',
-    ' xxx                    ','                        '
-  ],
-  yarn: [
-    '                        ','                        ','         xxxxxx         ',
-    '       xxehhheexx       ','      xvhhheehehexx     ','     xvhhheeeheeevvx    ',
-    '    xvhhhvvhheevhevvx   ','    xhhvvvhheeheevvvx   ','   xhhvvhheeheeevvvvx   ',
-    '   xhvhheevheeevveevx   ','   xvheevheeevveehhvx   ','   xheevheevveehhvvvx   ',
-    '    xvhheevveehhvvvx    ','    xvvevveehhvveevx    ','     xvvveehhvveevxx    ',
-    '      xvvvhvveeevx ex   ','       xxvveeevxx  vex  ','         xxxxxx xx  ex  ',
-    '                 xxxx   ','                        '
-  ]
-};
-const ITEM_PALETTE = {x:'#352943',s:'#79526a',v:'#ab7694',c:'#dab096',h:'#fff1d3',l:'#d5c4e2',d:'#918399',e:'#d5a1ce'};
+// Every inventory slot uses the same appliqué as its marker in the city.
 export function drawItemIcon(ctx, kind, x, y, size) {
-  if(drawToyWeapon(ctx,kind,x,y,size))return;
-  const item = ITEMS[kind] ? kind : 'fist';
-  const palette = item === 'yarn' ? {...ITEM_PALETTE,h:'#f4c5e9',e:'#cc93d0',v:'#a36bae',x:'#46314d'} : ITEM_PALETTE;
-  ctx.save();ctx.imageSmoothingEnabled=false;
-  stamp(ctx,'item|'+item,24,24,x,y,size,size,
-    c => pixels(c,ITEMS[item],0,2,palette));
-  ctx.restore();
+  if(!drawToyWeapon(ctx,kind,x,y,size))drawToyWeapon(ctx,'fist',x,y,size);
 }

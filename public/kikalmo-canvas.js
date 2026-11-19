@@ -92,7 +92,12 @@ function turntable(art,theta){
   return result;
 }
 function limb(g,a,b,r,color){
-  g.strokeStyle=color;g.lineWidth=r*2;g.beginPath();g.moveTo(...a);g.lineTo(...b);g.stroke();
+  g.beginPath();g.moveTo(...a);g.lineTo(...b);
+  g.strokeStyle='rgba(53,40,54,.8)';g.lineWidth=r*2.20;g.stroke();
+  g.strokeStyle=color;g.lineWidth=r*2;g.stroke();
+  // A single light strand rounds a sleeve even when a small screen drops fine detail.
+  g.strokeStyle='rgba(255,235,199,.26)';g.lineWidth=r*.43;g.beginPath();
+  g.moveTo(a[0]-r*.27,a[1]-r*.16);g.lineTo(b[0]-r*.27,b[1]-r*.16);g.stroke();
 }
 function bead(g,p,rx,ry,col){
   g.fillStyle=col;g.beginPath();g.ellipse(p[0],p[1],rx,ry,0,0,tau);g.fill();

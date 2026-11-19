@@ -34,7 +34,9 @@ test('an interposed walker reveals the player while a walker behind stays natura
     const npc=pixels([actor]),combined=pixels([hero,actor]);
     let common=0,obscured=0,heroOnTop=0;
     for(let i=0;i<baseline.length;i+=4){
-      if(difference(solo,baseline,i)<80||difference(npc,baseline,i)<80||difference(npc,solo,i)<80)continue;
+      // A cream wool coat can sit against a similarly dyed limestone façade.
+      // Keep the strict actor-to-actor contrast for depth, independently of the set.
+      if(difference(solo,baseline,i)<48||difference(npc,baseline,i)<48||difference(npc,solo,i)<80)continue;
       common++;
       if(difference(combined,npc,i)<4)obscured++;
       if(difference(combined,solo,i)<4)heroOnTop++;

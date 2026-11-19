@@ -19,13 +19,13 @@ test('Every collectible has its own HUD artwork, readable effect geometry and tu
   const recorder=()=>{const operations=[];const ctx=new Proxy({},{
     get(target,key){if(key in target)return target[key];return (...args)=>operations.push([key,...args]);}
   });return {ctx,operations};};
-  const art=new Set(),woven=weaponList.filter(w=>!['fist','pistol','yarn','smg','shotgun'].includes(w.id));
-  for(const w of woven){
+  const art=new Set();
+  for(const w of weaponList){
     const {ctx,operations}=recorder();
     assert(drawToyWeapon(ctx,w.id,0,0,32));assert(operations.length>20,w.id);
     art.add(JSON.stringify(operations));
   }
-  assert.equal(art.size,woven.length);
+  assert.equal(art.size,weaponList.length);
   for(const w of weaponList){
     assert(weaponCatalog[w.id]===w);assert(w.range>0&&w.damage>0&&w.interval>0);
     const lines=buildShotEffect(w.effect,48,27,.62,8,.4);

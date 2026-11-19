@@ -1,3 +1,9 @@
+import {emotePatch} from './emote-art.js';
+import {paintSkyView} from './textile-sky.js';
+import {paintStreetProp} from './street-props-art.js';
+import {paintStreetFabric,streetFabric} from './street-fabric.js';
+import {feltStone as stone,feltSlate as roofs,windowCloth,glassCloth,shopCloth,zincCloth,marbleCloth} from './paris-applique.js';
+import {paintKnit as knitArchitecture} from './wool-art.js';
 import {createBleedFibers} from './bleed-fibers.js';
 import {fiberLifetime,impactFibers} from './puppet-combat.js';
 import {terrainHeight,terrainGradient,buildingGround,waterLevel,walkingPose} from './terrain-height.js';
@@ -15,9 +21,6 @@ import {pickupPatch,pickupStyle,pickupLift,pickupPhase,pickupRange,pickupMarkerW
 import {grandParisModels,skipLandmark} from './canvas-landmarks.js';
 
 const tau=Math.PI*2,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),near=.32;
-const stone=['#d6b998','#e9c5a2','#cba897','#dbc4ab','#c9a78c','#d9b99d','#e5c7b0','#d2b6a6'];
-const roofs=['#716773','#72727d','#746572','#7c737c','#68697a'];
-const canopies=['#487f78','#b56767','#a07b58','#537786','#839977'];
 const mix=(a,b,t)=>a+(b-a)*t;
 function tint(hex,f){
   const a=parseInt(hex.slice(1),16);
@@ -57,57 +60,51 @@ function getSpatial(){
   spatial={blocks,ways};return spatial;
 }
 const facadeImages=new Map();
+let facadeArea=0;
 function makeCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
-function facade(seed,levels,shade,glass){
-  const key=[seed%8,levels,shade,glass].join('|');
-  if(facadeImages.has(key))return facadeImages.get(key);
-  const w=64,floorH=30,h=levels*floorH+34,c=makeCanvas(w,h),g=c.getContext('2d');
-  const color=stone[seed%stone.length],lighting=shade?1.015:.84;
-  g.fillStyle=tint(color,lighting);g.fillRect(0,0,w,h);
+function facade(seed,levels,shade,glass,detail){
+  const style=glass?0:seed%(detail===0?4:8);
+  const key=[style,levels,shade,glass,detail].join('|');
+  const cached=facadeImages.get(key);
+  if(cached){facadeImages.delete(key);facadeImages.set(key,cached);return cached;}
+  const w=detail===2?160:detail===1?80:40,floorH=Math.round(w*.49),shopH=Math.round(w*.52),h=levels*floorH+shopH;
+  const c=makeCanvas(w,h),g=c.getContext('2d');
   if(glass){
-    g.fillStyle=shade?'#8298a0':'#728997';g.fillRect(0,0,w,h);
-    for(let y=0;y<h;y+=16){g.fillStyle='rgba(206,225,217,.63)';g.fillRect(0,y,w,1.6);}
-    for(let x=0;x<w;x+=12){g.fillStyle='#a6b9b7';g.fillRect(x,0,1.8,h);}
-    g.fillStyle='rgba(226,233,212,.16)';g.beginPath();g.moveTo(20,0);g.lineTo(49,0);g.lineTo(21,h);g.lineTo(0,h);g.fill();
+    const pane=glassCloth();
+    const size=w/4;for(let y=0;y<h;y+=size)for(let x=0;x<w;x+=size)g.drawImage(pane,x,y,size,size);
   }else{
-    // Shallow shadows, limestone courses, double windows and black balcony ironwork.
-    for(let y=4;y<h;y+=8){g.fillStyle='rgba(112,90,86,.17)';g.fillRect(0,y,w,.7);g.fillRect((Math.floor(y/8)%2)*13+12,y,1,8);}
-    for(let j=0;j<levels;j++){const yy=j*floorH;
-      g.fillStyle='rgba(89,69,69,.26)';g.fillRect(0,yy+1,w,2);g.fillStyle='#edd2ab';g.fillRect(0,yy+3,w,1);
-      for(let col=0;col<2;col++){const x=7+32*col,y=yy+5;
-        g.fillStyle='#a79083';g.fillRect(x-2,y,19,22);g.fillStyle=shade?'#fae3bf':'#d5b99f';g.fillRect(x-2,y-1,19,2);
-        g.fillStyle=(seed+col+j)%5===0?'#bf976b':'#425767';g.fillRect(x,y+2,15,18);
-        g.fillStyle=(seed+col+j)%5===0?'#e8c08d':'#78909a';g.fillRect(x+1,y+3,6,7);
-        g.fillStyle='#bdac9d';g.fillRect(x+7,y+1,1,18);g.fillRect(x,y+10,15,1);
-        g.fillStyle='#c9b3a0';g.fillRect(x-3,y+20,20,2);
-        if(j===0||j===levels-2||seed%4===0){
-          g.fillStyle='#5b5358';g.fillRect(x-3,y+15,20,1.5);g.fillRect(x-3,y+20,20,1.3);
-          for(let bx=0;bx<5;bx++)g.fillRect(x-2+bx*4,y+15,1,5);
-        }
-      }
+    for(let floor=0;floor<levels;floor++)for(let col=0;col<2;col++){
+      const variant=(style+col*3+(floor===0||floor===levels-2?0:2))%8;
+      g.drawImage(windowCloth(variant),col*w/2,floor*floorH,w/2,floorH);
     }
-    const y=levels*floorH,awning=canopies[seed%canopies.length];
-    g.fillStyle=tint(color,.79);g.fillRect(0,y,w,34);
-    g.fillStyle='#514a51';g.fillRect(4,y+6,56,28);
-    g.fillStyle=shade?'#6f8789':'#566f78';g.fillRect(7,y+9,17,21);g.fillRect(29,y+10,8,24);g.fillRect(41,y+9,16,21);
-    g.fillStyle='#daa86e';g.fillRect(9,y+19,11,6);g.fillRect(44,y+16,8,7);
-    for(let bx=0;bx<8;bx++){g.fillStyle=bx%2?awning:'#e8d8b9';g.fillRect(bx*8,y+4,8,4);}
-    g.fillStyle='#524754';g.fillRect(0,y+0,w,3);
-    // A raised chain stitch along the awning, still visible on close façades.
-    g.fillStyle='#f0cf9c';for(let bx=0;bx<w;bx+=7)g.fillRect(bx,y+1,3,.9);
+    g.drawImage(shopCloth(style),0,h-shopH,w,shopH);
   }
-  facadeImages.set(key,c);return c;
+  if(!shade){g.fillStyle='rgba(57,49,66,.18)';g.fillRect(0,0,w,h);}
+  while(facadeArea+w*h>2750000&&facadeImages.size){
+    const [old,img]=facadeImages.entries().next().value;facadeArea-=img.width*img.height;facadeImages.delete(old);
+  }
+  facadeArea+=w*h;facadeImages.set(key,c);return c;
 }
-const patternImages=new Map();
+const patternImages=new Map(),patternIds=new WeakMap();
+let patternArea=0,nextPatternId=0;
 function repeatFacade(img,count) {
   if(count<=1)return img;
-  let cache=patternImages.get(img);if(!cache){cache=new Map();patternImages.set(img,cache);}
-  if(!cache.has(count)){
-    const c=makeCanvas(img.width*count,img.height),ctx=c.getContext('2d');
-    ctx.fillStyle=ctx.createPattern(img,'repeat-x');ctx.fillRect(0,0,c.width,c.height);cache.set(count,c);
+  if(!patternIds.has(img))patternIds.set(img,++nextPatternId);
+  const id=patternIds.get(img)+':'+count;
+  const old=patternImages.get(id);
+  if(old){patternImages.delete(id);patternImages.set(id,old);return old;}
+  const c=makeCanvas(img.width*count,img.height),ctx=c.getContext('2d');
+  ctx.fillStyle=ctx.createPattern(img,'repeat-x');ctx.fillRect(0,0,c.width,c.height);
+  patternImages.set(id,c);patternArea+=c.width*c.height;
+  // The large software atlas is shared by all visible faces and bounded across long journeys.
+  while(patternArea>4000000 && patternImages.size>1){
+    const [first,tile]=patternImages.entries().next().value;
+    patternArea-=tile.width*tile.height;patternImages.delete(first);
   }
-  return cache.get(count);
+  return c;
 }
+
+
 let arcArt;
 function illustratedArc(){
   if(arcArt)return arcArt;
@@ -118,6 +115,7 @@ function illustratedArc(){
   const body=new Path2D();body.rect(0,0,w,h);
   const opening=new Path2D();opening.moveTo(X-R,h+3);opening.lineTo(X-R,spring);opening.arc(X,spring,R,Math.PI,0);opening.lineTo(X+R,h+3);opening.closePath();
   body.addPath(opening);g.clip(body,'evenodd');g.fillStyle=grad;g.fillRect(0,0,w,h);
+  knitArchitecture(g,0,0,w,h,{step:10,opacity:.52,seed:31});
   for(let y=2;y<h;y+=10){
     stroke(0,y,w,y,'rgba(115,92,84,.33)',.65);
     for(let x=13*((y/10|0)%2);x<w;x+=35)stroke(x,y,x,y+10,'rgba(129,98,83,.33)',.65);
@@ -169,6 +167,8 @@ function illustratedArc(){
     for(const ss of [-1,1])for(let j=0;j<4;j++)stroke(x+ss*5,336+j*1.8,x+ss*(15+j*3),321+j*1.7,'#dabb9e',3.5);
     band(472,3,'#d5b99e','#9f8976');
     const mx=X+sign*114;circle(mx,183,12,'#ba9980');circle(mx-.6,182,10,'#ecd0a6');circle(mx,182,7.2,'#c4a486');
+    for(const dx of [-2.2,2.2])for(const dy of [-2.2,2.2])circle(mx+dx,182+dy,1.55,'#8e7368');
+    stroke(mx-2.2,179.8,mx+2.2,184.2,'#f1d3a9',1.8);stroke(mx+2.2,179.8,mx-2.2,184.2,'#e2bd93',1.8);
   }
   for(let j=0;j<=29;j++){
     const ang=Math.PI+j/29*Math.PI,cs=Math.cos(ang),sn=Math.sin(ang);
@@ -176,46 +176,17 @@ function illustratedArc(){
   }
   for(const offset of [2,7,13,17]){g.lineWidth=offset===17?2.5:1.4;g.strokeStyle=offset%2?'#e7cbac':'#a88e7b';
     g.beginPath();g.moveTo(X-R-offset,h);g.lineTo(X-R-offset,spring);g.arc(X,spring,R+offset,Math.PI,0);g.lineTo(X+R+offset,h);g.stroke();}
+  // The running stitch follows the cutout like the bound edge of a felt appliqué.
+  const edge=new Path2D();edge.moveTo(X-R-9,h);edge.lineTo(X-R-9,spring);edge.arc(X,spring,R+9,Math.PI,0);edge.lineTo(X+R+9,h);
+  g.lineCap='round';g.strokeStyle='#a88878';g.lineWidth=4;g.stroke(edge);
+  g.setLineDash([4,4]);g.strokeStyle='#f6ddb4';g.lineWidth=2.5;g.stroke(edge);g.setLineDash([]);
   band(496,7,'#d3b99c','#a08574');arcArt=c;return c;
 }
 const propArt=new Map();
 function propImage(type,seed,stage){
   const key=type+(seed%3)+'/'+stage;if(propArt.has(key))return propArt.get(key);
   const c=makeCanvas(104,146),g=c.getContext('2d');g.lineCap='round';g.lineJoin='round';
-  const ellipse=(x,y,rx,ry,color)=>{g.fillStyle=color;g.beginPath();g.ellipse(x,y,rx,ry,0,0,tau);g.fill();};
-  if(type==='tree'){
-    g.strokeStyle='#75645f';g.lineWidth=8;g.beginPath();g.moveTo(51,144);g.quadraticCurveTo(45,96,53,69);g.stroke();
-    g.lineWidth=4;for(const s of [-1,1]){g.beginPath();g.moveTo(50,113);g.quadraticCurveTo(53+s*12,92,50+s*25,77);g.stroke();}
-    const greens=[['#567b73','#759782','#91a58a','#b5bd91'],['#678775','#839e78','#a5aa81','#c5c795'],['#496c69','#6b9282','#81a597','#a0b599']][seed%3];
-    for(const [x,y,r,k] of [[33,70,27,0],[68,65,29,0],[49,37,30,0],[26,56,23,1],[62,45,30,1],[46,67,24,1],[47,31,22,2],[24,50,18,2],[70,51,17,2]])if(stage!==2||x>33)ellipse(x,y,r,r*.96,greens[k]);
-    for(let j=0;j<40;j++){const x=(j*43+seed*7)%65+17,y=(j*31)%54+18;if((x-51)**2+(y-48)**2>1090)continue;g.strokeStyle=j%3?greens[1]:greens[3];g.lineWidth=1.6;g.beginPath();g.moveTo(x-2,y);g.lineTo(x,y+2.5);g.lineTo(x+2.8,y-1);g.stroke();}
-  }else if(type==='lamp'){
-    g.fillStyle='#414b51';g.fillRect(49,30,5,109);g.fillRect(46,130,11,12);g.fillRect(43,141,17,5);
-    g.strokeStyle='#53615d';g.lineWidth=4;g.beginPath();g.moveTo(51,35);g.quadraticCurveTo(52,21,49,17);g.stroke();
-    g.fillStyle='#36484e';g.beginPath();g.moveTo(39,9);g.lineTo(62,9);g.lineTo(58,28);g.lineTo(47,28);g.fill();g.fillStyle=stage===2?'#958b81':'#ffe1a5';g.fillRect(46,12,10,12);
-    g.fillStyle='#455253';g.beginPath();g.moveTo(36,10);g.lineTo(51,1);g.lineTo(66,10);g.fill();
-  }else if(type==='crate'){
-    g.fillStyle='#ae8a6a';g.fillRect(6,36,92,107);
-    g.fillStyle='#cba77e';g.fillRect(6,34,92,10);g.fillRect(6,130,92,12);
-    g.strokeStyle='#826953';g.lineWidth=8;g.beginPath();g.moveTo(13,128);g.lineTo(stage===2?53:91,stage===2?88:46);g.stroke();
-  }else if(type==='bench'){
-    g.fillStyle='#485652';g.fillRect(20,88,7,54);g.fillRect(77,86,7,55);
-    g.fillStyle='#967758';g.fillRect(10,45,83,13);g.fillRect(10,63,83,13);g.fillRect(8,87,88,15);
-    if(stage===2){g.clearRect(43,44,10,15);g.clearRect(51,62,12,15);}
-  }else if(type==='hydrant'){
-    g.fillStyle='#ad5c55';g.fillRect(36,63,32,78);ellipse(52,61,18,17,'#d87968');g.fillRect(25,86,54,16);
-    g.fillStyle='#925552';g.fillRect(30,137,44,8);g.fillStyle='#e3a77a';g.fillRect(38,77,28,4);
-    if(stage===2)g.clearRect(24,85,13,19);
-  }else if(type==='postbox'){
-    g.fillStyle='#53636a';g.fillRect(47,61,9,82);
-    g.fillStyle='#c39b55';g.fillRect(26,32,53,54);
-    g.fillStyle='#dec07e';g.fillRect(25,28,55,9);
-    g.fillStyle='#5d575b';g.fillRect(35,44,35,4);
-  }else{
-    const bin=type==='bin';g.fillStyle=bin?'#5f8273':'#53636a';g.fillRect(bin?29:42,bin?34:29,bin?47:20,112);
-    ellipse(bin&&stage===2?60:52,bin?35:29,bin?27:11,bin?10:9,bin?'#749282':'#687b7b');
-    g.fillStyle=bin?'#4a655b':'#efe4bc';g.fillRect(bin?32:42,bin?55:47,bin?40:20,bin?6:7);
-  }
+  paintStreetProp(g,type,seed,stage);
   let image=c;
   const profile=propWearProfile(type);
   if(stage&&profile){
@@ -240,12 +211,13 @@ function monumentModel(m){
   const faces=[],arc=m.id==='arc',side=m.side,depth=m.depth,gap=m.innerSide,cy=arc?18.7:0;
   const c=Math.cos(m.yaw),s=Math.sin(m.yaw);
   const world=([x,h,z])=>[m.x+x*c+z*s,m.y-x*s+z*c,h];
-  const face=(pts,color)=>{const p=pts.map(world);faces.push({p,color,x:p.reduce((a,v)=>a+v[0],0)/p.length,y:p.reduce((a,v)=>a+v[1],0)/p.length});};
+  const face=(pts,color,textile=null)=>{const p=pts.map(world);faces.push({p,color,textile,x:p.reduce((a,v)=>a+v[0],0)/p.length,y:p.reduce((a,v)=>a+v[1],0)/p.length});};
   function block(l,r,d,f,b,t,palette){
-    face([[l,b,d],[r,b,d],[r,t,d],[l,t,d]],palette[0]);
-    face([[l,b,f],[r,b,f],[r,t,f],[l,t,f]],palette[0]);
-    face([[l,b,d],[l,b,f],[l,t,f],[l,t,d]],palette[1]);
-    face([[r,b,d],[r,b,f],[r,t,f],[r,t,d]],palette[1]);
+    const weave=len=>!arc?[Math.max(2,Math.round(len/6)),Math.max(2,Math.round((t-b)/5))]:null;
+    face([[l,b,d],[r,b,d],[r,t,d],[l,t,d]],palette[0],weave(r-l));
+    face([[l,b,f],[r,b,f],[r,t,f],[l,t,f]],palette[0],weave(r-l));
+    face([[l,b,d],[l,b,f],[l,t,f],[l,t,d]],palette[1],weave(f-d));
+    face([[r,b,d],[r,b,f],[r,t,f],[r,t,d]],palette[1],weave(f-d));
     face([[l,t,d],[r,t,d],[r,t,f],[l,t,f]],palette[2]);
   }
   const limestone=['#dfc4a2','#bca59b','#edddbb'],tinted=['#cfad94','#ae9387','#eed1ad'],trim=['#e7cdad','#c5b0a1','#f3e2c1'];
@@ -336,6 +308,7 @@ export function createCanvasView(canvas,spawn,onNotice){
   let projectionBase=null;const terraceFaces=[];
   let w=0,h=0,f=0,camX=spawn.x,camY=spawn.y,camH=2.3,fx=1,fy=0,sin=0,cos=1,horizon=.42,sideLimit=1;
   let arm=5.25,followX=spawn.x,followY=spawn.y,cacheX=Infinity,cacheY=Infinity,nearBuildings=[],nearWays=[],props=[],lastProps=-10;
+  let renderQuality=1,overBudget=0,fastFrames=0;
   let running=true,drawn=false,clock=0,last=-10;const effects=[],queue=[],occlusion=[];
   const blood=createBleedFibers();
   let foregroundLayer=null;
@@ -429,24 +402,17 @@ export function createCanvasView(canvas,spawn,onNotice){
       return;
     }
     const rad=Math.max(.035,seg.w*.5+extra),l=offset-rad,r=offset+rad,{nx,ny}=seg;
-    poly3([[a[0]+nx*l,a[1]+ny*l,0],[b[0]+nx*l,b[1]+ny*l,0],[b[0]+nx*r,b[1]+ny*r,0],[a[0]+nx*r,a[1]+ny*r,0]],color);
+    const plane=projectPoly([[a[0]+nx*l,a[1]+ny*l,0],[b[0]+nx*l,b[1]+ny*l,0],[b[0]+nx*r,b[1]+ny*r,0],[a[0]+nx*r,a[1]+ny*r,0]]);
+    fillPath(plane,color);
   }
   function ellipseGround(x,y,r,z,color){
     const points=[];for(let i=0;i<72;i++){const a=i/72*tau;points.push([x+Math.cos(a)*r,y+Math.sin(a)*r,z]);}
-    poly3(points,color);
+    const face=projectPoly(points);fillPath(face,color);
   }
-  function sky(yaw,time){
-    const a=clamp(horizon/h,0,1),grad=g.createLinearGradient(0,0,0,Math.max(h*.75,1));
-    grad.addColorStop(0,'#8493b4');grad.addColorStop(.44,'#e1b6bf');grad.addColorStop(.79,'#f9cead');grad.addColorStop(1,'#f2c3a1');g.fillStyle=grad;g.fillRect(0,0,w,h);
-    // Clouds are a continuous panoramic band so they pan with the world.
-    const cloudSpan=w*3.7;for(let i=0;i<45;i++){
-      const u=((i*.618034+.17-yaw/tau)%1+1)%1,x=(u-.5)*cloudSpan+w*.5;
-      const sz=22+(i*17%54),y=horizon-h*(.05+.19*((i*127%71)/71));
-      if(x<-sz*2||x>w+sz)continue;
-      g.fillStyle=i%2?'rgba(255,222,195,.4)':'rgba(240,208,209,.45)';
-      g.beginPath();g.ellipse(x,y,sz,sz*.09,0,0,tau);g.ellipse(x+sz*.18,y-sz*.08,sz*.34,sz*.115,0,0,tau);g.ellipse(x-sz*.22,y-sz*.055,sz*.26,sz*.09,0,0,tau);g.fill();
-    }
-    const ground=g.createLinearGradient(0,horizon,0,h);ground.addColorStop(0,'#c6ae96');ground.addColorStop(.15,'#b7a49a');ground.addColorStop(1,'#a9948d');g.fillStyle=ground;g.fillRect(0,horizon,w,h-horizon);
+  function sky(yaw){
+    paintSkyView(g,w,h,horizon,f,yaw);
+    const ground=g.createLinearGradient(0,horizon,0,h);ground.addColorStop(0,'#c0ab92');ground.addColorStop(.18,'#b49e92');ground.addColorStop(1,'#a48d86');
+    g.fillStyle=ground;g.fillRect(0,horizon,w,h-horizon);
   }
   function texturedFace(pic,world){
     // Clip UVs in camera space. This keeps the stone courses continuous when a wall crosses the camera.
@@ -472,7 +438,10 @@ export function createCanvasView(canvas,spawn,onNotice){
       const mx=(a.x+b.x+c.x)/3,my=(a.y+b.y+c.y)/3;
       g.save();g.beginPath();for(const [i,pt] of [a,b,c].entries()){const vx=pt.x-mx,vy=pt.y-my,len=Math.hypot(vx,vy)||1;g[i?'lineTo':'moveTo'](pt.x+.35*vx/len,pt.y+.35*vy/len);}g.closePath();g.clip();
       g.transform(A,B,C,D,a.x-A*a.u-C*a.v,a.y-B*a.u-D*a.v);
-      g.drawImage(pic,0,0);g.restore();
+      const l=Math.max(0,Math.floor(Math.min(a.u,b.u,c.u))-1),r=Math.min(pic.width,Math.ceil(Math.max(a.u,b.u,c.u))+1);
+      const top=Math.max(0,Math.floor(Math.min(a.v,b.v,c.v))-1),bt=Math.min(pic.height,Math.ceil(Math.max(a.v,b.v,c.v))+1);
+      if(r>l&&bt>top)g.drawImage(pic,l,top,r-l,bt-top,l,top,r-l,bt-top);
+      g.restore();
     }
   }
   function arcFront(m){
@@ -516,26 +485,119 @@ export function createCanvasView(canvas,spawn,onNotice){
         const a=row[i],b=row[i+1],c=previous[i+1],e=previous[i];
         const grade=(terrainHeight(c[0],c[1])-terrainHeight(b[0],b[1]))/(distances[k+1]-d);
         const haze=clamp(d/900,0,1),light=clamp(grade*.52,-.08,.09);
-        poly3([a,b,c,e],tint('#b7a49a',.96+haze*.09+light));
+        poly3([a,b,c,e],tint('#c3a995',.96+haze*.09+light));
       }
       previous=row;
     }
   }
-  function groundTexture(){
-    // Small marks are projected in fixed world space. They stay attached to the pavement as the camera orbits.
-    const range=26,spacing=.52,gridX=Math.floor(camX/spacing),gridY=Math.floor(camY/spacing);
-    for(let tone=0;tone<2;tone++){
-      g.beginPath();
-      for(let row=-range;row<=range;row++)for(let col=-range;col<=range;col++){
-        const ix=gridX+col,iy=gridY+row,hash=((Math.imul(ix,2221)^Math.imul(iy,3571))>>>0);
-        if((hash%8)!==tone)continue;
-        const x=(ix+.18*(iy&1))*spacing,y=iy*spacing,pt=at(x,y,.01);
-        if(!pt||pt.d<.48||pt.x<-5||pt.x>w+5||pt.y<horizon||pt.y>h+7)continue;
-        const sx=clamp(f/pt.d*.042,.45,5.5),sy=clamp(sx*.30,.29,1.8);
-        g.moveTo(pt.x-sx,pt.y-sy);g.lineTo(pt.x,pt.y+sy);g.lineTo(pt.x+sx,pt.y-sy);
+  // Keep the material mask in world coordinates. It is rebuilt once per block of
+  // travel and directly shared by every projected scanline when the camera pans.
+  let surfaceAtlas=null,groundOverlay=null,patternLevels=null;
+  const reliefLut=[];
+  const surfacePeriod=[streetFabric.paving.meters,streetFabric.road.meters,streetFabric.park.meters,streetFabric.water.meters];
+  function surfaceMap(){
+    const size=384,scale=3,cx=Math.floor(camX/20)*20,cy=Math.floor(camY/20)*20;
+    if(surfaceAtlas?.cx===cx&&surfaceAtlas.cy===cy)return surfaceAtlas;
+    const canvas=surfaceAtlas?.canvas||makeCanvas(size,size),mask=canvas.getContext('2d',{willReadFrequently:true});
+    const left=cx-size/(2*scale),top=cy-size/(2*scale),radius=size/(2*scale)+8;
+    mask.setTransform(scale,0,0,scale,-left*scale,-top*scale);mask.fillStyle='#000';mask.fillRect(left,top,size/scale,size/scale);
+    function fillArea(list,red){
+      mask.fillStyle=red;
+      for(const {a,bounds} of list)if(Math.abs(bounds.x-cx)<bounds.r+radius&&Math.abs(bounds.y-cy)<bounds.r+radius){
+        mask.beginPath();
+        for(const ring of [a.poly,...(a.holes||[])]){
+          if(ring.length<3)continue;mask.moveTo(...ring[0]);for(let i=1;i<ring.length;i++)mask.lineTo(...ring[i]);mask.closePath();
+        }
+        mask.fill('evenodd');
       }
-      g.lineWidth=.9;g.strokeStyle=tone?'rgba(255,228,201,.19)':'rgba(76,63,77,.17)';g.stroke();
     }
+    function circle(x,y,r,color){mask.fillStyle=color;mask.beginPath();mask.arc(x,y,r,0,tau);mask.fill();}
+    fillArea(parks,'#800000');fillArea(waters,'#c00000');
+    const arc=monuments.arc,arcVisible=Math.hypot(cx-arc.x,cy-arc.y)<radius*1.5+115;
+    if(arcVisible)circle(arc.x,arc.y,115,'#400000');
+    const local=spatial.ways.around(cx,cy,radius);
+    for(const curb of [true,false]){
+      mask.strokeStyle=curb?'#000':'#400000';mask.lineCap='butt';
+      for(const s of local){
+        if(!curb&&s.way.kind==='path')continue;
+        mask.lineWidth=s.w+(curb?2.7:0);mask.beginPath();mask.moveTo(...s.a);mask.lineTo(...s.b);mask.stroke();
+      }
+    }
+    if(arcVisible)circle(arc.x,arc.y,35.2,'#000');
+    const pixels=mask.getImageData(0,0,size,size).data,material=new Uint8Array(size*size);
+    for(let i=0;i<material.length;i++)material[i]=Math.min(3,Math.round(pixels[i*4]/64));
+    return surfaceAtlas={canvas,cx,cy,size,scale,left,top,material};
+  }
+  function clothSamples(){
+    const tile=makeCanvas(128,128),small=makeCanvas(1,1);
+    return ['paving','road','park','water'].map(kind=>{
+      const base=tile.getContext('2d');base.clearRect(0,0,128,128);
+      paintStreetFabric(base,128,128,kind,false);
+      // Store just the signed lightness of each yarn ridge. A single lookup
+      // converts its bilinearly sampled relief back into translucent light or shadow.
+      const rgb=parseInt(streetFabric[kind].color.slice(1),16);
+      const mid=(rgb>>16)*.30+((rgb>>8)&255)*.59+(rgb&255)*.11;
+      const shades=new Uint32Array(256),bytes=new Uint8Array(shades.buffer);
+      for(let i=0;i<256;i++){
+        const light=i>=128,val=light?[251,230,200]:[54,43,64];
+        const a=Math.min(255,Math.abs(i-128)*255/(light?232-mid:mid-50));
+        bytes.set([...val,Math.round(a)],4*i);
+      }
+      reliefLut.push(shades);
+      return [128,64,32,16,8].map(size=>{
+        small.width=small.height=size;const output=small.getContext('2d');
+        output.imageSmoothingEnabled=true;output.imageSmoothingQuality='high';output.drawImage(tile,0,0,size,size);
+        const rgba=output.getImageData(0,0,size,size).data,relief=new Uint8Array(size*size);
+        for(let i=0;i<relief.length;i++){
+          const k=i*4,light=rgba[k]*.30+rgba[k+1]*.59+rgba[k+2]*.11;
+          relief[i]=clamp(128+Math.round((light-mid)*rgba[k+3]/255),0,255);
+        }
+        return relief;
+      });
+    });
+  }
+  function groundTexture(){
+    const atlas=surfaceMap(),scale=Math.min(.65,480/w),ow=Math.max(1,Math.ceil(w*scale));
+    const ahead=distance=>at(camX+fx*distance,camY+fy*distance,.015);
+    const far=36,farPoint=ahead(far);if(!farPoint)return;
+    const top=Math.max(0,Math.floor(farPoint.y)),oh=Math.ceil((h-top)*scale);
+    if(oh<=0)return;
+    if(!patternLevels)patternLevels=clothSamples();
+    if(!groundOverlay||groundOverlay.canvas.width!==ow||groundOverlay.image.height<oh){
+      // Room above the current horizon prevents reallocating the buffer on small slopes.
+      const canvas=makeCanvas(ow,Math.ceil(h*scale)),context=canvas.getContext('2d');
+      const image=context.createImageData(ow,canvas.height);
+      groundOverlay={canvas,context,image,pixels:new Uint32Array(image.data.buffer)};
+    }
+    const {canvas,context,image,pixels}=groundOverlay;pixels.fill(0,0,ow*oh);
+    let distance=.65,front=ahead(distance);
+    while(distance<far){
+      const next=Math.min(far,distance+Math.max(.16,distance*.12)),back=ahead(next);
+      if(front&&back&&front.y>back.y){
+        const lastRow=Math.min(oh,Math.ceil((front.y-top)*scale-.5)),firstRow=Math.max(0,Math.ceil((back.y-top)*scale-.5));
+        const depthPerRow=(next-distance)/((front.y-back.y)*scale);
+        // Minify in depth as well as across the road, eliminating swimming stitches at the horizon.
+        const lod=clamp(Math.floor(Math.log2(Math.max(1,depthPerRow*32))),0,4),ts=128>>lod,wrap=ts-1;
+        const rates=surfacePeriod.map(period=>ts/period),samples=patternLevels.map(levels=>levels[lod]);
+        for(let row=firstRow;row<lastRow;row++){
+          const y=top+(row+.5)/scale,t=(front.y-y)/(front.y-back.y);
+          const z=1/((1-t)/front.d+t/back.d),d=z*((1-t)*distance/front.d+t*next/back.d);
+          const spacing=z/(scale*f),l=(.5/scale-w*.5)*z/f,fade=clamp((far-d)/9,0,1);
+          let x=camX+fx*d-fy*l,wy=camY+fy*d+fx*l,index=row*ow;
+          const stepX=-fy*spacing,stepY=fx*spacing;
+          for(let col=0;col<ow;col++,x+=stepX,wy+=stepY){
+            const mx=Math.floor((x-atlas.left)*atlas.scale),my=Math.floor((wy-atlas.top)*atlas.scale);
+            const kind=mx>=0&&mx<atlas.size&&my>=0&&my<atlas.size?atlas.material[my*atlas.size+mx]:0,rate=rates[kind];
+            const px=x*rate,py=wy*rate,ix=Math.floor(px),iy=Math.floor(py),tx=ix&wrap,nextX=(ix+1)&wrap;
+            const iy0=(iy&wrap)*ts,iy1=((iy+1)&wrap)*ts,sample=samples[kind];
+            const tintA=mix(sample[iy0+tx],sample[iy0+nextX],px-ix),tintB=mix(sample[iy1+tx],sample[iy1+nextX],px-ix);
+            pixels[index++]=reliefLut[kind][Math.round(128+(mix(tintA,tintB,py-iy)-128)*fade)];
+          }
+        }
+      }
+      distance=next;front=back;
+    }
+    context.putImageData(image,0,0,0,0,ow,oh);g.drawImage(canvas,0,0,ow,oh,0,top,w,oh/scale);
   }
   function hiddenByFacade(pp){
     // Scan-convert a conservative depth mask in screen columns. Farther façades behind a closer street wall never need texturing.
@@ -559,7 +621,8 @@ export function createCanvasView(canvas,spawn,onNotice){
     return !visible;
   }
   function building(item){
-    const {o,wind,seed,bounds}=item,poly=o.poly,H=Math.max(2.2,o.h||13),glass=H>43;
+    const {o,wind,seed,bounds}=item,poly=o.poly,H=Math.max(2.2,o.h||13);
+    const glass=H>48||(bounds.x< -135&&bounds.y< -625&&H>24);
     const eave=glass?H-.7:H>7.5?H-Math.min(3.25,H*.15):H-.65;
     const distance=Math.hypot(bounds.x-camX,bounds.y-camY);
     const top=poly.map(q=>[q[0]+(bounds.x-q[0])*.032,q[1]+(bounds.y-q[1])*.032,H]);
@@ -572,19 +635,34 @@ export function createCanvasView(canvas,spawn,onNotice){
       const pts=[[a[0],a[1],Math.min(0,terrainHeight(a[0],a[1])-item.ground)-.12],[b[0],b[1],Math.min(0,terrainHeight(b[0],b[1])-item.ground)-.12],[b[0],b[1],eave],[a[0],a[1],eave]];
       const pp=projectPoly(pts);if(!pp||hiddenByFacade(pp))continue;
       queue.push({z:d,base:item.ground,draw:()=>{
-        fillPath(pp,glass?shade?'#91a3a8':'#798f9c':tint(stone[seed%8],shade?1.00:.85));
-        const topA=top[j],topB=top[(j+1)%top.length];
-        poly3([[a[0],a[1],eave],[b[0],b[1],eave],topB,topA],glass?'#acb8b5':roofs[seed%roofs.length]);
+        fillPath(pp,glass?shade?'#829aa1':'#657b88':tint(stone[seed%8],shade?1.00:.85));
+        const topA=top[j],topB=top[(j+1)%top.length],roofColor=roofs[seed%roofs.length];
+        const roofFace=[[a[0],a[1],eave],[b[0],b[1],eave],topB,topA];
+        poly3(roofFace,glass?'#a5b8b5':roofColor);
+        if(!glass&&d<115&&length>1.8&&H>7.5){
+          const tile=zincCloth(),pic=repeatFacade(tile,clamp(Math.round(length/4),1,9));
+          g.save();g.globalAlpha=.32;
+          texturedFace(pic,roofFace.map((q,i)=>[...q,i===1||i===2?pic.width:0,i<2?pic.height:0]));
+          g.restore();
+        }
         if(d>620||length<1.8)return;
-        const bays=clamp(Math.round(length/6.6),1,40),count=d>85?Math.min(3,Math.ceil(bays/4)):Math.min(16,bays),floors=clamp(Math.round((eave-3)/3.2),1,10),pic=repeatFacade(facade(seed,floors,shade,glass),clamp(Math.round(bays/count),1,10));
+        const bays=clamp(Math.round(length/6.6),1,40),count=d>85?Math.min(3,Math.ceil(bays/4)):Math.min(16,bays),floors=clamp(Math.round((eave-3)/3.2),1,10);
+        const repeats=clamp(Math.round(bays/count),1,10);
+        function picture(k,detail){
+          const style=detail?(seed+j*3+k*5)%8:seed;
+          return repeatFacade(facade(style,floors,shade,glass,detail),repeats);
+        }
         for(let k=0;k<count;k++){
           let aa=k/count,bb=(k+1)/count;
           if(d<34){
             const x1=a[0]+dx*aa,z1=a[1]+dy*aa,x2=a[0]+dx*bb,z2=a[1]+dy*bb;
+            const da=depth(x1,z1),db=depth(x2,z2);
+            if(Math.max(da,db)<near)continue;
+            const pic=picture(k,Math.min(da,db)<12?2:1),u1=wind>0?pic.width:0,u2=pic.width-u1;
             const rows=clamp(Math.ceil(eave/4),2,9);
             for(let r=0;r<rows;r++){
               const t=r/rows,u=(r+1)/rows,y0=eave*(1-t),y1=eave*(1-u);
-              texturedFace(pic,[[x1,z1,y0,0,pic.height*t],[x2,z2,y0,pic.width,pic.height*t],[x2,z2,y1,pic.width,pic.height*u],[x1,z1,y1,0,pic.height*u]]);
+              texturedFace(pic,[[x1,z1,y0,u1,pic.height*t],[x2,z2,y0,u2,pic.height*t],[x2,z2,y1,u2,pic.height*u],[x1,z1,y1,u1,pic.height*u]]);
             }
             continue;
           }
@@ -599,10 +677,12 @@ export function createCanvasView(canvas,spawn,onNotice){
           if(!p1||!p2||!p3||!p4)continue;
           if([p1,p2,p3,p4].every(pt=>pt.x<0)||[p1,p2,p3,p4].every(pt=>pt.x>w))continue;
           const width=p2.x-p1.x;if(Math.abs(width)<.7)continue;
+          const pic=picture(k,Math.abs(width)/repeats>100?2:Math.abs(width)/repeats>38?1:0);
           const stripHeight=Math.max(0,p4.y-p1.y);
           g.save();
           if(d<45||Math.abs((p3.y-p2.y)-stripHeight)>2.5){g.beginPath();g.moveTo(p1.x,p1.y);g.lineTo(p2.x,p2.y);g.lineTo(p3.x,p3.y);g.lineTo(p4.x,p4.y);g.closePath();g.clip();}
           g.transform(width/pic.width,(p2.y-p1.y)/pic.width,(p4.x-p1.x)/pic.height,(stripHeight+(p3.y-p2.y))*.5/pic.height,p1.x,p1.y);
+          if(wind>0){g.translate(pic.width,0);g.scale(-1,1);}
           g.drawImage(pic,0,0);g.restore();
         }
       }});
@@ -671,11 +751,11 @@ export function createCanvasView(canvas,spawn,onNotice){
     const unit=f/base.d,art=pickupPatch(p.weapon),iconWidth=pickupMarkerWidth*f/icon.d;
     if(icon.x+iconWidth*.55<0||icon.x-iconWidth*.55>w||base.y<0||icon.y-iconWidth*.42>h)return;
     queue.push({z:depth(p.x,p.y),draw:()=>{
-      const pulse=1+.065*Math.sin(time*2.36+phase),radius=.735*unit*pulse;
+      const radius=.57*unit;
       const ellipse=(x,y,rx,ry,col)=>{g.beginPath();g.ellipse(x,y,Math.max(.45,rx),Math.max(.32,ry),0,0,tau);g.fillStyle=col;g.fill();};
       const perspective=clamp((camH-terrainHeight(p.x,p.y))/reach,.045,.81);
       ellipse(base.x,base.y,radius+unit*.08,radius*perspective+unit*.055,'rgba(55,40,57,.40)');
-      g.beginPath();g.ellipse(base.x,base.y,radius,Math.max(.65,radius*perspective),0,0,tau);g.lineWidth=Math.max(.85,unit*.047);g.strokeStyle=style.accent;g.stroke();
+      g.beginPath();g.moveTo(cap.x,cap.y);g.lineTo(icon.x,icon.y);g.lineCap='round';g.lineWidth=Math.max(1,.072*unit);g.strokeStyle='#926d50';g.stroke();
       const rx=.52*unit,ry=Math.max(.65,rx*perspective);
       ellipse(base.x,base.y,rx,ry,'#99765f');
       g.fillStyle=style.thread;g.fillRect(body.x-unit*.434,cap.y,unit*.868,Math.max(1,base.y-cap.y));
@@ -696,7 +776,9 @@ export function createCanvasView(canvas,spawn,onNotice){
     if(time-last<1/32&&!state.snap&&drawn)return;const frameDt=Math.min(.1,time-last);last=time;drawn=true;
     const width=canvas.clientWidth||window.innerWidth,height=canvas.clientHeight||window.innerHeight;
     if(!width||!height)return;
-    const scale=Math.min(1,Math.min(960/width,735/height));
+    // Render close stitching at native resolution when the street can afford it.
+    const started=performance.now(),density=Math.min(globalThis.devicePixelRatio||1,width<640?1.15:1);
+    const scale=Math.min(density,1360/width,900/height)*renderQuality;
     if(surface.width!==Math.round(width*scale)||surface.height!==Math.round(height*scale)){
       surface.width=Math.round(width*scale);surface.height=Math.round(height*scale);
     }
@@ -725,28 +807,36 @@ export function createCanvasView(canvas,spawn,onNotice){
     if(!background)background=makeCanvas(w,h);
     if(background.width!==w||background.height!==h){background.width=w;background.height=h;}
     g=background.getContext('2d',{alpha:false});backX=camX;backY=camY;backHeight=camH;backYaw=yaw;backPitch=tilt;backVersion=version;backPropCount=props.length;
-    sky(yaw,time);groundRelief();
-    for(const {a,bounds} of parks)if(seen(bounds,470))poly3(a.poly.map(q=>[q[0],q[1],0]),'#a4aa8c');
-    for(const {a,bounds,level} of waters)if(a.poly.length>=3&&seen(bounds,1000)){
-      projectionBase=level;poly3(a.poly.map(q=>[q[0],q[1],0]),'#679b9e');projectionBase=null;
+    sky(yaw);groundRelief();
+    for(const {a,bounds} of parks)if(seen(bounds,470)){
+      const plane=projectPoly(a.poly.map(q=>[q[0],q[1],0]));
+      fillPath(plane,streetFabric.park.color);
     }
-    const visibleWays=nearWays.filter(s=>seen(s.bounds,230));
-    const arc=monuments.arc;
-    if(Math.hypot(arc.x-p.x,arc.y-p.y)<450)ellipseGround(arc.x,arc.y,115,0,'#7a717c');
-    for(const s of visibleWays)roadRibbon(s,1.35,'#beaea2');
-    for(const s of visibleWays)roadRibbon(s,0,s.w>7?'#706c77':'#827d81');
+    for(const {a,bounds,level} of waters)if(a.poly.length>=3&&seen(bounds,1000)){
+      projectionBase=level;const plane=projectPoly(a.poly.map(q=>[q[0],q[1],0]));projectionBase=null;
+      fillPath(plane,streetFabric.water.color);
+    }
+    const visibleWays=nearWays.filter(s=>seen(s.bounds,230)),arc=monuments.arc;
+    const atArc=Math.hypot(arc.x-p.x,arc.y-p.y)<450;
+    if(atArc)ellipseGround(arc.x,arc.y,115,0,streetFabric.road.color);
+    for(const seg of visibleWays)roadRibbon(seg,1.35,'#c7af95',0,seg.a,seg.b);
+    for(const seg of visibleWays)if(seg.way.kind!=='path')
+      roadRibbon(seg,0,seg.w>7?streetFabric.road.color:'#79747c',0,seg.a,seg.b);
+
     for(const s of visibleWays){
-      if(s.w<5.0||s.len<6||!seen(s.bounds,135))continue;
+      if(s.way.kind==='path'||s.w<5.0||s.len<6||!seen(s.bounds,135))continue;
       for(let d=2;d+1<s.len;d+=9){
         const f0=d/s.len,f1=Math.min(1,(d+2.5)/s.len),dx=s.b[0]-s.a[0],dy=s.b[1]-s.a[1];
-        roadRibbon(s,-s.w*.5+.076,'#dbc9ac',0,[s.a[0]+dx*f0,s.a[1]+dy*f0],[s.a[0]+dx*f1,s.a[1]+dy*f1]);}
+        roadRibbon(s,-s.w*.5+.088,'#e1ceb1',0,[s.a[0]+dx*f0,s.a[1]+dy*f0],[s.a[0]+dx*f1,s.a[1]+dy*f1]);}
     }
-    if(Math.hypot(arc.x-p.x,arc.y-p.y)<450)ellipseGround(arc.x,arc.y,35.2,.025,'#c4b5a6');
+    if(atArc){
+      ellipseGround(arc.x,arc.y,35.2,.025,'#c4b5a6');
+    }
+    groundTexture();
     occlusion.length=0;
     const facadeSet=nearBuildings.filter(item=>seen(item.bounds,440)).sort((a,b)=>depth(a.bounds.x,a.bounds.y)-depth(b.bounds.x,b.bounds.y));
     for(const item of facadeSet){projectionBase=item.ground;building(item);}
     projectionBase=null;
-    groundTexture();
     for(const obj of monumentModels){
       const reach=obj.m.range||2300,md=depth(obj.m.x,obj.m.y);
       if(Math.hypot(obj.m.x-camX,obj.m.y-camY)>reach||!seen({x:obj.m.x,y:obj.m.y,r:110},reach))continue;
@@ -759,7 +849,15 @@ export function createCanvasView(canvas,spawn,onNotice){
           queue.push({z:depth(face.x,face.y),draw:()=>{g.strokeStyle=face.color;g.lineWidth=Math.min(45,Math.max(.65,lineWidth));g.beginPath();g.moveTo(pp.x,pp.y);g.lineTo(qq.x,qq.y);g.stroke();}});
           continue;
         }
-        const pp=projectPoly(face.p);if(pp)queue.push({z:depth(face.x,face.y),draw:()=>fillPath(pp,face.color)});}
+        const pp=projectPoly(face.p);
+        if(pp){
+          const z=depth(face.x,face.y);
+          if(face.textile&&z<430){
+            const texture=marbleCloth(...face.textile);
+            const uv=face.p.map((v,i)=>[...v,i===1||i===2?texture.width:0,i<2?texture.height:0]);
+            queue.push({z,base:projectionBase,draw:()=>{fillPath(pp,face.color);texturedFace(texture,uv);}});
+          }else queue.push({z,draw:()=>fillPath(pp,face.color)});
+        }}
       if(obj.m.id==='arc')arcFront(obj.m);
       projectionBase=null;
     }
@@ -798,8 +896,11 @@ export function createCanvasView(canvas,spawn,onNotice){
         coverBehindTerrace(e,base,top,ph);
         if(e.bubble||e.peer&&base.d<45){
           const label=String(e.bubble||e.name||'').slice(0,26);g.font=(e.bubble?'19px':'600 11px')+' sans-serif';
-          const ww=g.measureText(label).width+12,yy=top.y-(e.isCar?10:6);
-          g.fillStyle='#3c3448';g.fillRect(top.x-ww/2,yy-18,ww,18);g.fillStyle='#ffe7ce';g.textAlign='center';g.fillText(label,top.x,yy-5);g.textAlign='start';
+          const art=e.bubble&&emotePatch(label),ww=art?30:g.measureText(label).width+12,hh=art?30:18,yy=top.y-(e.isCar?10:6);
+          g.beginPath();g.roundRect(top.x-ww/2,yy-hh,ww,hh,art?9:5);g.fillStyle='#283e40';g.fill();
+          g.lineWidth=1;g.strokeStyle='#ad9779';g.stroke();
+          if(art)g.drawImage(art,top.x-14,yy-29,28,28);
+          else{g.fillStyle='#fff0d2';g.textAlign='center';g.fillText(label,top.x,yy-5);g.textAlign='start';}
         }
       }});
     }
@@ -836,6 +937,16 @@ export function createCanvasView(canvas,spawn,onNotice){
           for(const vertex of stroke.points){const pt=at(vertex.x,vertex.y,vertex.z+e.lift+terrainHeight(e.x,e.y)-terrainHeight(vertex.x,vertex.y));if(!pt){pen=false;continue;}if(pen)g.lineTo(pt.x,pt.y);else g.moveTo(pt.x,pt.y);pen=true;}
           g.stroke();
         }
+      }
+    }
+    if(refresh && !snap){
+      const drawMs=performance.now()-started;
+      overBudget=drawMs>31?overBudget+1:Math.max(0,overBudget-1);
+      fastFrames=drawMs<17?fastFrames+1:0;
+      if(overBudget>=7 && renderQuality>.70){
+        renderQuality=Math.max(.70,renderQuality-.10);overBudget=0;fastFrames=0;
+      }else if(fastFrames>=90 && renderQuality<1){
+        renderQuality=Math.min(1,renderQuality+.05);fastFrames=0;
       }
     }
   }

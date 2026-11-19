@@ -1,3 +1,4 @@
+import {makeEmoteIcon} from './emote-art.js';
 import {drawItemIcon, drawAvatar} from './sprites.js';
 import {metadata} from './paris-data.js';
 import {terrainHeight} from './terrain-height.js';
@@ -181,7 +182,7 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
           cell.append(weaponCanvas(it.id,80));
           if(count<=5)cell.append(node('span','mc-choice-name',it.name));
           if(it.id===state().weapon)cell.classList.add('mc-equipped');
-        }else cell.append(node('span','mc-emoji',it.id),node('span','mc-slot-key',String(i+1)));
+        }else cell.append(makeEmoteIcon(it.id),node('span','mc-slot-key',String(i+1)));
         cell.addEventListener('focus',()=>setSelected(i));
         cells.push(cell);ring.append(cell);
       }
@@ -198,7 +199,7 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
       });
       if(large.dataset.value!==it.id){
         large.dataset.value=it.id;
-        large.replaceChildren(isWeapon?weaponCanvas(it.id,88):node('span','mc-emoji',it.id));
+        large.replaceChildren(isWeapon?weaponCanvas(it.id,88):makeEmoteIcon(it.id));
         label.textContent=it.name;
       }
       detail.textContent=isWeapon?gearAmmo(it):it.hint;

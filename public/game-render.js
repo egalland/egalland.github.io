@@ -1,3 +1,5 @@
+import {makeEmoteIcon} from './emote-art.js';
+import {textileSky,sunBearing} from './textile-sky.js';
 import {createBleedFibers} from './bleed-fibers.js';
 import {createBleedMesh} from './bleed-mesh.js';
 import {fiberLifetime,impactFibers} from './puppet-combat.js';
@@ -19,18 +21,8 @@ const blend = (k,dt) => 1-Math.exp(-k*dt);
 const distance = (a,b) => Math.hypot(a.x-b.x,a.y-b.y);
 
 function makeSky() {
-  const canvas=document.createElement('canvas');canvas.width=1536;canvas.height=512;
-  const ctx=canvas.getContext('2d'), sky=ctx.createLinearGradient(0,0,0,512);
-  for(const [p,c] of [[0,'#8782ad'],[.27,'#b3a2c6'],[.42,'#e9b8bd'],[.51,'#ffd8b5'],[.64,'#e3baaf'],[1,'#c6a8a1']])sky.addColorStop(p,c);
-  ctx.fillStyle=sky;ctx.fillRect(0,0,1536,512);
-  let seed=1287;const random=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-  for(let n=0;n<100;n++){
-    const x=random()*1536,y=122+random()*104,w=5+random()*38,h=w*(.07+random()*.05),color=y<169?'#d8bbcb':'#ffe1cc';
-    ctx.fillStyle=color;ctx.globalAlpha=.35+random()*.25;
-    for(let j=0;j<4;j++){ctx.beginPath();ctx.ellipse(x+j*w*.31,y+Math.sin(j)*h*.48,w*(.49+random()*.24),h*(.5+random()*.7),-.02,0,Math.PI*2);ctx.fill();}
-  }
-  ctx.globalAlpha=1;
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+  const texture=new THREE.CanvasTexture(textileSky());texture.colorSpace=THREE.SRGBColorSpace;
+  texture.wrapS=THREE.RepeatWrapping;texture.repeat.x=-1;texture.offset.x=.5;
   const sphere=new THREE.Mesh(new THREE.SphereGeometry(4300,32,16),new THREE.MeshBasicMaterial({map:texture,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false}));
   sphere.renderOrder=-50;return sphere;
 }
@@ -54,13 +46,13 @@ export function createView(canvas,spawn,onNotice) {
   }
   const touch=matchMedia('(pointer:coarse)').matches;
   const scene=new THREE.Scene();
-  scene.background=new THREE.Color('#ecc6b5');scene.fog=new THREE.FogExp2('#dfbdb1',.00069);
+  scene.background=new THREE.Color('#f0d9be');scene.fog=new THREE.FogExp2('#d1c2b2',.00066);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.06;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.00;
   const sky=makeSky();scene.add(sky);
-  scene.add(new THREE.HemisphereLight(0xffe6cf,0x978885,1.65));
-  const sun=new THREE.DirectionalLight(0xffdcac,2.15);sun.position.set(-.38,.92,-.7);scene.add(sun);
-  const fill=new THREE.DirectionalLight(0xe7dbff,.54);fill.position.set(.3,.5,1);scene.add(fill);
+  scene.add(new THREE.HemisphereLight(0xfff1d7,0x8a8294,1.44));
+  const sun=new THREE.DirectionalLight(0xffe2ad,1.92);sun.position.set(Math.cos(sunBearing),1.06,Math.sin(sunBearing));scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xd8ebea,.69);fill.position.set(-.6,.47,-.9);scene.add(fill);
   const city=createCity3D(scene), pickupDisplay=createPickupDisplay(scene);
   const camera=new THREE.PerspectiveCamera(58,1,.08,6300);
   const shadows=makeShadow();scene.add(shadows);
@@ -99,12 +91,18 @@ export function createView(canvas,spawn,onNotice) {
   }
   function badge(e,label,bubble){
     let el=names.get(e.id);
-    if(!el){el=document.createElement('span');el.style.cssText='position:absolute;transform:translate(-50%,-100%);font:650 11px system-ui;color:#fff3e5;background:#251f30df;border:1px solid #a68ba48a;border-radius:5px;padding:2px 6px;white-space:nowrap;text-shadow:0 1px #302735;';labels.append(el);names.set(e.id,el);}
+    if(!el){el=document.createElement('span');el.className='world-label';labels.append(el);names.set(e.id,el);}
     el._used=inFrame;projection.set(e.x,terrainHeight(e.x,e.y)+(e.lift||0)+(e.isCar?vehicleSpec(e.type).height+.43:2.14),e.y);projection.project(camera);
     const visible=projection.z>0&&projection.z<1&&Math.abs(projection.x)<1.1&&Math.abs(projection.y)<1;
     el.hidden=!visible;if(!visible)return;
     el.style.left=(50+50*projection.x)+'%';el.style.top=(50-50*projection.y)+'%';
-    el.style.fontSize=bubble?'20px':'11px';if(el.textContent!==label)el.textContent=label;
+    if(el._label!==label||el._bubble!==bubble){
+      el._label=label;el._bubble=bubble;
+      const art=bubble&&makeEmoteIcon(label);
+      el.classList.toggle('world-emote',!!art);
+      if(art){el.replaceChildren(art);el.setAttribute('aria-label',label);}
+      else{el.textContent=label;el.removeAttribute('aria-label');}
+    }
   }
   function effect(kind,x,y,angle=0,len=0,colors=[],lift=0) {
     if(!active || effects.length>42)return;
@@ -229,6 +227,7 @@ export function createView(canvas,spawn,onNotice) {
   return {available:true,mode:'webgl',render,aim,projectTarget,effect,dispose(){
     active=false;canvas.removeEventListener('webglcontextlost',contextLost);labels.remove();
     for(const item of models.values())item.object.dispose?.();
-    bloodMesh.dispose();pickupDisplay.dispose();city.dispose?.();renderer.dispose();
+    bloodMesh.dispose();pickupDisplay.dispose();city.dispose?.();
+    sky.geometry.dispose();sky.material.map.dispose();sky.material.dispose();renderer.dispose();
   }};
 }
