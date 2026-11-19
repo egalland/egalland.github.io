@@ -1,5 +1,6 @@
 import {terrainHeight,buildingGround,waterLevel} from './terrain-height.js';
 import {terracePanels} from './street-terraces.js';
+import {propWearProfile,propWearStage,trackPropWear} from './prop-wear.js';
 import * as T from './three.js';
 import * as source from './paris-data.js';
 const {buildings,streets,water}=source;
@@ -390,7 +391,39 @@ function makeIndex(){
   }
   return {groups,towers};
 }
-function decoration(kind,variant) {
+function frayDecoration(batch,kind,stage){
+  const spec=propWearProfile(kind);
+  if(!stage||!spec)return;
+  const amount=stage===1?.3:1;
+  const [lining,,shadow]=spec.yarn;
+  function looseStitch(a,b,c){
+    const width=stage===1?.026:.036;
+    batch.tube(a,b,width,width*.9,shadow,5);
+    batch.tube(b,c,width*.83,.012,lining,5);
+  }
+  if(kind==='bench'||kind==='postbox'||kind==='crate'){
+    const depth=kind==='bench'?.2:0,halfDepth=kind==='bench'?.055:kind==='crate'?.40:.2;
+    const width=kind==='bench'?.53:.21;
+    for(const side of [-1,1])for(let i=0;i<stage+1;i++){
+      const x=(i-.75)*width*.57,z=depth+side*(halfDepth+.008);
+      looseStitch([x,spec.seam+.09,z],[x+.06,spec.seam-.018,z+side*.025],[x+.03,spec.seam-.10-.045*i,z+side*.07]);
+    }
+  }else{
+    const r=spec.radius,count=stage===1?5:8;
+    for(let i=0;i<count;i++){
+      const a=i*tau/count,h=spec.seam+.027*Math.cos(i*2.4);
+      const point=(angle,radius,y)=>[Math.cos(angle)*radius,y,Math.sin(angle)*radius];
+      looseStitch(point(a,r,h+.05),point(a+.30,r+.025,h-.035),point(a+.48,r+.075*stage,h-.06-.04*stage));
+    }
+  }
+  // Bend the whole connected upper section around the torn seam, while its
+  // base (and hence its contact with the ground) stays planted.
+  for(const {pos} of batch.buffers.values())for(let i=0;i<pos.length;i+=3){
+    const upper=Math.max(0,pos[i+1]-spec.pivot)*amount;
+    pos[i]+=upper*spec.lean;pos[i+2]+=upper*spec.lean*.31;pos[i+1]-=upper*spec.drop;
+  }
+}
+function decoration(kind,variant,stage) {
   const b=new Batch(),metal='#3c4e54',edge='#596967',brass='#ca9972';
   if(terracePanels[kind]){
     for(const panel of terracePanels[kind])b.face('felt',...panel.points,panel.color);
@@ -400,7 +433,7 @@ function decoration(kind,variant) {
     b.tube([.09,2.25,0],[-.83,3.9,.15],.13,.07,'#806659',6);
     b.tube([.11,2.63,0],[.74,3.98,-.3],.115,.07,'#806659',6);
     b.ball(.07,4.67,0,1.82,2.04,1.69,colors[0],10,6);
-    b.ball(-.89,4.28,.39,1.07,1.43,1.05,colors[1],8,5);
+    if(stage!==2)b.ball(-.89,4.28,.39,1.07,1.43,1.05,colors[1],8,5);
     b.ball(.74,4.93,.08,1.22,1.52,1.12,colors[1],8,5);
     b.ball(-.25,5.58,-.18,1.1,1.28,1.08,colors[2],9,5);
     b.tube([0,.04,0],[0,.12,0],.71,.68,'#797275',10);
@@ -411,24 +444,37 @@ function decoration(kind,variant) {
     for(const y of [.39,.96,3.58,3.93])b.tube([0,y,0],[0,y+.09,0],.145,.135,brass,8);
     const yy=4.0;
     b.tube([0,yy,0],[0,yy+.18,0],.13,.24,metal,4);
-    b.tube([0,yy+.18,0],[0,yy+.72,0],.245,.362,'#ffdc98',4);
+    b.tube([0,yy+.18,0],[0,yy+.72,0],.245,.362,stage===2?'#958b81':'#ffdc98',4);
     for(let i=0;i<4;i++){const a=i*tau/4;b.tube([.245*Math.cos(a),yy+.17,.245*Math.sin(a)],[.362*Math.cos(a),yy+.72,.362*Math.sin(a)],.027,.025,metal,5);}
     b.tube([0,yy+.72,0],[0,yy+.97,0],.43,.066,metal,4);
     b.ball(0,yy+1.03,0,.075,.12,.075,brass,6,3);
+  }else if(kind==='crate'){
+    b.box(0,.02,0,.89,.77,.78,'#ad886b');
+    for(const side of [-1,1]){
+      for(const y of [.09,.68])b.box(0,y,side*.396,.93,.08,.04,'#826953');
+      b.tube([-.36,.16,side*.414],[stage===2?-.01:.36,stage===2?.38:.7,side*.414],.05,.05,'#cea77f',4);
+    }
   }else if(kind==='bench'){
-    b.box(0,.46,0,1.70,.13,.49,'#a67864');b.box(0,.83,.2,1.70,.34,.10,'#b68a6c');
+    b.box(0,.46,0,1.70,.13,.49,'#a67864');
+    if(stage===2){
+      b.box(-.48,.81,.2,.74,.30,.10,'#ac8064');
+      b.box(.47,.88,.2,.76,.27,.10,'#b68a6c');
+    }else b.box(0,.83,.2,1.70,.34,.10,'#b68a6c');
     for(const x of [-.61,.61]){b.box(x,.01,.01,.085,.49,.52,metal);b.box(x,.35,.18,.072,.60,.07,metal);}
   }else if(kind==='hydrant'){
     b.tube([0,0,0],[0,.72,0],.21,.2,'#ad5c67',8);b.ball(0,.71,0,.235,.23,.235,'#c66c6b');
-    b.tube([-.3,.45,0],[.3,.45,0],.10,.10,'#875767',8);
+    b.tube([stage===2?-.19:-.3,.45,0],[.3,.45,0],.10,.10,'#875767',8);
   }else if(kind==='postbox'){
     b.tube([0,0,0],[0,.79,0],.085,.068,metal,6);b.box(0,.77,0,.59,.62,.39,'#d6ac65');b.box(0,1.17,.2,.36,.035,.02,'#555363');
   }else if(kind==='bin'){
-    b.tube([0,.03,0],[0,.88,0],.27,.34,'#557570',12);b.tube([0,.89,0],[0,.96,0],.36,.31,metal,12);
-    b.tube([0,.955,0],[0,.969,0],.26,.26,'#333e49',12);
+    b.tube([0,.03,0],[0,.88,0],.27,.34,'#557570',12);
+    const lid=stage===2?.14:0;
+    b.tube([lid,.89,0],[lid,.96,0],.36,.31,metal,12);
+    b.tube([lid,.955,0],[lid,.969,0],.26,.26,'#333e49',12);
   }else{
     b.tube([0,0,0],[0,.71,0],.13,.11,metal,8);b.ball(0,.74,0,.135,.14,.135,'#a59088',8,4);
   }
+  frayDecoration(b,kind,stage);
   return b;
 }
 const deckStart=[203,-800],deckEnd=[447,-681];
@@ -585,6 +631,7 @@ export function createCity3D(scene){
   root.add(towerBatch.mesh(materials));
   scene.add(root);
   const chunks=new Map(), propGroups=new Map(), propModels=new Map(), helper=new T.Object3D();
+  const wearChanged=trackPropWear();
   let lastX=Infinity,lastZ=Infinity,targets=[],tick=0,propX=Infinity,propZ=Infinity,destroyCount=-1,stamp=0,lastPropCount=-1;
   const groundShadows=new T.InstancedMesh(new T.CircleGeometry(1,12),new T.MeshBasicMaterial({color:0x695666,transparent:true,opacity:.19,depthWrite:false,side:T.DoubleSide}),460);
   groundShadows.count=0;groundShadows.frustumCulled=false;groundShadows.renderOrder=1;root.add(groundShadows);
@@ -612,9 +659,9 @@ export function createCity3D(scene){
     targets=next.filter(t=>!chunks.has(t.key)||chunks.get(t.key).detail!==t.detail).sort((a,b)=>a.dist-b.dist);
     lastX=pos.x;lastZ=pos.y;
   }
-  function propSet(kind,variant){
-    const k=kind+variant;if(propModels.has(k))return propModels.get(k);
-    const group=decoration(kind,variant).mesh(materials),instances=[];
+  function propSet(kind,variant,stage){
+    const k=kind+variant+'/'+stage;if(propModels.has(k))return propModels.get(k);
+    const group=decoration(kind,variant,stage).mesh(materials),instances=[];
     for(const templ of group.children){
       const mesh=new T.InstancedMesh(templ.geometry,templ.material,460);mesh.count=0;mesh.frustumCulled=false;
       mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);root.add(mesh);instances.push(mesh);
@@ -625,8 +672,9 @@ export function createCity3D(scene){
     propGroups.clear();let shadowIndex=0;
     for(const prop of pickProps(state?.props,pos,220)){
       if(state.destroyed?.has?.(prop.id))continue;
-      const type=prop.type||prop.kind||'bollard',h=hash(prop.id),variant=type==='tree'?h%3:0,k=type+variant;
-      if(!propGroups.has(k))propGroups.set(k,{items:[],type,variant});
+      const type=prop.type||prop.kind||'bollard',h=hash(prop.id),variant=type==='tree'?h%3:0;
+      const stage=propWearStage(state.propHealth?.get(prop.id)),k=type+variant+'/'+stage;
+      if(!propGroups.has(k))propGroups.set(k,{items:[],type,variant,stage});
       propGroups.get(k).items.push(prop);
       const tree=type==='tree',lamp=type==='lamp',radius=tree?1.38:lamp?.42:.45;
       helper.position.set(prop.x+radius*.55,terrainHeight(prop.x+radius*.55,prop.y+radius*.13)+.105,prop.y+radius*.13);helper.rotation.set(-Math.PI/2,0,-.30);
@@ -635,8 +683,8 @@ export function createCity3D(scene){
     }
     groundShadows.count=shadowIndex;groundShadows.instanceMatrix.needsUpdate=true;
     for(const list of propModels.values())for(const m of list)m.count=0;
-    for(const {items,type,variant} of propGroups.values()){
-      const meshes=propSet(type,variant);
+    for(const {items,type,variant,stage} of propGroups.values()){
+      const meshes=propSet(type,variant,stage);
       items.forEach((p,i)=>{
         const h=hash(p.id),scale=type==='tree'?.87+(h%41)/100:1;
         helper.position.set(p.x,terrainHeight(p.x,p.y),p.y);helper.rotation.set(0,p.angle===undefined?(h%628)/100:-p.angle,0);helper.scale.setScalar(scale);helper.updateMatrix();
@@ -652,7 +700,8 @@ export function createCity3D(scene){
     const start=performance.now();let count=0;
     while(targets.length&&count<(initial?2:3)&&(count===0||performance.now()-start<(initial?26:4))){buildChunk(targets.shift());count++;}
     tick++;const size=worldState.destroyed?.size||0,n=worldState.props?.length||0;
-    if(stamp===0||Math.hypot(propX-pos.x,propZ-pos.y)>2.8||size!==destroyCount||n!==lastPropCount||tick-stamp>=33){
+    const changed=wearChanged(worldState.props||[],worldState.propHealth,worldState.propDamageRevision);
+    if(stamp===0||Math.hypot(propX-pos.x,propZ-pos.y)>2.8||size!==destroyCount||n!==lastPropCount||changed||tick-stamp>=33){
       updateProps(pos,worldState);propX=pos.x;propZ=pos.y;destroyCount=size;lastPropCount=n;stamp=tick;
     }
   };

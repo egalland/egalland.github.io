@@ -2,7 +2,7 @@ import {decodeDropId,isEligibleDropId} from './drop-id.js';
 
 // Each tab is a separate player. State snapshots may coalesce; actions have stable IDs and are retried.
 const actionPoses=new Set(['jump','fall','vault','climb','land']);
-const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{},pickups:{}});
+const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{},pickups:{},propHealth:{}});
 const cleanName=s=>[...String(s||'Kikalmo').replace(/[\u0000-\u001f\u007f]/g,' ').trim()].slice(0,24).join('')||'Kikalmo';
 export function createNet(options={}) {
   const {onStatus=()=>{},onPlayers=()=>{},onChat=()=>{}}=options;
@@ -52,6 +52,12 @@ export function createNet(options={}) {
     if(e.type==='melee'&&e.at>Date.now()+offset-1200&&Math.hypot(d.x-state.x,d.y-state.y)<70)
       combatUntil=Date.now()+1100;
     if (e.type==='destroy' && !context.destroyed.includes(d.id)) context.destroyed.push(d.id);
+    if(e.type==='propDamage'){
+      const previous=context.propHealth[d.id];
+      if(previous && previous.health<d.health)return;
+      context.propHealth[d.id]=d;
+      if(d.health===0 && !context.destroyed.includes(d.id))context.destroyed.push(d.id);
+    }
     if (e.type==='vehicle') context.vehicles[d.id]=d;
     if (e.type==='npc') context.npcs[d.id]=d;
     if (e.type==='pickup') rememberPickup(d.id,d.availableAt);
@@ -60,7 +66,7 @@ export function createNet(options={}) {
       lifetimeChats.add(e.seq);
       if (lifetimeChats.size>1000) lifetimeChats.delete(lifetimeChats.values().next().value);
       onChat({seq:e.seq,player:e.player,name:e.name,text:d.text,at:e.at});
-    } else if (e.player!==id || (e.type==='npc' && Number.isFinite(d.damage))) {
+    } else if (e.player!==id || e.type==='propDamage' || (e.type==='npc' && Number.isFinite(d.damage))) {
       for (const fn of listeners) fn(e);
     }
   }
@@ -109,6 +115,11 @@ export function createNet(options={}) {
           pending=pending.filter(e=>!ack.has(e.op));
         }
         (data.events||[]).forEach(receive);
+        if(Array.isArray(data.propAccepted)){
+          const accepted=new Set(data.propAccepted);
+          for(const item of batch)if(item.type==='propDamage' && !accepted.has(item.data.impactId))
+            for(const fn of listeners)fn({type:'propDamageDenied',data:{id:item.data.id,impactId:item.data.impactId},at:data.now,player:id});
+        }
         const replies=new Map((data.pickupResults||[]).map(r=>[r.op,r]));
         for(const item of batch)if(item.type==='pickup'){
           const answer=replies.get(item.op);

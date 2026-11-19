@@ -8,11 +8,11 @@ export function installCombatControls(primary,melee,{action,setAim,endAim}){
 
   function release(event){
     if(!gesture || (event && (event.pointerId!==gesture.id || event.currentTarget!==gesture.button)))return;
-    const {button,command}=gesture;
+    const {button,command,steered}=gesture;
     gesture=null;
     button.classList.remove('is-pressed');
     action(command,false);
-    if(command!=='melee'){setAim(0,0);endAim();}
+    if(command!=='melee'||steered){setAim(0,0);endAim();}
   }
   function commandFor(button,pointerType){
     if(button===melee || weapon==='fist')return 'melee';
@@ -28,6 +28,12 @@ export function installCombatControls(primary,melee,{action,setAim,endAim}){
       button.setPointerCapture(event.pointerId);
       action(command,true);
     });
+    button.addEventListener('pointermove',event=>{
+      if(gesture?.button!==button||gesture.id!==event.pointerId)return;
+      const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y,length=Math.hypot(dx,dy);
+      if(length>6){gesture.steered=true;setAim(dx/length,dy/length);}
+      else if(gesture.steered)setAim(0,0);
+    });
     for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,release);
     // Assistive technology and keyboard activation fire a single pulse.
     button.addEventListener('click',event=>{
@@ -36,12 +42,6 @@ export function installCombatControls(primary,melee,{action,setAim,endAim}){
       action(command,true);action(command,false);
     });
   }
-  primary.addEventListener('pointermove',event=>{
-    if(gesture?.button!==primary || gesture.id!==event.pointerId || gesture.command==='melee')return;
-    const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y,length=Math.hypot(dx,dy);
-    if(length>6)setAim(dx/length,dy/length);
-    else setAim(0,0);
-  });
   function update({weapon:equipped,lifeState,inVehicle}){
     const fists=equipped==='fist',down=lifeState==='down';
     if(weapon!==equipped){

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SPAWN, getTravelPoint, nearbyProps, blocked, routeAgents, trafficVehicleAt, sampleTrafficRoute } from '../public/paris-world.js';
 import { createGame } from '../public/game.js';
+import { propMaxHealth } from '../public/prop-damage.js';
 import { vehicleSpec } from '../public/vehicle-types.js';
 import { nearbyWeaponDrops } from '../public/weapon-drops.js';
 
@@ -56,7 +57,15 @@ test('Chase-camera controls, car possession, shared effects and travel share the
     const pos=game.getPosition();aim=Math.atan2(target.y-pos.y,target.x-pos.x);
     canvas.dispatchEvent(Object.assign(new Event('pointerdown'),{button:0,pointerType:'mouse',clientX:300,clientY:200,pointerId:1}));
     canvas.dispatchEvent(Object.assign(new Event('pointerup'),{button:0,pointerType:'mouse',pointerId:1}));
-    step(2);assert(emitted.some(([kind,data])=>kind==='destroy'&&data.id===target.id));
+    step(2);
+    const request=emitted.findLast(([kind,data])=>kind==='propDamage'&&data.id===target.id)?.[1];
+    assert.equal(request.damage,17);assert.equal(request.weapon,'pistol');
+    const maxHealth=propMaxHealth(target.type),remaining=maxHealth-request.damage;
+    assert.equal(viewState.propHealth.get(target.id).health,remaining);
+    eventCallback({type:'propDamage',player:net.id,data:{...request,maxHealth,health:remaining}});
+    assert.equal(viewState.propHealth.get(target.id).health,remaining,'own echo must not subtract the shot twice');
+    assert(!viewState.destroyed.has(target.id));
+    eventCallback({type:'propDamage',player:'other',data:{...request,maxHealth,health:0,damage:remaining}});
     assert(viewState.destroyed.has(target.id));
     const here=game.getPosition();
     const otherSpot=Array.from({length:12},(_,i)=>({x:here.x+3*Math.cos(i*Math.PI/6),y:here.y+3*Math.sin(i*Math.PI/6)}))
@@ -128,6 +137,17 @@ test('A sector crossing preserves equipment and reacquires the same car after th
     game?.destroy();for(const [k,v] of saved)if(v===undefined)delete globalThis[k];else globalThis[k]=v;
   }
 });
+
+function nearlyBroken(h,prop){
+  const maxHealth=propMaxHealth(prop.type);
+  h.receive({type:'propDamage',player:'another-player',data:{...prop,maxHealth,health:7,damage:maxHealth-7}});
+}
+function confirmFinishingShot(h,prop){
+  const request=h.actions.findLast(a=>a.name==='propDamage'&&a.data.id===prop.id)?.data;
+  assert(request);assert.equal(h.scene.destroyed.has(prop.id),false,'the predicted final hit must leave a solid prop');
+  const event={type:'propDamage',player:h.net.id,data:{...request,health:0,maxHealth:propMaxHealth(prop.type),damage:7}};
+  h.receive(event);h.receive(event);
+}
 
 function startGame(t,options={}){
   const globals=['window','document','requestAnimationFrame','cancelAnimationFrame'];
@@ -220,8 +240,8 @@ test('A sector validates claimed equipment, hides consumed drops, and leaves leg
 test('One action gives exactly one wanted event, preserves the action weight on crossing and dispatches police and SWAT by level',t=>{
   const h=startGame(t),{game}=h;
   const prop=nearbyProps(SPAWN.x,SPAWN.y,23).sort((a,b)=>Math.hypot(a.x-SPAWN.x,a.y-SPAWN.y)-Math.hypot(b.x-SPAWN.x,b.y-SPAWN.y))[0];
-  h.fireAt(prop);h.step(12);
-  assert(h.scene.destroyed.has(prop.id));assert.equal(h.state.wantedPoints,10);
+  nearlyBroken(h,prop);h.fireAt(prop);confirmFinishingShot(h,prop);h.step(12);
+  assert(h.scene.destroyed.has(prop.id));assert.equal(h.state.score,10);assert.equal(h.state.wantedPoints,10);
   assert.deepEqual(h.state.wantedEvent,{id:1,action:'destroy',points:10});assert.equal(h.state.wanted,0);
   assert(h.actions.some(e=>e.name==='npc'&&e.data.kind==='firefighter'));
   assert(!h.actions.some(e=>e.name==='npc'&&e.data.kind==='police'));
@@ -238,6 +258,42 @@ test('One action gives exactly one wanted event, preserves the action weight on 
   assert(game.restoreTravelState({...saved,pursuit:{points:290,sinceCrime:0}}));h.step(26);
   assert.equal(h.state.wanted,5);assert.equal(h.state.wantedProgress,1);
   assert(h.actions.some(e=>e.name==='npc'&&e.data.kind==='swat'&&e.data.level===5));
+});
+
+test('A rejected prediction restores the other player’s confirmed damage and keeps the object solid',t=>{
+  const h=startGame(t);
+  const prop=nearbyProps(SPAWN.x,SPAWN.y,23).sort((a,b)=>Math.hypot(a.x-SPAWN.x,a.y-SPAWN.y)-Math.hypot(b.x-SPAWN.x,b.y-SPAWN.y))[0];
+  const maxHealth=propMaxHealth(prop.type);
+  h.fireAt(prop);
+  const {data}=h.actions.findLast(a=>a.name==='propDamage');
+  assert.equal(h.scene.propHealth.get(prop.id).health,maxHealth-17);
+  h.receive({type:'propDamage',player:'other',data:{...data,damage:6,health:maxHealth-6,maxHealth}});
+  assert.equal(h.scene.propHealth.get(prop.id).health,maxHealth-23,'a peer can use the same per-client impact ID');
+  h.receive({type:'propDamageDenied',player:h.net.id,data:{id:prop.id,impactId:data.impactId}});
+  h.step(12);
+  assert.equal(h.scene.propHealth.get(prop.id).health,maxHealth-6);
+  assert.equal(h.scene.destroyed.has(prop.id),false);
+  assert.equal(h.state.score,0);assert.equal(h.state.wantedEvent.action,'gunshot');
+});
+
+test('A delayed authoritative break credits the shooter once after its provisional mark has faded',t=>{
+  const h=startGame(t);
+  const prop=nearbyProps(SPAWN.x,SPAWN.y,23).sort((a,b)=>Math.hypot(a.x-SPAWN.x,a.y-SPAWN.y)-Math.hypot(b.x-SPAWN.x,b.y-SPAWN.y))[0];
+  nearlyBroken(h,prop);h.fireAt(prop);h.step(340);
+  assert.equal(h.scene.propHealth.get(prop.id).health,7);assert.equal(h.state.score,0);
+  confirmFinishingShot(h,prop);h.step(12);
+  assert.equal(h.state.score,10);assert.equal(h.state.wantedPoints,10);
+});
+
+test('Reconnecting restores the global condition of a prop broken during solo play',t=>{
+  const h=startGame(t);
+  const prop=nearbyProps(SPAWN.x,SPAWN.y,23).sort((a,b)=>Math.hypot(a.x-SPAWN.x,a.y-SPAWN.y)-Math.hypot(b.x-SPAWN.x,b.y-SPAWN.y))[0];
+  nearlyBroken(h,prop);
+  h.net.status='offline';h.fireAt(prop);h.step(12);
+  assert(h.scene.destroyed.has(prop.id));assert.equal(h.scene.propHealth.get(prop.id).health,0);
+  assert.equal(h.actions.some(a=>a.name==='propDamage'),false);
+  h.net.status='online';h.step(25);
+  assert.equal(h.scene.destroyed.has(prop.id),false);assert.equal(h.scene.propHealth.get(prop.id).health,7);
 });
 
 test('Only the touch fire button uses assistance. Mouse, F, a dragged thumb, fists and a disabled setting remain manual',t=>{
@@ -274,7 +330,7 @@ test('An assisted impact on scenery stays visible briefly and disappears when to
   const h=startGame(t,{onAimLock:point=>marks.push(point),projectTarget:(x,y)=>x===prop.x&&y===prop.y?{x:.55,y:.43}:null});
   const yaw=Math.atan2(prop.y-SPAWN.y,prop.x-SPAWN.x)-.1;
   assert(h.game.restoreTravelState({...h.game.exportTravelState(),yaw}));h.step(20);
-  h.game.action('touchFire');h.step(6);assert(h.scene.destroyed.has(prop.id));
+  nearlyBroken(h,prop);h.game.action('touchFire');confirmFinishingShot(h,prop);h.step(6);assert(h.scene.destroyed.has(prop.id));
   assert.deepEqual(marks,[{x:.55,y:.43}]);
   h.step(7);assert.equal(marks.at(-1),null);assert.equal(marks.length,2);
   h.game.action('touchFire',false);assert.equal(marks.length,2);

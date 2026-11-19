@@ -1,6 +1,9 @@
+import {createBleedFibers} from './bleed-fibers.js';
+import {createBleedMesh} from './bleed-mesh.js';
 import {fiberLifetime,impactFibers} from './puppet-combat.js';
 import {terrainHeight,terrainGradient,walkingPose} from './terrain-height.js';
 import {buildShotEffect,effectDuration} from './weapon-effects.js';
+import {propDebris} from './prop-wear.js';
 import { vehicleSpec } from './vehicle-types.js';
 import * as THREE from './three.js';
 import { createCity3D } from './city3d.js';
@@ -64,6 +67,7 @@ export function createView(canvas,spawn,onNotice) {
   const shadowTransform=new THREE.Object3D(), projection=new THREE.Vector3(), cameraAim=new THREE.Vector3();
   let width=0,height=0, cameraArm=5.6, camX=spawn.x,camY=spawn.y, lastPropTick=-100,props=[],inFrame=0,slowCount=0,scale=touch?.94:1, active=true;
   const models=new Map(), names=new Map(), effects=[];
+  const blood=createBleedFibers(),bloodMesh=createBleedMesh(scene);
   const labels=document.createElement('div');
   labels.style.cssText='position:absolute;inset:0;overflow:hidden;pointer-events:none;';
   canvas.after(labels);
@@ -104,15 +108,16 @@ export function createView(canvas,spawn,onNotice) {
   }
   function effect(kind,x,y,angle=0,len=0,colors=[],lift=0) {
     if(!active || effects.length>42)return;
-    if(kind==='meleeImpact'){
-      const height=terrainHeight(x,y)+lift;
-      for(const strand of impactFibers(angle,len)){
+    const debris=propDebris(kind,colors?.type,angle);
+    if(kind==='meleeImpact'||debris){
+      const height=terrainHeight(x,y)+lift+(debris?.height||0),duration=debris?.lifetime??fiberLifetime;
+      for(const strand of debris?.strands||impactFibers(angle,len)){
         const curve=new THREE.CatmullRomCurve3(strand.points.map(v=>new THREE.Vector3(...v)));
-        const geo=new THREE.TubeGeometry(curve,4,.017,4,false);
+        const geo=new THREE.TubeGeometry(curve,4,strand.thickness||.017,4,false);
         const mat=new THREE.MeshBasicMaterial({color:strand.color,transparent:true,depthWrite:false});
         const mesh=new THREE.Mesh(geo,mat),[vx,vy,vz]=strand.velocity;
         mesh.position.set(x,height,y);scene.add(mesh);
-        effects.push({mesh,life:fiberLifetime,max:fiberLifetime,vx,vy,vz,fiber:true});
+        effects.push({mesh,life:duration,max:duration,vx,vy,vz,fiber:true});
       }
       return;
     }
@@ -158,18 +163,20 @@ export function createView(canvas,spawn,onNotice) {
     camera.lookAt(cameraAim);camera.updateMatrixWorld();
     sky.position.copy(camera.position);
     if(time-lastPropTick>.30 || snap){props=nearbyProps(p.x,p.y,320);lastPropTick=time;}
-    city.update(p,time,{props,destroyed});
+    city.update(p,time,{props,destroyed,propHealth:state.propHealth,propDamageRevision:state.propDamageRevision});
     pickupDisplay.update(state.pickups,p,time);
     const candidates=state.entities.filter(e=>Number.isFinite(e.x)&&Number.isFinite(e.y)).sort((a,b)=>distance(a,p)-distance(b,p));
     const lowPower=scale<.81;
     const carLimit=lowPower?4:touch?6:8, pedestrianLimit=lowPower?5:touch?7:9;
     let npcs=0,cars=0,index=0;
+    blood.begin(time,state.epoch??Date.now());bloodMesh.begin();
     for(const e of candidates) {
       const d=distance(e,p),critical=e.self||e.peer;
       if(!critical && (d>(e.isCar?115:68) || (e.isCar?cars>=carLimit:npcs>=pedestrianLimit)))continue;
       if(critical && !e.self && d>210)continue;
       if(e.isCar)cars++;else npcs++;
       entity(e,dt,time);
+      if(d<42)bloodMesh.draw(blood.actor(e));
       if(index<65){
         const floor=e.supportHeight||0,angle=e.angle||0,c=Math.cos(angle),s=Math.sin(angle);
         const slope=floor>.12?{x:0,y:0}:terrainGradient(e.x,e.y);
@@ -182,6 +189,7 @@ export function createView(canvas,spawn,onNotice) {
       }
       if(e.bubble || (e.peer && d<48))badge(e,e.bubble||e.name,!!e.bubble);
     }
+    blood.eachDrop((id,center,strands)=>bloodMesh.draw(strands));bloodMesh.finish();
     shadows.count=index;shadows.instanceMatrix.needsUpdate=true;
     for(const [key,v] of models)if(v.used!==inFrame){
       v.object.group.visible=false;
@@ -221,6 +229,6 @@ export function createView(canvas,spawn,onNotice) {
   return {available:true,mode:'webgl',render,aim,projectTarget,effect,dispose(){
     active=false;canvas.removeEventListener('webglcontextlost',contextLost);labels.remove();
     for(const item of models.values())item.object.dispose?.();
-    pickupDisplay.dispose();city.dispose?.();renderer.dispose();
+    bloodMesh.dispose();pickupDisplay.dispose();city.dispose?.();renderer.dispose();
   }};
 }

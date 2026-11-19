@@ -132,14 +132,31 @@ function showWanted() {
     box.hidden=false;clearTimeout(feedbackTimer);feedbackTimer=setTimeout(()=>box.hidden=true,2400);
   }
 }
-let seenLifeEvent=null;
+let seenLifeEvent=null,wasBleeding=false,bleedStatusTimer=0;
+function showBleeding(){
+  const badge=$('#bleedStatus'),active=Boolean(state.bleeding);
+  if(active){
+    clearTimeout(bleedStatusTimer);
+    if(!wasBleeding){badge.dataset.state='open';badge.textContent='Saignement';badge.hidden=false;}
+    badge.title='Saignement · '+state.bleedSeconds+' s restantes';
+  }else if(wasBleeding){
+    if(state.lifeState==='down'){badge.hidden=true;}
+    else{
+      badge.dataset.state='closed';badge.textContent=state.lifeEvent?.kind==='heal'?'Soigné':'Stabilisé';
+      badge.title='Le saignement est arrêté.';
+      bleedStatusTimer=setTimeout(()=>{badge.hidden=true;},1900);
+    }
+  }
+  wasBleeding=active;
+}
 function showLife(){
   const max=state.maxHealth||100,hp=Math.max(0,Math.min(max,Math.ceil(state.health))),life=state.lifeState||'healthy';
   const meter=$('#healthMeter');
   meter.setAttribute('aria-valuemax',String(max));meter.setAttribute('aria-valuenow',String(hp));
   meter.dataset.life=life;$('#hpBar').style.width=(hp/max*100)+'%';$('#hpNum').textContent=String(hp);
+  showBleeding();
   const kits=state.medkits??1,canHeal=Boolean(state.canHeal);
-  const label='Utiliser une trousse de secours · '+kits+' disponible'+(kits>1?'s':'');
+  const label=(state.bleeding?'Arrêter le saignement avec une trousse · ':'Utiliser une trousse de secours · ')+kits+' disponible'+(kits>1?'s':'');
   for(const control of [$('#heal'),$('#healHud')]){control.disabled=!canHeal;control.setAttribute('aria-label',label);control.title=label+' (H)';}
   $('#kitCount').textContent=String(kits);
   const down=life==='down';

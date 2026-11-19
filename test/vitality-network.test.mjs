@@ -195,3 +195,62 @@ test('a swing reaches the second client once and can make a single nearby physic
   assert.equal(c.events.filter(e=>e.type==='hit').length,1);
   assert.equal(c.events.filter(e=>e.type==='melee').length,2);
 });
+
+test('shared street furniture settles concurrent hits, a lost reply and one final break across reconnects', async t=>{
+  const {browser}=sharedWorld(t), id='gqa-d-2', attempts=[];
+  let lose=true;
+  const a=browser('A',async(body,send)=>{
+    const hit=body.events?.find(e=>e.data?.impactId==='a1');
+    if(hit)attempts.push(hit.op);
+    const response=await send();
+    if(hit&&lose){lose=false;throw Error('Lost after commit');}
+    return response;
+  }), b=browser('B');
+  await Promise.all([a.net.start(),b.net.start()]);
+  const impact=(client,impactId,extra={})=>client.net.emit('propDamage',{id,type:'bin',x:11,y:10,cause:'weapon',weapon:'pistol',damage:17,impactId,...extra});
+  const hp=who=>who.net.world().propHealth[id]?.health;
+  impact(a,'a1');impact(b,'b1');
+  await until(()=>attempts.length>=2 && hp(a)===8 && hp(b)===8,'Both players see 42 minus two shots despite retry');
+  assert.equal(new Set(attempts).size,1);
+  const c=browser('C');await c.net.start();
+  assert.equal(hp(c),8);assert(!c.net.world().destroyed.includes(id));
+  impact(c,'invalid',{damage:0});impact(b,'mismatch',{type:'lamp'});
+  b.net.emit('destroy',{id}); // Prior builds cannot remove scenery already tracked by durability.
+  await until(()=>c.events.some(e=>e.type==='propDamageDenied')&&b.events.some(e=>e.type==='propDamageDenied'),'Rejected predictions roll back');
+  assert.equal(hp(b),8);
+  impact(a,'a2');impact(b,'b2');
+  await until(()=>[a,b,c].every(who=>hp(who)===0&&who.net.world().destroyed.includes(id)),'One final shared break');
+  await until(()=>[a,b].some(who=>who.events.some(e=>e.type==='propDamageDenied'&&['a2','b2'].includes(e.data.impactId))),'The other impact cannot get credit for the break');
+  assert.equal(c.events.filter(e=>e.type==='propDamage'&&e.data.health===0).length,1);
+  assert.equal(c.events.find(e=>e.type==='propDamage'&&e.data.health===0).data.damage,8);
+  assert.equal(c.events.filter(e=>e.type==='destroy'&&e.data.id===id).length,1);
+  c.net.stop();await c.net.start();
+  assert.equal(hp(c),0);assert.deepEqual(c.net.world().destroyed,[id]);
+});
+
+test('NPC bleed uses the shared clock across hits and reconnects, and player aid clears presence',async t=>{
+  const {browser,epoch,advance}=sharedWorld(t),a=browser('Source'),b=browser('Témoin'),id='npc-fil';
+  const wound={at:epoch,until:epoch+3000,severity:1};
+  a.net.publish({x:10,y:10,health:83,bleeding:{...wound,private:'hidden'}});
+  await Promise.all([a.net.start(),b.net.start()]);
+  const peer=()=>b.net.peers().find(p=>p.id===a.net.id);
+  await until(()=>peer()?.bleeding,'Observer should receive the wound in presence');
+  assert.deepEqual(peer().bleeding,wound);
+  const hit=(weapon,damage)=>a.net.emit('npc',{id,x:11,y:10,type:'pedestrian',cause:'weapon',weapon,damage,health:99});
+  const state=()=>b.net.world().npcs[id];
+  hit('pistol',17);
+  await until(()=>state()?.health===83,'First hit is resolved by the server');
+  assert.deepEqual(state().bleeding,wound);
+  advance(1100);hit('bubbles',8);
+  await until(()=>state()?.health===74,'First elapsed tick and soft hit without reopening wound');
+  assert.deepEqual(state().bleeding,wound);
+  advance(1600);hit('ribbonbow',28);
+  await until(()=>state()?.health===45,'One further tick plus second weapon damage');
+  assert.deepEqual(state().bleeding,{at:epoch+2700,until:epoch+7200,severity:2});
+  a.net.publish({x:10,y:10,health:98});
+  await until(()=>!peer()?.bleeding,'Healed owner clears the spectator state');
+  b.net.stop();await b.net.start();assert.equal(state().bleeding.severity,2);
+  advance(5000);hit('bubbles',8);
+  await until(()=>state()?.health===33,'Expired wound caps at four ticks before the next hit');
+  assert.equal(state().bleeding,null);
+});

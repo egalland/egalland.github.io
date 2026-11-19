@@ -115,8 +115,8 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
   if(pose.ragdoll?.head){
     const rag=pose.ragdoll,k=100/1.78,blend=rag.blend??1;
     const pt=(name,rest)=>{
-      const [a,h,z]=rag[name],depth=a*rear+z*profile;
-      const u=(-a*profile+z*rear)*k,v=(-h-depth*.16)*k;
+      const [a,h,z]=rag[name],depth=a*rear-z*profile;
+      const u=(a*profile+z*rear)*k,v=(-h-depth*.16)*k;
       return [rest[0]+blend*(u-rest[0]),rest[1]+blend*(v-rest[1])];
     };
     const hips=pt('hips',[0,-22]),chest=pt('chest',[0,-39]),head=pt('head',[0,-61]);

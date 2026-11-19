@@ -23,9 +23,14 @@ export function meleeContact(origin,angle,move,targets,ground,blocked){
     const base=ground(target.x,target.y)+(target.lift||0),high=base+(target.h??1.65);
     if(hand<base+.06||hand>high+.14)continue;
     const reach=Math.max(0,distance-radius*.84),x=origin.x+Math.cos(bearing)*reach,y=origin.y+Math.sin(bearing)*reach;
-    options.push({target,angle:bearing,x,y,height:hand-ground(x,y),reach,score:reach+error*.18});
+    // Prefer the first body actually under the aim line. The wider limb arc can
+    // still catch an exposed neighbour when the central line is empty.
+    const side=distance*Math.sin(error),along=distance*Math.cos(error);
+    const direct=along>=0&&side<=radius;
+    const score=direct?Math.max(0,along-Math.sqrt(Math.max(0,radius*radius-side*side))):reach+error*.34;
+    options.push({target,angle:bearing,x,y,height:hand-ground(x,y),reach,direct,score});
   }
-  options.sort((a,b)=>a.score-b.score||String(a.target.id).localeCompare(String(b.target.id)));
+  options.sort((a,b)=>Number(b.direct)-Number(a.direct)||a.score-b.score||String(a.target.id).localeCompare(String(b.target.id)));
   for(const option of options){
     const n=Math.max(1,Math.ceil(option.reach/.105));
     let clear=true;

@@ -29,7 +29,7 @@ function arena(t,count=1){
       }};
     c.canvas=Object.assign(new EventTarget(),{focus(){},setPointerCapture(){}});
     c.game=createGame({canvas:c.canvas,net,onState:h=>{c.hud=h;},buildView:()=>({
-      available:true,mode:'canvas',aim:()=>c.game.getPosition().angle,
+      available:true,mode:'canvas',aim:(x,y,p)=>c.aim?c.aim(x,y,p):c.game.getPosition().angle,
       render:s=>{c.scene=s;},effect:(...args)=>c.effects.push(args),dispose(){}
     })});
   }
@@ -153,12 +153,21 @@ test('a pavement pedestrian in front takes one contact, moves to a clear positio
     if(target)break;
   }
   assert.ok(target,`walked into range of a passerby (closest ${closest.toFixed(2)} m)`);
-  tap(a,'melee');tick(12);a.game.setMove(0,0);tick(38);
+  const before={x:target.x,y:target.y};
+  let atContact;
+  tap(a,'melee');tick(12,()=>{
+    if(!atContact&&a.events.some(e=>e.type==='npc'&&e.data.id===target.id&&e.data.damage>0))atContact={...self(a)};
+  });
+  a.game.setMove(0,0);tick(38);
   const impacts=a.events.filter(e=>e.type==='npc'&&e.data.id===target.id&&e.data.damage>0);
   assert.equal(impacts.length,1);
   const {health,damage,x,y,recoil}=impacts[0].data;
   assert.equal(health,100-damage);
   assert.ok(recoil&&Math.hypot(x-recoil.fromX,y-recoil.fromY)>.09,'NPC has a displaced endpoint');
+  assert.ok(Math.hypot(recoil.fromX-before.x,recoil.fromY-before.y)>.03,'pedestrian walked during wind-up');
+  const finalBearing=Math.atan2(recoil.fromY-atContact.y,recoil.fromX-atContact.x);
+  assert.ok(angularError(atContact.angle,finalBearing)<.002,'body faces the pedestrian at contact, after both moved');
+  assert.ok(angularError(recoil.angle,finalBearing)<.002);
   assert.equal(contactAt(x,y,{radius:.30}),null);
   assert.ok(a.hud.wantedPoints>0);
   assert.equal(a.events.some(e=>e.type==='shot'),false);
@@ -180,4 +189,68 @@ test('a knockout near a stone pier enters ragdoll without pushing the victim thr
   const point=b.game.getPosition();
   assert.equal(contactAt(point.x,point.y,{radius:.57}),null,'victim capsule remains on the open side');
   tap(b,'melee');tick(25);assert.equal(attacks(b).length,0);
+});
+
+const angularError=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
+const mouse=(client,type,x=200,y=160)=>client.canvas.dispatchEvent(Object.assign(new Event(type),{pointerId:3,pointerType:'mouse',button:0,clientX:x,clientY:y}));
+const key=(type,value)=>window.dispatchEvent(Object.assign(new Event(type,{cancelable:true}),{key:value}));
+
+test('quick melee follows the hovered opponent across the angle wrap, without turning the camera',t=>{
+  const {clients:[a,b],tick,place}=arena(t,2);
+  const heading=Math.PI-.32,aim=-Math.PI+.33,range=1.44;
+  place(a,arc,heading);place(b,{x:arc.x+range*Math.cos(aim),y:arc.y+range*Math.sin(aim)},0);tick(45);
+  a.aim=()=>aim;mouse(a,'pointermove');key('keydown','v');key('keyup','v');
+  assert.ok(angularError(attacks(a)[0].data.angle,aim)<.02);
+  tick(3);
+  assert.ok(angularError(self(a).angle,heading)>.01&&angularError(self(a).angle,heading)<.35,'body turns along the short arc during the wind-up');
+  let actual;
+  tick(19,()=>{
+    if(!actual&&hits(a).length)actual=self(a).angle;
+  });
+  assert.equal(hits(a).length,1);
+  assert.ok(angularError(actual,hits(a)[0].data.angle)<.002);
+  assert.ok(angularError(a.scene.yaw,heading)<.001);
+  const remote=b.scene.entities.find(e=>e.id===a.id);
+  assert.ok(remote&&angularError(remote.angle,actual)<.07);
+});
+
+test('dragging the melee button during the first wind-up can redirect the strike after lifting the thumb',t=>{
+  const {clients:[a],tick,place,other}=arena(t);
+  place(a,arc,0);other({x:arc.x,y:arc.y+1.37});tick(40);
+  a.game.action('melee');a.game.setAim(1,0);a.game.action('melee',false);a.game.setAim(0,0);
+  tick(18);
+  assert.equal(hits(a).length,1);assert.equal(hits(a)[0].data.target,'dummy');
+  assert.ok(angularError(self(a).angle,Math.PI/2)<.02);
+});
+
+test('a held stationary cursor updates its world bearing during a strafe and observes a shot before the next presence',t=>{
+  const {clients:[a,b],tick,place}=arena(t,2);
+  place(a,arc);place(b,{x:arc.x+4,y:arc.y+2});tick(40);
+  let aim=-.36;
+  a.aim=(x,y)=>{assert.equal(x,200);assert.equal(y,160);return aim;};
+  mouse(a,'pointerdown');a.game.setMove(1,0);tick(2);
+  const remote=b.scene.entities.find(e=>e.id===a.id);
+  assert.ok(remote.fire>0&&angularError(remote.angle,aim)<.001);
+  const atShot=a.game.getPosition();aim=-.83;
+  tick(11);
+  assert.ok(angularError(self(a).angle,aim)<.025,'the legs can move sideways while the body keeps aiming during weapon cooldown');
+  tick(8);
+  const shot=a.events.filter(e=>e.type==='shot').at(-1);
+  assert.ok(angularError(shot.data.angle,aim)<.0001);
+  assert.ok(angularError(self(a).angle,aim)<.002);
+  assert.ok(Math.hypot(self(a).x-atShot.x,self(a).y-atShot.y)>.17);
+  mouse(a,'pointerup');tick(44);
+  assert.ok(angularError(self(a).angle,Math.PI/2)<.09,'after releasing fire locomotion regains control of the heading');
+});
+
+test('shooting sideways while driving leaves the chassis heading unchanged',t=>{
+  const {clients:[a],tick}=arena(t);
+  tick(12);a.game.action('vehicle');tick(12);
+  assert.ok(self(a).isCar);
+  const heading=a.game.getPosition().angle;
+  a.aim=()=>heading+Math.PI/2;
+  mouse(a,'pointerdown');mouse(a,'pointerup');tick(8);
+  const shot=a.events.find(e=>e.type==='shot');
+  assert.ok(shot&&angularError(shot.data.angle,heading+Math.PI/2)<.0001);
+  assert.ok(angularError(a.game.getPosition().angle,heading)<.001);
 });

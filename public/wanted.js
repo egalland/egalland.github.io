@@ -17,7 +17,7 @@ function rule(label, points) {
 
 export const wantedRules = Object.freeze({
   peaceful: rule('Conduite normale ou action sans infraction', 0),
-  gunshot: rule('Coup de feu sans cible touchée', 5),
+  gunshot: rule('Coup de feu', 5),
   destroy: rule('Objet détruit', 10),
   stealVehicle: rule('Vol d’un véhicule en circulation', 24),
   stealService: rule('Vol d’un véhicule de service', 38),

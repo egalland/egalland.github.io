@@ -50,6 +50,10 @@
 #openAvatar{appearance:none;padding:0;cursor:pointer}.portrait:hover{border-color:#ead1a0}
 #healHud{padding:0;display:grid;place-items:center;color:inherit;font-size:inherit}#healHud:disabled{cursor:default}
 #healthMeter[data-life="critical"]>div{background:#ff626b}#healthMeter[data-life="recovering"]>div{background:#9ce2b2}
+.bleed-status{display:flex;align-items:center;gap:5px;margin:3px 0 1px;color:#ffb4bb;font:650 10px/1.15 var(--ui);white-space:nowrap}
+.bleed-status[hidden]{display:none}.bleed-status::before{content:"";width:7px;height:9px;margin-left:2px;border-radius:75% 35% 65% 45%;background:repeating-linear-gradient(140deg,#e0607a 0 2px,#99344f 2px 3px);transform:rotate(17deg)}
+.bleed-status[data-state="closed"]{color:#a9dfce}.bleed-status[data-state="closed"]::before{width:8px;height:4px;background:none;border:solid currentColor;border-width:0 0 1.5px 1.5px;border-radius:0;transform:rotate(-45deg)}
+@media(max-width:670px){.bleed-status{font-size:9px;margin-top:2px}}
 .ko-notice{position:absolute;z-index:4;left:50%;top:47%;transform:translate(-50%,-50%);text-align:center;display:grid;gap:3px;padding:14px 24px;color:#fff0d8;background:#312935ed;border:1px solid #c9938f;border-radius:7px;pointer-events:none}.ko-notice[hidden]{display:none}.ko-notice strong{font:italic 400 38px/1 var(--display)}.ko-notice span{font-size:14px}
 @media(pointer:coarse),(max-width:670px){
   .touch-actions{inset:0;display:block;pointer-events:none;--pad-right:18px;--pad-bottom:27px;--fire-size:61px;--small-size:44px;--button-gap:7px}
