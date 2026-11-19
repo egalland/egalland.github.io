@@ -1,103 +1,64 @@
-# Projets d’Emmanuel
+# Sudoku des saisons — monde 3D vivant
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur permet aussi de parcourir les vues Points et [Chrome](https://egalland.github.io/?theme=chrome). Elles partagent les textes et liens, tout en conservant leur propre structure visuelle. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+Jeu en français : plateau de sudoku modélisé dans la scène WebGL temps réel. Choisir une saison et une difficulté, créer une partie ou reprendre la sauvegarde.
 
-## Organisation
+## Vraie 3D pendant la partie
 
-- `index.html` : présentation Curseur et mini-démo Kikalmo.
-- `portfolio-assets/themes/construction.mjs` : curseurs animés, tracé des cadres droits, écriture puis transport avec inertie. Les éléments terminés restent stables.
-- `portfolio-assets/themes/choreography.mjs` : placement et durée tirés au hasard, inclinaison issue du mouvement, contournements ponctuels et deux incidents au maximum (chute et retournement 3D).
-- `portfolio-assets/portfolio.mjs` : ouverture de Curseur par défaut et passage vers Points ou Chrome au projet en cours.
-- `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 17 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
-- `points/assets/` : ressources et polices originales conservées sans altération.
-- `portfolio/content.json` : source commune des textes, projets et liens. `scripts/build-portfolio.mjs` génère les deux présentations depuis `portfolio/page.template.html` et `portfolio/points.template.html`.
-- `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
-- Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
-- Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.
-- `arrival/` : introduction du calendrier ; `tests/` : contrôles du calendrier et des routes.
-- `elec/` : configurateur pédagogique de tableau électrique en 3D ([démo](https://egalland.github.io/elec/), [sources et historique](https://github.com/egalland/elec)).
-- `redim/` et `livre/` : outils autonomes ; `kikalmo/` : accès au jeu multijoueur hébergé ; `sans-voyelles/` : ancienne adresse conservée.
+Le jeu utilise Three.js local (MIT) et des modèles 3D procéduraux construits dans `dist/models.js`. Ce sont des maillages volumétriques, éclairés et ombrés, avec articulations pour les personnages. Les modèles réagissent aux déplacements de caméra. Aucun diorama PNG n’est utilisé pendant la partie. Les quatre PNG précédents restent uniquement des illustrations des choix de saison dans le lobby.
 
-## Applications
+Quatre maps : printemps, plage estivale, Halloween et hiver. Chacune possède quatre personnages avec tête, bras, mains, jambes/chaussures ou corps de fantôme ; marche, salutation, livraison d’un chiffre, réaction aux erreurs et danse. Environnement avec arbres, cabane, porte, banc, mare et canard ; fleurs, parasols, citrouilles, lanternes ou bonshommes de neige selon la saison.
 
-| Jour | Application | Accès | Hébergement | Sources |
-|---|---|---|---|---|
-| 01 | One More Thing | [/one-more-thing/](https://egalland.github.io/one-more-thing/) | GitHub Pages | [egalland/one-more-thing](https://github.com/egalland/one-more-thing) |
-| 02 | Le Reliquaire | [https://inktober-2026.emmanuel-galland117.chatgpt.site/reliquaire/](https://inktober-2026.emmanuel-galland117.chatgpt.site/reliquaire/) | Serveur externe | [egalland/le-reliquaire](https://github.com/egalland/le-reliquaire) |
-| 03 | Micro · Habitudes | [/micro-habitudes/](https://egalland.github.io/micro-habitudes/) | GitHub Pages | [egalland/micro-habitudes](https://github.com/egalland/micro-habitudes) |
-| 04 | Cactocalypse | [/cactocalypse/](https://egalland.github.io/cactocalypse/) | GitHub Pages | [egalland/cactocalypse](https://github.com/egalland/cactocalypse) |
-| 05 | Ghost Slap | [/ghost-slap/](https://egalland.github.io/ghost-slap/) | GitHub Pages | [egalland/ghost-slap](https://github.com/egalland/ghost-slap) |
-| 06 | Le garde du pont | [/le-garde-du-pont/](https://egalland.github.io/le-garde-du-pont/) | GitHub Pages | [egalland/le-garde-du-pont](https://github.com/egalland/le-garde-du-pont) |
-| 07 | Panique | [/panique/](https://egalland.github.io/panique/) | GitHub Pages | [egalland/panique](https://github.com/egalland/panique) |
-| 08 | Carnet du compost | [/carnet-du-compost/](https://egalland.github.io/carnet-du-compost/) | GitHub Pages | [egalland/carnet-du-compost](https://github.com/egalland/carnet-du-compost) |
-| 09 | ASTRE BRUT | [/astre-brut/](https://egalland.github.io/astre-brut/) | GitHub Pages | [egalland/astre-brut](https://github.com/egalland/astre-brut) |
-| 10 | Archives du Voile | [/archives-du-voile/](https://egalland.github.io/archives-du-voile/) | GitHub Pages | [egalland/archives-du-voile](https://github.com/egalland/archives-du-voile) |
-| 12 | La fronde de Cthulhu | [/la-fronde-de-cthulhu/](https://egalland.github.io/la-fronde-de-cthulhu/) | GitHub Pages | [egalland/la-fronde-de-cthulhu](https://github.com/egalland/la-fronde-de-cthulhu) |
-| 13 | Priorités fragiles | [/priorites-fragiles/](https://egalland.github.io/priorites-fragiles/) | GitHub Pages | [egalland/priorites-fragiles](https://github.com/egalland/priorites-fragiles) |
-| 14 | Dames de porcelaine | [/dames-de-porcelaine/](https://egalland.github.io/dames-de-porcelaine/) | Serveur externe | [egalland/dames-de-porcelaine](https://github.com/egalland/dames-de-porcelaine) |
-| 15 | Petites victoires | [/petites-victoires/](https://egalland.github.io/petites-victoires/) | GitHub Pages | [egalland/petites-victoires](https://github.com/egalland/petites-victoires) |
-| 16 | Pas maladroits | [/pas-maladroits/](https://egalland.github.io/pas-maladroits/) | GitHub Pages | [egalland/pas-maladroits](https://github.com/egalland/pas-maladroits) |
-| 19 | Labyrinthe mouvant | [/labyrinthe-mouvant/](https://egalland.github.io/labyrinthe-mouvant/) | GitHub Pages | [egalland/labyrinthe-mouvant](https://github.com/egalland/labyrinthe-mouvant) |
-| 21 | Atelier Héros | [/atelier-heros/](https://egalland.github.io/atelier-heros/) | GitHub Pages | [egalland/atelier-heros](https://github.com/egalland/atelier-heros) |
-| 22 | Innsmouth — Le port oublié | [/phare/](https://egalland.github.io/phare/) | GitHub Pages | [egalland/egalland.github.io](https://github.com/egalland/egalland.github.io) |
+La grille visible est un objet de scène : cadre en volume, 81 dalles, séparations 3×3, chiffres et notes appliqués aux surfaces et pieds posés au sol. Le plateau conserve une orientation frontale pour la lisibilité. Les clics/touchers sur ses maillages sélectionnent les cases par raycasting. Une copie HTML invisible conserve les commandes clavier et l’accessibilité, et sert de solution de secours pendant le chargement ou si WebGL échoue.
 
-## Sauvegardes et hébergement
+## Évolution durant la partie
 
-Atelier Héros et Priorités fragiles fonctionnent sur GitHub Pages avec une sauvegarde locale. Pour récupérer les données de leur ancienne adresse ChatGPT, exporter puis importer le fichier JSON dans la nouvelle version. Aucun transfert automatique entre origines.
+Les bonnes réponses font apparaître progressivement de nouveaux objets. Chaque ligne, colonne ou carré 3×3 achevé déclenche une animation collective. La bonne réponse lance une livraison de chiffre ; combo et victoire font danser la brigade et produisent des particules 3D. Erreur et indice déclenchent des réactions distinctes.
 
-Le Reliquaire, Dames de porcelaine et Kikalmo utilisent un serveur pour leurs données ou salons partagés. Une page GitHub qui redirige vers eux ne constitue pas un hébergement autonome du jeu.
+La map se réinitialise pour une nouvelle partie. La sauvegarde restaure la grille et son niveau d’avancement ; aucun parc ne s’accumule entre les parties.
 
-## Statistiques
+## Interactions directes
 
-Les durées et tarifs sont dans `inktober-2026/calendar.json`. Les estimations complétées le 23 octobre sont justifiées dans `inktober-2026/metrics-sources.json`. Les coûts sont des valorisations indicatives à 35 €/h et 40 €/h, pas des factures ou une économie mesurée. Les deux nouvelles estimations Atelier Héros et Innsmouth ont une confiance faible.
+Cliquer sur la cabane ouvre sa porte ; arbre secoué, fleurs arrosées, parasol tournant, citrouille qui rebondit, lanterne allumée, boule de neige, canard qui barbote, salutation des personnages. Bouton « Interagir avec le décor » pour une interaction accessible au clavier. Chaque interaction gèle le compte à rebours du combo pendant trois secondes. Glisser explore le décor dans un angle limité ; boutons +/− et molette zooment le décor. La grille conserve son cadrage.
 
-## Vérification
+Pause : le temps du jeu et la scène sont suspendus. L’onglet masqué suspend la partie. Réduction des animations, sons facultatifs. WebGL requis pour la scène ; message explicite en cas d’indisponibilité, grille jouable.
 
-```sh
-node tests/check-calendar.mjs
-node tests/check-routes.mjs
-```
+## Sudoku
 
-Les dépôts sources conservent leur historique. Les archives `source-history/atelier-heros.bundle` et `source-history/priorites-fragiles.bundle` contiennent aussi tous leurs commits, auteurs et dates, récupérables avec `git clone <archive.bundle>`. La publication du contenu Pages passe par un commit d’intégration via la connexion GitHub ; le push Git natif n’était pas authentifié.
+Trois difficultés, génération à solution unique. 90 secondes par défaut pour enchaîner, options 120/180 secondes ou sans limite. 100 points × multiplicateur (plafond ×10). Erreur ou indice interrompt la série. Trois indices. Sauvegarde locale, sans synchronisation entre appareils.
 
-## Historique du portfolio
+## Validation
 
-Les 14 commits de la démo Chrome sont conservés dans `source-history/portfolio-chrome.bundle`. Pour restaurer le dépôt de la démo, exécuter `git clone source-history/portfolio-chrome.bundle chrome-original`. La version intégrée à GitHub Pages est servie depuis `chrome/` et lit les données communes du portfolio.
+Moteur : 36 grilles uniques testées lors de sa création. Régression v4 : création, sélection map, 81 boutons, notes, score, combos, erreurs, indices, pause, délai, suspension pendant une interaction, zen, reprise, victoire et nouvelle partie.
 
-Les huit commits disponibles du portfolio d’origine sont conservés exactement dans `source-history/portfolio-cursors.bundle`, avec leurs auteurs, dates, parents et identifiants Git. Le détail et les commandes de restauration figurent dans `source-history/portfolio-cursors.md`. La publication Pages est un commit d’intégration via la connexion GitHub, car le push Git natif n’est pas authentifié. Aucun commit antérieur n’a été reconstruit ou inventé.
+Modèles : maillages/sommets finis, personnages articulés, groupes interactifs sur les quatre maps. Tests de scène utilisant les vrais objets Three.js avec rendu GPU remplacé par un stub : matrices, mouvement, progression, livraison, particules, raycasting direct sur la cabane, pause et cadrage mobile. Les modèles ont été regroupés par instanciation pour limiter les appels de dessin. Contrôle de syntaxe, IDs DOM et imports locaux.
+
+Limite : ni le GPU WebGL ni le rendu final dans un navigateur n’ont pu être vérifiés dans cet environnement, faute du navigateur de test requis par Sites. Le rendu est donc à contrôler sur les appareils de jeu réels.
+
+## Dépendances et lancement
+
+`dist/vendor/three.module.js`, `three.core.js` et `THREE-LICENSE.txt` sont embarqués. Aucun CDN utilisé. Servir `dist/` via HTTP (les modules ES ne sont pas pris en charge en ouverture `file://` selon le navigateur).
 
 
-## Cartographie Market Plus
+## Correctif mobile
 
-La carte réelle des composants et de leurs dépendances est disponible à part sur [/map/](https://egalland.github.io/map/) : 259 composants, 925 liaisons, filtres par famille, recherche et fiches de dépendances. Elle reprend la vue « Explorer le code » de Point marché, avec son moteur Three.js et une projection 2D de secours. Les références et les quatre étapes de source disponibles sont conservées dans `map/SOURCE.md` et `map/source-history.patch`.
+Feuille de style consolidée pour supprimer les anciennes règles contradictoires. Grille 9×9 avec lignes de hauteur contrainte, barre de chiffres/notes/indices fixe en bas sur mobile, marges de sécurité, restauration du cadrage après création/reprise. Le décor autorise le défilement vertical ; ses positions dépendent désormais des dimensions réelles de la grille, au lieu de coordonnées fixes prévues pour une page de plus de 1000 pixels.
 
-L’accueil conserve la présentation de Market Plus et son aperçu schématique, sans carte embarquée ni lien vers l’outil interne.
+La grille et le menu démarrent avant le téléchargement/initialisation de Three.js. Les choix du menu ne construisent plus de scène 3D ; celle-ci est créée une seule fois au lancement de la partie. Sur mobile : rendu plafonné à environ 30 images/s, ratio de pixels limité et ombres dynamiques désactivées. Une erreur de rendu 3D laisse la grille utilisable. Migration défensive des anciennes sauvegardes.
 
-## Thèmes du portfolio
+Vérification : parcours complet sans charger le module WebGL, restauration du scroll, migration de sauvegarde et calculs de scène sur cinq dimensions mobiles. Le rendu dans un navigateur et sur appareil réel reste non vérifié dans cet environnement.
 
-Pour changer le contenu, modifier `portfolio/content.json`, puis exécuter :
 
-```sh
-node scripts/build-portfolio.mjs
-node --test tests/portfolio-*.test.mjs
-```
+## Plateau intégré à la scène
 
-Le switch mémorise le choix et retrouve le projet consulté. Les liens `?theme=points` ouvrent la scène Points ; `/curseurs/` conserve son rôle de raccourci. Les vues sont des documents distincts : elles partagent le contenu, pas la grille de mise en page.
+`dist/board3d.js` construit le plateau, ses 81 maillages de cases, matériaux de chiffres/notes, séparations et supports. Le plateau projette des ombres et est rendu avec les personnages et les accessoires par le moteur 3D. Le cadrage garde la grille droite et adapte sa taille aux dimensions disponibles sur mobile. Bonnes réponses et indices soulèvent brièvement les cases ; les erreurs les secouent. Les effets 3D démarrent à la position de la case concernée.
 
-Curseurs commence par une zone vide. Les curseurs animés arrivent, tracent un cadre droit progressivement, écrivent le contenu, puis transportent le bloc. L’inclinaison apparaît pendant le transport et se résorbe après un dépassement amorti. Certains trajets contournent un panneau voisin pour donner l’impression d’un chantier encombré. Une ligne au maximum glisse et se fait rattraper ; un panneau au maximum est construit à l’envers puis retourné avec perspective. Le placement et le geste varient à chaque chargement. Le défilement active les prochaines zones sans reconstruire ni incliner les éléments terminés. Les travaux hors écran sont suspendus et repris à la même étape, sans révélation instantanée au retour ni à la remontée. Le focus sur un contrôle de saisie révèle immédiatement le contenu nécessaire ; une ancre vers une carte projet ne court-circuite pas sa construction.
+Vérification : sélection par raycasting des 81 cases dans les quatre saisons et cinq dimensions mobiles ; chiffres, notes, teintes d’indices et retour des cases à leur position initiale après animation ; régression du jeu et du démarrage indépendant du WebGL. La vérification utilise les vrais objets/matrices Three.js avec rendu GPU simulé ; le rendu WebGL sur navigateur/appareil réel reste à vérifier.
 
-Points reprend la scène fixe d’avant Glitch : la molette, le tactile ou les flèches sélectionnent un tableau ; les mêmes particules se réorganisent en temps réel en sphère, lettrage, personnage, interfaces et objets. Les descriptions et liens proviennent de la même source que Curseurs. Les navigations utilisent des popovers natifs sans fond de modale : menu contextuel compact ancré au clic et poignées de sélection au survol pour Curseurs ; constellation, orbites et poussière de points pour Points. Échap et le clic extérieur ferment les outils ; le reste de la page reste utilisable.
 
-La pause mémorisée et les mouvements réduits sont respectés. Les animations s’arrêtent quand l’onglet est masqué. Sans JavaScript, les contenus et liens restent lisibles.
+## Comportements autonomes
 
-Aucun sous-site n’est déplacé : `/inktober/`, `/inktober-2026/`, `/livre/`, `/redim/`, `/elec/`, `/map/` et les autres dossiers conservent leurs chemins. Market Plus ouvre uniquement la cartographie publique.
+`dist/behaviour.js` contient une simulation indépendante du rendu : grille de navigation, A* à huit directions sans traversée des coins bloqués, lissage de chemin avec contrôle de visibilité, sélection d’activités par utilité, besoins (énergie, curiosité, travail), préférences individuelles, mémoire des derniers lieux, réservation exclusive des équipements, évitement local entre personnages et recalcul après blocage. Les personnages suivent les points du chemin à vitesse bornée ; ils ne sont plus interpolés sur une boucle rectangulaire imposée.
 
-Les huit commits du modèle Points sont conservés dans `source-history/portfolio-points.bundle.b64.*`, avec leurs auteurs, dates, identifiants et parents. Leur intégrité reste testée. La restauration ajoute un commit à l’historique existant.
+Les plantes se dessèchent et peuvent être arrosées par un personnage équipé d’un arrosoir 3D. Les habitants inspectent les lieux, entretiennent les équipements, font une pause et répondent aux demandes prioritaires du sudoku. Les bonnes réponses déclenchent une mission de livraison ; indices, erreurs et combos changent leurs priorités. Cliquer sur un objet déclenche sa réaction et peut attirer un habitant. Les nouveaux objets apparus pendant la partie modifient les possibilités d’activité et la navigation. Le bouton « Chemins » affiche les trajets A* dans la scène.
 
-Validation : tests de contenu partagé, routes, géométries, continuité des trajectoires aléatoires et cycle complet arrivée → tracé → écriture → transport, suspension hors écran et retour au repos des incidents. Contrôle navigateur de la scène Points, des changements de tableau, des deux outils de navigation et de la bascule vers Curseurs. Aucun téléphone physique testé.
-
-### Sélection du portfolio
-
-L’accueil présente quatre domaines de pratique. La rubrique Savoir-faire relie chaque geste à un projet. Pills, plateforme de critique culturelle, figure dans les deux vues avec [son dépôt public](https://github.com/egalland/Pills).
-
-L’Atelier contient uniquement Atelier du livre, Redim et Atlas. Four en route et Biscuit du jour sont retirés de la sélection, sans suppression de leurs sous-sites. Inktober dispose d’une section dédiée et de sa propre entrée dans les navigations Curseurs et Points. Les constantes de navigation Points correspondent aux 17 tableaux générés.
+Le cadrage mobile réserve davantage d’espace autour du plateau aux personnages et aux objets. Validation : simulation déterministe de 200 secondes avec quatre agents, activités variées achevées, réservations exclusives, aucun franchissement d’obstacle, livraison prioritaire, puis régression sur les quatre maps, le plateau et cinq formats mobiles. Le GPU/rendu final n’a pas été vérifié dans un navigateur réel dans cet environnement.

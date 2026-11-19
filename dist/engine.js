@@ -1,0 +1,7 @@
+(function(root){
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function candidates(a,i){let r=Math.floor(i/9),c=i%9,s=new Set();for(let k=0;k<9;k++){s.add(a[r*9+k]);s.add(a[k*9+c]);s.add(a[(Math.floor(r/3)*3+Math.floor(k/3))*9+Math.floor(c/3)*3+k%3])}return [1,2,3,4,5,6,7,8,9].filter(x=>!s.has(x))}
+function countSolutions(input,limit=2){let a=input.slice(),count=0;function visit(){let best=-1,opts=[];for(let i=0;i<81;i++)if(!a[i]){let p=candidates(a,i);if(!p.length)return;if(best===-1||p.length<opts.length){best=i;opts=p;if(p.length===1)break}}if(best===-1){count++;return}for(let n of opts){a[best]=n;visit();if(count>=limit)break}a[best]=0}visit();return count}
+function generate(level){let rows=[],cols=[],nums=shuffle([1,2,3,4,5,6,7,8,9]);for(let b of shuffle([0,1,2]))for(let x of shuffle([0,1,2]))rows.push(b*3+x);for(let b of shuffle([0,1,2]))for(let x of shuffle([0,1,2]))cols.push(b*3+x);let solution=rows.flatMap(r=>cols.map(c=>nums[(r*3+Math.floor(r/3)+c)%9])),puzzle=solution.slice(),target={easy:40,medium:33,hard:27}[level]||40;for(let i of shuffle(Array.from({length:81},(_,i)=>i))){if(puzzle.filter(Boolean).length<=target)break;let n=puzzle[i];puzzle[i]=0;if(countSolutions(puzzle)!==1)puzzle[i]=n}return{solution,puzzle}}
+const api={generate,candidates,countSolutions};if(typeof module!=='undefined')module.exports=api;else root.Sudoku=api;
+})(globalThis);
