@@ -2,11 +2,12 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { handleApi } from '../worker/game-api.js';
+import { handleGeo } from '../worker/geo-api.js';
 import { localDatabase } from './local-db.mjs';
 
 const env={DB:localDatabase()};
 const contentType={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
-  '.js':'text/javascript; charset=utf-8','.png':'image/png','.woff2':'font/woff2','.woff':'font/woff','.ico':'image/x-icon'};
+  '.js':'text/javascript; charset=utf-8','.png':'image/png','.woff2':'font/woff2','.woff':'font/woff','.ico':'image/x-icon','.gz':'application/octet-stream'};
 const publicDir=new URL('../public/',import.meta.url);
 const args=process.argv.slice(2);
 const portFlag=args.indexOf('--port');
@@ -26,7 +27,8 @@ const server=createServer(async(req,res)=>{
       }
       const init={method:req.method,headers:req.headers};
       if (req.method!=='GET' && req.method!=='HEAD') init.body=Buffer.concat(chunks);
-      const result=await handleApi(new Request(url,init),env);
+      const request=new Request(url,init);
+      const result=url.pathname==='/api/geo/ign'?await handleGeo(request):await handleApi(request,env);
       res.writeHead(result.status,Object.fromEntries(result.headers));
       res.end(Buffer.from(await result.arrayBuffer()));return;
     }

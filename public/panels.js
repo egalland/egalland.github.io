@@ -1,5 +1,8 @@
 import {drawItemIcon, drawAvatar} from './sprites.js';
 import {normalizeRoom} from './net.js';
+import {metadata} from './paris-data.js';
+import {coreDestinations} from './paris-world.js';
+import {mountAtlas,sectorURL,historicURL} from './grand-paris.js';
 
 const weapons = [
   {id:'fist', name:'Poings', hint:'Corps à corps'},
@@ -19,7 +22,10 @@ const emotes = [
 const shortcuts = [
   ['Se déplacer', ['ZQSD', 'WASD', '↑↓←→']],
   ['Courir', ['Maj']],
-  ['Viser et tirer', ['Souris', 'Clic']],
+  ['Tirer', ['Clic gauche', 'Espace']],
+  ['Tourner la caméra', ['Glisser clic droit']],
+  ['Recentrer la caméra', ['C']],
+  ['Recharger', ['R']],
   ['Entrer ou sortir d’un véhicule', ['E']],
   ['Roue d’armes', ['Tab']],
   ['Émotes', ['B']],
@@ -72,8 +78,13 @@ function weaponCanvas(id,size) {
   return c;
 }
 function getInvite(room) {
-  const url=new URL(location.pathname,location.origin);
+  const url=new URL(location.pathname,location.origin),original=new URL(location.href);
   url.searchParams.set('salon',room);
+  if(metadata.sector){
+    url.searchParams.set('lon',Number(metadata.sector.lon).toFixed(5));
+    url.searchParams.set('lat',Number(metadata.sector.lat).toFixed(5));
+    url.searchParams.set('lieu',metadata.sector.name||'Paris');
+  }else if(original.searchParams.get('halte'))url.searchParams.set('halte',original.searchParams.get('halte'));
   return url.href;
 }
 
@@ -189,19 +200,56 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     sheet.append(wheelStage,actions,tip);
   }
   function mapPanel() {
-    const sheet=frame('map','Exploration','Plan de la ville');
+    const sheet=frame('map','Plan de ville',metadata.sector?.name||'Paris et petite couronne');
     const pad=node('div','mc-body');
+    const nav=node('div','gp-mode');nav.setAttribute('role','group');nav.setAttribute('aria-label','Échelle du plan');
+    const localButton=button('Plan local','',()=>switchMap('local'));
+    const regionButton=button('Grand Paris','',()=>switchMap('region'));
+    nav.append(localButton,regionButton);pad.append(nav);
+    const detail=node('div','gp-local'),regional=node('div','gp-regional');
     const map=node('div','mc-map-box');
-    const canvas=node('canvas','mc-map-canvas');canvas.width=720;canvas.height=538;
+    const canvas=node('canvas','mc-map-canvas');canvas.width=840;canvas.height=448;
     canvas.setAttribute('aria-label','Plan de la ville avec la position des joueurs et des véhicules');
-    map.append(canvas);pad.append(map);
+    map.append(canvas);detail.append(map);
     const legends=node('div','mc-map-legends');
     [['mc-me','Vous'],['mc-other','Autres joueurs'],['mc-car','Véhicules']].forEach(([c,value])=>{
       const line=node('span','mc-map-legend');line.append(node('i',c),node('span','',value));legends.append(line);
     });
-    pad.append(legends);sheet.append(pad);
-    renderCurrent=()=>game.drawFullMap?.(canvas);
-    renderCurrent();interval=setInterval(()=>renderCurrent?.(),200);
+    const travel=node('div','mc-travel');
+    const label=fieldLabel('Voyage rapide sur l’axe historique','mc-travel-target');
+    const row=node('form','mc-travel-row');
+    const target=node('select','mc-input');target.id='mc-travel-target';
+    for(const destination of coreDestinations){
+      const option=node('option','',destination.label);
+      option.value=destination.key;target.append(option);
+    }
+    const go=node('button','mc-primary','S’y rendre');go.type='submit';
+    row.addEventListener('submit',e=>{
+      e.preventDefault();
+      if(metadata.sector){location.assign(historicURL(location.href,net.room,target.value));return;}
+      if(game.travel(target.value)!==false){close();notify?.('Arrivée · '+target.selectedOptions[0].textContent);}
+    });
+    row.append(target,go);travel.append(label,row);
+    const credit=node('p','mc-map-credit');
+    const source=node('a','','IGN · BD TOPO®');source.href='https://cartes.gouv.fr/rechercher-une-donnee/dataset/IGNF_BD-TOPO';source.target='_blank';source.rel='noopener';
+    credit.append(source,document.createTextNode(' · Licence Ouverte 2.0. Emprises et voirie réelles, façades réinterprétées en laine.'));
+    detail.append(legends,travel,credit);pad.append(detail,regional);sheet.append(pad);
+    let built=false,region=false;
+    function switchMap(mode){
+      region=mode==='region';detail.hidden=region;regional.hidden=!region;
+      localButton.setAttribute('aria-pressed',String(!region));regionButton.setAttribute('aria-pressed',String(region));
+      if(region&&!built){
+        mountAtlas(regional,{position:game.getPosition?.(),visit:point=>{
+          const url=sectorURL(location.href,net.room,point.lon,point.lat,point.name);
+          if(url)location.assign(url);
+        }});
+        built=true;
+      }
+      if(!region)game.drawFullMap?.(canvas);
+    }
+    switchMap('local');
+    renderCurrent=()=>{if(!region)game.drawFullMap?.(canvas);};
+    interval=setInterval(()=>renderCurrent?.(),300);
   }
   function keyRows() {
     const list=node('dl','mc-keys');
@@ -215,7 +263,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const sheet=frame('help','Commandes','Comment jouer');
     const body=node('div','mc-body');
     body.append(keyRows());
-    const mobile=node('p','mc-form-note','Sur écran tactile, déplace-toi avec le joystick à gauche. Les boutons à droite permettent de tirer et d’interagir.');
+    const mobile=node('p','mc-form-note','Sur mobile, pousse le joystick à fond pour courir. Glisse sur le décor pour tourner la caméra. Au volant, pousse vers le haut pour accélérer et vers le bas pour freiner ou reculer.');
     body.append(mobile);
     sheet.append(body);
   }
@@ -233,11 +281,15 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     toggle.setAttribute('role','switch');toggle.setAttribute('aria-label','Effets sonores');
     function syncToggle() {toggle.setAttribute('aria-checked',String(sound()));toggle.replaceChildren(node('i'),node('span','',sound()?'Activés':'Coupés'));}
     syncToggle();row.append(soundLabel,toggle);
+    const display=node('div','mc-option-row');
+    const info=node('span','mc-option-label','Rendu actif');
+    const graphics=state().graphics;
+    display.append(info,node('span','mc-render-mode',graphics==='canvas'?'Perspective légère':graphics==='webgl'?'3D WebGL':'Initialisation'));
     const confirm=node('button','mc-primary','Enregistrer');confirm.type='submit';
     const actions=node('div','mc-form-actions');
     const controls=button('Commandes','mc-secondary',()=>open('help'));
     controls.innerHTML=icon('help')+'<span>Commandes</span>';
-    actions.append(controls,confirm);form.append(group,row,actions);
+    actions.append(controls,confirm);form.append(group,row,display,actions);
     form.addEventListener('submit',e=>{
       e.preventDefault();const name=username.value.trim();
       if(!name){username.setCustomValidity('Entre un nom de joueur.');username.reportValidity();return;}

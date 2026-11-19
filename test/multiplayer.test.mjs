@@ -97,3 +97,14 @@ test('A full room enforces its cap, permits a reconnect and reclaims an expired 
     assert.equal(players.some(p=>p.id===sessions[0].id),false);
   } finally {DB.close();}
 });
+
+test('Paris rooms and old top-down rooms use separate coordinate spaces',async()=>{
+  const DB=localDatabase();
+  const enter=(path,name)=>handleApi(new Request('https://example.test'+path,{method:'POST',body:JSON.stringify({
+    room:'public',name,id:crypto.randomUUID(),token:crypto.randomUUID(),state:{x:10,y:20}
+  })}),{DB}).then(r=>r.json());
+  assert.equal((await enter('/api/join','Classic')).players.length,1);
+  assert.deepEqual((await enter('/api/paris/join','Paris')).players.map(p=>p.name),['Paris']);
+  const second=await enter('/api/paris/join','Neuilly');
+  assert.deepEqual(second.players.map(p=>p.name).sort(),['Neuilly','Paris']);
+});

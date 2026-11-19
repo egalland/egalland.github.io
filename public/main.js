@@ -1,7 +1,9 @@
+import {attachSectorTravel} from './sector-travel.js';
 import {createGame} from './game.js';
 import {createNet} from './net.js';
 import {createPanels} from './panels.js';
-import {drawAvatar,drawItemIcon} from './sprites.js';
+import {drawItemIcon} from './sprites.js';
+import {portrait} from './portrait.js';
 import {drawBrand} from './brand.js';
 import {renderIcons,icon} from './icons.js';
 
@@ -15,11 +17,11 @@ write('name',name);
 const queryRoom=new URL(location.href).searchParams.get('salon')||'public';
 const weapons=[['fist','Poings'],['pistol','Pistolet'],['smg','Mitraillette'],['shotgun','Fusil à pompe'],['yarn','Pelote']];
 const city=$('#city'),chat=$('#chat'),entry=$('#chatEntry');
-let settingsSound=read('sound','false')==='true',panels=null,game=null, state={weapon:'pistol',ammo:12,health:100,wanted:0,district:'Les Filatures'}, timer=0;
+let settingsSound=read('sound','false')==='true',panels=null,game=null, state={weapon:'pistol',ammo:12,health:100,wanted:0,district:'Place de l’Étoile'}, timer=0;
 const controlsAreTouch=()=>matchMedia('(pointer:coarse),(max-width:670px)').matches;
 renderIcons();
 drawBrand($('#brandMark').getContext('2d'));
-drawAvatar($('#portrait').getContext('2d'),0,0,48,'fox');
+portrait($('#portrait').getContext('2d'),96);
 function appendChat({name,text,system=false}){
   const log=$('#chatLog'),p=document.createElement('p');
   if(system){p.className='system';const dot=document.createElement('b');dot.textContent='◆';p.append(dot,document.createTextNode(text));}
@@ -55,6 +57,8 @@ weapons.forEach(([id,label],i)=>{
 function onState(next){
   state={...state,...next};
   $('#district').textContent=state.district;
+  const street=state.street||'';
+  $('#street').textContent=street===state.district?'':street;
   $('#driveHud').hidden=!state.inVehicle;
   $('#carSpeed').textContent=(state.speed||0)+' km/h';
   const ride=$('#ride');
@@ -87,13 +91,17 @@ window.addEventListener('keydown',e=>{
   const number=Number((/^(?:Digit|Numpad)([1-5])$/.exec(e.code)||[])[1]||0);if(number){e.preventDefault();selectWeapon(weapons[number-1][0]);}
 },true);
 window.addEventListener('keyup',e=>{if(panels.handleKey(e,'up'))e.stopImmediatePropagation();},true);
-const stick=$('#stick');let finger=null;
+const stick=$('#stick');let finger=null, stickSprint=false;
 function moveStick(e){const rect=stick.getBoundingClientRect(),radius=rect.width*.36,dx=e.clientX-rect.left-rect.width/2,dy=e.clientY-rect.top-rect.height/2;
- const length=Math.hypot(dx,dy);const factor=length>radius?radius/length:1;stick.querySelector('span').style.transform='translate('+dx*factor+'px,'+dy*factor+'px)';game.setMove(dx*factor/radius,dy*factor/radius);}
+ const length=Math.hypot(dx,dy);const factor=length>radius?radius/length:1;stick.querySelector('span').style.transform='translate('+dx*factor+'px,'+dy*factor+'px)';game.setMove(dx*factor/radius,dy*factor/radius);
+ const sprint=!state.inVehicle && length>radius*1.08;
+ if(sprint!==stickSprint){stickSprint=sprint;game.action('sprint',sprint);}
+}
 stick.onpointerdown=e=>{e.preventDefault();finger=e.pointerId;stick.setPointerCapture(finger);moveStick(e);};
 stick.onpointermove=e=>{if(e.pointerId===finger)moveStick(e);};
-function stopStick(){finger=null;stick.querySelector('span').style.transform='';game.setMove(0,0);}
+function stopStick(){if(stickSprint){stickSprint=false;game.action('sprint',false);}finger=null;stick.querySelector('span').style.transform='';game.setMove(0,0);}
 stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=stopStick;
+$('#recenter').onpointerdown=e=>{e.preventDefault();game.action('recenter');};
 $('#ride').onpointerdown=e=>{e.preventDefault();game.action('vehicle');};
 const fire=$('#fire');let aimStart=null;
 fire.onpointerdown=e=>{e.preventDefault();fire.setPointerCapture(e.pointerId);aimStart=[e.clientX,e.clientY];game.action('fire',true);};
@@ -102,4 +110,6 @@ const releaseFire=()=>{aimStart=null;game.action('fire',false);game.setAim(0,0);
 fire.onpointerup=fire.onpointercancel=fire.onlostpointercapture=releaseFire;
 window.addEventListener('blur',()=>{stopStick();releaseFire();});
 city.addEventListener('pointerdown',()=>{if(controlsAreTouch())chat.classList.remove('mobile-open');});
+attachSectorTravel(game,net,$('#sectorEdge'));
 net.start();
+$('#loadScene').hidden=true;

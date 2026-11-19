@@ -185,7 +185,9 @@ async function sync(db,b,now) {
   return json({now,players:roster(result[membersIndex].results),events:feed,denied,cursor:feed.at(-1)?.seq??cursor});
 }
 export async function handleApi(request, env) {
-  const path=new URL(request.url).pathname;
+  const pathname=new URL(request.url).pathname;
+  const paris=pathname.startsWith('/api/paris/');
+  const path=paris ? pathname.replace('/api/paris/','/api/') : pathname;
   if (!['/api/join','/api/sync','/api/leave'].includes(path)) return json({error:'route'},404);
   if (request.method!=='POST') return json({error:'method'},405);
   if (!env.DB) return json({error:'storage'},503);
@@ -195,6 +197,8 @@ export async function handleApi(request, env) {
   try {b=JSON.parse(raw);} catch {return json({error:'json'},400);}
   if (!b || typeof b.room!=='string' || !/^[a-z0-9][a-z0-9-]{0,31}$/.test(b.room) ||
       !UUID.test(b.id) || !UUID.test(b.token)) return json({error:'session'},400);
+  // Older open tabs still use pixel coordinates and their original rooms.
+  if (paris) b.room='paris:'+b.room;
   await ready(env.DB);
   if (path==='/api/join') return join(env.DB,b,Date.now());
   if (path==='/api/leave') {

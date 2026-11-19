@@ -4,18 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#15131e">
-<meta name="description" content="Explore Maille City avec ton renard Kikalmo. Une ville de laine en monde ouvert, à parcourir à pied ou en voiture avec tes amis.">
-<title>Maille City · Kikalmo</title>
+<meta name="description" content="Explore Paris, la petite couronne et La Défense en laine avec tes amis, à pied ou au volant.">
+<title>Maille City · Paris en laine</title>
 <link rel="icon" href="/favicon.png">
-<link rel="preload" href="/maille.woff" as="font" type="font/woff" crossorigin>
+<link rel="preload" href="/dm-serif.woff" as="font" type="font/woff" crossorigin>
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/panels.css">
-<script type="module" src="/main.js"></script>
+<link rel="modulepreload" href="/three.js">
+<link rel="modulepreload" href="/three.core.min.js">
+<link rel="modulepreload" href="/paris-data.js">
+<link rel="stylesheet" href="/paris.css">
+<script type="module" src="/entry.js"></script>
 </head>
 <body>
 <div id="app">
 <header class="topbar">
-  <div class="brand"><canvas id="brandMark" width="48" height="48" aria-hidden="true"></canvas><div><span class="brand-studio">KIKALMO</span><h1>MAILLE CITY</h1></div></div>
+  <div class="brand"><canvas id="brandMark" width="48" height="48" aria-hidden="true"></canvas><div><span class="brand-studio">KIKALMO</span><h1>Maille City</h1></div></div>
   <nav class="topnav" aria-label="Navigation du jeu">
     <button class="nav-current" id="playNav" aria-current="page"><i data-icon="gamepad"></i>Jouer</button>
     <button data-panel="map"><i data-icon="map"></i>Carte</button>
@@ -29,14 +33,14 @@
   </div>
 </header>
 <main class="scene" id="scene" aria-label="Ville jouable">
-  <canvas id="city" tabindex="0" aria-label="Maille City, espace de jeu en vue de dessus"></canvas>
+  <canvas id="city" tabindex="0" aria-label="Paris en laine, monde 3D à la troisième personne"></canvas>
   <div class="scene-shade" aria-hidden="true"></div>
   <section class="district" aria-label="Position actuelle">
-    <div class="district-line"><i data-icon="pin"></i><span>QUARTIER ACTUEL</span></div>
-    <h2 id="district">Les Filatures</h2>
+    <div class="district-line"><i data-icon="pin"></i><span>PARIS · PETITE COURONNE</span></div>
+    <h2 id="district">Place de l’Étoile</h2><span id="street" class="street"></span>
   </section>
   <section class="player-panel hud" aria-label="État du personnage">
-    <div class="portrait"><canvas id="portrait" width="48" height="48" role="img" aria-label="Renard Kikalmo"></canvas></div>
+    <div class="portrait"><canvas id="portrait" width="96" height="96" role="img" aria-label="Renard Kikalmo"></canvas></div>
     <div class="vitals">
       <div class="name-row"><strong id="playerName">Renard</strong><span class="you">VOUS</span></div>
       <div class="health-row"><i data-icon="heart"></i><div class="health-track"><div id="hpBar"></div></div><span id="hpNum">100</span></div>
@@ -44,6 +48,7 @@
     </div>
   </section>
   <div id="driveHud" class="drive-hud" hidden><i data-icon="car"></i><span>Au volant</span><b id="carSpeed">0 km/h</b></div>
+  <button id="sectorEdge" type="button" hidden></button>
   <div class="game-notice" id="notice" role="status" aria-live="polite"></div>
   <button class="hud radar" data-panel="map" title="Ouvrir la carte (M)" aria-label="Ouvrir la carte de la ville">
     <div class="radar-map"><canvas id="minimap" width="330" height="170"></canvas><span class="north">N</span><span class="radar-expand"><i data-icon="expand"></i></span></div>
@@ -60,13 +65,14 @@
   </aside>
   <div id="touchControls" aria-label="Commandes tactiles">
     <div class="stick" id="stick" role="group" aria-label="Joystick de déplacement"><span></span><b></b></div>
-    <div class="touch-actions"><button id="ride" aria-label="Monter ou descendre du véhicule"><i data-icon="car"></i></button><button id="fire" aria-label="Utiliser l’arme"><i data-icon="aim"></i></button></div>
+    <div class="touch-actions"><button id="recenter" title="Recentrer la caméra" aria-label="Recentrer la caméra"><i data-icon="camera"></i></button><button id="ride" aria-label="Monter ou descendre du véhicule"><i data-icon="car"></i></button><button id="fire" aria-label="Utiliser l’arme"><i data-icon="aim"></i></button></div>
   </div>
+  <div class="scene-load" id="loadScene" role="status"><div class="load-frame"><img src="/favicon.png" alt=""><strong>Maille City</strong><span id="loadingText">Ouverture de Paris en laine…</span><div class="load-progress"></div><button id="retryLoad" type="button" hidden>Réessayer</button><a id="returnToCity" hidden>Revenir avenue de la Grande Armée</a></div></div>
   <div id="panels"></div>
 </main>
 <footer class="keybar">
   <div class="keys-desktop">
-    <span><kbd>ZQSD</kbd> Déplacer</span><span><kbd><i data-icon="mouse"></i></kbd> Tirer</span><span><kbd>E</kbd> Véhicule</span>
+    <span><kbd>ZQSD</kbd> Déplacer</span><span><kbd><i data-icon="mouse"></i></kbd> Tirer</span><span><kbd>E</kbd> Véhicule</span><span class="camera-key"><kbd>Clic droit</kbd> Caméra</span>
     <button data-panel="weapons"><kbd>TAB</kbd> Roue d’armes</button><button data-panel="emotes"><kbd>B</kbd> Émotes</button><button id="chatKey"><kbd>T</kbd> Chat</button>
   </div>
   <div class="keys-mobile"><button data-panel="weapons"><i data-icon="aim"></i>Armes</button><button data-panel="emotes"><i data-icon="smile"></i>Émotes</button><button data-panel="map"><i data-icon="map"></i>Carte</button><button id="chatMobile"><i data-icon="chat"></i>Chat</button></div>

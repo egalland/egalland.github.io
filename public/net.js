@@ -65,7 +65,7 @@ export function createNet(options={}) {
     request=controller;
     const deadline=setTimeout(()=>controller.abort(),8500);
     try {
-      const response=await fetcher(joining?'/api/join':'/api/sync',{
+      const response=await fetcher(joining?'/api/paris/join':'/api/paris/sync',{
         method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',signal:controller.signal,
         body:JSON.stringify({room,id,token,name,state,cursor,events:batch})
       });
@@ -124,7 +124,7 @@ export function createNet(options={}) {
     if (!joined) return;
     const body=JSON.stringify({room,id,token});
     // Same-origin keepalive also works when a player closes the tab.
-    void fetcher('/api/leave',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
+    void fetcher('/api/paris/leave',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
   }
   function pageHide(e) {if (!e.persisted) net.stop();}
   function wake() {if (started && !busy && (typeof document==='undefined' || !document.hidden)) schedule(0);}
