@@ -47,7 +47,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
   let reloading=0,cooldown=0,damageLock=0,contactLock=0,actionAt=-2,score=0,arrivalChecked=false,isRunning=true;
   let actors=[],cars=[],routeActors=[],routeCars=[],remotes=[],obstacles=[],previousFrame=performance.now(),frameId;
   let driftX=0,driftY=0,aimAngle=null,levelPlace=null,streetName=streetAt(p.x,p.y),streetTime=-1;
-  let travelClaim=null,touchFireHeld=false,aimAssist=true,aimLock=null,lockPoint=null,markImpactUntil=0;
+  let travelClaim=null,touchFireHeld=false,aimAssist=true,aimLock=null,lockPoint=null,markImpactUntil=0,nextLockCheck=0,heldSource='pointer';
   const emit=(type,data)=>net?.emit?.(type,data);
   function publish(){
     net?.publish?.({x:p.x,y:p.y,angle:p.angle,vx,vy,moving:p.moving,sprinting:p.sprinting,shooting:shootPose>.6,
@@ -185,6 +185,10 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     if(!target){clearAimLock();return;}
     const angle=Math.atan2(target.y-p.y,target.x-p.x);
     if(Math.abs(deltaAngle(yaw,angle))>13*Math.PI/180){clearAimLock();return;}
+    if(target!==aimLock&&time>=nextLockCheck){
+      nextLockCheck=time+.12;
+      if(shotScene(weapons[weapon].range).trace(angle).hit?.id!==target.id){clearAimLock();return;}
+    }
     const point=view.projectTarget?.(target.x,target.y,targetHeight(aimLock));
     if(!point){clearAimLock();return;}
     if(!lockPoint||Math.abs(point.x-lockPoint.x)+Math.abs(point.y-lockPoint.y)>.0008){
@@ -409,24 +413,28 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     settleTravelClaim(net?.peers?.()||[],net?.world?.()||{});
     publish();sendHud(true);return true;
   }
+  function shotScene(range){
+    const muzzle=car?1.8:.35;
+    const targets=[...nearbyProps(p.x,p.y,range+2).filter(o=>!destroyed.has(o.id)).map(o=>({...o,hitKind:'prop'})),
+      ...actors.filter(o=>!o.stunned).map(o=>({...o,r:.65,hitKind:'npc'})),...remotes.filter(o=>o.id!==net?.id&&o.id!==p.id).map(o=>({...o,r:o.isCar?1.4:.67,hitKind:'peer'}))];
+    const vehicles=[...cars,...remotes.filter(e=>e.isCar)].filter(v=>dist(v,p)<range+6).map(collisionBody);
+    const geometry={radius:.12,height:1.05,camera:true,destroyed,colliders:vehicles,ignoreId:null};
+    const contact=(x,y,ignoreId)=>{geometry.ignoreId=ignoreId;return contactAt(x,y,geometry);};
+    const trace=angle=>traceShot(p,angle,muzzle,range,targets,contact,weapon==='fist');
+    return {muzzle,targets,trace};
+  }
   function fire(source='manual'){
     if(paused||!view.available||cooldown>0||reloading>0)return;
     const w=weapons[weapon];if(ammo[weapon]<=0){readyReload();return;}
     cooldown=w.interval;shootPose=1;ammo[weapon]--;
-    const touch=source==='touch',manualDrag=touch&&Math.hypot(aimX,aimY)>.15;
+    const touch=source==='touch',manualDrag=(touch||source==='button')&&Math.hypot(aimX,aimY)>.15;
     const bearing=manualDrag?yaw+Math.atan2(aimX,-aimY):source==='pointer'?(aimAngle??yaw):yaw;
-    const muzzle=car?1.8:.35;
-    const targets=[...nearbyProps(p.x,p.y,w.range+2).filter(o=>!destroyed.has(o.id)).map(o=>({...o,hitKind:'prop'})),
-      ...actors.filter(o=>!o.stunned).map(o=>({...o,r:.65,hitKind:'npc'})),...remotes.filter(o=>o.id!==net?.id&&o.id!==p.id).map(o=>({...o,r:o.isCar?1.4:.67,hitKind:'peer'}))];
-    const vehicles=[...cars,...remotes.filter(e=>e.isCar)].filter(v=>dist(v,p)<w.range+6).map(collisionBody);
-    const geometry={radius:.12,height:1.05,camera:true,destroyed,colliders:vehicles,ignoreId:null};
-    const contact=(x,y,ignoreId)=>{geometry.ignoreId=ignoreId;return contactAt(x,y,geometry);};
-    const trace=angle=>traceShot(p,angle,muzzle,w.range,targets,contact,weapon==='fist');
+    const {muzzle,targets,trace}=shotScene(w.range);
     let shot=trace(bearing);
     if(touch&&!manualDrag&&aimAssist&&weapon!=='fist'){
       const lock=chooseTouchShot({position:p,yaw,muzzle,range:w.range,targets,wanted:p.wanted,previousId:aimLock?.id,
         project:view.projectTarget,trace,direct:shot});
-      if(lock){shot=lock.shot;aimLock=lock.target;markImpactUntil=time+.19;drawAimLock();}else clearAimLock();
+      if(lock){shot=lock.shot;aimLock=lock.target;markImpactUntil=time+.19;nextLockCheck=time+.12;drawAimLock();}else clearAimLock();
     }else clearAimLock();
     const {angle:a,origin,length,hit}=shot;
     if(!car)p.angle=a;
@@ -500,7 +508,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     turn=clamp(deltaAngle(oldAngle,p.angle)/dt/3,-1,1);
     if(!paused){
       if(keys.has(' '))fire('manual');
-      else if(fireHeld)fire('pointer');
+      else if(fireHeld)fire(heldSource);
       else if(touchFireHeld)fire('touch');
     }
   }
@@ -554,7 +562,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     }
     if(paused)return;unlock();
     if(['vehicle','drive','interact','use','enter'].includes(name))interact();
-    if(name==='fire'||name==='shoot'){fireHeld=true;aimAngle=null;fire('manual');}
+    if(name==='fire'||name==='shoot'){fireHeld=true;heldSource='button';aimAngle=null;fire(heldSource);}
     if(name==='touchFire'){touchFireHeld=true;fire('touch');}
     if(name==='sprint')sprintHeld=true;
     if(name==='reload')readyReload();
@@ -573,7 +581,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     if(paused)return;e.preventDefault();canvas.focus({preventScroll:true});unlock();
     if(e.button===2||e.button===1||e.pointerType==='touch'){
       drag={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now()};driftX=driftY=0;canvas.setPointerCapture?.(e.pointerId);return;}
-    if(e.button===0){clearAimLock();aimAngle=view.aim(e.clientX,e.clientY,p);fireHeld=true;fire('pointer');canvas.setPointerCapture?.(e.pointerId);}
+    if(e.button===0){clearAimLock();aimAngle=view.aim(e.clientX,e.clientY,p);fireHeld=true;heldSource='pointer';fire(heldSource);canvas.setPointerCapture?.(e.pointerId);}
   }
   function pointerMove(e){
     if(paused)return;
