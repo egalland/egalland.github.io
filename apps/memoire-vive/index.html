@@ -1,0 +1,265 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f3ed"><title>Mémoire vive — Laboratoire RAM</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f5f3ed;color:#27283b;font:15px/1.55 system-ui,sans-serif}button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.42;cursor:default}button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #cd5d36;outline-offset:4px}button{border:1px solid #d7d5df;border-radius:9px;padding:10px 15px;background:white;color:#29283d;transition:background .15s}button:hover:not(:disabled){background:#eeebf7}header{max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:23px 28px;border-bottom:1px solid #dcd9d1}.brand{display:flex;align-items:center;gap:12px;font-weight:750;font-size:19px}.logo{display:grid;place-items:center;background:#302a46;border-radius:12px;color:#fff;font-size:27px;width:45px;height:45px}.tag{font:11px ui-monospace,monospace;letter-spacing:1px;color:#666178}main{max-width:1200px;margin:auto;padding:40px 28px}h1{font-size:clamp(35px,5vw,57px);line-height:1.05;letter-spacing:-2px;margin:9px 0 17px;font-weight:740}h1 em{font-style:normal;color:#7357cb}h2{font-size:19px;margin:0}h3{font-size:16px;margin:0 0 14px}p{margin:0}.hero{display:flex;align-items:center;justify-content:space-between;gap:35px;margin-bottom:30px}.hero p{max-width:610px;color:#626176;font-size:16px}.eyebrow{font:11px ui-monospace,monospace;letter-spacing:2px;color:#7357cb}.hero .example{white-space:nowrap;background:#eee9fa;border-color:#d7ccef;color:#5b3fab}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid #dedbe4;border-radius:14px;overflow:hidden;margin:24px 0;background:#dedbe4}.stat{background:#fff;padding:18px 22px}.stat span{display:block;font-size:12px;color:#777385}.stat strong{font-size:30px;letter-spacing:-1px}.stat small{font-size:13px;margin-left:5px;color:#797386}.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px}.panel{background:#fff;border:1px solid #dedbe4;border-radius:16px;padding:24px}.panel-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:20px}.micro{font:11px ui-monospace,monospace;color:#767086}.map{display:flex;height:62px;border:1px solid #dcd6e6;border-radius:9px;overflow:hidden;gap:2px;background:#f5f3f9}.segment{border:0;border-radius:0;min-width:0;padding:4px;overflow:hidden;color:white;font:12px ui-monospace,monospace;text-overflow:ellipsis;white-space:nowrap}.segment:hover:not(:disabled){filter:brightness(1.1)}.segment[aria-pressed=true]{box-shadow:inset 0 0 0 3px #28243b}.vacant{background:repeating-linear-gradient(135deg,#f4f2f8,#f4f2f8 5px,#e7e4ef 5px,#e7e4ef 6px);color:#6e667d;display:grid;place-items:center}.axis{display:flex;justify-content:space-between;font:10px ui-monospace,monospace;color:#787382;margin:7px 0 23px}.cells{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:5px}.cell{padding:0;border:0;border-radius:5px;aspect-ratio:1;display:grid;place-items:center;font:10px ui-monospace,monospace;background:#eeecf3;color:#847e94;min-height:25px}.cell[aria-pressed]{color:white}.cell.selected{box-shadow:inset 0 0 0 2px #201b32,inset 0 0 0 4px #fff}.cell:hover[aria-pressed]{filter:brightness(1.1)}.selection{min-height:45px;font-size:12px;color:#746c83;padding-top:15px}.legend{display:flex;gap:18px;align-items:center;font-size:12px;color:#766f82;margin-bottom:15px}.dot{display:inline-block;width:8px;height:8px;border-radius:2px;background:#7357cb;margin-right:5px}.dot.free{background:#e2deeb}.insight{background:#f5f1fc;color:#605079;padding:14px 16px;border-radius:9px;margin-top:5px;font-size:13px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:19px}.toolbar button{font-size:12px}.label{display:block;font-size:12px;font-weight:650;margin:18px 0 7px}input[type=text],input[type=number]{width:100%;background:#f9f8fc;border:1px solid #dcd8e5;border-radius:8px;padding:11px 13px}input[type=number]{font:24px ui-monospace,monospace}.hint{font-size:12px;color:#797083;margin:7px 0 20px}.primary{background:#7357cb;color:#fff;border:0;width:100%;font-weight:650;padding:13px}.primary:hover:not(:disabled){background:#6147b0}.algorithm{font:11px ui-monospace,monospace;border-top:1px solid #eeeaf1;margin-top:22px;padding-top:18px;color:#777084}.notice{padding:12px 16px;margin-bottom:18px;background:#eeebf7;border-radius:9px;font-size:13px;min-height:45px;border-left:3px solid #7357cb}.notice.error{background:#fff0e9;color:#9d3e21;border-color:#c95532}.notice.success{color:#534078}.lower{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;margin-top:20px}.block-row{display:flex;gap:12px;align-items:center;border-top:1px solid #eeebf2;padding:12px 0}.block-row span{font:11px ui-monospace,monospace;color:#777084}.block-row.active{background:#f7f5fc}.pick{border:0;padding:4px 0;background:transparent;text-align:left;flex:1;font-weight:650}.pick:before{content:'';display:inline-block;background:var(--color);width:9px;height:9px;border-radius:3px;margin-right:8px}.release{font-size:11px;padding:6px 9px}.empty{font-size:13px;color:#82788d;padding:20px 0}.log{list-style:none;padding:0;margin:12px 0 0;max-height:205px;overflow:auto}.log li{font-size:12px;border-bottom:1px solid #ece9f1;padding:10px 0;color:#71687f}.rules{margin-top:20px;background:#eeece5;border:0}summary{cursor:pointer;font-weight:650}.rules-content{max-width:850px;font-size:14px;color:#64616d}.rules-content ol{padding-left:23px}.rules-content p{margin-top:13px}.footer{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:25px;color:#8b8194;font-size:11px}.footer button{font-size:11px;padding:7px 10px}.footer-actions{display:flex;gap:7px;flex-wrap:wrap}dialog{border:1px solid #ddd6e6;border-radius:16px;max-width:430px;padding:25px;box-shadow:0 20px 70px #23203233}dialog::backdrop{background:#26213466}dialog p{margin:15px 0 22px}.dialog-actions{display:flex;gap:10px;justify-content:flex-end}.dialog-actions .primary{width:auto} @media(max-width:850px){.layout,.lower{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column;gap:20px}.panel{padding:20px}.stats .stat{padding:14px}main{padding:28px 18px}.lower .panel{min-width:0}.footer{align-items:flex-start;flex-direction:column}}@media(max-width:480px){header{padding:18px}.tag{display:none}.stats{grid-template-columns:repeat(2,1fr)}.cells{grid-template-columns:repeat(8,minmax(0,1fr));gap:5px}.cell{font-size:11px}.segment{font-size:10px}.block-row{gap:8px;flex-wrap:wrap}.block-row span{font-size:10px}.panel-head{align-items:flex-start}.panel-head .micro{font-size:10px;text-align:right}h1{letter-spacing:-1.2px}}@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}} 
+</style></head><body><header><div class="brand"><span class="logo" aria-hidden="true">♈</span>Mémoire vive</div><span class="tag">LABORATOIRE RAM / 01</span></header><main><section class="hero"><div><span class="eyebrow">UN PETIT LAB POUR LES GRANDES IDÉES</span><h1>Fais de la place.<br><em>Comprends la mémoire.</em></h1><p>Alloue des programmes, libère des blocs et découvre pourquoi une mémoire libre n’est pas toujours une mémoire disponible.</p></div><button id="example" class="example">↗ Essayer l’exemple</button></section><div class="stats" aria-label="État de la mémoire"><div class="stat"><span>Mémoire utilisée</span><strong id="used">0</strong><small>/ 64 Mio</small></div><div class="stat"><span>Mémoire libre</span><strong id="free">64</strong><small>Mio</small></div><div class="stat"><span>Plus grand espace libre</span><strong id="largest">64</strong><small>Mio</small></div><div class="stat"><span>Espaces libres</span><strong id="holes">1</strong><small>bloc(s)</small></div></div><div id="notice" class="notice" role="status" aria-live="polite" aria-atomic="true">Bienvenue ! Nomme un programme et choisis sa taille pour commencer.</div><div class="layout"><section class="panel"><div class="panel-head"><h2>La carte mémoire</h2><span class="micro">64 CASES · 1 MIO / CASE</span></div><div id="map" class="map" aria-label="Répartition linéaire de la mémoire"></div><div class="axis" aria-hidden="true"><span>0</span><span>16</span><span>32</span><span>48</span><span>64 Mio</span></div><div class="legend"><span><i class="dot"></i>Programme</span><span><i class="dot free"></i>Espace libre</span><span>Adresses 0 à 63</span></div><div id="cells" class="cells" aria-label="Cases de la mémoire"></div><p id="selection" class="selection"></p><p id="insight" class="insight"></p><div class="toolbar"><button id="compact">↔ Compacter</button><button id="undo" disabled>↶ Annuler</button><button id="reset">Réinitialiser</button></div></section><aside class="panel"><h2>Allouer un programme</h2><form id="allocate" novalidate><label class="label" for="name">Nom du programme</label><input id="name" type="text" maxlength="30" value="Navigateur" autocomplete="off"><label class="label" for="size">Taille demandée · Mio</label><input id="size" type="number" min="1" max="64" step="1" value="8" inputmode="numeric"><p class="hint">De 1 à 64 Mio, en cases contiguës.</p><button type="submit" class="primary">+ Allouer le bloc</button></form><p class="algorithm">ALGORITHME · FIRST FIT</p><p class="hint">On parcourt la mémoire de gauche à droite. Le premier espace assez grand accueille le programme.</p></aside></div><div class="lower"><section class="panel"><div class="panel-head"><h2>Programmes en mémoire</h2><span class="micro">SÉLECTIONNER → LIBÉRER</span></div><div id="blocks"></div></section><section class="panel"><h2>Journal d’opérations</h2><ul id="log" class="log"></ul></section></div><details class="panel rules" open><summary>Les règles du laboratoire & un exemple</summary><div class="rules-content"><p><strong>Le sens choisi :</strong> « Bélier » évoque ici <em>ram</em>, bélier en anglais, et RAM, la mémoire vive. Le symbole ♈ est un clin d’œil visuel. Nous simulons la mémoire informatique.</p><ol><li>La mémoire contient 64 cases de 1 Mio. Chaque programme occupe un seul bloc contigu. La taille et la capacité sont fixes pendant la session.</li><li>Libérer un programme rend toutes ses cases disponibles. Les espaces libres voisins sont automatiquement réunis.</li><li>Une allocation échoue si aucun espace contigu n’est assez grand. Les programmes existants restent alors inchangés.</li><li>La compaction déplace les programmes vers le début de la mémoire et regroupe le vide à la fin. Leurs tailles ne changent pas. L’annulation revient d’une seule opération.</li></ol><p><strong>Exemple de partie :</strong> alloue Navigateur (16), Musique (16), Éditeur (16). Libère Musique : il reste 32 Mio libres, mais en deux espaces de 16. Une demande de Jeu (24) échoue. Compacte, puis réessaie : Jeu tient dans l’espace de 32 Mio.</p><p><strong>Modèle simplifié :</strong> données entièrement fictives, aucune lecture de la RAM réelle. La compaction est pédagogique ; ce modèle ne simule pas la pagination, les pointeurs, les caches ou les contraintes d’un système d’exploitation. Aucun service externe à connecter.</p></div></details><footer class="footer"><div><span id="storage"></span><br>Sur cet appareil uniquement · exporte pour transférer ou sécuriser ta session.</div><div class="footer-actions"><button id="export">Exporter JSON</button><button id="import-button">Importer JSON</button><input id="import" type="file" accept="application/json,.json" hidden></div></footer></main><dialog id="reset-dialog" aria-labelledby="reset-title"><h2 id="reset-title">Vider la mémoire ?</h2><p>Les programmes seront libérés. Tu pourras annuler cette opération immédiatement après.</p><div class="dialog-actions"><button data-close="reset-dialog">Conserver</button><button id="reset-confirm" class="primary">Vider la mémoire</button></div></dialog><dialog id="demo-dialog" aria-labelledby="demo-title"><h2 id="demo-title">Charger l’exemple ?</h2><p>L’exemple remplace ta simulation actuelle. Tu pourras annuler immédiatement après.</p><div class="dialog-actions"><button data-close="demo-dialog">Conserver</button><button id="demo-confirm" class="primary">Charger l’exemple</button></div></dialog><script>"use strict";
+const CAP = 64, KEY = 'memoire-vive-v1';
+const colors = ['#7357cb', '#ca633e', '#287c73', '#a74d78', '#647d28', '#466db0'];
+const empty = () => ({ version: 1, blocks: [], nextId: 1, history: [] });
+function validate(data) {
+    const s = data;
+    if (!s || s.version !== 1 || !Array.isArray(s.blocks) || s.blocks.length > 64 || !Number.isSafeInteger(s.nextId) || s.nextId < 1 || s.nextId > 1000000 || !Array.isArray(s.history) || s.history.length > 20 || s.history.some(x => typeof x !== 'string' || x.length > 300))
+        throw Error('Format de session non valide.');
+    const occupied = new Set(), ids = new Set();
+    for (const b of s.blocks) {
+        if (!b || !Number.isInteger(b.id) || b.id < 1 || b.id >= s.nextId || ids.has(b.id) || typeof b.name !== 'string' || !b.name.trim() || b.name.length > 30 || !Number.isInteger(b.size) || b.size < 1 || !Number.isInteger(b.start) || b.start < 0 || b.start + b.size > CAP || !Number.isInteger(b.color) || b.color < 0 || b.color >= colors.length)
+            throw Error('Blocs invalides ou hors mémoire.');
+        ids.add(b.id);
+        for (let i = b.start; i < b.start + b.size; i++) {
+            if (occupied.has(i))
+                throw Error('Des blocs se chevauchent.');
+            occupied.add(i);
+        }
+    }
+    return JSON.parse(JSON.stringify(s));
+}
+function holes(s) {
+    const result = [];
+    let pos = 0;
+    for (const b of [...s.blocks].sort((a, b) => a.start - b.start)) {
+        if (b.start > pos)
+            result.push({ start: pos, size: b.start - pos });
+        pos = b.start + b.size;
+    }
+    if (pos < CAP)
+        result.push({ start: pos, size: CAP - pos });
+    return result;
+}
+function allocate(s, name, size) {
+    if (!name.trim() || name.trim().length > 30)
+        throw Error('Donne un nom de 1 à 30 caractères au programme.');
+    if (!Number.isInteger(size) || size < 1 || size > 64)
+        throw Error('La taille doit être un nombre entier de 1 à 64 Mio.');
+    const h = holes(s), free = h.reduce((n, h) => n + h.size, 0), slot = h.find(h => h.size >= size);
+    if (!slot)
+        throw Error(free >= size ? `Mémoire fragmentée : ${free} Mio libres, mais le plus grand espace ne fait que ${Math.max(0, ...h.map(h => h.size))} Mio. Compacte ou libère un bloc voisin.` : `Mémoire insuffisante : ${free} Mio libres pour ${size} Mio demandés.`);
+    if (s.nextId >= 1000000)
+        throw Error('Limite de session atteinte. Réinitialise la mémoire.');
+    const b = { id: s.nextId++, name: name.trim(), size, start: slot.start, color: (s.nextId - 2) % colors.length };
+    s.blocks.push(b);
+    return b;
+}
+function compact(s) { let pos = 0; for (const b of s.blocks.sort((a, b) => a.start - b.start)) {
+    b.start = pos;
+    pos += b.size;
+} }
+const el = (id) => document.getElementById(id);
+let state = empty(), previous = null, selected = null;
+function message(text, error = false) { el('notice').textContent = text; el('notice').className = 'notice ' + (error ? 'error' : 'success'); }
+function save() { try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+    el('storage').textContent = 'Session sauvegardée dans ce navigateur';
+}
+catch {
+    el('storage').textContent = 'Sauvegarde indisponible : exporte ta session pour la conserver.';
+} }
+function commit(action) { const draft = validate(state); try {
+    const msg = action(draft);
+    previous = validate(state);
+    draft.history.unshift(msg);
+    draft.history = draft.history.slice(0, 20);
+    state = draft;
+    save();
+    render();
+    message(msg);
+}
+catch (e) {
+    message(e.message, true);
+} }
+function button(text, fn, cls = '') { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.className = cls; b.onclick = fn; return b; }
+function render() {
+    const free = holes(state), available = free.reduce((n, h) => n + h.size, 0), largest = Math.max(0, ...free.map(h => h.size));
+    el('used').textContent = String(CAP - available);
+    el('free').textContent = String(available);
+    el('largest').textContent = String(largest);
+    el('holes').textContent = String(free.length);
+    el('undo').disabled = !previous;
+    el('compact').disabled = !state.blocks.length || free.length <= 1 && (!free.length || free[0].start === CAP - available);
+    if (!state.blocks.some(b => b.id === selected))
+        selected = null;
+    el('map').replaceChildren();
+    el('cells').replaceChildren();
+    el('blocks').replaceChildren();
+    const all = [...state.blocks.map(b => ({ ...b, block: true })), ...free.map(h => ({ ...h, id: 0, name: 'Libre', color: 0, block: false }))].sort((a, b) => a.start - b.start);
+    for (const b of all) {
+        const node = b.block ? button(`${b.name} · ${b.size}`, () => { selected = b.id; render(); }, 'segment') : document.createElement('div');
+        node.classList.add('segment');
+        node.style.width = (b.size / CAP * 100) + '%';
+        node.title = `${b.name} : ${b.size} Mio, adresses ${b.start}–${b.start + b.size - 1}`;
+        if (b.block) {
+            node.style.background = colors[b.color];
+            node.setAttribute('aria-pressed', String(b.id === selected));
+        }
+        else {
+            node.classList.add('vacant');
+            node.textContent = String(b.size);
+        }
+        el('map').append(node);
+    }
+    for (let i = 0; i < CAP; i++) {
+        const b = state.blocks.find(b => i >= b.start && i < b.start + b.size), node = b ? button(String(i).padStart(2, '0'), () => { selected = b.id; render(); }, 'cell') : document.createElement('span');
+        node.classList.add('cell');
+        node.textContent = String(i).padStart(2, '0');
+        node.title = b ? `${b.name} · adresse ${i}` : `Adresse ${i} · libre`;
+        if (b) {
+            node.style.background = colors[b.color];
+            node.setAttribute('aria-label', `${b.name}, adresse ${i}. Sélectionner le bloc.`);
+            node.setAttribute('aria-pressed', String(selected === b.id));
+            if (selected === b.id)
+                node.classList.add('selected');
+        }
+        el('cells').append(node);
+    }
+    if (!state.blocks.length) {
+        const p = document.createElement('p');
+        p.className = 'empty';
+        p.textContent = 'La mémoire est vide. Alloue ton premier programme ou lance l’exemple.';
+        el('blocks').append(p);
+    }
+    for (const b of [...state.blocks].sort((a, b) => a.start - b.start)) {
+        const row = document.createElement('div');
+        row.className = 'block-row' + (selected === b.id ? ' active' : '');
+        const pick = button(b.name, () => { selected = b.id; render(); }, 'pick');
+        pick.style.setProperty('--color', colors[b.color]);
+        pick.setAttribute('aria-pressed', String(selected === b.id));
+        const info = document.createElement('span');
+        info.textContent = `${b.size} Mio · ${b.start}–${b.start + b.size - 1}`;
+        const release = button('Libérer', () => commit(s => { s.blocks = s.blocks.filter(x => x.id !== b.id); return `${b.name} libéré : ${b.size} Mio rendus disponibles.`; }), 'release');
+        release.setAttribute('aria-label', `Libérer ${b.name}`);
+        row.append(pick, info, release);
+        el('blocks').append(row);
+    }
+    const b = state.blocks.find(b => b.id === selected);
+    el('selection').textContent = b ? `${b.name} sélectionné · ${b.size} Mio · adresses ${b.start} à ${b.start + b.size - 1}` : 'Clique sur un bloc pour l’identifier.';
+    el('log').replaceChildren();
+    for (const entry of state.history) {
+        const li = document.createElement('li');
+        li.textContent = entry;
+        el('log').append(li);
+    }
+    if (!state.history.length) {
+        const li = document.createElement('li');
+        li.textContent = 'Tes opérations apparaîtront ici.';
+        el('log').append(li);
+    }
+    el('insight').textContent = available === 64 ? 'Tout est libre : chaque allocation peut commencer à l’adresse 0.' : available === 0 ? 'Mémoire pleine : libère un programme avant la prochaine allocation.' : free.length > 1 ? `${available} Mio libres répartis en ${free.length} espaces. Un programme de plus de ${largest} Mio ne peut pas tenir, même si le total libre suffit.` : `Un espace contigu de ${largest} Mio est disponible.`;
+}
+el('allocate').onsubmit = e => { e.preventDefault(); commit(s => { const b = allocate(s, el('name').value, Number(el('size').value)); return `${b.name} alloué : ${b.size} Mio aux adresses ${b.start}–${b.start + b.size - 1}.`; }); };
+el('compact').onclick = () => commit(s => { compact(s); return 'Compaction terminée : les blocs ont été regroupés sans changer leur taille.'; });
+el('undo').onclick = () => { if (!previous)
+    return; state = previous; previous = null; save(); render(); message('Dernière opération annulée.'); };
+el('example').onclick = () => { if (state.blocks.length)
+    el('demo-dialog').showModal();
+else
+    demo(); };
+function demo() { commit(s => { Object.assign(s, empty()); allocate(s, 'Navigateur', 16); allocate(s, 'Musique', 16); allocate(s, 'Éditeur', 16); s.blocks = s.blocks.filter(b => b.name !== 'Musique'); return 'Exemple chargé : 32 Mio libres, en deux espaces de 16. Essaie d’allouer « Jeu » : 24 Mio.'; }); el('name').value = 'Jeu'; el('size').value = '24'; }
+el('demo-confirm').onclick = () => { el('demo-dialog').close(); demo(); };
+el('reset').onclick = () => el('reset-dialog').showModal();
+el('reset-confirm').onclick = () => { el('reset-dialog').close(); commit(s => { Object.assign(s, empty()); return 'Mémoire réinitialisée : les 64 Mio sont libres.'; }); };
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => el(b.dataset.close).close());
+el('export').onclick = () => { const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }), url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = 'Memoire_vive_session.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); message('Export de la session préparé ; conserve le fichier téléchargé.'); };
+el('import-button').onclick = () => el('import').click();
+el('import').onchange = async () => { const input = el('import'), f = input.files?.[0]; if (!f)
+    return; try {
+    if (f.size > 100000)
+        throw Error('Fichier trop volumineux (100 Ko maximum).');
+    const imported = validate(JSON.parse(await f.text()));
+    previous = validate(state);
+    state = imported;
+    selected = null;
+    save();
+    render();
+    message('Session importée. Tu peux annuler pour retrouver la précédente.');
+}
+catch (e) {
+    message('Import refusé : ' + e.message, true);
+}
+finally {
+    input.value = '';
+} };
+try {
+    const data = localStorage.getItem(KEY);
+    if (data) {
+        state = validate(JSON.parse(data));
+        message('Ta session précédente a été restaurée.');
+    }
+    el('storage').textContent = 'Sauvegarde automatique dans ce navigateur';
+}
+catch {
+    message('Session enregistrée illisible ou stockage inaccessible. Exporte tes nouvelles sessions pour les conserver.', true);
+    el('storage').textContent = 'Sauvegarde locale indisponible ou session invalide';
+}
+render();
+</script><script type="text/plain" id="typescript-source">type Block = {id:number; name:string; size:number; start:number; color:number};
+type State = {version:1; blocks:Block[]; nextId:number; history:string[]};
+const CAP=64, KEY='memoire-vive-v1';
+const colors=['#7357cb','#ca633e','#287c73','#a74d78','#647d28','#466db0'];
+const empty=():State=>({version:1,blocks:[],nextId:1,history:[]});
+function validate(data:unknown):State {
+ const s=data as State;
+ if(!s||s.version!==1||!Array.isArray(s.blocks)||s.blocks.length>64||!Number.isSafeInteger(s.nextId)||s.nextId<1||s.nextId>1000000||!Array.isArray(s.history)||s.history.length>20||s.history.some(x=>typeof x!=='string'||x.length>300))throw Error('Format de session non valide.');
+ const occupied=new Set<number>(),ids=new Set<number>();
+ for(const b of s.blocks){
+  if(!b||!Number.isInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||typeof b.name!=='string'||!b.name.trim()||b.name.length>30||!Number.isInteger(b.size)||b.size<1||!Number.isInteger(b.start)||b.start<0||b.start+b.size>CAP||!Number.isInteger(b.color)||b.color<0||b.color>=colors.length)throw Error('Blocs invalides ou hors mémoire.');
+  ids.add(b.id);for(let i=b.start;i<b.start+b.size;i++){if(occupied.has(i))throw Error('Des blocs se chevauchent.');occupied.add(i);}
+ }
+ return JSON.parse(JSON.stringify(s));
+}
+function holes(s:State):{start:number;size:number}[]{
+ const result=[];let pos=0;
+ for(const b of [...s.blocks].sort((a,b)=>a.start-b.start)){if(b.start>pos)result.push({start:pos,size:b.start-pos});pos=b.start+b.size;}
+ if(pos<CAP)result.push({start:pos,size:CAP-pos});return result;
+}
+function allocate(s:State,name:string,size:number):Block {
+ if(!name.trim()||name.trim().length>30)throw Error('Donne un nom de 1 à 30 caractères au programme.');
+ if(!Number.isInteger(size)||size<1||size>64)throw Error('La taille doit être un nombre entier de 1 à 64 Mio.');
+ const h=holes(s),free=h.reduce((n,h)=>n+h.size,0),slot=h.find(h=>h.size>=size);
+ if(!slot)throw Error(free>=size?`Mémoire fragmentée : ${free} Mio libres, mais le plus grand espace ne fait que ${Math.max(0,...h.map(h=>h.size))} Mio. Compacte ou libère un bloc voisin.`:`Mémoire insuffisante : ${free} Mio libres pour ${size} Mio demandés.`);
+ if(s.nextId>=1000000)throw Error('Limite de session atteinte. Réinitialise la mémoire.');
+ const b={id:s.nextId++,name:name.trim(),size,start:slot.start,color:(s.nextId-2)%colors.length};s.blocks.push(b);return b;
+}
+function compact(s:State){let pos=0;for(const b of s.blocks.sort((a,b)=>a.start-b.start)){b.start=pos;pos+=b.size;}}
+const el=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
+let state=empty(),previous:State|null=null,selected:number|null=null;
+function message(text:string,error=false){el('notice').textContent=text;el('notice').className='notice '+(error?'error':'success');}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));el('storage').textContent='Session sauvegardée dans ce navigateur';}catch{el('storage').textContent='Sauvegarde indisponible : exporte ta session pour la conserver.';}}
+function commit(action:(s:State)=>string){const draft=validate(state);try{const msg=action(draft);previous=validate(state);draft.history.unshift(msg);draft.history=draft.history.slice(0,20);state=draft;save();render();message(msg);}catch(e){message((e as Error).message,true);}}
+function button(text:string,fn:()=>void,cls=''){const b=document.createElement('button');b.type='button';b.textContent=text;b.className=cls;b.onclick=fn;return b;}
+function render(){
+ const free=holes(state),available=free.reduce((n,h)=>n+h.size,0),largest=Math.max(0,...free.map(h=>h.size));
+ el('used').textContent=String(CAP-available);el('free').textContent=String(available);el('largest').textContent=String(largest);el('holes').textContent=String(free.length);
+ el<HTMLButtonElement>('undo').disabled=!previous;el<HTMLButtonElement>('compact').disabled=!state.blocks.length||free.length<=1 && (!free.length||free[0].start===CAP-available);
+ if(!state.blocks.some(b=>b.id===selected))selected=null;
+ el('map').replaceChildren();el('cells').replaceChildren();el('blocks').replaceChildren();
+ const all=[...state.blocks.map(b=>({...b,block:true})),...free.map(h=>({...h,id:0,name:'Libre',color:0,block:false}))].sort((a,b)=>a.start-b.start);
+ for(const b of all){const node=b.block?button(`${b.name} · ${b.size}`,()=>{selected=b.id;render();},'segment'):document.createElement('div');node.classList.add('segment');node.style.width=(b.size/CAP*100)+'%';node.title=`${b.name} : ${b.size} Mio, adresses ${b.start}–${b.start+b.size-1}`;if(b.block){node.style.background=colors[b.color];node.setAttribute('aria-pressed',String(b.id===selected));}else{node.classList.add('vacant');node.textContent=String(b.size);}el('map').append(node);}
+ for(let i=0;i<CAP;i++){const b=state.blocks.find(b=>i>=b.start&&i<b.start+b.size),node=b?button(String(i).padStart(2,'0'),()=>{selected=b.id;render();},'cell'):document.createElement('span');node.classList.add('cell');node.textContent=String(i).padStart(2,'0');node.title=b?`${b.name} · adresse ${i}`:`Adresse ${i} · libre`;if(b){node.style.background=colors[b.color];node.setAttribute('aria-label',`${b.name}, adresse ${i}. Sélectionner le bloc.`);node.setAttribute('aria-pressed',String(selected===b.id));if(selected===b.id)node.classList.add('selected');}el('cells').append(node);}
+ if(!state.blocks.length){const p=document.createElement('p');p.className='empty';p.textContent='La mémoire est vide. Alloue ton premier programme ou lance l’exemple.';el('blocks').append(p);}
+ for(const b of [...state.blocks].sort((a,b)=>a.start-b.start)){const row=document.createElement('div');row.className='block-row'+(selected===b.id?' active':'');const pick=button(b.name,()=>{selected=b.id;render();},'pick');pick.style.setProperty('--color',colors[b.color]);pick.setAttribute('aria-pressed',String(selected===b.id));const info=document.createElement('span');info.textContent=`${b.size} Mio · ${b.start}–${b.start+b.size-1}`;const release=button('Libérer',()=>commit(s=>{s.blocks=s.blocks.filter(x=>x.id!==b.id);return `${b.name} libéré : ${b.size} Mio rendus disponibles.`;}),'release');release.setAttribute('aria-label',`Libérer ${b.name}`);row.append(pick,info,release);el('blocks').append(row);}
+ const b=state.blocks.find(b=>b.id===selected);el('selection').textContent=b?`${b.name} sélectionné · ${b.size} Mio · adresses ${b.start} à ${b.start+b.size-1}`:'Clique sur un bloc pour l’identifier.';
+ el('log').replaceChildren();for(const entry of state.history){const li=document.createElement('li');li.textContent=entry;el('log').append(li);}if(!state.history.length){const li=document.createElement('li');li.textContent='Tes opérations apparaîtront ici.';el('log').append(li);}
+ el('insight').textContent=available===64?'Tout est libre : chaque allocation peut commencer à l’adresse 0.':available===0?'Mémoire pleine : libère un programme avant la prochaine allocation.':free.length>1?`${available} Mio libres répartis en ${free.length} espaces. Un programme de plus de ${largest} Mio ne peut pas tenir, même si le total libre suffit.`:`Un espace contigu de ${largest} Mio est disponible.`;
+}
+el<HTMLFormElement>('allocate').onsubmit=e=>{e.preventDefault();commit(s=>{const b=allocate(s,el<HTMLInputElement>('name').value,Number(el<HTMLInputElement>('size').value));return `${b.name} alloué : ${b.size} Mio aux adresses ${b.start}–${b.start+b.size-1}.`;});};
+el('compact').onclick=()=>commit(s=>{compact(s);return 'Compaction terminée : les blocs ont été regroupés sans changer leur taille.';});
+el('undo').onclick=()=>{if(!previous)return;state=previous;previous=null;save();render();message('Dernière opération annulée.');};
+el('example').onclick=()=>{if(state.blocks.length)el<HTMLDialogElement>('demo-dialog').showModal();else demo();};
+function demo(){commit(s=>{Object.assign(s,empty());allocate(s,'Navigateur',16);allocate(s,'Musique',16);allocate(s,'Éditeur',16);s.blocks=s.blocks.filter(b=>b.name!=='Musique');return 'Exemple chargé : 32 Mio libres, en deux espaces de 16. Essaie d’allouer « Jeu » : 24 Mio.';});el<HTMLInputElement>('name').value='Jeu';el<HTMLInputElement>('size').value='24';}
+el('demo-confirm').onclick=()=>{el<HTMLDialogElement>('demo-dialog').close();demo();};
+el('reset').onclick=()=>el<HTMLDialogElement>('reset-dialog').showModal();
+el('reset-confirm').onclick=()=>{el<HTMLDialogElement>('reset-dialog').close();commit(s=>{Object.assign(s,empty());return 'Mémoire réinitialisée : les 64 Mio sont libres.';});};
+document.querySelectorAll<HTMLButtonElement>('[data-close]').forEach(b=>b.onclick=()=>el<HTMLDialogElement>(b.dataset.close!).close());
+el('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Memoire_vive_session.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);message('Export de la session préparé ; conserve le fichier téléchargé.');};
+el('import-button').onclick=()=>el<HTMLInputElement>('import').click();
+el<HTMLInputElement>('import').onchange=async()=>{const input=el<HTMLInputElement>('import'),f=input.files?.[0];if(!f)return;try{if(f.size>100000)throw Error('Fichier trop volumineux (100 Ko maximum).');const imported=validate(JSON.parse(await f.text()));previous=validate(state);state=imported;selected=null;save();render();message('Session importée. Tu peux annuler pour retrouver la précédente.');}catch(e){message('Import refusé : '+(e as Error).message,true);}finally{input.value='';}};
+try{const data=localStorage.getItem(KEY);if(data){state=validate(JSON.parse(data));message('Ta session précédente a été restaurée.');}el('storage').textContent='Sauvegarde automatique dans ce navigateur';}catch{message('Session enregistrée illisible ou stockage inaccessible. Exporte tes nouvelles sessions pour les conserver.',true);el('storage').textContent='Sauvegarde locale indisponible ou session invalide';}
+render();
+</script></body></html>
