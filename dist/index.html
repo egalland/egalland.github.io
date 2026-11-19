@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+ <meta name="theme-color" content="#f6eddb">
+ <meta name="description" content="Une démo du futur mode culture de Kikalmo : dix questions, des rébus, des QCM et des mélodies à reconnaître, dans un univers en laine.">
+ <title>Kikalmo · Démo du mode culture</title>
+ <link rel="icon" href="assets/star.webp">
+ <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ <a href="#main" class="skip-link">Aller au jeu</a>
+ <div class="shell">
+  <header class="topbar">
+   <button class="brand" data-action="home" aria-label="Kikalmo, revenir aux salons"><img src="assets/kikalmo.webp" width="1200" height="307" alt="Kikalmo"><span>MODE CULTURE <i>démo</i></span></button>
+   <div class="header-actions"><span class="solo-tag"><i></i> Démo solo</span><button id="sound" class="icon-button" data-action="sound" aria-label="Couper les effets sonores" title="Effets sonores">♫</button><button id="profile" class="profile-button" data-action="profile">Mon profil <span>✎</span></button></div>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <footer><span>Un fil commun, deux façons de jouer.</span><span>Prototype du mode culture · nom provisoire</span><button class="text-button" data-action="about">À propos de la démo</button></footer>
+ </div>
+ <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
+ <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+ <div id="toast" role="status" hidden></div>
+ <script type="module" src="app.mjs"></script>
+</body>
+</html>
