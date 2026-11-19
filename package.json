@@ -1,0 +1,13 @@
+{
+  "name": "kline-forecast-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:scene": "node scripts/build-scene.mjs",
+    "check": "node --check dist/app.mjs && node scripts/check-engine.mjs && node scripts/check-scene.mjs && node scripts/check-scene-geometry.mjs"
+  },
+  "dependencies": {
+    "esbuild": "0.28.2",
+    "three": "0.187.0"
+  }
+}
