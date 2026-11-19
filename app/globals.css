@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "./styles/access.css";
+@import "./styles/theme.css";
+@import "./styles/analyst.css";
+@import "./styles/components.css";
+@import "./styles/workspace.css";
+@import "./styles/simulations.css";
+@import "./styles/meeting.css";
+@import "./styles/point-builder.css";
+@import "./styles/period-comparison.css";
+@import "./styles/point-workspace-v48.css";
+
+
+@import "./styles/point-workspace-v49.css";
+@import "./styles/point-workspace-v51.css";
+@import "./styles/purchaseData.css";
+
+@import "./styles/point-workspace-v70.css";
+@import "./styles/point-review-v74.css";
+
+@import "./styles/import-center.css";
+@import "./styles/supplier-profile.css";
+@import "./styles/feedback.css";
+@import "./styles/point-preparation.css";
+@import "./styles/mobile.css";
+
+@import "./styles/alignment.css";
+
+@import "./styles/point-interaction.css";
+
+@import "./styles/surface-hierarchy.css";
+
+@import "./styles/analyst-interaction.css";
+
+@import "./styles/point-reading-v109.css";
+
+@import "./styles/point-composition-v110.css";
+
+@import "./styles/point-window-v111.css";
+
+@import "./styles/market-plus-v112.css";
+
+@import "./styles/market-plus-v113.css";
