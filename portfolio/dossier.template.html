@@ -8,9 +8,10 @@
  <meta name="description" content="Le CV interactif d’Emmanuel Galland, analyste Tarif & Référentiel et développeur web. Parcours, compétences et projets.">
  <link rel="canonical" href="https://egalland.github.io/?theme=dossier">
  <link rel="stylesheet" href="/portfolio-assets/theme-switch.css?v=dossier1">
- <link rel="stylesheet" href="/dossier/dossier.css?v=ascenseur1">
+ <link rel="stylesheet" href="/dossier/dossier.css?v=etages1">
  <link rel="stylesheet" href="/dossier/cover.css">
- <script type="module" src="/dossier/dossier.mjs?v=ascenseur2"></script>
+ <link rel="stylesheet" href="/dossier/scenes.css?v=etages1">
+ <script type="module" src="/dossier/dossier.mjs?v=etages1"></script>
  <title>Emmanuel Galland — CV & projets</title>
 </head>
 <body>
@@ -18,21 +19,22 @@
  <header class="portfolio-bar dossier-bar">{{brandHtml}}{{themeSwitchHtml}}<div class="bar-actions"><a href="{{profile.github}}" aria-label="Profil GitHub d’Emmanuel Galland">GitHub ↗</a></div></header>
  <div class="dossier-layout">
   <div class="lift">
+   <button class="console-backdrop" type="button" hidden aria-label="Quitter les commandes"></button>
    <aside class="lift-console" aria-label="Commandes de l’ascenseur">
-    <div class="console-heading"><span>Ascenseur</span><span>EG / CV</span></div>
-    <div class="lift-display" aria-hidden="true">
-     <span class="lift-direction">–</span>
+    <div class="console-heading"><span>Ascenseur</span><button class="console-close" type="button" hidden aria-label="Revenir à la cabine">×</button></div>
+    <button class="lift-display" type="button" aria-label="Agrandir le panneau de commande" aria-expanded="false" title="Agrandir les commandes">
+     <span class="lift-direction">⤢</span>
      <strong class="lift-number">R</strong>
      <span class="lift-readout">Rez-de-chaussée</span>
-    </div>
+    </button>
     <nav class="lift-buttons" aria-label="Choisir un étage">
-     <a href="#home" data-floor="R" aria-current="location"><b>R</b><span>Profil</span></a>
-     <a href="#parcours" data-floor="01"><b>01</b><span>Parcours</span></a>
-     <a href="#competences" data-floor="02"><b>02</b><span>Compétences</span></a>
-     <a href="#work" data-floor="03"><b>03</b><span>Projets</span></a>
-     <a href="#atelier" data-floor="04"><b>04</b><span>Atelier</span></a>
-     <a href="#about" data-floor="05"><b>05</b><span>Pratiques</span></a>
-     <a href="#contact" data-floor="06"><b>06</b><span>Contact</span></a>
+     <a href="#home" data-floor="R" data-room-name="Atrium" data-action="Ouvrir le CV" aria-current="location"><b>R</b><span>Profil</span></a>
+     <a href="#parcours" data-floor="01" data-room-name="Archives" data-action="Lire le parcours"><b>01</b><span>Parcours</span></a>
+     <a href="#competences" data-floor="02" data-room-name="Salle des instruments" data-action="Voir les compétences"><b>02</b><span>Compétences</span></a>
+     <a href="#work" data-floor="03" data-room-name="Galerie" data-action="Voir les projets"><b>03</b><span>Projets</span></a>
+     <a href="#atelier" data-floor="04" data-room-name="Atelier" data-action="Voir les prototypes"><b>04</b><span>Atelier</span></a>
+     <a href="#about" data-floor="05" data-room-name="Studio" data-action="Explorer les pratiques"><b>05</b><span>Pratiques</span></a>
+     <a href="#contact" data-floor="06" data-room-name="Terrasse" data-action="Voir les contacts"><b>06</b><span>Contact</span></a>
     </nav>
     <div class="lift-travel" hidden>
      <button type="button" data-step="-1" aria-label="Descendre d’un étage">↓</button>
@@ -42,9 +44,19 @@
    <div class="lift-opening">
     <div class="lift-header">
      <span class="floor-label">R / Profil</span>
-     <a href="#work">Voir les projets ↗</a>
+     <span class="lift-brandplate">{{profile.name}}</span>
     </div>
-    <div class="lift-viewport">
+    <div class="lift-stage">
+     <div class="lift-room" hidden>
+      <div class="room-scenery" aria-hidden="true"></div>
+      <button class="room-hotspot" type="button" aria-label="Explorer la rubrique"><span aria-hidden="true">+</span></button>
+      <div class="room-caption">
+       <div><p class="room-level">R / Profil</p><h1 class="room-name">Atrium</h1></div>
+       <button class="room-explore" type="button">Ouvrir le CV <span aria-hidden="true">↗</span></button>
+      </div>
+     </div>
+     <div class="lift-details-bar" hidden><button class="room-back" type="button"><span aria-hidden="true">←</span> Retour au décor</button></div>
+     <div class="lift-viewport">
      <main>
    <section class="cover dossier-section" id="home" aria-labelledby="cover-title">
     <div class="cover-art" aria-hidden="true"></div>
@@ -89,8 +101,10 @@
    </section>
    <footer class="dossier-footer"><a href="https://egalland.github.io/?theme=dossier">egalland.github.io/?theme=dossier</a></footer>
      </main>
+     </div>
+     <div class="lift-doors" aria-hidden="true"><i></i><i></i></div>
     </div>
-    <div class="lift-doors" aria-hidden="true"><i></i><i></i></div>
+    <div class="lift-threshold" aria-hidden="true"></div>
    </div>
   </div>
  </div>

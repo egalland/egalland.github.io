@@ -31,141 +31,292 @@ header.dossier-bar {
 .dossier-bar .bar-brand b {color: var(--acid)}
 .dossier-bar .bar-actions a {font: 600 12px/1 var(--mono); text-decoration: none; padding-block: 12px}
 .dossier-bar .bar-actions a:hover {color: var(--acid)}
-.dossier-layout {width: min(100% - 48px, 1272px); margin: clamp(16px, 3.2vw, 48px) auto}
+.dossier-layout {
+ width: min(100% - 30px, 1500px);
+ margin: 15px auto;
+}
 .lift {
+ position: relative;
  display: grid;
- grid-template-columns: minmax(0, 1fr) 232px;
+ grid-template-columns: minmax(0, 1fr) 116px;
  grid-template-areas: "opening console";
- gap: clamp(10px, 2vw, 24px);
- align-items: start;
- padding: clamp(8px, 1.4vw, 20px);
- background: linear-gradient(135deg, #282d29, #101410 62%, #242922);
- border: 1px solid #50564b;
- box-shadow: 0 20px 75px #0007, inset 0 0 0 3px #090b09;
+ gap: clamp(9px, 2vw, 28px);
+ align-items: center;
+ padding: clamp(10px, 2vw, 28px);
+ background:
+  repeating-linear-gradient(95deg, #e1e9dc06 0 1px, transparent 2px 5px),
+  linear-gradient(104deg, #242a29, #626b67 26%, #363e3b 67%, #7b857c);
+ border: 1px solid #838d83;
+ box-shadow: inset 0 0 0 4px #282f2d, 0 16px 70px #0009;
 }
 .lift-opening {
  grid-area: opening;
  position: relative;
  isolation: isolate;
- overflow: hidden;
  min-width: 0;
- border: 1px solid #5d645a;
- background: #131610;
- box-shadow: 0 0 0 3px #080a08, 0 0 0 4px #3d433b;
+ border: 1px solid #8e9a91;
+ background: #161c1b;
+ box-shadow: 0 0 0 3px #0c1111, 0 0 0 5px #56635d;
 }
 .lift-header {
  position: relative;
- z-index: 2;
- min-height: 37px;
+ z-index: 4;
+ min-height: 36px;
  display: flex;
  justify-content: space-between;
  align-items: center;
- gap: 12px;
- padding: 5px 14px;
- border-bottom: 1px solid #4f5549;
- background: #1d211c;
- font: 600 11px/1.2 var(--mono);
+ gap: 8px;
+ padding: 5px 16px;
+ background: #171f1e;
+ border-bottom: 1px solid #52625b;
+ box-shadow: 0 0 12px #000a;
+ font: 650 10px/1.2 var(--mono);
 }
-.floor-label {color: var(--acid); text-transform: uppercase; letter-spacing: .1em}
-.lift-header a {color: var(--muted); padding-block: 7px; text-underline-offset: 3px}
-.lift-header a:hover {color: var(--acid)}
+.floor-label, .lift-brandplate {color: #dbe8db; text-transform: uppercase; letter-spacing: .13em}
+.floor-label {color: #ccefa6}
+.lift-stage {position: relative; isolation: isolate}
+html[data-lift="ready"] .lift-stage {
+ height: clamp(440px, calc(100svh - 184px), 1040px);
+ overflow: hidden;
+}
+.lift-threshold {
+ height: 17px;
+ background: repeating-linear-gradient(0deg, #0c1111 0 1px, #909892 2px, #525b54 3px);
+ box-shadow: inset 0 3px 6px #080c0c;
+}
 .lift-console {
  grid-area: console;
- padding: 12px;
- border: 1px solid #50574c;
- background: repeating-linear-gradient(0deg, #fff0 0 3px, #fff1 4px, #fff0 5px), linear-gradient(135deg, #424942 0%, #252b25 48%, #363d35 100%);
- box-shadow: inset 0 0 0 3px #121612, 0 5px 15px #0005;
+ position: relative;
+ padding: 8px;
+ border: 1px solid #818d83;
+ background: linear-gradient(143deg, #414a45, #171f1c 62%, #555f57);
+ border-radius: 4px;
+ box-shadow: 0 7px 20px #101211b5, inset 0 0 0 3px #222a25;
 }
-.console-heading {display: flex; justify-content: space-between; margin: 0 2px 9px; gap: 7px; color: #d0d7ca; font: 650 10px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .12em}
+.console-heading {display: flex; justify-content: space-between; align-items: center; margin: 0 1px 6px; gap: 4px; color: #e2eadf; font: 650 9px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .06em}
 .lift-display {
+ width: 100%;
  display: grid;
  grid-template-columns: minmax(0, 1fr) auto;
  grid-template-areas: "number direction" "readout readout";
  align-items: start;
- padding: 10px 12px;
- margin-bottom: 12px;
- border: 1px solid #647457;
- box-shadow: inset 0 0 0 3px #10160d;
- background: repeating-linear-gradient(0deg, #8ec75d0c 0 1px, transparent 1px 4px), #171f13;
- color: var(--acid);
+ padding: 7px 8px;
+ margin-bottom: 9px;
+ border: 1px solid #7f9376;
+ border-radius: 2px;
+ box-shadow: inset 0 0 0 2px #111a13;
+ background: repeating-linear-gradient(0deg, #8ec75d10 0 1px, transparent 1px 4px), #142015;
+ color: #d6ffb9;
+ text-align: left;
  font-family: var(--mono);
+ cursor: zoom-in;
 }
-.lift-number {grid-area: number; font-size: 48px; font-weight: 600; line-height: 1; letter-spacing: -.1em; text-shadow: 0 0 20px #cafa78a0}
-.lift-direction {grid-area: direction; display: block; line-height: 1; border: 1px solid #43563a; padding: 5px 7px}
-.lift-readout {grid-area: readout; margin-top: 7px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase}
-.lift-buttons {display: grid; gap: 6px}
-.lift-buttons a, .lift-travel button {
+.lift-display:hover {border-color: #c4f6ad}
+.lift-number {grid-area: number; font-size: 40px; font-weight: 650; line-height: 1; letter-spacing: -.09em; text-shadow: 0 0 15px #a0fa78a0}
+.lift-direction {grid-area: direction; align-self: start; font-size: 13px}
+.lift-readout {grid-area: readout; margin-top: 5px; font-size: 8px; line-height: 1.2; text-transform: uppercase}
+.lift-buttons {display: grid; grid-template-columns: 1fr 1fr; gap: 5px}
+.lift-buttons a, .lift-travel button, .console-close {
  display: grid;
- grid-template-columns: 32px minmax(0, 1fr);
- align-items: center;
- gap: 8px;
- min-height: 42px;
- padding: 4px 9px 4px 5px;
- background: linear-gradient(180deg, #353e34, #252b25);
- border: 1px solid #586055;
+ place-items: center;
+ min-width: 0;
+ min-height: 38px;
+ padding: 3px;
+ background: linear-gradient(180deg, #5b685d, #29332b);
+ border: 1px solid #7f8b7b;
  border-radius: 3px;
- box-shadow: 0 2px 0 #141913;
- color: #e9ede6;
+ box-shadow: 0 2px 0 #101511;
+ color: #f5f8ee;
  text-decoration: none;
- font: 600 11px/1.25 var(--mono);
+ font: 650 11px/1.25 var(--mono);
 }
 .lift-buttons b {
  display: grid;
  place-items: center;
- height: 29px;
- border: 1px solid #6c7466;
- border-radius: 2px;
- color: #d8dfd3;
- background: #161c15;
- font-size: 12px;
+ width: 28px;
+ height: 28px;
+ border: 1px solid #9aa793;
+ border-radius: 50%;
+ color: #eef7e9;
+ background: linear-gradient(#424d42, #1a241b);
 }
-.lift-buttons a:hover, .lift-buttons a[aria-current] {border-color: #b7cb83; color: var(--acid)}
+.lift:not([data-console="expanded"]) .lift-buttons span {
+ position: absolute;
+ width: 1px;
+ height: 1px;
+ overflow: hidden;
+ clip-path: inset(50%);
+}
+.lift-buttons a:hover, .lift-buttons a[aria-current] {border-color: #c0eca1}
 .lift-buttons a[aria-current] b, .lift-buttons a:hover b {
- background: var(--acid);
- border-color: var(--acid);
- color: #18220f;
- box-shadow: 0 0 12px #d9fa7755;
+ background: #c9efa9;
+ border-color: #d2ffc0;
+ color: #19271c;
+ box-shadow: 0 0 12px #befaa366;
 }
-.lift-travel {display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 11px}
-.lift-travel button {display: block; cursor: pointer; min-height: 38px; padding: 3px 9px; font-size: 19px}
-.lift-travel button:hover {border-color: var(--acid)}
-.lift-travel [aria-disabled="true"] {opacity: .45; cursor: default}
+.lift-travel {display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px}
+.lift-travel button, .console-close {cursor: pointer; font-size: 16px}
+.lift-travel [aria-disabled="true"] {opacity: .55; cursor: default}
+.console-backdrop {position: absolute; z-index: 6; inset: 0; border: 0; background: #080d0cbe; backdrop-filter: blur(8px); cursor: zoom-out}
+.lift[data-console="expanded"] .lift-console {
+ position: absolute;
+ z-index: 7;
+ grid-area: auto;
+ top: 50%;
+ left: 50%;
+ width: min(320px, calc(100% - 34px));
+ padding: 14px;
+ transform: translate(-50%, -50%);
+}
+.lift[data-console="expanded"] .lift-display {padding: 11px 13px; cursor: zoom-out}
+.lift[data-console="expanded"] .lift-number {font-size: 54px}
+.lift[data-console="expanded"] .lift-readout {font-size: 10px}
+.lift[data-console="expanded"] .lift-buttons {grid-template-columns: 1fr}
+.lift[data-console="expanded"] .lift-buttons a {grid-template-columns: 42px 1fr; justify-items: start; min-height: 39px; padding-inline: 7px}
+.lift[data-console="expanded"] .lift-buttons b {justify-self: center}
+.console-close {min-width: 39px; min-height: 32px}
 .lift-announcement {position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
+
+.lift-room {position: absolute; z-index: 1; inset: 0; overflow: hidden; background: #202e2c; cursor: grab; touch-action: pan-y}
+.lift-room[data-dragging] {cursor: grabbing}
+.room-scenery {
+ position: absolute;
+ inset: -7%;
+ transform: translateX(var(--room-pan, 0%)) scale(var(--room-scale, 1));
+ background-color: #202e2c;
+ background-image: radial-gradient(ellipse at 56% 44%, #566754, #17221c 66%);
+ background-position: center;
+ background-size: cover;
+ transition: transform .28s ease-out;
+}
+.lift-room[data-dragging] .room-scenery {transition: none}
+@media (prefers-reduced-motion: no-preference) {
+ .lift-opening[data-shaft] .room-scenery {animation: shaft-motion .72s linear infinite}
+ .lift-opening[data-travel="down"] .room-scenery {animation-direction: reverse}
+}
+@keyframes shaft-motion {
+ from {transform: translateY(-6%) scale(1.12)}
+ to {transform: translateY(6%) scale(1.12)}
+}
+.lift-room::after {
+ content: "";
+ position: absolute;
+ inset: 0;
+ pointer-events: none;
+ background: linear-gradient(0deg, #081010e8 0%, #09111091 16%, transparent 45%), linear-gradient(90deg, #07100e56, transparent 25%, transparent 75%, #07100e3d);
+}
+.room-caption {
+ position: absolute;
+ z-index: 2;
+ inset: auto 0 0;
+ display: flex;
+ flex-wrap: wrap;
+ align-items: end;
+ justify-content: space-between;
+ gap: 8px 20px;
+ padding: clamp(15px, 3.3vw, 46px);
+ pointer-events: none;
+}
+.room-caption button {pointer-events: auto}
+.room-level {margin: 0 0 7px; color: #ccefae; font: 650 11px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase}
+.room-name {
+ margin: 0;
+ max-width: 16ch;
+ color: #f2f4eb;
+ font: 700 clamp(31px, 6.9vw, 100px)/.91 var(--display);
+ letter-spacing: -.075em;
+ text-wrap: balance;
+}
+.room-hotspot {
+ position: absolute;
+ z-index: 2;
+ top: 49%;
+ left: 52%;
+ width: 46px;
+ height: 46px;
+ border: 1px solid #f0ffe7;
+ border-radius: 50%;
+ background: #0e1c1aa3;
+ color: #e8ffd9;
+ box-shadow: 0 0 0 5px #d2ffc239, 0 2px 24px #060b0b;
+ cursor: pointer;
+ font: 400 24px/1 var(--mono);
+ transition: box-shadow .2s, background .2s;
+}
+.room-hotspot:hover, .room-hotspot:focus-visible {box-shadow: 0 0 0 10px #edffd75e; background: #1f3929}
+.room-explore, .room-back {
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ gap: 10px;
+ min-height: 44px;
+ padding: 8px 11px;
+ border: 1px solid #a2b89a;
+ background: #14251fe3;
+ color: #f4fbf0;
+ cursor: pointer;
+ font: 650 11px/1.35 var(--mono);
+}
+.room-explore:hover, .room-back:hover {background: #d8efc3; color: #18241b}
+.lift-details-bar {
+ position: absolute;
+ top: 0;
+ left: 0;
+ right: 0;
+ z-index: 4;
+ padding: 8px clamp(12px, 3vw, 28px);
+ background: #17221ef2;
+ border-bottom: 1px solid #53645b;
+}
+.room-back {min-height: 35px; padding-block: 5px}
 .lift-doors {display: none}
 main {min-width: 0}
 html[data-lift="ready"] .lift-viewport {
- height: clamp(530px, calc(100dvh - 178px), 850px);
- position: relative;
+ position: absolute;
+ z-index: 3;
+ inset: 52px 0 0;
  overflow: auto;
  scrollbar-gutter: stable;
- scrollbar-color: #6d785e #1b211a;
+ scrollbar-color: #77897a #1e2a24;
+ background: #151d19;
 }
+html[data-lift="ready"] .lift-opening:not([data-details]) .lift-viewport {visibility: hidden}
 html[data-lift="ready"] .dossier-section:not([data-active-floor]) {display: none}
-html[data-lift="ready"] .dossier-section {
- min-height: 100%;
- margin: 0;
-}
+html[data-lift="ready"] .dossier-section {min-height: 100%; margin: 0}
 html[data-lift="ready"] main {min-height: 100%}
 html[data-lift="ready"] .dossier-section:not(.cover) {padding: clamp(20px, 4vw, 60px)}
-html[data-lift="ready"] .cover {border: 0; min-height: max(100%, clamp(530px, calc(100dvh - 178px), 850px))}
+html[data-lift="ready"] .cover {min-height: max(400px, calc(100svh - 236px)); border: 0}
 html[data-lift="ready"] .lift-doors {
  position: absolute;
- z-index: 1;
+ z-index: 5;
  pointer-events: none;
- inset: 37px 0 0;
+ inset: 0;
  display: grid;
  grid-template-columns: 1fr 1fr;
 }
 .lift-doors i {
  position: relative;
  transform: translateX(-101%);
- border-right: 1px solid #9eaa9d;
- background: repeating-linear-gradient(0deg, #d9e8d909 0 1px, transparent 1px 3px), linear-gradient(90deg, #414c45, #6e7b70 42%, #3a483e 90%, #161d17);
- box-shadow: inset 0 0 25px #18231b8c;
- transition: transform .23s cubic-bezier(.53,.02,.33,1);
+ border: 8px solid #343e39;
+ border-right: 5px solid #171e1b;
+ background: linear-gradient(113deg, #c4e8ce35, #30413fe0 36%, #182522b5 58%, #bccfc567 85%);
+ box-shadow: inset 0 0 0 1px #839b8e, inset 0 0 28px #12251b77;
+ backdrop-filter: blur(3px);
+ transition: transform .34s cubic-bezier(.53,.02,.33,1);
 }
-.lift-doors i + i {transform: translateX(101%); border: 0; border-left: 1px solid #111813; background: repeating-linear-gradient(0deg, #d9e8d909 0 1px, transparent 1px 3px), linear-gradient(90deg, #222d25, #626f64 58%, #384639)}
+.lift-doors i::after {
+ content: "";
+ position: absolute;
+ top: 52%;
+ left: 0;
+ width: 100%;
+ height: 11px;
+ opacity: .55;
+ background: repeating-linear-gradient(125deg, #abc895 0 5px, #262d25 6px 11px);
+}
+.lift-doors i + i {transform: translateX(101%); border-right: 8px solid #343e39; border-left: 5px solid #171e1b}
 .lift-opening[data-doors="closed"] .lift-doors i {transform: translateX(0)}
+.lift-opening[data-travel] .room-hotspot, .lift-opening[data-travel] .room-caption {visibility: hidden}
 .cover {
  position: relative;
  isolation: isolate;
@@ -299,55 +450,50 @@ h1, h2, h3 {font-family: var(--display)}
 .practices span {font-size: 14px; color: var(--muted)}
 .practices small {color: var(--acid); font: 12px/1.6 var(--mono)}
 .dossier-footer {display: none}
-@media (max-width: 800px) {
- .dossier-layout {width: calc(100% - 24px)}
- .lift {display: block}
- .lift-opening {margin-top: 12px}
- .lift-console {display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: start; gap: 8px; padding: 8px}
- .console-heading {grid-column: 1 / -1; margin: 0}
- .lift-buttons {grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px}
- .lift-buttons a {grid-template-columns: 1fr; justify-items: center; padding: 3px 0; gap: 2px; font-size: 10px; min-height: 43px}
- .lift-buttons b {min-width: 23px; height: 21px; font-size: 11px}
- .lift-display {margin: 0; padding: 6px; min-height: 68px}
- .lift-number {font-size: 31px}
- .lift-direction {font-size: 11px; padding: 3px}
- .lift-readout {font-size: 8px}
- .lift-travel {display: none}
- html[data-lift="ready"] .lift-viewport {height: clamp(390px, calc(100dvh - 234px), 690px)}
- html[data-lift="ready"] .cover {min-height: clamp(390px, calc(100dvh - 234px), 690px)}
-}
-@media (max-width: 540px) {
- .cover {min-height: 400px; padding: 25px 17px}
+@media (max-width: 650px) {
+ .dossier-layout {width: calc(100% - 12px); margin: 7px auto}
+ .lift {grid-template-columns: minmax(0, 1fr) 61px; gap: 8px; padding: 7px}
+ .lift-console {padding: 4px}
+ .console-heading {font-size: 7px; letter-spacing: 0}
+ .lift-display {padding: 5px 4px}
+ .lift-number {font-size: 29px}
+ .lift-direction {font-size: 10px}
+ .lift-readout {font-size: 7px; overflow-wrap: anywhere}
+ .lift:not([data-console="expanded"]) .lift-buttons, .lift:not([data-console="expanded"]) .lift-travel {grid-template-columns: 1fr}
+ .lift-buttons a, .lift-travel button {min-height: 34px}
+ .lift-buttons b {width: 23px; height: 23px}
+ .lift:not([data-console="expanded"]) .lift-travel button {min-height: 29px}
+ .lift-header {padding: 5px 8px; font-size: 9px}
+ .lift-brandplate {font-size: 8px; letter-spacing: .035em; text-align: right}
+ html[data-lift="ready"] .lift-stage {height: clamp(420px, calc(100svh - 140px), 800px)}
+ html[data-lift="ready"] .cover {min-height: 365px}
+ .room-caption {padding: 14px}
+ .room-name {font-size: clamp(29px, 9vw, 53px)}
+ .room-hotspot {left: 47%; width: 44px; height: 44px}
+ .room-scenery {inset: -8% -15%}
+ .cover {min-height: 360px; padding: 20px 14px}
  .cover-art {background-position: 63% center}
- .cover h1 {font-size: clamp(40px, 11vw, 61px)}
- .cover h1, .cover-label {margin-bottom: 19px}
+ .cover h1 {font-size: clamp(32px, 9vw, 55px)}
+ .cover h1, .cover-label {margin-bottom: 16px}
  .action {gap: 6px; padding-inline: 8px; font-size: 11px}
- .timeline li, .credentials, .reel-entry {grid-template-columns: 1fr}
+ .timeline li, .credentials, .reel-entry, .practices {grid-template-columns: 1fr}
  .reel-entry .frame {grid-row: 1}
- .frame span {font-size: 56px}
- .practices {grid-template-columns: 1fr}
+ .frame span {font-size: 50px}
  .dossier-bar .bar-actions a {font-size: 11px}
 }
-@media (max-width: 460px) {
- .lift-console {grid-template-columns: 69px minmax(0, 1fr); gap: 5px}
- .lift-buttons {grid-template-columns: repeat(3, minmax(0, 1fr))}
- .lift-buttons a {font-size: 9px}
- .lift-display {align-self: stretch}
- .lift-header {padding-inline: 9px}
- html[data-lift="ready"] .lift-viewport {height: clamp(345px, calc(100dvh - 282px), 570px)}
- html[data-lift="ready"] .cover {min-height: clamp(345px, calc(100dvh - 282px), 570px)}
-}
 @media (prefers-reduced-motion: reduce) {
- .lift-doors i {transition: none}
+ .lift-doors i, .room-scenery {transition: none}
 }
 @media print {
  @page {size: A4; margin: 15mm}
  :root {color-scheme: light; --paper: white; --ink: #171717; --muted: #343434; --rule: #bdbdbd; --acid: #26391a}
  body {font-size: 10.5pt}
  .dossier-layout {display: block; width: auto}
- header.dossier-bar, .lift-console, .lift-header, .lift-announcement, .skip, .cover-art, .cover-actions {display: none}
+ header.dossier-bar, .lift-console, .console-backdrop, .lift-header, .lift-threshold, .lift-room, .lift-details-bar, .lift-announcement, .skip, .cover-art, .cover-actions {display: none}
  .lift, .lift-opening {display: block; background: none; border: 0; box-shadow: none; padding: 0; margin: 0; overflow: visible}
- html[data-lift="ready"] .lift-viewport {height: auto; overflow: visible}
+ html[data-lift="ready"] .lift-stage {height: auto; overflow: visible}
+ html[data-lift="ready"] .lift-viewport,
+ html[data-lift="ready"] .lift-opening:not([data-details]) .lift-viewport {position: static; visibility: visible; height: auto; overflow: visible; background: none}
  html[data-lift="ready"] .lift-doors {display: none}
  html[data-lift="ready"] .dossier-section:is(.cover,.cv-core) {display: block; min-height: 0; margin-top: 15px; padding: 0}
  html[data-lift="ready"] .dossier-section.cover {margin-top: 0; padding-bottom: 12px; border-bottom: 1px solid var(--rule)}

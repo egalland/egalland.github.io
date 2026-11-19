@@ -161,3 +161,15 @@ test('les commandes de cabine ouvrent chacune un étage du Dossier', () => {
  for (const [id] of buttons) assert.match(html, new RegExp('<section[^>]+id="' + id + '"'));
  assert.match(html, /class="lift-doors" aria-hidden="true"/);
 });
+
+test('chaque étage possède un décor et un accès au contenu', () => {
+ const html = read('dossier/index.html');
+ const scenes = read('dossier/scenes.css');
+ for (const id of ['home', 'parcours', 'competences', 'work', 'atelier', 'about', 'contact']) {
+  assert.ok(scenes.includes('[data-room="' + id + '"] .room-scenery {background-image: url("data:image/webp;base64,UklGR'));
+ }
+ assert.match(scenes, /\[data-shaft\][^\n]+data:image\/webp;base64,UklGR/);
+ for (const control of ['room-hotspot', 'room-explore', 'room-back', 'console-close']) {
+  assert.match(html, new RegExp('<button class="' + control + '"'));
+ }
+});
