@@ -4,335 +4,201 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#000000">
-<title>MX Master 3 — Surface animée</title>
+<title>MX Master 3 — Jiggler optique</title>
 <style>
-  :root {
-    --speed: 42ms;
-    --scale: 1;
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;background:#000;color:#fff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+  body{display:flex;flex-direction:column}
+  #wrap{position:relative;flex:1;min-height:0;background:#000}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;background:#000}
+  #target{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(68vw,300px);height:min(44vw,190px);
+    border:2px solid rgba(255,255,255,.78);border-radius:26px;
+    pointer-events:none;box-shadow:0 0 0 2px rgba(0,0,0,.55) inset
   }
-
-  * { box-sizing: border-box; }
-
-  html, body {
-    margin: 0;
-    min-height: 100%;
-    background: #000;
-    color: #fff;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    overflow: hidden;
-    touch-action: manipulation;
+  #target:after{
+    content:"CAPTEUR";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    font-size:11px;letter-spacing:.14em;background:rgba(0,0,0,.72);padding:5px 8px;border-radius:999px
   }
-
-  body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  #surface {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 68vh;
-    overflow: hidden;
-    background: #000;
-    isolation: isolate;
-  }
-
-  #pattern,
-  #pattern2 {
-    position: absolute;
-    inset: -80px;
-    will-change: transform, background-position;
-    image-rendering: pixelated;
-    pointer-events: none;
-  }
-
-  /* Texture volontairement très contrastée et riche en micro-détails,
-     plus facile à "voir" pour un capteur optique qu'un simple dégradé. */
-  #pattern {
-    opacity: 1;
-    background:
-      repeating-conic-gradient(
-        from 0deg,
-        #fff 0deg 45deg,
-        #000 45deg 90deg
-      ) 0 0 / 10px 10px;
-  }
-
-  #pattern2 {
-    opacity: .42;
-    mix-blend-mode: difference;
-    background:
-      repeating-linear-gradient(
-        27deg,
-        #fff 0 2px,
-        #000 2px 5px,
-        #fff 5px 6px,
-        #000 6px 11px
-      );
-    background-size: 17px 17px;
-  }
-
-  #target {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: min(62vw, 260px);
-    aspect-ratio: 1.65 / 1;
-    transform: translate(-50%, -50%);
-    border: 2px solid rgba(255,255,255,.72);
-    border-radius: 28px;
-    pointer-events: none;
-    z-index: 4;
-  }
-
-  #target::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 22px;
-    height: 22px;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,.8);
-    box-shadow: 0 0 0 7px rgba(0,0,0,.35);
-  }
-
-  #hint {
-    position: absolute;
-    left: 50%;
-    top: calc(50% + min(25vw, 105px));
-    transform: translateX(-50%);
-    z-index: 5;
-    font-size: 12px;
-    letter-spacing: .02em;
-    background: rgba(0,0,0,.62);
-    padding: 6px 9px;
-    border-radius: 999px;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
-  #controls {
-    position: relative;
-    z-index: 10;
-    background: rgba(16,16,16,.96);
-    border-top: 1px solid rgba(255,255,255,.14);
-    padding: 12px;
-    display: grid;
-    gap: 10px;
-  }
-
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    flex-wrap: wrap;
-  }
-
-  button, select, input[type="range"] {
-    font: inherit;
-  }
-
-  button, select {
-    min-height: 42px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,.18);
-    background: #202020;
-    color: #fff;
-    padding: 0 12px;
-  }
-
-  button.primary {
-    background: #fff;
-    color: #000;
-    border-color: #fff;
-    font-weight: 700;
-  }
-
-  button.active {
-    outline: 2px solid #fff;
-    outline-offset: 2px;
-  }
-
-  .grow { flex: 1 1 160px; }
-
-  label {
-    font-size: 13px;
-    color: #ddd;
-  }
-
-  input[type="range"] {
-    width: 100%;
-  }
-
-  #status {
-    font-size: 12px;
-    color: #bbb;
-    line-height: 1.35;
-  }
-
-  .hidden-ui #controls,
-  .hidden-ui #hint,
-  .hidden-ui #target {
-    display: none;
-  }
-
-  @media (orientation: landscape) {
-    #surface { min-height: 76vh; }
-    #controls { grid-template-columns: 1fr 1fr; align-items: center; }
-  }
+  #ui{padding:10px;background:#111;border-top:1px solid #333;display:grid;gap:8px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  button,select,input{font:inherit}
+  button,select{min-height:42px;border-radius:10px;border:1px solid #444;background:#222;color:#fff;padding:0 12px}
+  button.primary{background:#fff;color:#000;border-color:#fff;font-weight:700}
+  label{font-size:13px;color:#ddd}
+  input[type=range]{width:100%}
+  #info{font-size:12px;color:#bbb;line-height:1.35}
+  .hide-ui #ui,.hide-ui #target{display:none}
 </style>
 </head>
-
 <body>
-  <main id="surface" aria-label="Surface animée pour souris optique">
-    <div id="pattern"></div>
-    <div id="pattern2"></div>
-    <div id="target" aria-hidden="true"></div>
-    <div id="hint">Place le capteur de la souris sur la cible</div>
-  </main>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="target"></div>
+</div>
 
-  <section id="controls">
-    <div class="row">
-      <button id="toggle" class="primary" type="button">Pause</button>
-      <button id="fullscreen" type="button">Plein écran</button>
-      <button id="hideUi" type="button">Masquer l’interface</button>
-
-      <select id="mode" class="grow" aria-label="Type d’animation">
-        <option value="micro">Micro-jitter</option>
-        <option value="diagonal">Défilement diagonal</option>
-        <option value="chaos">Pseudo-aléatoire</option>
-      </select>
-    </div>
-
-    <div>
-      <label for="speed">Vitesse : <span id="speedValue">moyenne</span></label>
-      <input id="speed" type="range" min="1" max="100" value="52">
-    </div>
-
-    <div id="status">
-      Optimisé pour une souris optique à haute précision : motif noir/blanc à petits détails,
-      mouvement très faible et continu. Mets la luminosité du téléphone assez haute et pose
-      la souris directement sur l’écran, capteur au centre.
-    </div>
-  </section>
+<div id="ui">
+  <div class="row">
+    <button id="toggle" class="primary">Pause</button>
+    <button id="fs">Plein écran</button>
+    <button id="hide">Masquer interface</button>
+    <select id="mode">
+      <option value="noise">Bruit fin — recommandé</option>
+      <option value="checker">Damier mobile</option>
+      <option value="stripes">Rayures mobiles</option>
+      <option value="combo">Combo agressif</option>
+    </select>
+  </div>
+  <div>
+    <label for="speed">Vitesse : <span id="sv">60</span></label>
+    <input id="speed" type="range" min="10" max="180" value="60">
+  </div>
+  <div>
+    <label for="size">Taille du motif : <span id="zs">3 px</span></label>
+    <input id="size" type="range" min="2" max="10" value="3">
+  </div>
+  <div id="info">
+    Pose le capteur au centre. Commence par « Bruit fin ». Si rien ne se passe, monte la vitesse puis teste « Combo agressif ».
+  </div>
+</div>
 
 <script>
 (() => {
-  const surface = document.getElementById('surface');
-  const p1 = document.getElementById('pattern');
-  const p2 = document.getElementById('pattern2');
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d', { alpha:false });
   const toggle = document.getElementById('toggle');
-  const fullscreenBtn = document.getElementById('fullscreen');
-  const hideUi = document.getElementById('hideUi');
-  const speed = document.getElementById('speed');
-  const speedValue = document.getElementById('speedValue');
+  const fs = document.getElementById('fs');
+  const hide = document.getElementById('hide');
   const mode = document.getElementById('mode');
+  const speed = document.getElementById('speed');
+  const size = document.getElementById('size');
+  const sv = document.getElementById('sv');
+  const zs = document.getElementById('zs');
 
-  let running = true;
-  let raf = 0;
-  let last = performance.now();
-  let x = 0, y = 0, phase = 0;
-  let wakeLock = null;
+  let running = true, raf = 0, last = performance.now();
+  let ox = 0, oy = 0, t = 0, noiseCanvas = null, noiseCtx = null;
 
-  function speedParams() {
-    const v = Number(speed.value);
-    if (v < 34) speedValue.textContent = 'lente';
-    else if (v < 68) speedValue.textContent = 'moyenne';
-    else speedValue.textContent = 'rapide';
-
-    // Environ 5 à 55 px/s : volontairement faible pour provoquer un mouvement
-    // détectable sans envoyer le curseur à l'autre bout de l'écran.
-    return 5 + (v / 100) * 50;
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const r = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, Math.round(r.width * dpr));
+    canvas.height = Math.max(1, Math.round(r.height * dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    buildNoise();
   }
 
-  function animate(now) {
-    if (!running) return;
-    const dt = Math.min(0.05, (now - last) / 1000);
+  function buildNoise() {
+    const cell = Number(size.value);
+    const w = 360, h = 360;
+    noiseCanvas = document.createElement('canvas');
+    noiseCanvas.width = w; noiseCanvas.height = h;
+    noiseCtx = noiseCanvas.getContext('2d', {alpha:false});
+    noiseCtx.fillStyle = '#000';
+    noiseCtx.fillRect(0,0,w,h);
+
+    for(let y=0;y<h;y+=cell){
+      for(let x=0;x<w;x+=cell){
+        noiseCtx.fillStyle = Math.random() > .5 ? '#fff' : '#000';
+        noiseCtx.fillRect(x,y,cell,cell);
+      }
+    }
+  }
+
+  function drawNoise(w,h) {
+    const pat = ctx.createPattern(noiseCanvas,'repeat');
+    ctx.save();
+    ctx.translate(ox,oy);
+    ctx.fillStyle = pat;
+    ctx.fillRect(-400,-400,w+800,h+800);
+    ctx.restore();
+  }
+
+  function drawChecker(w,h) {
+    const s = Math.max(4, Number(size.value)*2);
+    ctx.save();
+    ctx.translate(ox,oy);
+    for(let y=-s*4;y<h+s*4;y+=s){
+      for(let x=-s*4;x<w+s*4;x+=s){
+        ctx.fillStyle = (((x/s|0)+(y/s|0)) & 1) ? '#fff' : '#000';
+        ctx.fillRect(x,y,s,s);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawStripes(w,h) {
+    const s = Math.max(3, Number(size.value));
+    ctx.save();
+    ctx.translate(ox,oy);
+    ctx.rotate(-0.35);
+    for(let x=-h;x<w+h;x+=s*2){
+      ctx.fillStyle='#fff';
+      ctx.fillRect(x,-h,s,h*3);
+    }
+    ctx.restore();
+  }
+
+  function frame(now){
+    if(!running) return;
+    const dt = Math.min(.05,(now-last)/1000);
     last = now;
+    t += dt;
+    const v = Number(speed.value);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
 
-    const s = speedParams();
-    phase += dt;
+    ox = (ox + v*dt) % 360;
+    oy = (oy + v*.63*dt) % 360;
 
-    if (mode.value === 'micro') {
-      x = Math.sin(phase * 2.1) * 5 + Math.sin(phase * 5.3) * 1.4;
-      y = Math.cos(phase * 1.7) * 4 + Math.sin(phase * 4.1) * 1.2;
-    } else if (mode.value === 'diagonal') {
-      x = (x + s * dt) % 20;
-      y = (y + s * 0.73 * dt) % 20;
-    } else {
-      x += (Math.sin(phase * 3.7) + Math.cos(phase * 2.3)) * s * dt * 0.34;
-      y += (Math.cos(phase * 4.3) - Math.sin(phase * 1.9)) * s * dt * 0.34;
-      x = Math.max(-12, Math.min(12, x));
-      y = Math.max(-12, Math.min(12, y));
-      if (Math.abs(x) > 11.5) x *= -0.8;
-      if (Math.abs(y) > 11.5) y *= -0.8;
+    ctx.fillStyle='#000';
+    ctx.fillRect(0,0,w,h);
+
+    if(mode.value==='noise') drawNoise(w,h);
+    if(mode.value==='checker') drawChecker(w,h);
+    if(mode.value==='stripes') drawStripes(w,h);
+    if(mode.value==='combo'){
+      drawNoise(w,h);
+      ctx.globalCompositeOperation='difference';
+      drawStripes(w,h);
+      ctx.globalCompositeOperation='source-over';
     }
 
-    p1.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-    p2.style.transform = `translate3d(${-x * 0.61}px, ${-y * 0.79}px, 0) rotate(${Math.sin(phase * 0.4) * 0.35}deg)`;
-
-    raf = requestAnimationFrame(animate);
+    raf = requestAnimationFrame(frame);
   }
 
-  function start() {
-    if (running) return;
-    running = true;
-    toggle.textContent = 'Pause';
-    last = performance.now();
-    raf = requestAnimationFrame(animate);
+  function start(){
+    if(running) return;
+    running=true; toggle.textContent='Pause'; last=performance.now();
+    raf=requestAnimationFrame(frame);
+  }
+  function stop(){
+    running=false; toggle.textContent='Démarrer'; cancelAnimationFrame(raf);
   }
 
-  function stop() {
-    running = false;
-    toggle.textContent = 'Démarrer';
-    cancelAnimationFrame(raf);
+  toggle.addEventListener('click',()=>running?stop():start());
+  fs.addEventListener('click',async()=>{
+    try{
+      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    }catch(e){}
+  });
+  hide.addEventListener('click',()=>document.body.classList.toggle('hide-ui'));
+  canvas.addEventListener('dblclick',()=>document.body.classList.toggle('hide-ui'));
+
+  speed.addEventListener('input',()=>sv.textContent=speed.value);
+  size.addEventListener('input',()=>{zs.textContent=size.value+' px';buildNoise();});
+  mode.addEventListener('change',()=>{ox=0;oy=0;});
+
+  window.addEventListener('resize',resize);
+
+  async function wake(){
+    try{
+      if('wakeLock' in navigator) await navigator.wakeLock.request('screen');
+    }catch(e){}
   }
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake();});
 
-  toggle.addEventListener('click', () => running ? stop() : start());
-
-  speed.addEventListener('input', speedParams);
-
-  mode.addEventListener('change', () => {
-    x = 0; y = 0; phase = 0;
-  });
-
-  fullscreenBtn.addEventListener('click', async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (_) {}
-  });
-
-  hideUi.addEventListener('click', () => {
-    document.body.classList.toggle('hidden-ui');
-  });
-
-  surface.addEventListener('dblclick', () => {
-    document.body.classList.toggle('hidden-ui');
-  });
-
-  // Garde l'écran éveillé si le navigateur mobile prend en charge Screen Wake Lock.
-  async function requestWakeLock() {
-    try {
-      if ('wakeLock' in navigator) {
-        wakeLock = await navigator.wakeLock.request('screen');
-      }
-    } catch (_) {}
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') requestWakeLock();
-  });
-
-  requestWakeLock();
-  speedParams();
-  raf = requestAnimationFrame(animate);
+  resize(); wake(); raf=requestAnimationFrame(frame);
 })();
 </script>
 </body>
