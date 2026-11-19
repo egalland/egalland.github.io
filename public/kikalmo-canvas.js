@@ -3,6 +3,38 @@ import {getKikalmoLook,kikalmoFrame} from './kikalmo-avatar.js';
 import {kikalmoShell,costumeThreads} from './kikalmo-shell.js';
 
 const views=new WeakMap(),tau=Math.PI*2;
+// Costumes are painted as a whole outfit. At the silhouette the depth shell has
+// only its outermost texel; stretching that texel across the side produces a
+// different horizontal stripe on every row. Turn the two authored textile
+// panels as rounded three-quarter sprites, keeping the actual heading for the rig.
+function costumePanels(shell,rear,out,z,sin,cos,meter){
+  const {w,h,pixels:front,rowDepth}=shell,W=out.width,dst=out.data;
+  const half=(w-1)/2,width=1-.26*Math.abs(sin),side=Math.sign(sin);
+  const shift=.31*sin;
+  function sourceColumn(screen){
+    // Invert x = width*u + shift*(1-u²); the outer contour stays anchored
+    // while the centre of a hood, face or lapel travels around its volume.
+    const root=Math.sqrt(Math.max(0,width*width-4*shift*(screen-shift)));
+    return (1+2*(screen-shift)/(width+root))*half;
+  }
+  for(let x=0;x<W;x++){
+    const screen=(x-(W-1)*.5)/half;
+    if(Math.abs(screen)>width)continue;
+    const fx=sourceColumn(screen),bx=(w-1)-fx;
+    const reveal=side*screen-1.65*cos+.42*Math.abs(sin);
+    const t=Math.max(0,Math.min(1,(reveal+.12)/.24)),frontWeight=t*t*(3-2*t);
+    const shade=1-.075*Math.abs(sin)*(1-side*screen)*.5;
+    const colFront=Math.max(0,Math.min(w-1,Math.round(fx))),colBack=Math.max(0,Math.min(w-1,Math.round(bx)));
+    const round=Math.sqrt(Math.max(0,1-(screen/width)**2));
+    for(let y=0;y<h;y++){
+      const f=(y*w+colFront)*4,b=(y*w+colBack)*4,k=y*W+x;
+      const fa=front[f+3]*frontWeight,ba=rear[b+3]*(1-frontWeight),alpha=fa+ba;
+      if(alpha<1)continue;
+      for(let ch=0;ch<3;ch++)dst[k*4+ch]=(front[f+ch]*fa+rear[b+ch]*ba)*shade/alpha;
+      dst[k*4+3]=alpha;z[k]=round*rowDepth[y]/meter;
+    }
+  }
+}
 function turntable(art,theta){
   let cache=views.get(art);if(!cache){cache=new Map();views.set(art,cache);}
   const angle=((Math.round(theta/tau*24)%24)+24)%24;
@@ -29,7 +61,8 @@ function turntable(art,theta){
       d[n+3]=Math.max(im[aa+3],im2[bb+3]);
     }
   }
-  for(let y=0;y<h;y++){
+  if(art.appearance.costume)costumePanels(shell,rear,out,z,sin,cos,meter);
+  else for(let y=0;y<h;y++){
     for(let x=0;x<w;x++){
       const i=y*w+x;if(front[i*4+3]<30)continue;
       if(x===0||front[(i-1)*4+3]<30)segment(y,i,i,-1,1);

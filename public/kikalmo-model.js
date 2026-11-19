@@ -11,6 +11,25 @@ function material(color){
   if(!colors.has(color))colors.set(color,new THREE.MeshLambertMaterial({color}));
   return colors.get(color);
 }
+// A small repeat knitted in both directions around the stuffed perimeter. Its
+// colour comes from the actual garment at that edge, independent of portrait UVs.
+let clothTexture;
+function knitTexture(){
+  if(clothTexture)return clothTexture;
+  const size=32,bytes=new Uint8Array(size*size*4);
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const u=(x+.5)/size,v=(y+.5)/size;
+    const stitch=.5+.43*Math.cos(Math.PI*v);
+    const d=Math.min(Math.abs(u-stitch),Math.abs(1-u-stitch));
+    const twist=Math.cos(2*Math.PI*(u*6-v*3))*.016;
+    const shade=Math.round(255*(.77+.19*Math.exp(-48*d*d)+twist));
+    const i=(y*size+x)*4;bytes.set([shade,shade,shade,255],i);
+  }
+  clothTexture=new THREE.DataTexture(bytes,size,size);
+  clothTexture.wrapS=clothTexture.wrapT=THREE.RepeatWrapping;
+  clothTexture.magFilter=THREE.LinearFilter;clothTexture.minFilter=THREE.LinearMipmapLinearFilter;
+  clothTexture.generateMipmaps=true;clothTexture.needsUpdate=true;return clothTexture;
+}
 function geometry(art){
   if(built.has(art))return built.get(art);
   const s=kikalmoShell(art),{w,h,depth,dims,pixels,material:tags}=s;
@@ -34,23 +53,70 @@ function geometry(art){
     else if(isCostume&&up<1.19&&up>.50&&Math.abs(lateral)>.23){bone=1;next=lateral<0?3:4;t=clamp((Math.abs(lateral)-.23)*3.8);}
     si.push(bone,next,0,0);sw.push(1-t,t,0,0);
   }
-  function edge(a,b){seam.push(a,b,b+offset,a,b+offset,a+offset);}
+  const edges=[],widthAt=new Map(),vertexColors=new Array(2*offset*3).fill(1);
+  function edge(a,b,di,dj){
+    // Follow the exterior of each occupied cell, including holes between limbs.
+    // Read slightly inside the cutout so a transparent border never erases the side.
+    const i=a%(cols+1),j=Math.floor(a/(cols+1)),k=b%(cols+1),l=Math.floor(b/(cols+1));
+    const x=(i+k)*.5*w/cols,y=(j+l)*.5*h/rows;
+    const channels=[0,0,0];let samples=0,relief=.018;
+    for(const inset of [.28,.62,1,1.6]){
+      for(const across of [-.26,0,.26]){
+        const sx=clamp(Math.floor(x+(di*inset+dj*across)*w/cols),0,w-1);
+        const sy=clamp(Math.floor(y+(dj*inset+di*across)*h/rows),0,h-1);
+        const idx=sy*w+sx,px=idx*4;if(pixels[px+3]<125)continue;
+        samples++;for(let ch=0;ch<3;ch++)channels[ch]+=pixels[px+ch];
+        relief=Math.max(relief,depth[idx]);
+      }
+    }
+    // Broad pieces have a padded seam. Fine embroidery keeps a narrower rim.
+    const half=clamp(relief*.70,.026,.15);
+    for(const index of [a,b])widthAt.set(index,Math.max(half,widthAt.get(index)||0));
+    const rgb=samples?channels.map(v=>v/(samples*255)):[.41,.32,.37];
+    const dye=new THREE.Color().setRGB(...rgb,THREE.SRGBColorSpace);
+    edges.push({a,b,di,dj,dye});
+  }
   for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
     const k=j*cols+i;if(!cells[k])continue;
     const a=j*(cols+1)+i,b=a+1,c=a+cols+1,d=c+1;
     front.push(a,c,b,b,c,d);back.push(a+offset,b+offset,c+offset,b+offset,d+offset,c+offset);
-    if(!i||!cells[k-1])edge(a,c);if(i===cols-1||!cells[k+1])edge(d,b);
-    if(!j||!cells[k-cols])edge(b,a);if(j===rows-1||!cells[k+cols])edge(c,d);
+    if(!i||!cells[k-1])edge(a,c,1,0);if(i===cols-1||!cells[k+1])edge(d,b,-1,0);
+    if(!j||!cells[k-cols])edge(b,a,0,1);if(j===rows-1||!cells[k+cols])edge(c,d,0,-1);
+  }
+  for(const [i,half] of widthAt){
+    pos[i*3]=Math.max(pos[i*3],half);
+    pos[(i+offset)*3]=Math.min(pos[(i+offset)*3],-half*.83);
+  }
+  // Three rings join the skinned front and rear. The middle ring forms a soft
+  // bead, with a common outward direction at each corner to keep the hull closed.
+  const outward=new Map();
+  for(const {a,b,di,dj} of edges)for(const i of [a,b]){
+    const v=outward.get(i)||[0,0];v[0]+=di;v[1]+=dj;outward.set(i,v);
+  }
+  for(const {a,b,di,dye} of edges){
+    const start=pos.length/3;
+    for(const ring of [0,1,2])for(const i of [a,b]){
+      const [dz,dy]=outward.get(i),len=Math.hypot(dz,dy)||1;
+      const round=ring===1 ? .012/len : 0;
+      const x=ring===0?pos[i*3]:ring===2?pos[(i+offset)*3]:.002;
+      const y=pos[i*3+1]+dy*round,z=pos[i*3+2]+dz*round;
+      pos.push(x,y,z);uv.push(x/.059,(di?y:z)/.062);
+      vertexColors.push(dye.r,dye.g,dye.b);
+      si.push(...si.slice(i*4,i*4+4));sw.push(...sw.slice(i*4,i*4+4));
+    }
+    for(let v=start;v<start+4;v+=2)seam.push(v,v+3,v+1,v,v+2,v+3);
   }
   const mesh=new THREE.BufferGeometry();
   mesh.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));mesh.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  mesh.setAttribute('color',new THREE.Float32BufferAttribute(vertexColors,3));
   mesh.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4));mesh.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));
-  mesh.setIndex([...front,...back,...seam]);mesh.addGroup(0,front.length,0);mesh.addGroup(front.length,back.length,1);mesh.addGroup(front.length+back.length,seam.length,1);
+  mesh.setIndex([...front,...back,...seam]);mesh.addGroup(0,front.length,0);mesh.addGroup(front.length,back.length,1);mesh.addGroup(front.length+back.length,seam.length,2);
   mesh.computeVertexNormals();mesh.computeBoundingSphere();
   const mats=[art.front,art.rear].map(p=>{
     const tex=new THREE.CanvasTexture(p);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=2;
     return new THREE.MeshLambertMaterial({map:tex,side:THREE.DoubleSide,alphaTest:.20,emissive:'#443e39',emissiveIntensity:.20});
   });
+  mats.push(new THREE.MeshLambertMaterial({map:knitTexture(),vertexColors:true,side:THREE.DoubleSide,emissive:'#332831',emissiveIntensity:.12}));
   let entry={mesh,mats,refs:0};built.set(art,entry);return entry;
 }
 const tmp=new THREE.Vector3(),delta=new THREE.Vector3(),Y=new THREE.Vector3(0,1,0);
@@ -92,7 +158,7 @@ export function createKikalmoModel(value,seed=0){
     inactive.set(active,entry);
     if(inactive.size<=12)return;
     const [key,old]=inactive.entries().next().value;inactive.delete(key);built.delete(key);
-    old.mesh.dispose();for(const m of old.mats){m.map.dispose();m.dispose();}
+    old.mesh.dispose();for(const m of old.mats){if(m.map!==clothTexture)m.map.dispose();m.dispose();}
   }
   function update(e,dt=.016,t=0){
     if(e.id!==lastId){lastId=e.id;styleSeed=motionSeed(lastId??seed);}

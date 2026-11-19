@@ -1,9 +1,7 @@
 // Optional raster/mesh QA: npm packages sharp and @napi-rs/canvas, or CODEX_PRIMARY_RUNTIME_NODE_MODULES.
 // No network access is needed. The shim rasterizes our production self-contained SVGs with librsvg.
 import assert from 'node:assert/strict';
-import {createRequire} from 'node:module';
-import {readFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
+import {installKikalmoRaster} from './fixtures/kikalmo-raster.mjs';
 import {createHash} from 'node:crypto';
 import {equipment} from '../public/kikalmo-art.js';
 import {getKikalmoLook,drawKikalmoPortrait} from '../public/kikalmo-avatar.js';
@@ -12,21 +10,7 @@ import {drawKikalmoPuppet} from '../public/kikalmo-canvas.js';
 import {createKikalmoModel} from '../public/kikalmo-model.js';
 import * as THREE from '../public/three.js';
 
-const req=createRequire(import.meta.url);
-const paths=[process.cwd(),...(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?[process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES]:[])];
-const sharp=req(req.resolve('sharp',{paths})),native=req(req.resolve('@napi-rs/canvas',{paths}));
-globalThis.document={createElement:()=>native.createCanvas(224,224)};
-const src=Object.getOwnPropertyDescriptor(native.Image.prototype,'src').set;
-globalThis.Image=class extends native.Image{
-  set src(value){
-    if(value.startsWith('file:'))return src.call(this,readFileSync(fileURLToPath(value)));
-    if(value.startsWith('data:image/svg')){
-      const svg=decodeURIComponent(value.slice(value.indexOf(',')+1));
-      sharp(Buffer.from(svg)).png().toBuffer().then(bytes=>src.call(this,bytes)).catch(e=>this.onerror(e));return;
-    }
-    src.call(this,value);
-  }
-};
+const native=installKikalmoRaster();
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 function square(surface){
   const c=native.createCanvas(100,100),g=c.getContext('2d');g.drawImage(surface,0,0,100,100);
