@@ -41,7 +41,7 @@ test('Chase-camera controls, car possession, shared effects and travel share the
     game.setPaused(false);game.setMove(0,-1);step(45);game.setMove(0,0);
     assert(Math.hypot(game.getPosition().x-afterTravel.x,game.getPosition().y-afterTravel.y)>.3);
     game.selectWeapon('yarn');step(15);game.action('fire',true);game.action('fire',false);step(10);
-    assert(shots.some(([kind])=>kind==='yarn'));assert(emitted.some(([kind,e])=>kind==='shot'&&e.kind==='yarn'));
+    assert(shots.some(([kind])=>kind==='yarn'));assert(emitted.some(([kind,e])=>kind==='fire'&&e.kind==='yarn'));
     const prop=nearbyProps(pose.x,pose.y,45)[0];
     assert(prop);eventCallback({type:'destroy',data:{id:prop.id},player:'other'});step();
     assert(viewState.destroyed.has(prop.id));
@@ -305,7 +305,7 @@ test('Only the touch fire button uses assistance. Mouse, F, a dragged thumb, fis
   h.players.push(peer);
   assert(game.restoreTravelState({...game.exportTravelState(),yaw:manual}));
   h.step(30);
-  const totalHits=()=>h.actions.filter(e=>e.name==='hit'&&e.data.target===peer.id).length;
+  const totalHits=()=>h.actions.filter(e=>e.name==='fire'&&e.data.hits.some(hit=>hit.target===peer.id)).length;
   const mousePoint={x:location.x+Math.cos(manual)*22,y:location.y+Math.sin(manual)*22};
   h.fireAt(mousePoint);h.step(20);assert.equal(totalHits(),0);
   globalThis.window.dispatchEvent(Object.assign(new Event('keydown',{cancelable:true}),{key:'f'}));h.step(2);
@@ -358,8 +358,8 @@ test('The local player, observers and returning tabs share falls, life and appea
   assert.equal(game.travel('louvre'),false);
   const snapshot=game.exportTravelState();assert.equal(snapshot.vitality.health,0);assert.deepEqual(snapshot.vitality,game.getVitalitySnapshot());
   assert(game.restoreTravelState(snapshot));assert.equal(h.state.lifeState,'down');
-  const count=h.actions.filter(e=>e.name==='shot').length;game.action('fire');h.step(50);
-  assert.equal(h.actions.filter(e=>e.name==='shot').length,count);
+  const count=h.actions.filter(e=>e.name==='fire').length;game.action('fire');h.step(50);
+  assert.equal(h.actions.filter(e=>e.name==='fire').length,count);
   h.step(360);assert(h.state.health>0);assert.equal(h.scene.entities.find(e=>e.self).ragdoll,null);
   assert(game.selectWeapon('fist'));assert.equal(h.state.medkits,1);
 });

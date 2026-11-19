@@ -765,10 +765,10 @@ export function createCanvasView(canvas,spawn,onNotice){
       g.drawImage(art,icon.x-iconWidth*.5,icon.y-iconWidth*.4,iconWidth,iconWidth*.8);
     }});
   }
-  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0){
+  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0,age=0){
     const debris=propDebris(kind,colors?.type,angle);
     if(effects.length>60)effects.shift();
-    effects.push({kind,x,y,angle,len,lift:lift+(debris?.height||0),born:clock,duration:debris?.lifetime,
+    effects.push({kind,x,y,angle,len,lift:lift+(debris?.height||0),born:clock-age,duration:debris?.lifetime,
       fibers:debris?.strands||(kind==='meleeImpact'?impactFibers(angle,len):null)});
   }
   function render(state,dt,time){

@@ -5,7 +5,10 @@ import {vehicleSpec} from '../public/vehicle-types.js';
 import {meleeMoves} from '../public/melee-moves.js';
 import {cleanTrafficPacket} from '../public/traffic-sync.js';
 import {normalizeAppearance} from '../public/kikalmo-schema.js';
+import {encodeRoster} from '../public/roster-wire.js';
+import {stateReferences,restoreStateFields} from '../public/state-wire.js';
 import { decodeDropId, isEligibleDropId } from '../public/drop-id.js';
+import {prepareFire,readFireSession,rememberFirePose,recordFire} from './fire-netcode.js';
 
 // The Worker owns these tables. They are initialized once per D1 binding and isolate.
 const schemaReady = new WeakMap();
@@ -22,6 +25,12 @@ const SCHEMA = [
   'CREATE INDEX IF NOT EXISTS mc_events_room ON mc_events (room,seq)',
   'CREATE INDEX IF NOT EXISTS mc_chat_history ON mc_events (room,seq) WHERE type=\'chat\'',
   'CREATE INDEX IF NOT EXISTS mc_events_age ON mc_events (at)',
+  "CREATE INDEX IF NOT EXISTS mc_fire_cadence ON mc_events (room,player,at) WHERE type='shot'",
+  `CREATE TABLE IF NOT EXISTS mc_fire_poses (
+    room TEXT NOT NULL, player TEXT NOT NULL, slot INTEGER NOT NULL, at INTEGER NOT NULL,
+    x REAL NOT NULL,y REAL NOT NULL,lift REAL NOT NULL,vx REAL NOT NULL,vy REAL NOT NULL,car TEXT NOT NULL,
+    PRIMARY KEY (room,player,slot))`,
+  'CREATE INDEX IF NOT EXISTS mc_fire_pose_age ON mc_fire_poses (at)',
   `CREATE TABLE IF NOT EXISTS mc_items (
     room TEXT NOT NULL, kind TEXT NOT NULL, item TEXT NOT NULL,
     seq INTEGER NOT NULL, owner TEXT NOT NULL, data TEXT NOT NULL, at INTEGER NOT NULL,
@@ -209,6 +218,15 @@ function roster(rows,viewerId) {
   for(const r of players)if(r.id===viewerId||!viewer||Math.hypot(r.x-viewer.x,r.y-viewer.y)>290)delete r.traffic;
   return players;
 }
+function rosterPacket(rows,id,request){
+  const players=roster(rows,id);
+  return request.protocol===2?encodeRoster(players,request.rosterBase):{players};
+}
+function visibleCombatEvent(e,viewer){
+  if(e.type!=='shot'&&e.type!=='melee')return true;
+  if(![e.data.x,e.data.y,viewer.x,viewer.y].every(Number.isFinite))return true;
+  return Math.hypot(e.data.x-viewer.x,e.data.y-viewer.y)<=225;
+}
 function events(rows) {
   return rows.map(r=>({seq:r.seq,player:r.player,name:r.name,type:r.type,data:JSON.parse(r.data),at:r.at}));
 }
@@ -247,12 +265,13 @@ async function join(db,b,now) {
     q('SELECT COALESCE(MAX(seq),0) AS last FROM mc_events WHERE room=?',room),
     q('SELECT kind,item,data,owner FROM mc_items WHERE room=?',room),
     q('SELECT item,available FROM mc_pickup_claims WHERE room=? AND ok=1 AND available>?',room,now),
-    q('DELETE FROM mc_pickup_claims WHERE at<?',now-EVENT_RETENTION)
+    q('DELETE FROM mc_pickup_claims WHERE at<?',now-EVENT_RETENTION),
+    q('DELETE FROM mc_fire_poses WHERE at<?',now-5000)
   ]);
   if (!results[4].results.length) return json({error:'session'},403);
   const world=shared(results[8].results);
   for(const pickup of results[9].results)world.pickups[pickup.item]=pickup.available;
-  return json({now,players:roster(results[5].results,id),history:events(results[6].results.reverse()),
+  return json({now,...(b.protocol===2?{stateRefs:stateReferences(playerState(b.state,now))}:{}),...rosterPacket(results[5].results,id,{protocol:b.protocol}),history:events(results[6].results.reverse()),
     cursor:results[7].results[0].last,world});
 }
 const airbornePickup=new Set(['jump','fall','climb','vault']);
@@ -351,14 +370,24 @@ function contactGuard(type,data,actor,room,id,now){
 async function sync(db,b,now) {
   const {id,token}=b,room=WORLD_KEY;
   const q=(sql,...args)=>db.prepare(sql).bind(...args);
-  const member=await q('SELECT name,seen,state FROM mc_members WHERE room=? AND id=? AND secret=? AND seen>?',room,id,token,now-GONE).first();
+  const inputs=Array.isArray(b.events)?b.events.slice(0,MAX_BATCH):[];
+  const firePackets=new Map();
+  for(const input of inputs){
+    if(input?.type!=='fire'||!key(input.op))continue;
+    const packet=prepareFire(input.data,now,target=>typeof target==='string'&&UUID.test(target));
+    if(packet)firePackets.set(input,packet);
+  }
+  const {member,priorState,tracks:fireHistories}=await readFireSession(db,q,{
+    room,id,token,now,aliveSince:now-GONE,packets:firePackets,submitted:b.state
+  });
   if (!member) return json({error:'rejoin'},401);
   const name=clean(b.name,24)||member.name;
-  const rawState=playerState(b.state,now);
+  const rawState=playerState(b.protocol===2?restoreStateFields(b.state,b.keepState,priorState):b.state,now);
   const state=Number.isFinite(rawState.x) ? JSON.stringify(rawState) : member.state;
-  const actor=Number.isFinite(rawState.x)?rawState:JSON.parse(member.state);
+  const actor=Number.isFinite(rawState.x)?rawState:priorState;
   const stmts=[];
   if (now-member.seen>3500 || state!==member.state || name!==member.name) {
+    if(Number.isFinite(rawState.x))rememberFirePose(stmts,q,room,id,priorState,member.seen,rawState);
     stmts.push(q('UPDATE mc_members SET seen=?,state=?,name=? WHERE room=? AND id=? AND secret=?',now,state,name,room,id,token));
     if (rawState.vehicle) {
       // Keep a last known parking spot for a driver who loses their connection.
@@ -368,17 +397,22 @@ async function sync(db,b,now) {
     }
   }
   const claims=new Set(),pickupOps=new Map(), propOps=new Map();
-  for (const input of (Array.isArray(b.events) ? b.events.slice(0,MAX_BATCH) : [])) {
+  for (const input of inputs) {
     const {type}=dict(input);
     let {op}=dict(input);
+    if(type==='fire'){
+      const packet=firePackets.get(input);
+      if(packet)recordFire(stmts,q,room,id,name,packet,fireHistories,actor,now);
+      continue;
+    }
     if(type==='pickup'&&key(op)){
       const {id:item,weapon}=dict(input.data);
-      if(key(item)&&recordPickup(stmts,q,{room,id,token,name,op,item,weapon,now,state:Number.isFinite(rawState.x)?rawState:JSON.parse(member.state)}))
+      if(key(item)&&recordPickup(stmts,q,{room,id,token,name,op,item,weapon,now,state:actor}))
         pickupOps.set(op,item);
       continue;
     }
     if (!EVENTS.has(type) || !key(op)) continue;
-    if(/^(?:(?:pick|swing|contact)-|break:)/.test(op))continue;
+    if(/^(?:(?:pick|swing|contact)-|break:|fire:)/.test(op))continue;
     const data=eventData(type,input.data,now);
     if (!data) continue;
     let guard={clause:'',args:[]};
@@ -458,7 +492,11 @@ async function sync(db,b,now) {
   const denied=claims.size ? result[membersIndex+2].results.filter(c=>c.owner && c.owner!==id) : [];
   const pickupResults=pickupOps.size?result[pickupIndex].results.filter(r=>pickupOps.get(r.op)===r.item)
     .map(r=>({op:r.op,id:r.item,ok:r.ok===1,availableAt:r.available})):undefined;
-  return json({now,players:roster(result[membersIndex].results,id),events:feed,denied,pickupResults,propAccepted,cursor:feed.at(-1)?.seq??cursor});
+  // Always advance beyond scanned effects, including an entirely distant page. Hits, chat,
+  // ownership and durable world changes keep their original global ordering.
+  const delivered=b.protocol===2?feed.filter(event=>visibleCombatEvent(event,actor)):feed;
+  return json({now,...(b.protocol===2?{stateRefs:stateReferences(actor)}:{}),...rosterPacket(result[membersIndex].results,id,b),events:delivered,denied,pickupResults,propAccepted,
+    ...(b.protocol===2&&feed.length===160?{more:true}:{}),cursor:feed.at(-1)?.seq??cursor});
 }
 export async function handleApi(request, env) {
   const pathname=new URL(request.url).pathname;

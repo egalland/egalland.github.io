@@ -86,7 +86,7 @@ for(const [fps,input] of [[60,'keyboard'],[15,'touch']]){
     assert.ok(states.has('jump')&&states.has('fall'));
     assert.ok(biggest<9/fps,`maximum step ${biggest}m at ${fps} FPS`);
     assert.ok(avatar(player).lift<.03);assert.ok(dist(avatar(player),start)<.13);
-    assert.equal(player.events.some(e=>e.type==='shot'),false);
+    assert.equal(player.events.some(e=>e.type==='fire'),false);
     t.diagnostic(`Peak ${peak.toFixed(2)} m, maximum change ${biggest.toFixed(3)} m per frame`);
   });
 }

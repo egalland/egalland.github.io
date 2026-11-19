@@ -13,6 +13,10 @@ const interactions={
   boomerang:{chain:5.1,limit:1},
   spool:{chain:3.5,limit:3}
 };
+const straight=[0];
+export function weaponShotShape(kind){
+  return {spreads:spreads[kind]||straight,...interactions[kind]};
+}
 const radians=(from,to)=>Math.atan2(to.y-from.y,to.x-from.x);
 const distance=(from,to)=>Math.hypot(to.x-from.x,to.y-from.y);
 function tip(ray){return {x:ray.origin.x+Math.cos(ray.angle)*ray.length,y:ray.origin.y+Math.sin(ray.angle)*ray.length};}
@@ -24,7 +28,8 @@ export function resolveWeaponShot(kind,angle,trace,targets=[],visible,firstRay=n
     if(!target||target.id===undefined||used.has(target.id))return;
     used.add(target.id);hits.push({target,damage:Math.max(1,Math.round(damage))});
   };
-  for(const spread of spreads[kind]||[0]){
+  const shape=weaponShotShape(kind);
+  for(const spread of shape.spreads){
     const direction=angle+spread;
     const result=(spread===0&&firstRay)||trace(direction);
     if(!result?.origin||!Number.isFinite(result.length))continue;
@@ -35,8 +40,8 @@ export function resolveWeaponShot(kind,angle,trace,targets=[],visible,firstRay=n
     const length=Math.max(...rays.map(r=>r.length));
     rays.splice(1);rays[0]={...rays[0],length};
   }
-  const mode=interactions[kind],primary=rays[0];
-  if(!mode||!primary)return {rays,hits,impact:null};
+  const mode=shape,primary=rays[0];
+  if(!(mode.area||mode.chain)||!primary)return {rays,hits,impact:null};
   let origin=tip(primary),sourceId=primary.hit?.id;
   const impact=mode.area?{...origin,radius:mode.area}:null;
   if(typeof visible!=='function'||(mode.chain&&!primary.hit))return {rays,hits,impact};

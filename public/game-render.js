@@ -104,7 +104,7 @@ export function createView(canvas,spawn,onNotice) {
       else{el.textContent=label;el.removeAttribute('aria-label');}
     }
   }
-  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0) {
+  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0,age=0) {
     if(!active || effects.length>42)return;
     const debris=propDebris(kind,colors?.type,angle);
     if(kind==='meleeImpact'||debris){
@@ -121,12 +121,12 @@ export function createView(canvas,spawn,onNotice) {
     }
     if(kind!=='burst'){
       const duration=effectDuration(kind);
-      for(const stroke of buildShotEffect(kind,x,y,angle,len)){
+      for(const stroke of buildShotEffect(kind,x,y,angle,len,age?age/duration:.5)){
         const points=stroke.points.map(p=>new THREE.Vector3(p.x,terrainHeight(x,y)+lift+p.z,p.y));
         const geo=new THREE.BufferGeometry().setFromPoints(points);
         const mat=new THREE.LineBasicMaterial({color:stroke.color,transparent:true,depthWrite:false});
         const mesh=new THREE.Line(geo,mat);
-        scene.add(mesh);effects.push({mesh,life:duration,max:duration});
+        scene.add(mesh);effects.push({mesh,life:duration-age,max:duration});
       }
       return;
     }
@@ -135,7 +135,9 @@ export function createView(canvas,spawn,onNotice) {
       const m=new THREE.Mesh(new THREE.IcosahedronGeometry(.09+Math.random()*.07),new THREE.MeshBasicMaterial({color:palette[i%palette.length],transparent:true}));
       m.position.set(x,terrainHeight(x,y)+lift+.3+Math.random()*.5,y);scene.add(m);
       const a=Math.random()*Math.PI*2,v=1.3+Math.random()*2;
-      effects.push({mesh:m,life:.65,max:.65,vx:Math.cos(a)*v,vy:2+Math.random()*2.5,vz:Math.sin(a)*v});
+      const vx=Math.cos(a)*v,vy=2+Math.random()*2.5,vz=Math.sin(a)*v;
+      m.position.x+=vx*age;m.position.z+=vz*age;m.position.y+=vy*age-3.5*age*age;
+      effects.push({mesh:m,life:.65-age,max:.65,vx,vy:vy-7*age,vz});
     }
   }
   function render(state,dt,time) {

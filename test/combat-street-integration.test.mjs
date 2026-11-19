@@ -1,3 +1,4 @@
+import {broadcastEvents} from './fixtures/fire-events.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../public/game.js';
@@ -43,8 +44,8 @@ function street(t, count = 1, db = null) {
       publish: pose => { c.published = structuredClone(pose); },
       emit(type, data) {
         const event = { type, data: structuredClone(data), at: time, seq: ++sequence, player: c.id };
-        if (type === 'shot') c.shots.push(event.data);
-        if (count > 1) waiting.push(event);
+        if (type === 'fire') c.shots.push(event.data);
+        if (count > 1) waiting.push(...broadcastEvents(event, () => ++sequence));
         return count > 1;
       },
       onEvent: callback => { c.receive = callback; }
@@ -165,18 +166,20 @@ test('a sideways shot faces its target, bleeds on the victim and witness, and ca
   tick(45); assert.equal(b.hud.health, immediate - 3);
 });
 
+async function tickUntil(tick, condition, message) {
+  const deadline = performance.now() + 4500;
+  do {
+    tick(3);
+    if (condition()) return;
+    await new Promise(resolve => setTimeout(resolve, 12));
+  } while (performance.now() < deadline);
+  assert.fail(message);
+}
+
 test('two playable clients see the same partial damage, then the same broken street prop through the world API', async t => {
   const { clients, tick } = street(t, 2, localDatabase());
   const [a, b] = clients;
-  const poll = async (ready, message) => {
-    const deadline = performance.now() + 4500;
-    do {
-      tick(3);
-      if (ready()) return;
-      await new Promise(resolve => setTimeout(resolve, 12));
-    } while (performance.now() < deadline);
-    assert.fail(message);
-  };
+  const poll = (ready, message) => tickUntil(tick, ready, message);
   const bin = approach(a, 'bin', 1.24);
   tick(4);
   assert.deepEqual(await Promise.all(clients.map(c => c.net.start())), [true, true]);
@@ -200,4 +203,25 @@ test('two playable clients see the same partial damage, then the same broken str
     assert.equal(solid(c, bin), false);
     assert.equal(c.effects.filter(([kind]) => kind === 'propBreak').length, 1);
   }
+});
+
+
+test('the live shooting controls, HTTP netcode and world database agree on a single player hit', async t => {
+  const {clients:[a,b],tick}=street(t,2,localDatabase());
+  const arc=monuments.arc;
+  assert.ok(stand(a,arc.x,arc.y));assert.ok(stand(b,arc.x,arc.y+4));
+  tick(3);
+  assert.deepEqual(await Promise.all([a.net.start(),b.net.start()]),[true,true]);
+  await tickUntil(tick,()=>a.scene.entities.some(e=>e.id===b.net.id)&&b.scene.entities.some(e=>e.id===a.net.id),'both avatars should be present');
+  const received=[];
+  b.net.onEvent(e=>{if(e.player===a.net.id)received.push(e);});
+  clickAt(a,b.game.getPosition());
+  assert.equal(a.game.getWeaponAmmo('pistol'),11);
+  assert.equal(a.effects.filter(([kind])=>kind==='shot').length,1);
+  await tickUntil(tick,()=>b.hud.health===83&&received.some(e=>e.type==='hit'),'the authoritative hit should reach the player');
+  const shots=received.filter(e=>e.type==='shot'),hits=received.filter(e=>e.type==='hit');
+  assert.equal(shots.length,1);assert.equal(hits.length,1);
+  assert.equal(shots[0].data.shotId,hits[0].data.shotId);
+  assert.equal(hits[0].data.target,b.net.id);
+  assert.ok(b.hud.bleeding);
 });

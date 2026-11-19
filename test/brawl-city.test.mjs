@@ -1,3 +1,4 @@
+import {broadcastEvents} from './fixtures/fire-events.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame} from '../public/game.js';
@@ -25,7 +26,7 @@ function arena(t,count=1){
       publish:pose=>{c.published=pose;},onEvent:fn=>{c.receive=fn;return ()=>{};},
       emit:(type,data)=>{
         const e={type,data:structuredClone(data),seq:++seq,at:clock,player:c.id};
-        c.events.push(e);queued.push(e);return true;
+        c.events.push(e);queued.push(...broadcastEvents(e,()=>++seq));return true;
       }};
     c.canvas=Object.assign(new EventTarget(),{focus(){},setPointerCapture(){}});
     c.game=createGame({canvas:c.canvas,net,onState:h=>{c.hud=h;},buildView:()=>({
@@ -49,7 +50,7 @@ function arena(t,count=1){
     roster.set('dummy',{id:'dummy',health:100,angle:0,joinedAt:1,updatedAt:clock,...pose});
   }
   const place=(c,pose,angle=0)=>assert.ok(c.game.restoreTravelState({...c.game.exportTravelState(),x:pose.x,y:pose.y,angle,yaw:angle,vx:0,vy:0,vehicle:null}));
-  return {clients,tick,place,other};
+  return {clients,tick,place,other,now:()=>Math.floor(clock)};
 }
 const arc=monuments.arc;
 const arcPoint=(x,z)=>({x:arc.x+x*Math.cos(arc.yaw)+z*Math.sin(arc.yaw),y:arc.y-x*Math.sin(arc.yaw)+z*Math.cos(arc.yaw)});
@@ -57,6 +58,21 @@ const self=c=>c.scene.entities.find(p=>p.self);
 const attacks=c=>c.events.filter(e=>e.type==='melee');
 const hits=c=>c.events.filter(e=>e.type==='hit');
 const tap=(c,action)=>{c.game.action(action,true);c.game.action(action,false);};
+
+test('a confirmed shot survives the shooter leaving, while a retry or a hit before fast travel costs no further health',t=>{
+  const {clients:[target],tick,place,now}=arena(t);
+  place(target,arc);tick(8);
+  const firedAt=now(),data={target:target.id,cause:'weapon',weapon:'pistol',damage:17,force:.15,
+    angle:0,shotId:'lost-ack',firedAt};
+  const hit={type:'hit',player:'departed-shooter',at:firedAt,seq:110,data};
+  target.receive(hit);tick();
+  assert.equal(target.hud.health,83);
+  target.receive({...hit,seq:111});tick();
+  assert.equal(target.hud.health,83);
+  place(target,{x:arc.x+5,y:arc.y});tick(2);
+  target.receive({...hit,seq:112,data:{...data,shotId:'before-travel'}});tick();
+  assert.equal(target.hud.health,83);
+});
 
 test('quick melee with a pistol and primary attack with fists swing through air without shots or ammunition loss',t=>{
   const {clients:[a],tick,place}=arena(t);
@@ -72,7 +88,7 @@ test('quick melee with a pistol and primary attack with fists swing through air 
   assert.ok(a.game.selectWeapon('fist'));tick(10);
   tap(a,'fire');tick(65);
   assert.equal(attacks(a).length,2);assert.equal(hits(a).length,0);
-  assert.equal(a.events.filter(e=>['shot','destroy'].includes(e.type)||e.data.damage).length,0);
+  assert.equal(a.events.filter(e=>['fire','destroy'].includes(e.type)||e.data.damage).length,0);
   assert.equal(a.game.exportTravelState().ammo.pistol,ammo);
   assert.equal(a.hud.wantedPoints,0);
 });
@@ -106,7 +122,7 @@ test('a close strike lands once at contact on a second game, pushes its capsule 
   assert.equal(b.hud.health,hp-contact[0].data.damage);assert.equal(a.hud.health,hpAtStart);
   assert.ok(b.game.getPosition().x-before.x>.12,'hit moves the victim away from the attacking avatar');
   assert.ok(observed.swing&&observed.recoil,JSON.stringify(observed));
-  assert.equal(a.events.some(e=>e.type==='shot'),false);
+  assert.equal(a.events.some(e=>e.type==='fire'),false);
   assert.ok(a.hud.wantedPoints>0);
   b.receive(contact[0]);tick(10);
   assert.equal(b.hud.health,hp-contact[0].data.damage,'network redelivery cannot damage the avatar twice');
@@ -170,7 +186,7 @@ test('a pavement pedestrian in front takes one contact, moves to a clear positio
   assert.ok(angularError(recoil.angle,finalBearing)<.002);
   assert.equal(contactAt(x,y,{radius:.30}),null);
   assert.ok(a.hud.wantedPoints>0);
-  assert.equal(a.events.some(e=>e.type==='shot'),false);
+  assert.equal(a.events.some(e=>e.type==='fire'),false);
 });
 
 
@@ -235,7 +251,7 @@ test('a held stationary cursor updates its world bearing during a strafe and obs
   tick(11);
   assert.ok(angularError(self(a).angle,aim)<.025,'the legs can move sideways while the body keeps aiming during weapon cooldown');
   tick(8);
-  const shot=a.events.filter(e=>e.type==='shot').at(-1);
+  const shot=a.events.filter(e=>e.type==='fire').at(-1);
   assert.ok(angularError(shot.data.angle,aim)<.0001);
   assert.ok(angularError(self(a).angle,aim)<.002);
   assert.ok(Math.hypot(self(a).x-atShot.x,self(a).y-atShot.y)>.17);
@@ -250,7 +266,44 @@ test('shooting sideways while driving leaves the chassis heading unchanged',t=>{
   const heading=a.game.getPosition().angle;
   a.aim=()=>heading+Math.PI/2;
   mouse(a,'pointerdown');mouse(a,'pointerup');tick(8);
-  const shot=a.events.find(e=>e.type==='shot');
+  const shot=a.events.find(e=>e.type==='fire');
   assert.ok(shot&&angularError(shot.data.angle,heading+Math.PI/2)<.0001);
   assert.ok(angularError(a.game.getPosition().angle,heading)<.001);
+});
+
+test('a trigger spends one round and sends one timestamped fire packet carrying its player contact',t=>{
+  const {clients:[a,b],tick,place}=arena(t,2);
+  place(a,arc);place(b,{x:arc.x,y:arc.y+4});tick(40);
+  const target=b.game.getPosition(),origin=a.game.getPosition();
+  a.aim=()=>Math.atan2(target.y-origin.y,target.x-origin.x);
+  const before=a.game.getWeaponAmmo('pistol');
+  mouse(a,'pointerdown');mouse(a,'pointerup');
+  const [packet]=a.events.filter(e=>e.type==='fire');
+  assert.ok(packet);
+  assert.equal(a.events.filter(e=>e.type==='fire').length,1);
+  assert.equal(a.events.filter(e=>e.type==='hit'||e.type==='shot').length,0);
+  assert.equal(a.game.getWeaponAmmo('pistol'),before-1);
+  assert.match(packet.data.shotId,/^[a-f0-9-]{36}$/);
+  assert.ok(Math.abs(packet.data.firedAt-packet.at)<=1);
+  assert.equal(packet.data.firedAt-packet.data.viewAt,65);
+  assert.deepEqual(packet.data.hits.map(h=>[h.target,h.damage]),[[b.id,17]]);
+  assert.equal(a.effects.filter(([type])=>type==='shot').length,1,'the shooter sees the trace before an exchange');
+  tick(3);
+  assert.equal(b.hud.health,83);
+  assert.equal(b.effects.filter(([type])=>type==='shot').length,1);
+});
+
+test('late gunfire uses its remaining tracer life, ignores duplicates and never replays an expired shot',t=>{
+  const {clients:[a],tick,place}=arena(t);
+  place(a,arc);tick(3);
+  const stamp=a.scene.epoch;
+  const shot=(firedAt,seq)=>({player:'witness',seq,at:stamp,type:'shot',
+    data:{kind:'pistol',shotId:'trace-'+seq,firedAt,x:arc.x,y:arc.y,angle:.2,length:5}});
+  a.receive(shot(stamp-240,1));a.receive(shot(stamp-100,2));a.receive(shot(stamp-100,2));
+  tick();
+  const traces=a.effects.filter(([type])=>type==='shot');
+  assert.equal(traces.length,1,'distinct, old SMG-style burst pulses are not all replayed on receipt');
+  assert.ok(traces[0][7]>.025&&traces[0][7]<.11,'renderer receives partial tracer age in seconds');
+  a.receive(shot(stamp-100,2));a.receive(shot(stamp-900,3));tick(3);
+  assert.equal(a.effects.filter(([type])=>type==='shot').length,1);
 });
