@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>MX Master 3 — Surface animée</title>
+<style>
+  :root {
+    --speed: 42ms;
+    --scale: 1;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: #000;
+    color: #fff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #surface {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 68vh;
+    overflow: hidden;
+    background: #000;
+    isolation: isolate;
+  }
+
+  #pattern,
+  #pattern2 {
+    position: absolute;
+    inset: -80px;
+    will-change: transform, background-position;
+    image-rendering: pixelated;
+    pointer-events: none;
+  }
+
+  /* Texture volontairement très contrastée et riche en micro-détails,
+     plus facile à "voir" pour un capteur optique qu'un simple dégradé. */
+  #pattern {
+    opacity: 1;
+    background:
+      repeating-conic-gradient(
+        from 0deg,
+        #fff 0deg 45deg,
+        #000 45deg 90deg
+      ) 0 0 / 10px 10px;
+  }
+
+  #pattern2 {
+    opacity: .42;
+    mix-blend-mode: difference;
+    background:
+      repeating-linear-gradient(
+        27deg,
+        #fff 0 2px,
+        #000 2px 5px,
+        #fff 5px 6px,
+        #000 6px 11px
+      );
+    background-size: 17px 17px;
+  }
+
+  #target {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(62vw, 260px);
+    aspect-ratio: 1.65 / 1;
+    transform: translate(-50%, -50%);
+    border: 2px solid rgba(255,255,255,.72);
+    border-radius: 28px;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  #target::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.8);
+    box-shadow: 0 0 0 7px rgba(0,0,0,.35);
+  }
+
+  #hint {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + min(25vw, 105px));
+    transform: translateX(-50%);
+    z-index: 5;
+    font-size: 12px;
+    letter-spacing: .02em;
+    background: rgba(0,0,0,.62);
+    padding: 6px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  #controls {
+    position: relative;
+    z-index: 10;
+    background: rgba(16,16,16,.96);
+    border-top: 1px solid rgba(255,255,255,.14);
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+  }
+
+  button, select, input[type="range"] {
+    font: inherit;
+  }
+
+  button, select {
+    min-height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.18);
+    background: #202020;
+    color: #fff;
+    padding: 0 12px;
+  }
+
+  button.primary {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    font-weight: 700;
+  }
+
+  button.active {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  .grow { flex: 1 1 160px; }
+
+  label {
+    font-size: 13px;
+    color: #ddd;
+  }
+
+  input[type="range"] {
+    width: 100%;
+  }
+
+  #status {
+    font-size: 12px;
+    color: #bbb;
+    line-height: 1.35;
+  }
+
+  .hidden-ui #controls,
+  .hidden-ui #hint,
+  .hidden-ui #target {
+    display: none;
+  }
+
+  @media (orientation: landscape) {
+    #surface { min-height: 76vh; }
+    #controls { grid-template-columns: 1fr 1fr; align-items: center; }
+  }
+</style>
+</head>
+
+<body>
+  <main id="surface" aria-label="Surface animée pour souris optique">
+    <div id="pattern"></div>
+    <div id="pattern2"></div>
+    <div id="target" aria-hidden="true"></div>
+    <div id="hint">Place le capteur de la souris sur la cible</div>
+  </main>
+
+  <section id="controls">
+    <div class="row">
+      <button id="toggle" class="primary" type="button">Pause</button>
+      <button id="fullscreen" type="button">Plein écran</button>
+      <button id="hideUi" type="button">Masquer l’interface</button>
+
+      <select id="mode" class="grow" aria-label="Type d’animation">
+        <option value="micro">Micro-jitter</option>
+        <option value="diagonal">Défilement diagonal</option>
+        <option value="chaos">Pseudo-aléatoire</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="speed">Vitesse : <span id="speedValue">moyenne</span></label>
+      <input id="speed" type="range" min="1" max="100" value="52">
+    </div>
+
+    <div id="status">
+      Optimisé pour une souris optique à haute précision : motif noir/blanc à petits détails,
+      mouvement très faible et continu. Mets la luminosité du téléphone assez haute et pose
+      la souris directement sur l’écran, capteur au centre.
+    </div>
+  </section>
+
+<script>
+(() => {
+  const surface = document.getElementById('surface');
+  const p1 = document.getElementById('pattern');
+  const p2 = document.getElementById('pattern2');
+  const toggle = document.getElementById('toggle');
+  const fullscreenBtn = document.getElementById('fullscreen');
+  const hideUi = document.getElementById('hideUi');
+  const speed = document.getElementById('speed');
+  const speedValue = document.getElementById('speedValue');
+  const mode = document.getElementById('mode');
+
+  let running = true;
+  let raf = 0;
+  let last = performance.now();
+  let x = 0, y = 0, phase = 0;
+  let wakeLock = null;
+
+  function speedParams() {
+    const v = Number(speed.value);
+    if (v < 34) speedValue.textContent = 'lente';
+    else if (v < 68) speedValue.textContent = 'moyenne';
+    else speedValue.textContent = 'rapide';
+
+    // Environ 5 à 55 px/s : volontairement faible pour provoquer un mouvement
+    // détectable sans envoyer le curseur à l'autre bout de l'écran.
+    return 5 + (v / 100) * 50;
+  }
+
+  function animate(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    const s = speedParams();
+    phase += dt;
+
+    if (mode.value === 'micro') {
+      x = Math.sin(phase * 2.1) * 5 + Math.sin(phase * 5.3) * 1.4;
+      y = Math.cos(phase * 1.7) * 4 + Math.sin(phase * 4.1) * 1.2;
+    } else if (mode.value === 'diagonal') {
+      x = (x + s * dt) % 20;
+      y = (y + s * 0.73 * dt) % 20;
+    } else {
+      x += (Math.sin(phase * 3.7) + Math.cos(phase * 2.3)) * s * dt * 0.34;
+      y += (Math.cos(phase * 4.3) - Math.sin(phase * 1.9)) * s * dt * 0.34;
+      x = Math.max(-12, Math.min(12, x));
+      y = Math.max(-12, Math.min(12, y));
+      if (Math.abs(x) > 11.5) x *= -0.8;
+      if (Math.abs(y) > 11.5) y *= -0.8;
+    }
+
+    p1.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    p2.style.transform = `translate3d(${-x * 0.61}px, ${-y * 0.79}px, 0) rotate(${Math.sin(phase * 0.4) * 0.35}deg)`;
+
+    raf = requestAnimationFrame(animate);
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    toggle.textContent = 'Pause';
+    last = performance.now();
+    raf = requestAnimationFrame(animate);
+  }
+
+  function stop() {
+    running = false;
+    toggle.textContent = 'Démarrer';
+    cancelAnimationFrame(raf);
+  }
+
+  toggle.addEventListener('click', () => running ? stop() : start());
+
+  speed.addEventListener('input', speedParams);
+
+  mode.addEventListener('change', () => {
+    x = 0; y = 0; phase = 0;
+  });
+
+  fullscreenBtn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (_) {}
+  });
+
+  hideUi.addEventListener('click', () => {
+    document.body.classList.toggle('hidden-ui');
+  });
+
+  surface.addEventListener('dblclick', () => {
+    document.body.classList.toggle('hidden-ui');
+  });
+
+  // Garde l'écran éveillé si le navigateur mobile prend en charge Screen Wake Lock.
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (_) {}
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  requestWakeLock();
+  speedParams();
+  raf = requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
