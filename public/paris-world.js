@@ -2,7 +2,7 @@
 import { buildings, streets, water, green, metadata } from './paris-data.js';
 
 import { vehicleSpec, vehicleDoorways } from './vehicle-types.js';
-import { buildTrafficRoutes, sampleRoadRoute } from './traffic-roads.js';
+import { buildTrafficRoutes, indexTrafficDetours, sampleRoadRoute } from './traffic-roads.js';
 
 const EMPTY = new Set();
 const TAU = Math.PI * 2;
@@ -351,6 +351,22 @@ function canSeparateBody(x,y,dx,dy,opt){
   }
   return true;
 }
+// When two newly received poses enclose a walker from opposite sides, a push along
+// either normal would deepen the other contact. Look for a short swept exit beside them.
+function leaveMultipleContacts(x,y,opt,nx,ny){
+  if(opt.halfLength)return null;
+  const overlapping=opt.colliders.filter(b=>(!opt.ignoreId||b.id!==opt.ignoreId)&&bodyContact(x,y,opt,b,0,0)[2]<0);
+  if(overlapping.length<2)return null;
+  const tangent=Math.atan2(nx,-ny);
+  const step=.18,limit=Math.min(4,(opt.radius??.42)+Math.max(...overlapping.map(b=>b.halfWidth||b.r||.5))+.5);
+  for(let reach=step;reach<=limit+step;reach+=step){
+    for(let i=0;i<16;i++){
+      const angle=tangent+i*Math.PI/8,dx=Math.cos(angle)*reach,dy=Math.sin(angle)*reach;
+      if(!testPose(x+dx,y+dy,opt)&&canSeparateBody(x,y,dx,dy,opt))return {x:x+dx,y:y+dy};
+    }
+  }
+  return null;
+}
 export function moveBody(x,y,dx,dy,opt={}) {
   let touched=null,nx=0,ny=0;
   const length=Math.hypot(dx,dy),steps=Math.max(1,Math.ceil(length/(opt.halfLength ? .7 : .35)));
@@ -368,6 +384,9 @@ export function moveBody(x,y,dx,dy,opt={}) {
       if(canSeparateBody(x,y,nx*push,ny*push,opt)){x+=nx*push;y+=ny*push;}
       else if(bodyContact(x+sx,y+sy,opt,d,sx,sy)[2]>contact[2]+.00001&&canSeparateBody(x,y,sx,sy,opt)){
         x+=sx;y+=sy;continue;
+      }else{
+        const clear=leaveMultipleContacts(x,y,opt,nx,ny);
+        if(clear){x=clear.x;y=clear.y;}
       }
     }
     const along=sx*nx+sy*ny,tx=sx-nx*Math.min(along,0),ty=sy-ny*Math.min(along,0);
@@ -656,6 +675,8 @@ function clearTrafficFurniture(){
   props.length=retained;
 }
 clearTrafficFurniture();
+const detours=indexTrafficDetours(trafficRoutes);
+export const trafficAlternatives=detours.alternatives;
 for(const route of trafficRoutes.values())circulation.insert(route,bounds(route.points,4));
 export const sampleTrafficRoute=(routeId,distance)=>sampleRoadRoute(trafficRoutes.get(routeId),distance);
 // Build the swept envelopes of the traffic lanes once, near each travel stop.
@@ -734,8 +755,8 @@ for(const {p} of walkerSeeds.values()){
 const flocks=['pedestrian','pedestrian','pedestrian','pedestrian','police','pedestrian','pedestrian','firefighter','pedestrian','medic','pedestrian','swat','pedestrian','pedestrian'];
 const fleet=['compact','sedan','taxi','police','van','compact','sport','ambulance','sedan','bus','firetruck','van','taxi','swat','compact','sedan','car','bus'];
 // Stable global identities let a delayed car keep the same wardrobe and footprint on every client.
-export function trafficVehicleAt(routeId,index){
-  const route=trafficRoutes.get(routeId);
+export function trafficVehicleAt(originRouteId,index,routeId=originRouteId){
+  const route=trafficRoutes.get(originRouteId);
   if(!route||!Number.isSafeInteger(index)||index<0||(route.closed&&index>=route.count))return null;
   const slot=index%route.count,seed=route.key+slot*5;
   // Large vehicles get a scheduled slot on routes wide enough for their envelope.
@@ -744,7 +765,9 @@ export function trafficVehicleAt(routeId,index){
   const body=vehicleSpec(type);
   if((type==='bus'&&!canBus)||body.halfWidth*4+.12>route.availableWidth||body.halfWidth>route.clearance.halfWidth||body.halfLength>route.clearance.halfLength)type='compact';
   const cruiseSpeed=(4.7+(route.key%51)*.08)*vehicleSpec(type).cruise;
-  return {id:'v'+route.id+'-'+index,routeId,routeIndex:index,routeLength:route.length,routeLoop:route.closed,
+  const active=routeId===originRouteId?route:trafficRoutes.get(routeId);
+  if(!active||(routeId!==originRouteId&&!detours.canReach(originRouteId,routeId,vehicleSpec(type))))return null;
+  return {id:'v'+originRouteId+'-'+index,originRouteId,routeId,routeIndex:index,routeLength:active.length,routeLoop:active.closed,
     type,kind:type,color:tintedCars[(route.key+slot)%tintedCars.length],speed:cruiseSpeed,cruiseSpeed,moving:true};
 }
 export function routeAgents(x,y,radius=140,epochMs=Date.now()){

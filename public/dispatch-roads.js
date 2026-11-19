@@ -122,12 +122,13 @@ export function stepDispatch(state,age,dt,clear){
   return {...dispatchRoadPose(plan,state.distance),speed:state.speed,moving:state.speed>.12};
 }
 
-export function footApproach(scene,walkable){
-  for(const radius of [7,5,3,1])for(let i=0;i<12;i++){
-    const angle=i*Math.PI/6,q={x:scene.x+Math.cos(angle)*radius,y:scene.y+Math.sin(angle)*radius};
+export function footApproach(scene,walkable,role){
+  const heading=workingPositions[role]?.angle||0;
+  for(const radius of [7,5,10,3,14])for(let i=0;i<12;i++){
+    const angle=heading+i*Math.PI/6,q={x:scene.x+Math.cos(angle)*radius,y:scene.y+Math.sin(angle)*radius};
     if(walkable(q))return q;
   }
-  return {...scene};
+  return null;
 }
 
 const directions=[[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[-1,-1],[1,-1]];
@@ -165,15 +166,77 @@ export function dispatchWalkPath(from,to,walkable){
   return points.reverse();
 }
 
-export function stepDispatchFoot(state,target,age,stride,walkable){
+const workingPositions={
+  police:{angle:1.68,radius:2.1},
+  swat:{angle:-1.83,radius:2.65},
+  medic:{angle:2.9,radius:2.2},
+  firefighter:{angle:-2.67,radius:3.35}
+};
+const angleDifference=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+const beside=(p,angle,radius)=>({x:p.x+Math.cos(angle)*radius,y:p.y+Math.sin(angle)*radius});
+
+function exitHeading(target,preferred,walkable) {
+  // Prefer the player's direction. If it faces a facade, keep an open way along the pavement.
+  let best=preferred,bestReach=-1;
+  for(const offset of [0,.73,-.73,1.35,-1.35,2.05,-2.05,Math.PI]){
+    const a=preferred+offset;
+    let reach=0;
+    for(const r of [1.2,2.25,3.5]){
+      if(!walkable(beside(target,a,r)))break;
+      reach=r;
+    }
+    if(reach>bestReach){best=a;bestReach=reach;}
+    if(reach===3.5)break;
+  }
+  return best;
+}
+
+// Each role has a working side and distance. Keep the chosen side while there is room;
+// a moving pedestrian crossing it briefly should not send the unit orbiting its patient.
+export function dispatchWorkSpot(state,target,age,{role,heading,moving,closeContact,down,walkable,available}){
+  const base=workingPositions[role],mode=closeContact?'pursuit':down?'down':'scene';
+  const last=state.work;
+  if(last&&age<last.review&&mode===last.mode&&distance(last.origin,target)<.85)return last;
+  const preferred=last&&(!moving||Math.abs(angleDifference(heading,last.heading))<.66)?last.heading:heading;
+  const exit=exitHeading(target,preferred,walkable);
+  const range=closeContact?1.53:down&&role!=='medic'?Math.max(2.9,base.radius):base.radius;
+  const offsets=[0,.48,-.48,.94,-.94,1.42,-1.42,2,-2,Math.PI];
+  const candidates=[];
+  const keep=last&&last.mode===mode&&Math.abs(angleDifference(exit,last.exit))<.60;
+  if(keep&&last.radius<=range+.2)candidates.push([last.offset,last.radius]);
+  for(const radius of [range,range+.55,range+1.2,range+2.45,range+4.1]){
+    if(keep&&last.radius===radius)candidates.push([last.offset,last.radius]);
+    for(const delta of offsets)candidates.push([base.angle+delta,radius]);
+  }
+  for(const [offset,radius] of candidates){
+    // Leave roughly 115 degrees clear in front, including when there are several dispatches.
+    if(Math.abs(angleDifference(offset,0))<1.02)continue;
+    const q=beside(target,exit+offset,radius);
+    if(!available(q)||!clearWalk(target,q,walkable))continue;
+    const work={...q,origin:{x:target.x,y:target.y},offset,radius,mode,heading:preferred,exit,review:age+.55};
+    state.work=work;return work;
+  }
+  // If every opening is occupied, wait away from the centre and recheck shortly.
+  const wait=state.walker||state.foot;
+  state.work={x:wait.x,y:wait.y,origin:{x:target.x,y:target.y},offset:base.angle,radius:range,
+    heading:preferred,exit,mode,review:age+.35};
+  return state.work;
+}
+
+export function stepDispatchFoot(state,goal,age,stride,walkable,face=goal){
   let walker=state.walker;
   if(!walker)walker=state.walker={...state.foot,last:state.arrived+.3,angle:0};
-  if(!walker.target||distance(walker.target,target)>1.3){
-    const angle=Math.atan2(target.y-walker.y,target.x-walker.x);
-    const reach=Math.max(0,distance(walker,target)-1.05);
-    const goal={x:walker.x+Math.cos(angle)*reach,y:walker.y+Math.sin(angle)*reach};
+  const next=walker.path?.[walker.next];
+  const needsDetour=next&&age>=(walker.inspect||0)&&!clearWalk(walker,{
+    x:walker.x+(next.x-walker.x)*Math.min(1,.9/(distance(walker,next)||1)),
+    y:walker.y+(next.y-walker.y)*Math.min(1,.9/(distance(walker,next)||1))
+  },walkable);
+  if(age>=(walker.inspect||0))walker.inspect=age+.35;
+  const stalled=!next&&distance(walker,goal)>.8&&age>=(walker.retry||0);
+  if(!walker.target||distance(walker.target,goal)>.28||needsDetour||stalled){
+    walker.retry=age+1.25;
     walker.path=dispatchWalkPath(walker,goal,walkable);walker.next=1;
-    walker.target={x:target.x,y:target.y};
+    walker.target={x:goal.x,y:goal.y};
   }
   let remaining=Math.max(0,age-walker.last)*stride;walker.last=age;
   while(remaining>0&&walker.next<walker.path.length){
@@ -186,5 +249,5 @@ export function stepDispatchFoot(state,target,age,stride,walkable){
     if(remaining>0||length<.00001||distance(walker,next)<.001)walker.next++;
   }
   const moving=walker.next<walker.path.length;
-  return {x:walker.x,y:walker.y,angle:moving?walker.angle:Math.atan2(target.y-walker.y,target.x-walker.x),moving,move:moving,speed:moving?stride:0};
+  return {x:walker.x,y:walker.y,angle:moving?walker.angle:Math.atan2(face.y-walker.y,face.x-walker.x),moving,move:moving,speed:moving?stride:0};
 }

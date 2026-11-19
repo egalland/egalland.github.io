@@ -132,3 +132,103 @@ test('opposing taxis pass in narrow parallel lanes with physical clearance',()=>
   const end=run(createTrafficFlow(narrow),seeds,6).at(-1);
   assert.ok(end[0].x< -18&&end[1].x>20);
 });
+
+function intersection(id,d){
+  let x=d,y=1.6,angle=0,incoming=0;
+  if(id==='left'||id.startsWith('right')){
+    const sign=id==='left'?-1:1,r=sign<0?8.6:4.9,len=r*Math.PI/2,half=len*.5;
+    const t=clampTurn((d+half)/r),start=sign<0?-7:-6.5;
+    x=start+r*Math.sin(t);y=1.6+sign*r*(1-Math.cos(t));angle=sign*t;
+    if(d< -half)x+=d+half;
+    if(d>half)y+=sign*(d-half);
+  }
+  if(id==='west'||id==='rightWest'){x=-x;y=-y;angle+=Math.PI;incoming=Math.PI;}
+  return {x,y,angle,routeLength:400,routeLoop:false,
+    junction:d>=-35&&d<7?{id:'square',distance:-d,x:0,y:0,angle:incoming}:null};
+}
+const clampTurn=t=>Math.min(Math.PI*.5,Math.max(0,t));
+function intersects(a,b){
+  const sa=vehicleSpec(a.type),sb=vehicleSpec(b.type),proj=(o,s,theta)=>
+    Math.abs(Math.cos(o.angle-theta))*s.halfLength+Math.abs(Math.sin(o.angle-theta))*s.halfWidth;
+  return [a.angle,a.angle+Math.PI/2,b.angle,b.angle+Math.PI/2].every(theta=>
+    Math.abs((a.x-b.x)*Math.cos(theta)+(a.y-b.y)*Math.sin(theta))<proj(a,sa,theta)+proj(b,sb,theta));
+}
+function crossover(frames,index){
+  return frames.findIndex(f=>f[index]&&f[index].routeDistance>=0)*dt;
+}
+
+test('opposing through movements clear the same intersection together at cruise speed',()=>{
+  const seeds=[seed('a','east',-22),seed('b','west',-22)];
+  const frames=run(createTrafficFlow(intersection),seeds,6);
+  assert.ok(frames.some(([a,b])=>Math.abs(a.routeDistance)<2&&Math.abs(b.routeDistance)<2));
+  assert.ok(frames.every(([a,b])=>Math.min(a.speed,b.speed)>7.8&&!intersects(a,b)));
+  assert.ok(Math.abs(crossover(frames,0)-crossover(frames,1))<.1);
+});
+
+test('opposing right turns share the intersection; a left turn across a straight approach yields',()=>{
+  const right=run(createTrafficFlow(intersection),[seed('a','right',-22),seed('b','rightWest',-22)],8);
+  assert.ok(right.some(([a,b])=>Math.abs(a.routeDistance)<2&&Math.abs(b.routeDistance)<2));
+  assert.ok(Math.abs(crossover(right,0)-crossover(right,1))<.2);
+  const opposite=run(createTrafficFlow(intersection),[seed('b','west',-22),seed('a','left',-22)],12);
+  assert.ok(opposite.every(([a,b])=>!intersects(a,b)));
+  assert.ok(crossover(opposite,0)-crossover(opposite,1)>1.6);
+  assert.ok(opposite.at(-1).every(c=>c.routeDistance>15));
+});
+
+test('compatible vehicles can join an occupied crossing and measured dimensions protect long buses',()=>{
+  const seeds=[seed('a','east',-2,5,'bus'),seed('b','west',-2,5,'bus')];
+  const frames=run(createTrafficFlow(intersection),seeds,3);
+  assert.equal(frames[0].length,2);
+  assert.ok(frames.every(([a,b])=>!intersects(a,b)));
+});
+
+test('a newly blocked exit revokes its incoming grant while another approach clears',()=>{
+  const flow=createTrafficFlow(lane),seeds=[seed('east','east',-26,7),seed('north','north',-34,7)];
+  run(flow,seeds,.8);
+  const end=run(flow,seeds,8,{from:.8,blockers:[{x:9,y:1.5,angle:0,id:'double-parked',isCar:true,type:'bus'}]}).at(-1);
+  assert.ok(end[0].routeDistance< -6&&end[0].brake);
+  assert.ok(end[1].routeDistance>15);
+});
+
+test('a persistent closure changes route at a real shared approach while preserving identity; temporary obstructions do not',()=>{
+  const initial=seed('original','east',-30,3),parked={id:'parked',type:'car',isCar:true,x:9,y:1.6,angle:0};
+  // Route progress differs between roads; world positions before the turn are identical.
+  const shared=(id,d)=>id==='east'?intersection('east',d):intersection('right',d-100+6.5-4.9*Math.PI/4);
+  let considered=0;
+  const pick=({vehicle,routeId,routeDistance,blockedDistance,obstructedAt})=>{
+    considered++;
+    assert.equal(vehicle.id,'original');assert.equal(routeId,'east');
+    assert.ok(blockedDistance>0&&obstructedAt({x:9,y:1.6,angle:0}));
+    return {routeId:'side',routeDistance:routeDistance+100,branchDistance:-6-routeDistance};
+  };
+  const flow=createTrafficFlow(shared,pick);
+  run(flow,[initial],1,{blockers:[parked]});
+  const unblocked=run(flow,[initial],7,{from:1});
+  assert.equal(considered,0);assert.equal(unblocked.at(-1)[0].routeId,'east');
+  flow.reset();
+  const diverted=run(flow,[initial],9,{blockers:[parked]});
+  const end=diverted.at(-1)[0];assert.equal(considered,1);assert.equal(end.routeId,'side');
+  assert.equal(end.originRouteId,'east');assert.equal(end.id,'original');assert.ok(end.y>9);
+  assert.ok(diverted.every((f,i)=>i===0||Math.hypot(f[0].x-diverted[i-1][0].x,f[0].y-diverted[i-1][0].y)<.9));
+});
+
+test('shared origin identity survives a checkpoint entering an alternate continuous route',()=>{
+  const road=(id,d)=>intersection('east',id==='side'?d-100:d);
+  const flow=createTrafficFlow(road),seeds=[seed('v','east',-21)],epoch=origin+100;
+  flow.step(seeds,{dt:.01,epoch:origin});
+  const check={...seeds[0],originRouteId:'east',routeId:'side',routeDistance:80,speed:6,stamp:epoch};
+  const [v]=flow.step(seeds,{dt:.03,epoch,observer:{x:-19,y:1.6},checkpoints:[check]});
+  assert.equal(v.originRouteId,'east');assert.equal(v.routeId,'side');assert.equal(v.id,'v');
+  assert.ok(Math.abs(v.x+21)<1);
+});
+
+test('a long vehicle clears two close successive junctions before its tail leaves the first one',()=>{
+  const connected=(id,d)=>{
+    const p=intersection(id,d);
+    if(d>=7&&d<19)p.junction={id:'second',x:12,y:0,distance:12-d,angle:0};
+    return p;
+  };
+  const frames=run(createTrafficFlow(connected),[seed('bus','east',-25,7,'bus')],10);
+  assert.ok(frames.at(-1)[0].routeDistance>35);
+  assert.ok(frames.every(([bus])=>bus.speed>6));
+});

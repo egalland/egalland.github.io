@@ -86,7 +86,7 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
   const vel=Number(pose.speed)||0,moving=Math.abs(vel)>.15||!!pose.moving,run=pose.sprinting||Math.abs(vel)>5.5;
   const phase=Number.isFinite(pose.walk)&&pose.walk!==0?pose.walk:t*(run?11.8:7.7)+id%17;
   const stride=moving?Math.sin(phase):0,lift=moving?Math.abs(Math.cos(phase))*(run?2.6:1.65):Math.sin(t*2+id%9)*.42;
-  const sx=Math.max(.1,height/(animal==='bunny'?106:100));
+  const sx=height/(animal==='bunny'?106:100);
   const firing=Number(pose.fire)||0,react=Math.min(1,Math.abs(Number(pose.impact)||0));
   function faceAndHat(){
   ear(c,-1,animal,fur,rear,stride);ear(c,1,animal,fur,rear,-stride);

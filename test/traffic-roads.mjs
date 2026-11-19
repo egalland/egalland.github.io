@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildTrafficRoutes,sampleRoadRoute} from '../public/traffic-roads.js';
+import {buildTrafficRoutes,indexTrafficDetours,sampleRoadRoute} from '../public/traffic-roads.js';
 
 function street(id,path,options={}){
   const length=path.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p[0]-path[i][0],p[1]-path[i][1]),0);
@@ -55,4 +55,43 @@ test('a through-road clipped by both edges exits the tile once and never wraps i
   assert.equal(sampleRoadRoute(r,-.01),null);assert.equal(sampleRoadRoute(r,r.length+.01),null);
   assert.ok(Math.abs(sampleRoadRoute(r,100).x-100)<.01);
   assert.equal(buildTrafficRoutes(roads,[[roads[0]]],{atEdge:([x])=>x===0}).size,0);
+});
+
+function branchingStreets(){
+  const roads=square();
+  const longer=[street('e',[[60,0],[105,0]]),street('f',[[105,0],[105,60]]),street('g',[[105,60],[60,60]])];
+  for(const r of [...roads,...longer])r.road.oneway=1;
+  const isolated=square().map((r,i)=>street('island'+i,r.path.map(([x,y])=>[x+300,y])));
+  const routes=buildTrafficRoutes([...roads,...longer,...isolated],[[roads[0]],[longer[0]],[isolated[0]]]);
+  assert.equal(routes.size,3);
+  const [short,long,island]=routes.values();return {routes,short,long,island};
+}
+
+test('an alternate route shares the exact directed approach and heading, then really takes the other exit',()=>{
+  const {routes,short,long,island}=branchingStreets(),detours=indexTrafficDetours(routes);
+  const approach=short.passages.find(p=>p.lane==='a^');assert.ok(approach);
+  const d=approach.end-6,[alternate]=detours.alternatives(short.id,d),old=sampleRoadRoute(short,d);
+  assert.equal(alternate.routeId,long.id);assert.ok(Math.abs(alternate.branchDistance-6)<.000001);
+  for(const travelled of [-1,0,4]){
+    const a=sampleRoadRoute(short,d+travelled),b=sampleRoadRoute(long,alternate.routeDistance+travelled);
+    assert.ok(Math.hypot(a.x-b.x,a.y-b.y)<.000001);assert.ok(difference(a.angle,b.angle)<.000001);
+  }
+  const a=sampleRoadRoute(short,d+25),b=sampleRoadRoute(long,alternate.routeDistance+25);
+  assert.ok(a.y>14&&b.x>70&&Math.hypot(a.x-b.x,a.y-b.y)>16);
+  assert.ok(a.y>old.y&&b.x>old.x);
+  const [nextLap]=detours.alternatives(short.id,d+short.length);
+  assert.equal(nextLap.routeId,alternate.routeId);assert.ok(Math.abs(nextLap.routeDistance-alternate.routeDistance)<.000001);
+  assert.deepEqual(detours.alternatives(short.id,approach.end-.5),[],'committed turn cannot be exchanged');
+  assert.deepEqual(detours.alternatives(short.id,Infinity),[]);
+  assert.ok(detours.canReach(short.id,long.id));assert.equal(detours.canReach(short.id,island.id),false);
+});
+
+test('a compact car can detour down a narrower route while the bus keeps its wide itinerary',()=>{
+  const {routes,short,long}=branchingStreets();
+  long.clearance={halfLength:2.1,halfWidth:.92};short.clearance={halfLength:4.25,halfWidth:1.23};
+  const detours=indexTrafficDetours(routes),d=short.passages.find(p=>p.lane==='a^').end-8;
+  const compact={halfLength:1.7,halfWidth:.81},bus={halfLength:4.25,halfWidth:1.225};
+  assert.equal(detours.alternatives(short.id,d,compact).length,1);
+  assert.equal(detours.alternatives(short.id,d,bus).length,0);
+  assert.ok(detours.canReach(short.id,long.id,compact));assert.equal(detours.canReach(short.id,long.id,bus),false);
 });

@@ -3,7 +3,7 @@ import { vehicleSpec } from './vehicle-types.js';
 import * as THREE from './three.js';
 import { createCity3D } from './city3d.js';
 import { createPuppet, createCar } from './puppets3d.js';
-import {appearanceKey} from './kikalmo-avatar.js';
+import {appearanceKey,getKikalmoLook} from './kikalmo-avatar.js';
 import {createKikalmoModel} from './kikalmo-model.js';
 import { createCanvasView } from './canvas-view.js';
 import { createPickupDisplay } from './pickup-models.js';
@@ -73,7 +73,8 @@ export function createView(canvas,spawn,onNotice) {
     renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=touch&&w<h?68:58;camera.updateProjectionMatrix();
   }
   function entity(e,dt,t){
-    const vehicle=!!e.isCar,key=e.renderId||e.id,look=vehicle?'':appearanceKey(e.appearance);
+    const vehicle=!!e.isCar,key=e.renderId||e.id;
+    const look=!vehicle&&getKikalmoLook(e.appearance,0)?.art?appearanceKey(e.appearance):'';
     const id=vehicle?'car/'+e.type:look?'kikalmo/'+look:'puppet/'+e.type;
     let item=models.get(key);
     if(item && item.kind!==id){scene.remove(item.object.group);item.object.dispose?.();models.delete(key);item=null;}

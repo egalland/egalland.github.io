@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCrowdMotion, WALKER_RADIUS, PLAYER_RADIUS} from '../public/crowd-motion.js';
+import {createCrowdMotion, pedestrianBody, WALKER_RADIUS, PLAYER_RADIUS} from '../public/crowd-motion.js';
 
 const separation = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const pedestrian = (id, x, y, angle = 0, speed = 1.25) => ({id, x, y, angle, speed, moving: speed > 0});
@@ -97,7 +97,7 @@ test('a player sprinting against five walkers next to a wall clears each shoulde
       const t = frame / fps;
       const runner = {...player(11 - sprint * t, .13), vx: -sprint, vy: 0};
       const next = {...runner, x: runner.x - sprint / fps};
-      const group = Array.from({length: 5}, (_, i) => pedestrian('walker-' + i, -5 + i * 1.35 + walk * t, 0, 0, walk));
+      const group = Array.from({length: 5}, (_, i) => pedestrian('walker-' + i, -5 + i * 1.75 + walk * t, 0, 0, walk));
       sim.step(group, [runner], 1 / fps);
       assert.equal(group.length, 5);
       for (const [i, actor] of group.entries()) {
@@ -109,6 +109,81 @@ test('a player sprinting against five walkers next to a wall clears each shoulde
     }
     assert.ok(lateral > .9);
     for (const [i, actor] of last.entries())
-      assert.ok(separation(actor, {x: -5 + i * 1.35 + walk * 8, y: 0}) < .12);
+      assert.ok(separation(actor, {x: -5 + i * 1.75 + walk * 8, y: 0}) < .12);
   }
+});
+
+test('a crowd at one idle goal leaves room for the visible wool silhouettes and settles without orbiting', () => {
+  const sim = createCrowdMotion(), local = player(0, 0);
+  let last;
+  for (let frame = 0; frame < 100; frame++) {
+    const group = Array.from({length:12}, (_, i) => pedestrian('a'+i, 0, 0, 0, 0));
+    sim.step(group, [local], 1/30);
+    assert.equal(group.length, 12);
+    for (const [i, walker] of group.entries()) {
+      assert.ok(separation(walker, local) >= 1.68);
+      for (const other of group.slice(0,i)) assert.ok(separation(walker, other) >= 1.50);
+      if (frame > 60) assert.ok(separation(walker,last[i]) < .01);
+    }
+    last = group;
+  }
+  sim.reset();
+  const officer = {...pedestrian('officer', 0, 0, 0, 0), closeContact:true};
+  sim.step([officer],[local],1/30);
+  assert.ok(separation(officer,local) >= 1.47 && separation(officer,local) < 1.6);
+});
+
+test('an idle pedestrian starts making way before a runner arrives then returns after the runner passes', () => {
+  const sim = createCrowdMotion();
+  let early = 0, last;
+  for (let frame = 0; frame <= 120; frame++) {
+    const actor = pedestrian('idle', 0, 0, 0, 0);
+    const runner = {...player(-5 + 4*frame/30, 0), vx:4};
+    sim.step([actor],[runner],1/30);
+    if (runner.x < -3.5) early = Math.max(early,Math.abs(actor.y));
+    assert.ok(separation(actor, runner) >= WALKER_RADIUS + PLAYER_RADIUS);
+    last = actor;
+  }
+  assert.ok(early > .35);
+  assert.ok(Math.hypot(last.x,last.y) < .05);
+});
+
+test('two walkers heading into a one-person passage yield to a single direction and both clear the opening', () => {
+  const blocked = (x, y, r) => Math.abs(x) < 3 && Math.abs(y)+r > 1;
+  const sim = createCrowdMotion({blocked, move:(x,y,dx,dy,r) => ({
+    x:blocked(x+dx,y,r) ? x : x+dx,
+    y:Math.abs(x+dx)<3 ? Math.max(r-1,Math.min(1-r,y+dy)) : y+dy
+  })});
+  let yielded = false, last;
+  for (let frame = 0; frame <= 30*17; frame++) {
+    const t = frame/30;
+    const pair = [pedestrian('a', -5+t, 0, 0, 1),pedestrian('b', 5-t, 0, Math.PI, 1)];
+    sim.step(pair, [], 1/30);
+    assert.equal(pair.length,2);
+    assert.ok(separation(...pair) >= 1.5);
+    if (last && t>3 && t<7 && pair[1].x > last[1].x+.005) yielded = true;
+    last = pair;
+  }
+  assert.ok(yielded);
+  assert.ok(last[0].x > 6 && last[1].x < -6);
+});
+
+test('ragdoll body follows the rotated visible head and feet, keeping other walkers off the whole fallen figure', () => {
+  const sim = createCrowdMotion();
+  const floor = {id:'fallen',x:3,y:8,angle:Math.PI/2,stunned:true,peer:true,
+    ragdoll:{blend:1,hips:[.24,.2,0],chest:[.70,.21,-.1],head:[1.25,.23,-.1],
+      leftFoot:[-.15,.10,-.22],rightFoot:[-.16,.10,.20],rightHand:[.66,.10,.31]}};
+  const body = pedestrianBody(floor);
+  assert.ok(body.fallen && body.person && body.player && body.halfLength>body.halfWidth);
+  assert.ok(separation(floor,body)>.5);
+  const head = {x:3.1,y:9.25}, feet = {x:2.8,y:7.84};
+  const group = [pedestrian('near head',head.x,head.y,0,0),pedestrian('near feet',feet.x,feet.y,0,0)];
+  sim.step(group,[body],1/30);
+  for (const walker of group) {
+    assert.ok(separation(walker,head) >= WALKER_RADIUS + .29);
+    assert.ok(separation(walker,feet) >= WALKER_RADIUS + .1);
+  }
+  const upright = pedestrianBody({...floor, ragdoll:null,stunned:false});
+  assert.equal(upright.halfLength,undefined); assert.equal(upright.r,PLAYER_RADIUS);
+  assert.ok(pedestrianBody({...floor,ragdoll:null}).fallen);
 });

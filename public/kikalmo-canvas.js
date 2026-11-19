@@ -51,7 +51,7 @@ const clothing=['#a17176','#768a6a','#745e77','#445d76','#ad7048','#917b63'];
 export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
   const pose=e.pose||e,frame=kikalmoFrame(e.appearance,t);
   const art=getKikalmoLook(e.appearance,frame)?.art||getKikalmoLook(e.appearance,0)?.art;
-  if(!art)return;
+  if(!art)return false;
   const a=art.appearance;
   const view=turntable(art,theta),m=height/1.78,cos=Math.cos(theta),sin=Math.sin(theta);
   const speed=Math.min(1.45,(Math.abs(pose.speed||0)||((pose.move||pose.moving)?2.4:0))/3);
@@ -87,5 +87,5 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
     g.drawImage(view.c,-width*.5,-bottom-H,width,H);g.restore();
   }
   if(!a.costume)arm(sin>0?1:-1);
-  g.restore();
+  g.restore();return true;
 }

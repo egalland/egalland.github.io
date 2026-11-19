@@ -302,6 +302,7 @@ export function createCanvasView(canvas,spawn,onNotice){
   let w=0,h=0,f=0,camX=spawn.x,camY=spawn.y,camH=2.3,fx=1,fy=0,sin=0,cos=1,horizon=.42,sideLimit=1;
   let arm=5.25,followX=spawn.x,followY=spawn.y,cacheX=Infinity,cacheY=Infinity,nearBuildings=[],nearWays=[],props=[],lastProps=-10;
   let running=true,drawn=false,clock=0,last=-10;const effects=[],queue=[],occlusion=[];
+  let foregroundLayer=null;
   let background=null,backX=Infinity,backY=Infinity,backYaw=0,backPitch=0,backArm=0,backHeight=0,backVersion=null,backPropCount=0;
   function xyz(x,y,height){
     const dx=x-camX,dy=y-camY,forward=dx*fx+dy*fy,v=height-camH;
@@ -309,6 +310,41 @@ export function createCanvasView(canvas,spawn,onNotice){
   }
   function project(v){return {x:w*.5+f*v.s/v.d,y:h*.5-f*v.v/v.d,d:v.d};}
   function at(x,y,z){const p=xyz(x,y,z);return p.d>=near?project(p):null;}
+  function uprightBody(e){
+    if(!e||e.isCar||e.stunned||e.ragdoll)return null;
+    const low=at(e.x,e.y,.48),high=at(e.x,e.y,1.49);
+    if(!low||!high)return null;
+    const width=.38*f/((low.d+high.d)*.5);
+    return {x:(low.x+high.x)*.5,r:width,top:high.y,bottom:low.y,depth:depth(e.x,e.y)};
+  }
+  function pedestrianOpacity(e,playerBody){
+    if(!playerBody||e.self||e.isCar)return 1;
+    const difference=playerBody.depth-depth(e.x,e.y);
+    if(difference<=.1)return 1;
+    const body=uprightBody(e);if(!body)return 1;
+    const left=Math.max(playerBody.x-playerBody.r,body.x-body.r),right=Math.min(playerBody.x+playerBody.r,body.x+body.r);
+    const width=Math.max(0,right-left)/(2*playerBody.r);
+    const height=Math.max(0,Math.min(body.bottom,playerBody.bottom)-Math.max(body.top,playerBody.top))/(playerBody.bottom-playerBody.top);
+    return 1-.70*clamp(width*height*2.8,0,1)*clamp((difference-.1)/.5,0,1);
+  }
+  function uprightSprite(e,base,top,height,time,angle,opacity){
+    // Horizontal scale comes from camera depth. Shear maps the head and feet to their own
+    // projected world centres when looking down on a pedestrian near the edge of the screen.
+    const metresPerPixel=1.78/height,scaleX=metresPerPixel*f/((top.d+base.d)*.5);
+    let ctx=g;
+    if(opacity<.999){
+      if(!foregroundLayer)foregroundLayer=makeCanvas(w,h);
+      if(foregroundLayer.width!==w||foregroundLayer.height!==h){foregroundLayer.width=w;foregroundLayer.height=h;}
+      ctx=foregroundLayer.getContext('2d');ctx.clearRect(0,0,w,h);
+    }
+    ctx.save();ctx.translate(base.x,base.y);ctx.transform(scaleX,0,(base.x-top.x)/height,1,0,0);
+    if(!e.appearance||!drawKikalmoPuppet(ctx,e,0,0,height,time,angle))drawCanvasPuppet(ctx,e,0,0,height,time,angle);
+    ctx.restore();
+    if(ctx!==g){
+      // Fade the completed sprite once. Applying alpha per limb lets the hidden back arms and lining show through.
+      g.save();g.globalAlpha=opacity;g.drawImage(foregroundLayer,0,0);g.restore();
+    }
+  }
   function projectPoly(points){
     const input=points.map(o=>xyz(o[0],o[1],o[2])),clipped=[];
     let a=input[input.length-1];
@@ -610,6 +646,7 @@ export function createCanvasView(canvas,spawn,onNotice){
     }
     g.drawImage(background,0,0);queue.length=0;
     for(const pickup of state.pickups||[])queuePickup(pickup,time,destroyed);
+    const playerBody=uprightBody(state.entities.find(e=>e.self));
     for(const e of state.entities){
       const base=at(e.x,e.y,0),high=e.isCar?vehicleSpec(e.type).height:1.78,top=at(e.x,e.y,high);
       if(!base||!top||base.d>(e.isCar?160:96)||base.d<.61)continue;
@@ -620,7 +657,8 @@ export function createCanvasView(canvas,spawn,onNotice){
         const wid=ph*(e.isCar?.77:.27);
         g.fillStyle='rgba(62,49,64,.25)';g.beginPath();g.ellipse(base.x,base.y-1,Math.max(1,wid),Math.max(1,wid*.2),0,0,tau);g.fill();
         const theta=Math.atan2(e.y-camY,e.x-camX)-(e.angle||0);
-        (e.isCar?drawCanvasCar:e.appearance?drawKikalmoPuppet:drawCanvasPuppet)(g,e,base.x,base.y,ph,time,theta);
+        if(e.isCar)drawCanvasCar(g,e,base.x,base.y,ph,time,theta);
+        else uprightSprite(e,base,top,ph,time,theta,pedestrianOpacity(e,playerBody));
         if(e.bubble||e.peer&&base.d<45){
           const label=String(e.bubble||e.name||'').slice(0,26);g.font=(e.bubble?'19px':'600 11px')+' sans-serif';
           const ww=g.measureText(label).width+12,yy=top.y-(e.isCar?10:6);

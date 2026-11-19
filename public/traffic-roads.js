@@ -87,7 +87,7 @@ function laneSection(edge,first,last){
   const start=first?0:trim,end=last?lane.length:lane.length-trim;
   const a=pose(lane,start),b=pose(lane,end),points=[[a.x,a.y]];
   for(let i=1;i<lane.points.length-1;i++)if(lane.lengths[i]>start+.08&&lane.lengths[i]<end-.08)points.push(lane.points[i]);
-  points.push([b.x,b.y]);return {points,start:a,end:b};
+  points.push([b.x,b.y]);return {points,start:a,end:b,laneStart:start};
 }
 function roundJoin(a,b,append){
   const len=Math.hypot(b.x-a.x,b.y-a.y),handle=len*.46;
@@ -103,7 +103,7 @@ function roundJoin(a,b,append){
 }
 function makeRoute(edges,closed,id){
   const sections=edges.map((e,i)=>laneSection(e,!closed&&i===0,!closed&&i===edges.length-1));
-  const points=[],lengths=[],junctions=[];let length=0;
+  const points=[],lengths=[],junctions=[],passages=[];let length=0;
   const append=p=>{
     const d=points.length?dist(p,points.at(-1)):0;
     if(!points.length||d>.00001){length+=d;points.push(p);lengths.push(length);}
@@ -111,14 +111,17 @@ function makeRoute(edges,closed,id){
   };
   for(let i=0;i<edges.length;i++){
     const edge=edges[i],section=sections[i];
+    const start=length;
     section.points.forEach(append);
     if(!closed&&i===edges.length-1)break;
-    const d=roundJoin(section.end,sections[(i+1)%sections.length].start,append);
+    const next=(i+1)%edges.length;
+    if(edge.to.degree>=3)passages.push({lane:edge.tag,exit:edges[next].tag,start,end:length,laneStart:section.laneStart});
+    const d=roundJoin(section.end,sections[next].start,append);
     if(edge.to.degree>=3)junctions.push({d,id:edge.to.id,x:edge.to.point[0],y:edge.to.point[1],angle:edge.endAngle});
   }
   const minWidth=Math.min(...edges.map(e=>e.record.road.w));
   const availableWidth=Math.min(...edges.map(({record:{road}})=>road.oneway&&road.w<5.5?road.w*1.58:road.w));
-  return {id,key:hash(id),points,lengths,length,junctions,closed,minWidth,availableWidth,count:Math.max(1,Math.round(length/195))};
+  return {id,key:hash(id),points,lengths,length,junctions,passages,closed,minWidth,availableWidth,count:Math.max(1,Math.round(length/195))};
 }
 // End the trip just before the map border, with space for the whole car. Otherwise
 // a driver's collision box reaches the invisible boundary before its route ends.
@@ -133,6 +136,9 @@ function trimEdgePortals(route,portalClear){
   const points=route.points.filter((point,i)=>route.lengths[i]>first+.01&&route.lengths[i]<last-.01);
   Object.assign(route,measure([[a.x,a.y],...points,[b.x,b.y]]));
   route.junctions=route.junctions.filter(j=>j.d>=first&&j.d<=last).map(j=>({...j,d:j.d-first}));
+  route.passages=route.passages.filter(p=>p.end>first&&p.end<last).map(p=>({
+    ...p,start:Math.max(0,p.start-first),end:p.end-first,laneStart:p.laneStart+Math.max(0,first-p.start)
+  }));
   route.count=Math.max(1,Math.round(route.length/195));return true;
 }
 export function buildTrafficRoutes(records,seedGroups,{atEdge=()=>false,laneClear=()=>true,portalClear=()=>true}={}){
@@ -191,6 +197,66 @@ export function buildTrafficRoutes(records,seedGroups,{atEdge=()=>false,laneClea
     }
   }
   return routes;
+}
+// Two checked itineraries can exchange a vehicle on the same directed IGN section,
+// before their turning curves diverge. The car keeps its pose, speed and original ID.
+export function indexTrafficDetours(routes){
+  const lanes=new Map(),graphs=new Map();
+  for(const route of routes.values())for(const passage of route.passages){
+    if(!lanes.has(passage.lane))lanes.set(passage.lane,[]);
+    lanes.get(passage.lane).push({route,passage});
+  }
+  const fits=(route,spec)=>route&&(!spec||((!route.clearance||
+    (spec.halfLength<=route.clearance.halfLength&&spec.halfWidth<=route.clearance.halfWidth))&&
+    spec.halfWidth*4+.12<=route.availableWidth));
+  const overlap=(a,b)=>Math.min(a.laneStart+a.end-a.start,b.laneStart+b.end-b.start)-Math.max(a.laneStart,b.laneStart);
+  const margin=1.2; // the tangent sampler reads 1.15 m on either side of the centre
+
+  function alternatives(routeId,distance,spec){
+    const source=routes.get(routeId);
+    if(!source||!Number.isFinite(distance))return [];
+    const d=source.closed?wrap(distance,source.length):distance;
+    const i=lowerBound(source.passages,d,p=>p.end),from=source.passages[i];
+    if(!from||d<from.start+margin||d>from.end-margin||from.end-d>45)return [];
+    const laneAt=from.laneStart+d-from.start,choices=[];
+    for(const {route,passage:to} of lanes.get(from.lane)){
+      if(route===source||to.exit===from.exit||!fits(route,spec))continue;
+      const target=to.start+laneAt-to.laneStart;
+      if(target<to.start+margin||target>to.end-margin)continue;
+      choices.push({routeId:route.id,routeDistance:target,routeLength:route.length,routeLoop:route.closed,branchDistance:from.end-d});
+    }
+    return choices;
+  }
+
+  // A checkpoint can arrive after more than one detour. Cache the connected routes
+  // for each vehicle footprint, including only transfers that actually share a lane.
+  function canReach(originId,activeId,spec){
+    if(!fits(routes.get(originId),spec)||!fits(routes.get(activeId),spec))return false;
+    if(originId===activeId)return true;
+    const key=spec?`${spec.halfLength}/${spec.halfWidth}`:'all';
+    if(!graphs.has(key)){
+      const parent=new Map();
+      function root(id){
+        let top=id;
+        while(parent.has(top))top=parent.get(top);
+        while(parent.has(id)){const next=parent.get(id);parent.set(id,top);id=next;}
+        return top;
+      }
+      for(const shared of lanes.values()){
+        if(shared.length<2)continue;
+        const usable=shared.filter(entry=>fits(entry.route,spec));
+        for(let i=0;i<usable.length;i++)for(let j=0;j<i;j++){
+          const a=usable[i],b=usable[j];
+          if(a.route===b.route||a.passage.exit===b.passage.exit||overlap(a.passage,b.passage)<=2*margin)continue;
+          const left=root(a.route.id),right=root(b.route.id);
+          if(left!==right)parent.set(left,right);
+        }
+      }
+      graphs.set(key,new Map([...routes.keys()].map(id=>[id,root(id)])));
+    }
+    const graph=graphs.get(key);return graph.get(originId)===graph.get(activeId);
+  }
+  return {alternatives,canReach};
 }
 export function sampleRoadRoute(route,distance){
   if(!route||!Number.isFinite(distance)||(!route.closed&&(distance<0||distance>route.length)))return null;

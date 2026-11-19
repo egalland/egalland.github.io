@@ -75,3 +75,12 @@ test('recovering from two coincident peers clears both hitboxes in one step',()=
   assert.equal(contactAt(move.x,move.y,options),null);
   assert.ok(Math.hypot(move.x-centre.x,move.y-centre.y)<.865);
 });
+
+test('an idle person appearing exactly between two replicated bodies clears both without tunnelling',()=>{
+  const left=point(0,-.49),right=point(0,.49);
+  const options={radius:.59,colliders:[{...left,id:'l',r:.59},{...right,id:'r',r:.59}]};
+  assert.ok(contactAt(centre.x,centre.y,options));
+  const resolved=moveBody(centre.x,centre.y,0,0,options);
+  assert.equal(contactAt(resolved.x,resolved.y,options),null);
+  assert.ok(Math.hypot(resolved.x-centre.x,resolved.y-centre.y)<1.4);
+});

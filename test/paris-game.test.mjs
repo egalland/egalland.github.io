@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SPAWN, getTravelPoint, nearbyProps, blocked, routeAgents } from '../public/paris-world.js';
+import { SPAWN, getTravelPoint, nearbyProps, blocked, routeAgents, trafficVehicleAt, sampleTrafficRoute } from '../public/paris-world.js';
 import { createGame } from '../public/game.js';
 import { vehicleSpec } from '../public/vehicle-types.js';
 import { nearbyWeaponDrops } from '../public/weapon-drops.js';
@@ -363,7 +363,7 @@ test('Multiple services arriving at one Paris incident keep separate bodies arou
   for(const role of roles){
     h.receive({type:'npc',player:'neighbour',data:{id:`unit-${role}-${h.net.id}`,kind:role,x:origin.x,y:origin.y,started:h.epoch-12000,level:1}});
   }
-  let nearestPlayer=Infinity,nearestUnit=Infinity,atScene=0;
+  let nearestPlayer=Infinity,nearestUnit=Infinity,atScene=0,closeByAtRest=0;
   for(let frame=0;frame<240;frame++){
     h.step();
     const units=h.scene.entities.filter(a=>a.id.endsWith('-foot'));
@@ -372,9 +372,11 @@ test('Multiple services arriving at one Paris incident keep separate bodies arou
       nearestPlayer=Math.min(nearestPlayer,separation(unit,h.game.getPosition()));
       for(const neighbour of units.slice(i+1))nearestUnit=Math.min(nearestUnit,separation(unit,neighbour));
     }
-    atScene=Math.max(atScene,units.filter(a=>separation(a,origin)<4).length);
+    atScene=Math.max(atScene,units.filter(a=>separation(a,origin)<7).length);
+    if(frame>=180)closeByAtRest=Math.max(closeByAtRest,units.filter(a=>separation(a,origin)<2).length);
   }
   assert.equal(atScene,4,'all four units reach their incident');
+  assert.ok(closeByAtRest<=2,`all emergency roles should not surround a healthy, unwarranted player (${closeByAtRest} within 2 m)`);
   assert.ok(nearestPlayer>=.74,`responder-player clearance ${nearestPlayer.toFixed(3)} m`);
   assert.ok(nearestUnit>=.72,`responder-responder clearance ${nearestUnit.toFixed(3)} m`);
   t.diagnostic(`Minimum centre distance for four responders: ${nearestPlayer.toFixed(2)} m to player, ${nearestUnit.toFixed(2)} m between units`);
@@ -421,4 +423,59 @@ test('Paris traffic brakes before an on-foot peer and proceeds once the lane cle
   assert.ok(travelled>9,'vehicle leaves its stopping place after the lane clears');
   assert.ok(biggestStep<.4,`largest movement in one frame was ${biggestStep.toFixed(2)} m`);
   t.diagnostic(`Peer crossing: ${minClearance.toFixed(2)} m minimum clearance from the bumper; driver resumed over ${travelled.toFixed(1)} m`);
+});
+
+test('Travel into the narrow gap between two stationary people never pins the entering player',t=>{
+  const h=startGame(t),stop=getTravelPoint('maillot');
+  // Their shoulders do not touch each other, but a third body cannot fit between them.
+  const left={id:'standing-left',x:stop.x-.49,y:stop.y,angle:0};
+  const right={id:'standing-right',x:stop.x+.49,y:stop.y,angle:Math.PI};
+  h.players.push(left,right);h.step(20);
+  assert(h.game.travel(stop.key));
+  h.step(24);
+  const gap=Math.min(...[left,right].map(q=>separation(h.game.getPosition(),q)));
+  assert.ok(gap>=.84,`an involuntary arrival stayed wedged between two occupied bodies (${gap.toFixed(2)} m)`);
+  assert.ok(!blocked(h.scene.p.x,h.scene.p.y,.43),'the arriving player has a usable standing point');
+  assert.ok(Math.hypot(h.scene.p.x-stop.x,h.scene.p.y-stop.y)<5,'the landing stays near the requested stop');
+  h.players.length=0;h.step(24);
+  assert(h.game.travel('sablons'));h.step(24);
+  const here=h.game.getPosition();
+  Object.assign(left,{x:here.x-.49,y:here.y});Object.assign(right,{x:here.x+.49,y:here.y});
+  h.players.push(left,right);h.step(40);
+  const lateGap=Math.min(...[left,right].map(q=>separation(h.game.getPosition(),q)));
+  assert.ok(lateGap>=.84,`late-arriving neighbours pinned an idle player (${lateGap.toFixed(2)} m)`);
+  t.diagnostic(`Two occupied bodies: ${gap.toFixed(2)} m on travel, ${lateGap.toFixed(2)} m after late peer snapshots`);
+});
+
+
+test('Traffic takes a legal side street at the last fork before a persistent parked vehicle',t=>{
+  const h=startGame(t),route='r184245_1sh3897',index=1;
+  // At Rue de Tilsitt a driver can stay on the road into the obstruction or turn onto a connected street.
+  const model=trafficVehicleAt(route,index),startProgress=203,obstruction=sampleTrafficRoute(route,245.59);
+  assert.ok(model&&obstruction);
+  const snapshot=routeAgents(SPAWN.x,SPAWN.y,220,h.epoch).cars.find(v=>v.id===model.id);
+  // The world continuously seeds traffic. Pick the instant this identifiable driver approaches the junction.
+  let basis=snapshot;
+  if(!basis){
+    const point=sampleTrafficRoute(route,startProgress);
+    for(let sec=0;sec<90&&!basis;sec++){
+      h.epoch+=1000;basis=routeAgents(point.x,point.y,100,h.epoch).cars.find(v=>v.id===model.id);
+    }
+  }
+  assert.ok(basis,'a world driver approaches this Paris junction');
+  const advance=(startProgress-basis.routeDistance+model.routeLength)%model.routeLength;
+  h.epoch+=advance/model.cruiseSpeed*1000;
+  h.world.vehicles={'parked-van':{id:'parked-van',type:'van',x:obstruction.x,y:obstruction.y,angle:obstruction.angle,occupied:false}};
+  assert(h.game.travel(SPAWN.key));
+  let changed=false,traveled=0,previous=null,onDetour=0;
+  for(let i=0;i<60*32;i++){
+    h.step();const driver=h.scene.entities.find(v=>v.id===model.id);
+    if(!driver)continue;
+    if(previous){const stride=separation(previous,driver);assert.ok(stride<.55,'same driver stays continuous through the turn');traveled+=stride;}
+    if(driver.routeId!==route){changed=true;if(previous?.routeId===driver.routeId)onDetour+=separation(previous,driver);}
+    previous={...driver};if(onDetour>22)break;
+  }
+  assert.ok(changed,`the persistent parked van kept this driver on the obstructed street (${traveled.toFixed(1)} m driven)`);
+  assert.ok(onDetour>22,'the same car drives down the side street while the parked van stays in place');
+  t.diagnostic(`Permanent obstruction: same driver continued ${onDetour.toFixed(1)} m on the connected alternate route`);
 });

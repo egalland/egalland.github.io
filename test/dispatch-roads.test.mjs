@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { contactAt, destinations, nearbyDrivableStreets } from '../public/paris-world.js';
-import { planDispatch, dispatchRoadPose, stepDispatch, stepDispatchFoot } from '../public/dispatch-roads.js';
+import { planDispatch, dispatchRoadPose, stepDispatch, dispatchWorkSpot, stepDispatchFoot } from '../public/dispatch-roads.js';
 
 test('The four emergency vehicles pull over in distinct, navigable spaces on real Paris roads',()=>{
   for(const scene of destinations){
@@ -36,13 +36,14 @@ test('A response brakes on its route for a pedestrian and resumes when the lane 
 test('A crew walks around a wall between its door and the suspect and stops within speaking distance',()=>{
   const state={foot:{x:1,y:0},arrived:0},target={x:13,y:1};
   const clear=q=>!(q.x>=4&&q.x<=8&&q.y>=-4&&q.y<=4);
+  const spot=dispatchWorkSpot(state,target,.3,{role:'police',heading:0,moving:false,closeContact:true,down:false,walkable:clear,available:clear});
   let last,maxSide=0;
   for(let i=0;i<=360;i++){
-    last=stepDispatchFoot(state,target,.3+i/30,2.3,clear);
+    last=stepDispatchFoot(state,spot,.3+i/30,2.3,clear,target);
     assert.ok(clear(last));maxSide=Math.max(maxSide,Math.abs(last.y));
   }
   assert.ok(maxSide>4.1);
-  assert.ok(Math.hypot(last.x-target.x,last.y-target.y)>.9);assert.ok(Math.hypot(last.x-target.x,last.y-target.y)<1.2);
+  assert.ok(Math.hypot(last.x-target.x,last.y-target.y)>1.45);assert.ok(Math.hypot(last.x-target.x,last.y-target.y)<1.6);
   assert.equal(last.moving,false);
 });
 
@@ -70,4 +71,40 @@ test('Vehicles parked at Paris travel stops leave the passing lanes clear, inclu
     }
   }
   assert.ok(concordePasses>12,'Concorde traffic actually passed the parked car');
+});
+
+test('Crews from the same curb choose separate working positions and leave a forward walking exit',()=>{
+  const target={x:0,y:0},roles=['police','swat','medic','firefighter'],chosen=[];
+  for(const role of roles){
+    const state={foot:{x:-8,y:0},arrived:0};
+    const options={role,heading:0,moving:false,closeContact:['police','swat'].includes(role),down:false,walkable:()=>true,
+      available:q=>chosen.every(v=>Math.hypot(q.x-v.x,q.y-v.y)>1.6)};
+    const spot=dispatchWorkSpot(state,target,0,options);
+    assert.ok(Math.abs(Math.atan2(spot.y,spot.x))>=1.02);
+    const range=Math.hypot(spot.x,spot.y);
+    if(role==='medic')assert.ok(range>=1.9&&range<2.7);
+    if(options.closeContact)assert.ok(range>1.45&&range<1.6);
+    const idle=dispatchWorkSpot(state,target,1,{...options,heading:1.59});
+    assert.deepEqual([idle.x,idle.y],[spot.x,spot.y],'turning a camera while standing does not move the crew');
+    const clear=q=>Math.hypot(q.x,q.y)>1.23;
+    for(let i=0;i<240;i++){
+      const foot=stepDispatchFoot(state,spot,.3+i*.05,2.5,clear,target);
+      assert.ok(clear(foot),'approach also keeps clear of the target');
+    }
+    chosen.push(spot);
+  }
+});
+
+test('Units change flanks for a wall, a parked vehicle or a second crew and let the medic approach a fallen player',()=>{
+  const target={x:0,y:0},occupied=[];
+  for(const role of ['medic','police','medic','swat','firefighter']){
+    const state={foot:{x:4,y:6}},floor=q=>q.y<2.6&&q.x> -5;
+    const options={role,heading:-.26,closeContact:false,down:true,moving:false,walkable:floor,
+      available:q=>floor(q)&&!(q.x< -1.4&&q.y<0)&&occupied.every(b=>Math.hypot(q.x-b.x,q.y-b.y)>1.65)};
+    const spot=dispatchWorkSpot(state,target,4,options);
+    assert.ok(options.available(spot));
+    assert.ok(Math.hypot(spot.x,spot.y)>=2);
+    if(role==='medic'&&!occupied.length)assert.ok(Math.hypot(spot.x,spot.y)<2.7);
+    occupied.push(spot);
+  }
 });
