@@ -1,3 +1,4 @@
+import {applyCombatPose} from './puppet-combat.js';
 // Local puppet coordinates: x points forward, y up. Angles are radians from
 // a hanging limb. The gait clock comes from metres travelled in the simulation.
 const clamp=(value,min=0,max=1)=>Math.max(min,Math.min(max,value));
@@ -66,7 +67,7 @@ export function sampleLocomotion(e={},time=0,seed=0){
       splay:.04+.026*pace+effort*splay
     };
   }
-  return {phase,step,pace,run,breath,bob,squash,lean,roll,turn,effort,left:side(-1),right:side(1)};
+  return applyCombatPose({phase,step,pace,run,breath,bob,squash,lean,roll,twist:0,turn,effort,left:side(-1),right:side(1)},e);
 }
 
 // Shared joint positions for the linked avatar's mesh and projected drawings.
@@ -79,10 +80,11 @@ export function posedLimb(origin,upper,lower,l1,l2,side,spread=0){
 // The portrait shell and its seven skin anchors share this skeleton in both views.
 export const kikalmoAnchors=[[0,.46,0],[0,.83,0],[0,1.1,0],[0,.86,-.26],[0,.86,.26],[0,.44,-.14],[0,.44,.14]];
 export function linkedPose(e,gait,time){
-  const {lean,roll,bob,squash,effort}=gait;
+  const {lean,roll,twist,bob,squash,effort}=gait;
   const anchors=kikalmoAnchors.map(([x,y,z])=>{
     const height=(y-.46)*(1+squash);
-    return [x+height*Math.sin(lean),.46+bob+height*Math.cos(lean)-z*Math.sin(roll),z+height*Math.sin(roll)];
+    const yaw=twist*clamp((y-.45)/.43);
+    return [x+z*Math.sin(yaw)+height*Math.sin(lean),.46+bob+height*Math.cos(lean)-z*Math.sin(roll),z*Math.cos(yaw)+height*Math.sin(roll)];
   });
   const arms=[],legs=[],shoulders=[],hips=[];
   for(const [index,s] of [[0,-1],[1,1]]){
@@ -90,8 +92,9 @@ export function linkedPose(e,gait,time){
     const free=1-effort,wave=s>0&&e.emote?free:0,fire=s>0?(e.fire||0)*free:0;
     const raised=l.arm+wave*(2.45+.20*Math.sin(time*12))+fire*1.2;
     shoulders.push(raised);hips.push(l.thigh);
-    arms.push(posedLimb(anchors[3+index],raised,l.elbow,.19,.17,s,.043+.22*l.splay+.04*wave));
-    legs.push(posedLimb(anchors[5+index],l.thigh,l.shin,.19,.185,s,0));
+    const sleeve=1+(l.armStretch||0),trouser=1+(l.legStretch||0);
+    arms.push(posedLimb(anchors[3+index],raised,l.elbow,.19*sleeve,.17*sleeve,s,.043+.22*l.splay+.04*wave));
+    legs.push(posedLimb(anchors[5+index],l.thigh,l.shin,.19*trouser,.185*trouser,s,0));
   }
   return {anchors,arms,legs,shoulders,hips};
 }

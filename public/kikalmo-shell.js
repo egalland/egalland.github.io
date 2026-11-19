@@ -30,3 +30,24 @@ export function kikalmoShell(art){
   }
   const result={w,h,pixels,depth,rowDepth,material,dims};shells.set(art,result);return result;
 }
+
+
+// A gloved fist or boot emerging from a one-piece outfit picks up that costume's yarn.
+export function costumeThreads(art){
+  const shell=kikalmoShell(art);
+  if(shell.threads)return shell.threads;
+  const {w,h,pixels}=shell;
+  function swatch(y0,y1){
+    const samples=[];
+    for(let y=Math.floor(y0*h);y<y1*h;y+=3)for(let x=Math.floor(w*.18);x<w*.82;x+=3){
+      const i=(y*w+x)*4;
+      if(pixels[i+3]>185)samples.push([pixels[i],pixels[i+1],pixels[i+2]]);
+    }
+    const light=c=>c[0]*.3+c[1]*.6+c[2]*.1;
+    samples.sort((a,b)=>light(a)-light(b));
+    const c=samples[Math.floor(samples.length*.52)]||[101,77,73];
+    return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join('');
+  }
+  shell.threads={sleeve:swatch(.58,.76),boot:swatch(.83,.96)};
+  return shell.threads;
+}

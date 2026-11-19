@@ -1,6 +1,6 @@
 import {motionSeed,sampleLocomotion,linkedPose,kikalmoAnchors} from './locomotion-pose.js';
 import {getKikalmoLook,kikalmoFrame} from './kikalmo-avatar.js';
-import {kikalmoShell} from './kikalmo-shell.js';
+import {kikalmoShell,costumeThreads} from './kikalmo-shell.js';
 
 const views=new WeakMap(),tau=Math.PI*2;
 function turntable(art,theta){
@@ -103,8 +103,9 @@ function drawCostume(g,view,rig,gait,m,sin,cos){
   function point(v){
     const {pos:[x,y,z],side,arm,leg}=v;
     const height=(y-.46)*(1+gait.squash);
-    let xx=x+height*Math.sin(gait.lean),yy=.46+gait.bob+height*Math.cos(gait.lean)-z*Math.sin(gait.roll);
-    let zz=z+height*Math.sin(gait.roll);
+    const twist=gait.twist*Math.max(0,Math.min(1,(y-.45)/.43));
+    let xx=x+z*Math.sin(twist)+height*Math.sin(gait.lean),yy=.46+gait.bob+height*Math.cos(gait.lean)-z*Math.sin(gait.roll);
+    let zz=z*Math.cos(twist)+height*Math.sin(gait.roll);
     if(arm||leg){
       const isArm=arm>leg,index=(isArm?3:5)+side;
       // The catalog contains long dresses, coats and one-piece costumes: the
@@ -143,22 +144,36 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
   const view=turntable(art,theta),m=height/1.78,cos=Math.cos(theta),sin=Math.sin(theta);
   const gait=sampleLocomotion(pose,t,motionSeed(e.id??e.seed)),rig=linkedPose(pose,gait,t);
   const rag=e.ragdoll||pose.ragdoll,b=rag?.blend||0;
+  const threads=a.costume&&(gait.footSide||gait.handSide)?costumeThreads(art):null;
   const project=p=>[(p[0]*sin+p[2]*cos)*m,(-p[1]-p[0]*cos*.14)*m];
   const blend=(joint,p)=>{const v=rag?.[joint];return v&&b?p.map((n,i)=>n+(v[i]-n)*b):p;};
   g.save();g.translate(x,ground);g.lineCap='round';
   function arm(s){
     const side=s>0?1:0,n=side?'right':'left',arm=rig.arms[side];
     const [p,q,r]=['Shoulder','Elbow','Hand'].map((joint,i)=>project(blend(n+joint,arm[i])));
-    limb(g,p,q,.072*m,clothing[a.outfit]||clothing[0]);limb(g,q,r,.054*m,a.color);
-    bead(g,r,.076*m,.085*m,a.color);
+    limb(g,p,q,.072*m,threads?.sleeve||clothing[a.outfit]||clothing[0]);limb(g,q,r,.054*m,threads?.sleeve||a.color);
+    const glove=threads?'#efcfaa':a.color;
+    if(threads)bead(g,r,.091*m,.087*m,'#5d4748');
+    bead(g,r,.078*m,.075*m,glove);
+    if(threads)bead(g,[r[0]+s*m*.039,r[1]+.043*m],.040*m,.042*m,glove);
   }
+  function leg(s){
+    const side=s>0?1:0,n=side?'right':'left',leg=rig.legs[side];
+    const [hip,knee,foot]=['Hip','Knee','Foot'].map((joint,i)=>project(blend(n+joint,leg[i])));
+    limb(g,hip,knee,.071*m,threads?.boot||'#59505c');limb(g,knee,foot,.064*m,threads?.boot||'#554c58');
+    if(threads)bead(g,[foot[0]+sin*.035*m,foot[1]+.03*m],.116*m,.050*m,'#42333c');
+    bead(g,[foot[0]+sin*.035*m,foot[1]],.109*m,.056*m,threads?.boot||'#4b3e45');
+  }
+  // A punch thrown away from the chase camera disappears behind the wearer.
+  // Paint the sleeve before the cloth so only the part beyond its silhouette shows.
+  const away=cos>.58,backArm=sin>0?-1:1,frontArm=-backArm;
+  const hiddenByBody=s=>away&&gait.handSide===s;
   if(!a.costume){
-    for(const s of [-1,1]){
-      const side=s>0?1:0,n=side?'right':'left',leg=rig.legs[side];
-      const [hip,knee,foot]=['Hip','Knee','Foot'].map((joint,i)=>project(blend(n+joint,leg[i])));
-      limb(g,hip,knee,.071*m,'#59505c');limb(g,knee,foot,.064*m,'#554c58');bead(g,foot,.099*m,.055*m,'#4b3e45');
-    }
-    arm(sin>0?-1:1);
+    leg(-1);leg(1);arm(backArm);
+    if(hiddenByBody(frontArm))arm(frontArm);
+  }else if(!b&&away){
+    if(gait.handSide)arm(gait.handSide);
+    if(gait.footSide)leg(gait.footSide);
   }
   const width=view.width*m,H=view.height*m,bottom=view.bottom*m;
   if(b&&rag?.head&&rag?.hips){
@@ -172,6 +187,10 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
     g.scale(1-gait.squash*.5,1+gait.squash);
     g.drawImage(view.c,-width*.5,-bottom-H+.46*m,width,H);g.restore();
   }
-  if(!a.costume)arm(sin>0?1:-1);
+  if(!a.costume){if(!hiddenByBody(frontArm))arm(frontArm);}
+  else if(!b&&!away){
+    if(gait.handSide)arm(gait.handSide);
+    if(gait.footSide)leg(gait.footSide);
+  }
   g.restore();return true;
 }

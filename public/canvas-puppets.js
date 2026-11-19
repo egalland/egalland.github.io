@@ -150,31 +150,37 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
   const screen=([forward,up,side])=>[side*foreshorten+forward*profile,-up-rear*forward*.22];
   const leg=s=>{
     const l=s<0?gait.left:gait.right;
-    const [hip,knee,foot]=posedLimb([0,22+lift,s*7.5],l.thigh,l.shin,8.0,9.5,s,1.2).map(screen);
+    const length=1+(l.legStretch||0);
+    const [hip,knee,foot]=posedLimb([0,22+lift,s*7.5],l.thigh,l.shin,8*length,9.5*length,s,1.2).map(screen);
     hose(c,hip,knee,foot,5.8,'#4c4856');
     const [toe,endY]=foot;
     bead(c,toe+profile*2,endY,6.4,3.2,'#4b4546',outline,1.3,profile*.08);
     stitch(c,[[toe-4,endY+2],[toe+3.6,endY+2]],1.2,'#9c8068');
   };
-  leg(-1);leg(1);
+  const frontFoot=rear>.58?0:gait.footSide;
+  if(frontFoot!==-1)leg(-1);if(frontFoot!==1)leg(1);
   c.save();c.translate(0,-lift-22);c.rotate(gait.lean*profile+gait.roll*rear);
   const stretch=gait.squash-react*.075;
   c.scale(1-stretch*.5,1+stretch);c.translate(0,22);
   const tailSide=profile>.2?-1:1;
   if(animal==='fox' && rear<.20)drawTail(c,fur,phase,rear,tailSide);
-  shape(c,'M-12 -44 Q-15 -37 -15 -26 Q-14 -20 -9 -18 Q1 -15 12 -20 Q17 -27 12 -40 Q9 -45 1 -46 Z',dress,outline,1.8,true);
+  const chest=()=>shape(c,'M-12 -44 Q-15 -37 -15 -26 Q-14 -20 -9 -18 Q1 -15 12 -20 Q17 -27 12 -40 Q9 -45 1 -46 Z',dress,outline,1.8,true);
   function arm(s){
     const l=s<0?gait.left:gait.right,free=1-gait.effort;
     const wave=s>0&&pose.emote?free:0,fire=s>0?firing*free:0;
     const raised=l.arm+wave*(2.38+.14*Math.sin(t*12))+fire*1.12;
     const reach=gait.effort*Math.max(0,Math.sin(raised*.5));
-    const [a,b,h]=posedLimb([0,39,s*12],raised,l.elbow,7.6+2.7*reach,7+2.4*reach,s,3.6+10*l.splay+wave*2).map(screen);
+    const length=1+(l.armStretch||0);
+    const [a,b,h]=posedLimb([s*12*Math.sin(gait.twist),39,s*12*Math.cos(gait.twist)],raised,l.elbow,(7.6+2.7*reach)*length,(7+2.4*reach)*length,s,3.6+10*l.splay+wave*2).map(screen);
     hose(c,a,b,h,4.5,dress);
     bead(c,h[0],h[1]+1,4.8,4.6,'#f2d9b7',outline,1.2);
     bead(c,h[0]-s*3,h[1]-1.1,2.0,2.5,'#f2d9b7',null);
   }
   const nearArm=profile>0?1:-1;
-  if(gait.effort<.1)arm(-nearArm);
+  const coveredArm=rear>.58?gait.handSide:0;
+  if(coveredArm)arm(coveredArm);
+  chest();
+  if(gait.effort<.1&&coveredArm!==-nearArm)arm(-nearArm);
   if(hero){
     c.save();c.translate(0,Math.sin(phase-.4)*.9*gait.pace+.2*gait.breath);c.rotate(stride*.029);
     shape(c,'M-9 -44 Q-20 -39 -19 -25 L-22 -20 Q-18 -19 -15 -21 Q-7 -17 2 -18 Q12 -18 17 -21 L22 -20 Q19 -25 17 -35 Q14 -43 7 -45 Z','#367e80',outline,1.45,true);
@@ -183,11 +189,11 @@ export function drawCanvasPuppet(c,o,x,groundY,height,time=0,viewAngle=0){
     c.restore();
   }
   if(animal==='fox'&&rear>=.20)drawTail(c,fur,phase,rear,tailSide);
-  if(gait.effort<.1)arm(nearArm);
+  if(gait.effort<.1&&coveredArm!==nearArm)arm(nearArm);
   c.save();c.translate(profile*.8,-60+Math.sin(phase+.15)*gait.pace*.7);c.rotate(stride*(.023+.016*run)-gait.lean*profile*.33);c.translate(0,60);
   faceAndHat();
-  c.restore();if(gait.effort>=.1){arm(-nearArm);arm(nearArm);}
-  c.restore();c.restore();
+  c.restore();if(gait.effort>=.1){if(coveredArm!==-nearArm)arm(-nearArm);if(coveredArm!==nearArm)arm(nearArm);}
+  c.restore();if(frontFoot)leg(frontFoot);c.restore();
 }
 const carColors=['#b86b70','#429d9b','#deac59','#887eae','#b08163','#7798aa'];
 const carFleet={police:'#527598',firetruck:'#ab4e48',ambulance:'#e6d6b6',swat:'#4b5260',taxi:'#b15c65',bus:'#408d82'};

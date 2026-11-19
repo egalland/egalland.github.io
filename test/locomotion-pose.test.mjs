@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {motionSeed,sampleLocomotion,linkedPose} from '../public/locomotion-pose.js';
+import {meleeMoves} from '../public/melee-moves.js';
+import {impactFibers} from '../public/puppet-combat.js';
 import {createPuppet} from '../public/puppets3d.js';
 
 const pose=(motion,phase=0,extra={})=>({id:'pedestrian-23',motion,motionPhase:phase,walk:.9,...extra});
@@ -43,4 +45,29 @@ test('knitted mesh and linked armature both reach overhead, pull down and lead w
     assert.ok(Math.abs(pulled.legs[0][2][0]-pulled.legs[1][2][0])>.10);
   }
   mesh.dispose();
+});
+
+test('physical blows extend the striking limb at the game contact frame and regain the walking pose',()=>{
+  const base=pose('walk',.3,{stride:.27});
+  const idle=linkedPose(base,sample(base),.52);
+  for(const [kind,move] of Object.entries(meleeMoves)){
+    const at=p=>{const e={...base,melee:{kind,phase:p}};return linkedPose(e,sample(e),.52);};
+    const contact=at(move.contact/move.duration),wind=at(.18);
+    const chain=kind==='kick'?'legs':'arms',side=kind==='jab'?0:1;
+    const end=contact[chain][side][2],opposite=contact[chain][1-side][2];
+    assert.ok(end[0]>wind[chain][side][2][0]+.26,kind+' extends forward at contact');
+    assert.ok(end[1]>opposite[1]+.10,kind+' raises the striking limb');
+    assert.deepEqual(at(1),idle,'the original walking phase is restored');
+  }
+  const e={...base,angle:.8,recoil:{force:.65,angle:.8,phase:.11}};
+  assert.ok(sample(e).lean>sample(base).lean+.38);
+  assert.ok(sample({...e,recoil:{...e.recoil,angle:.8+Math.PI/2}}).roll>sample(base).roll+.3);
+  assert.deepEqual(sample({...e,recoil:{...e.recoil,phase:1}}),sample(base));
+});
+
+test('contact fibers are localized around the contact and travel outwards',()=>{
+  for(const strand of impactFibers(.53,.8)){
+    assert.ok(strand.points.every(p=>p.every(Number.isFinite)&&Math.hypot(...p)<.35));
+    assert.ok(Math.hypot(...strand.velocity)>.6);
+  }
 });

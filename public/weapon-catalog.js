@@ -25,3 +25,8 @@ export const weaponCatalog=Object.freeze(Object.fromEntries(entries.map(w=>[w.id
 export const weaponList=Object.freeze(entries);
 export const starterWeapons=Object.freeze(entries.filter(w=>w.starter).map(w=>w.id));
 export const findableWeaponIds=Object.freeze(entries.filter(w=>!w.starter).map(w=>w.id));
+
+// Number keys and the wheel follow the same slots as the player's bag grows.
+export function inventoryWeapons(owned=starterWeapons){
+  return weaponList.filter(item=>item.starter||owned?.includes(item.id));
+}

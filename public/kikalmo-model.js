@@ -1,7 +1,7 @@
 import {motionSeed,sampleLocomotion,linkedPose,kikalmoAnchors as anchors} from './locomotion-pose.js';
 import * as THREE from './three.js';
 import {appearanceKey,getKikalmoLook,kikalmoFrame,zones} from './kikalmo-avatar.js';
-import {kikalmoShell} from './kikalmo-shell.js';
+import {kikalmoShell,costumeThreads} from './kikalmo-shell.js';
 
 const built=new WeakMap(),inactive=new Map();
 const shape=new THREE.SphereGeometry(1,12,9);
@@ -78,7 +78,13 @@ export function createKikalmoModel(value,seed=0){
   function setSurface(art){
     if(art===active)return;
     if(surface){group.remove(surface);release();}
-    active=art;entry=geometry(art);inactive.delete(art);entry.refs++;surface=new THREE.SkinnedMesh(entry.mesh,entry.mats);
+    active=art;entry=geometry(art);
+    if(a.costume){
+      const {sleeve,boot}=costumeThreads(art);
+      for(const [upper,lower,palm] of arms){upper.material=lower.material=material(sleeve);palm.material=material('#efcfaa');}
+      for(const leg of legs)for(const part of leg)part.material=material(boot);
+    }
+    inactive.delete(art);entry.refs++;surface=new THREE.SkinnedMesh(entry.mesh,entry.mats);
     surface.frustumCulled=false;surface.bind(skeleton,new THREE.Matrix4());group.add(surface);
   }
   function release(){
@@ -95,7 +101,7 @@ export function createKikalmoModel(value,seed=0){
     const rag=e.ragdoll||pose.ragdoll,blend=clamp(rag?.blend||0);
     for(let i=0;i<bones.length;i++){
       const b=bones[i];b.position.fromArray(rig.anchors[i]);
-      let rz=-gait.lean*(i===2?.63:1),rx=gait.roll,ry=i===2?-gait.turn*.12:0;
+      let rz=-gait.lean*(i===2?.63:1),rx=gait.roll,ry=i===2?-gait.turn*.12+gait.twist*.4:gait.twist*(i===0?.18:1);
       if(i===3||i===4){
         const side=i-3,leg=side?gait.right:gait.left;
         rz=rig.shoulders[side];rx=(side?-1:1)*leg.splay;
@@ -106,9 +112,16 @@ export function createKikalmoModel(value,seed=0){
       const joint=rag?.[joints[i]]||(i===5||i===6?rag?.hips:null);
       if(joint&&blend){tmp.fromArray(joint);b.position.lerp(tmp,blend);b.quaternion.slerp(identity,blend);}
     }
+    // A one-piece costume supplies its resting hands and boots in the cloth itself.
+    // Its striking hand or foot emerges from the sleeve only during the swing.
+    limb.visible=!a.costume||(!blend&&(!!gait.handSide||!!gait.footSide));
     if(limb.visible){
       for(const side of [0,1]){
         const name=side?'right':'left',arm=arms[side],leg=legs[side];
+        if(a.costume){
+          for(const part of arm)part.visible=gait.handSide===(side?1:-1);
+          for(const part of leg)part.visible=gait.footSide===(side?1:-1);
+        }
         p.copy(bones[3+side].position);q.fromArray(rig.arms[side][1]);r.fromArray(rig.arms[side][2]);
         if(blend){if(rag[name+'Elbow'])q.lerp(tmp.fromArray(rag[name+'Elbow']),blend);if(rag[name+'Hand'])r.lerp(tmp.fromArray(rag[name+'Hand']),blend);}
         stick(arm[0],p,q,.068);stick(arm[1],q,r,.055);arm[2].position.copy(r);

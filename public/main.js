@@ -1,6 +1,7 @@
-import {weaponList,starterWeapons} from './weapon-catalog.js';
+import {weaponList,starterWeapons,inventoryWeapons} from './weapon-catalog.js';
 import {installHudEditor} from './hud-editor.js';
 import {installTraversalControl} from './traversal-control.js';
+import {installCombatControls} from './combat-controls.js';
 import {installKikalmoLink} from './kikalmo-link.js';
 import {createWanted,wantedRules,wantedThresholds} from './wanted.js';
 import {attachSectorTravel} from './sector-travel.js';
@@ -20,7 +21,6 @@ function guestName(){return defaultNames[Math.floor(Math.random()*defaultNames.l
 const name=read('name',guestName());
 write('name',name);
 const weapons=weaponList.map(({id,name})=>[id,name]);
-const shortcut=i=>i<9?String(i+1):i===9?'0':'';
 const pursuitKey='maillecity.pursuit.v1';
 function loadPursuit(){
   try{
@@ -40,10 +40,10 @@ const weaponNames=new Map(weapons);
 const city=$('#city'),chat=$('#chat'),entry=$('#chatEntry');
 let settingsSound=read('sound','false')==='true',panels=null,game=null, state={weapon:'pistol',ammo:12,health:100,wanted:0,wantedPoints:0,wantedProgress:0,ownedWeapons:loadout,district:'Place de l’Étoile'}, timer=0;
 let touchAimEnabled=read('touchAimAssist','true')==='true';
-let fireGesture=null;
+
 const aimMarker=$('#touchAimMarker');
 function showAimLock(point) {
-  const visible=touchAimEnabled && fireGesture?.action==='touchFire' && point &&
+  const visible=touchAimEnabled && combat.aiming && point &&
     Number.isFinite(point.x) && point.x>=0 && point.x<=1 &&
     Number.isFinite(point.y) && point.y>=0 && point.y<=1;
   if(visible){
@@ -61,6 +61,11 @@ function setTouchAim(enabled) {
 const controlsAreTouch=()=>matchMedia('(pointer:coarse),(max-width:670px)').matches;
 renderIcons();
 const traversal=installTraversalControl($('#jump'),$('#traversalShortcut'),pressed=>game.action('jump',pressed));
+const combat=installCombatControls($('#fire'),$('#melee'),{
+  action:(name,pressed)=>game?.action(name,pressed),
+  setAim:(x,y)=>game?.setAim(x,y),
+  endAim:()=>showAimLock(null)
+});
 drawBrand($('#brandMark').getContext('2d'));
 portrait($('#portrait').getContext('2d'),96);
 function appendChat({name,text,system=false}){
@@ -86,26 +91,23 @@ function notify(text){const box=$('#notice');box.textContent=text;box.classList.
 function focusGame(){if(chat.contains(document.activeElement))document.activeElement.blur();city.focus({preventScroll:true});}
 function selectWeapon(id){game?.selectWeapon(id);focusGame();}
 let editor=null;
-const buttons=new Map();
-const pageSize=5;
-let page=0,lastEquipped='';
-const totalPages=Math.ceil(weapons.length/pageSize);
-function showSlots(target){
-  page=Math.max(0,Math.min(totalPages-1,target));
-  weapons.forEach(([id],i)=>{buttons.get(id).hidden=Math.floor(i/pageSize)!==page;});
-  $('#prevSlots').disabled=page===0;$('#nextSlots').disabled=page===totalPages-1;
+const equippedIcon=$('#equippedIcon'),wheelButton=$('#openInventory');
+let lastEquipped='',lastWantedEvent=null,feedbackTimer=0;
+function showEquipment(){
+  const item=weaponList.find(w=>w.id===state.weapon);
+  if(!item)return;
+  if(item.id!==lastEquipped){
+    const ctx=equippedIcon.getContext('2d');
+    ctx.clearRect(0,0,equippedIcon.width,equippedIcon.height);
+    drawItemIcon(ctx,item.id,0,0,equippedIcon.width);
+    lastEquipped=item.id;
+  }
+  $('#weaponLabel').textContent=item.name;
+  const ammo=item.id==='fist'?'Corps à corps':state.reloading?'Recharge…':state.ammo+' / '+item.mag;
+  $('#equippedAmmo').textContent=ammo;
+  wheelButton.setAttribute('aria-label','Ouvrir la roue d’armes · '+item.name+' · '+ammo);
+  panels?.refresh('weapons');
 }
-$('#prevSlots').onclick=()=>showSlots(page-1);$('#nextSlots').onclick=()=>showSlots(page+1);
-
-let lastWantedEvent=null,feedbackTimer=0;
-weapons.forEach(([id,label],i)=>{
-  const b=document.createElement('button');b.className='slot';b.dataset.weapon=id;b.title=label+' ('+(i+1)+')';b.setAttribute('aria-label',label);
-  const num=document.createElement('span');num.className='slot-n';num.textContent=shortcut(i);
-  const c=document.createElement('canvas');c.width=c.height=36;c.setAttribute('aria-hidden','true');drawItemIcon(c.getContext('2d'),id,0,0,36);
-  const ammo=document.createElement('small');ammo.className='ammo';
-  const lock=document.createElement('i');lock.className='slot-lock';lock.innerHTML=icon('lock');lock.hidden=true;
-  b.append(num,c,lock,ammo);$('#slots').append(b);buttons.set(id,b);b.onclick=()=>{if(state.ownedWeapons.includes(id))selectWeapon(id);else panels?.open('weapons',id);};
-});
 function showWanted() {
   const stars=state.wanted, points=Math.floor(state.wantedPoints||0);
   const next=wantedThresholds[stars];
@@ -167,20 +169,11 @@ function onState(next){
   ride.title=$('#rideShortcut').title=rideLabel;
   $('#rideShortcut span').textContent=rideVerb;
   traversal.update(state);
+  combat.update(state);
+  $('#primaryVerb').textContent=state.weapon==='fist'?'Frapper':'Tirer';
   showLife();
   showWanted();
-  $('#weaponLabel').textContent=weaponNames.get(state.weapon)||'';
-  const owned=new Set(state.ownedWeapons||starterWeapons);
-  $('#ownedCount').textContent=owned.size+'/'+weapons.length;
-  for(const [i,[id,label]] of weapons.entries()){
-    const button=buttons.get(id),active=id===state.weapon,locked=!owned.has(id);
-    button.classList.toggle('locked',locked);button.classList.toggle('active',active);
-    button.setAttribute('aria-label',locked?label+' à trouver':label);
-    button.setAttribute('aria-pressed',String(active));button.title=locked?label+' · À trouver sur la carte':label+(shortcut(i)?' ('+shortcut(i)+')':'');
-    button.querySelector('.slot-lock').hidden=!locked;
-    button.querySelector('.ammo').textContent=active?String(state.ammo??''):'';
-  }
-  if(state.weapon!==lastEquipped){lastEquipped=state.weapon;showSlots(Math.floor(weapons.findIndex(([id])=>id===lastEquipped)/pageSize));}
+  showEquipment();
   const hint=$('#pickupHint'),drop=state.nearPickup;
   hint.hidden=!drop;
   if(drop)hint.textContent=drop.online===false?'Ramassage disponible à la reconnexion':weaponNames.get(drop.weapon)+' · '+Math.max(0,Math.round(drop.distance))+' m';
@@ -215,7 +208,7 @@ window.addEventListener('keydown',e=>{
   if(e.altKey||e.metaKey||e.ctrlKey||e.repeat)return;
   if(e.key.toLowerCase()==='t'){e.preventDefault();e.stopImmediatePropagation();openChat();return;}
   const digit=/^(?:Digit|Numpad)([0-9])$/.exec(e.code);
-  if(digit){const slot=weapons[(Number(digit[1])||10)-1];if(slot && state.ownedWeapons.includes(slot[0])){e.preventDefault();selectWeapon(slot[0]);}}
+  if(digit){const item=inventoryWeapons(state.ownedWeapons)[(Number(digit[1])||10)-1];if(item){e.preventDefault();selectWeapon(item.id);}}
 },true);
 window.addEventListener('keyup',e=>{if(editor?.intercept(e))return;if(panels.handleKey(e,'up'))e.stopImmediatePropagation();},true);
 const stick=$('#stick');let finger=null, stickSprint=false;
@@ -237,30 +230,9 @@ function stopStick(e){
 stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=stopStick;
 $('#recenter').onpointerdown=e=>{e.preventDefault();game.action('recenter');};
 $('#ride').onpointerdown=e=>{e.preventDefault();game.action('vehicle');};
-const fire=$('#fire');
-fire.onpointerdown=e=>{
-  if(fireGesture || e.button!==0)return;
-  e.preventDefault();
-  fire.setPointerCapture(e.pointerId);
-  fireGesture={id:e.pointerId,x:e.clientX,y:e.clientY,action:e.pointerType==='touch'?'touchFire':'fire'};
-  game.action(fireGesture.action,true);
-};
-fire.onpointermove=e=>{
-  if(fireGesture?.id!==e.pointerId)return;
-  const dx=e.clientX-fireGesture.x,dy=e.clientY-fireGesture.y,length=Math.hypot(dx,dy);
-  if(length>6)game.setAim(dx/length,dy/length);
-  else game.setAim(0,0);
-};
-function releaseFire(e) {
-  if(!fireGesture || (e?.pointerId!==undefined && e.pointerId!==fireGesture.id))return;
-  const {action}=fireGesture;
-  fireGesture=null;
-  game.action(action,false);
-  game.setAim(0,0);
-  showAimLock(null);
-}
-fire.onpointerup=fire.onpointercancel=fire.onlostpointercapture=releaseFire;
-function releaseTouchInputs(){stopStick();releaseFire();traversal.release();}
+function releaseTouchInputs(){stopStick();combat.release();traversal.release();}
+$('#panels').addEventListener('focusin',releaseTouchInputs);
+entry.addEventListener('focus',releaseTouchInputs);
 window.addEventListener('blur',releaseTouchInputs);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseTouchInputs();});
 city.addEventListener('pointerdown',()=>{if(controlsAreTouch())chat.classList.remove('mobile-open');});

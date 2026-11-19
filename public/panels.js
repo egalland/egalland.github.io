@@ -1,12 +1,12 @@
 import {drawItemIcon, drawAvatar} from './sprites.js';
 import {metadata} from './paris-data.js';
 import {terrainHeight} from './terrain-height.js';
-import {coreDestinations, districtAt, streetAt} from './paris-world.js';
+import {coreDestinations,streetAt,districtAt} from './paris-world.js';
 import {weaponDrops} from './weapon-drops.js';
 import {wantedRules, wantedThresholds, wantedTuning} from './wanted.js';
 import {mountAtlas,sectorURL,historicURL} from './grand-paris.js';
 
-import {weaponList as weapons} from './weapon-catalog.js';
+import {inventoryWeapons,weaponList} from './weapon-catalog.js';
 
 const emotes = [
   {id:'👋', name:'Salut !', hint:'Saluer les joueurs'},
@@ -20,7 +20,8 @@ const shortcuts = [
   ['Se déplacer', ['ZQSD', 'WASD', '↑↓←→']],
   ['Courir', ['Maj']],
   ['Sauter, franchir ou grimper', ['Espace']],
-  ['Tirer', ['Clic gauche', 'F']],
+  ['Utiliser l’arme équipée', ['Clic gauche', 'F']],
+  ['Frapper au corps à corps', ['V']],
   ['Tourner la caméra', ['Glisser clic droit']],
   ['Recentrer la caméra', ['C']],
   ['Recharger', ['R']],
@@ -32,7 +33,6 @@ const shortcuts = [
   ['Plan de la ville', ['M']]
 ];
 const signs = {
-  lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/>',
   close:'<path d="m6 6 12 12M18 6 6 18"/>',
   weapon:'<circle cx="12" cy="12" r="7"/><path d="M12 2v5m0 10v5M2 12h5m10 0h5"/>',
   emotes:'<path d="M3 4h18v13H10l-5 4v-4H3z"/><path d="M7 9h1m8 0h1m-9 3 2 2h4l2-2"/>',
@@ -58,11 +58,13 @@ const button = (label, className, action) => {
   element.addEventListener('click', action);
   return element;
 };
-function sectorPath(index, count) {
-  const step = Math.PI*2/count, mid = step*index-Math.PI/2;
+const tau=Math.PI*2;
+const firstAngle=count=>count===2?Math.PI:-Math.PI/2;
+function sectorPath(index,count,outer=96,inner=52){
+  const step=tau/count,mid=step*index+firstAngle(count);
   const a = mid-step/2+.034, b = mid+step/2-.034;
   const point = (r,t) => (100+r*Math.cos(t)).toFixed(3)+','+(100+r*Math.sin(t)).toFixed(3);
-  return 'M'+point(96,a)+' A96,96 0 0 1 '+point(96,b)+' L'+point(52,b)+' A52,52 0 0 0 '+point(52,a)+' Z';
+  return 'M'+point(outer,a)+' A'+outer+','+outer+' 0 0 1 '+point(outer,b)+' L'+point(inner,b)+' A'+inner+','+inner+' 0 0 0 '+point(inner,a)+' Z';
 }
 function paintCanvas(canvas, paint, size) {
   canvas.width = canvas.height = size;
@@ -98,28 +100,16 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
   root.hidden=true;
   const state=()=>getState?.() || {};
   const sound=()=>Boolean(getSound?.());
-  const ownsWeapon=id=>(state().ownedWeapons || ['fist','pistol']).includes(id);
-
-  function dropHint(weapon) {
-    const position=game.getPosition();
-    const cooldowns=net.world?.()?.pickups || {};
-    const now=net.serverTime?.() ?? Date.now();
-    let nearest=null, nearestDistance=Infinity;
-    for(const drop of weaponDrops){
-      if(drop.weapon!==weapon || cooldowns[drop.id]>now)continue;
-      const distance=Math.hypot(position.x-drop.x,position.y-drop.y);
-      if(distance<nearestDistance){nearestDistance=distance;nearest=drop;}
-    }
-    if(!nearest)return 'Consulte le plan local pour repérer le prochain dépôt disponible.';
-    const street=streetAt(nearest.x,nearest.y);
-    const district=districtAt(nearest.x,nearest.y);
-    return [street,district].filter((text,i)=>text && (!i || text!==street)).join(' · ');
+  let choices=[];
+  function gearAmmo(item){
+    if(item.id==='fist')return item.hint;
+    const current=state(),remaining=game.getWeaponAmmo?.(item.id)??(item.id===current.weapon?current.ammo:null);
+    return remaining==null?item.hint:remaining+' / '+item.mag;
   }
-
   function close(focus=true) {
     if(!current) return;
     clearInterval(interval);
-    current=''; choose=null; setSelected=null; renderCurrent=null; held=false; wheelDirty=false;
+    current=''; choices=[]; choose=null; setSelected=null; renderCurrent=null; held=false; wheelDirty=false;
     root.hidden=true;
     root.replaceChildren();
     game.setPaused?.(false);
@@ -153,119 +143,112 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     return dialog;
   }
   function wheel(kind,initialId) {
-    const isWeapon=kind==='weapons', items=isWeapon?weapons:emotes;
-    const sheet=frame(kind,isWeapon?'Équipement':'Interactions',isWeapon?'Roue d’armes':'Émotes');
-    const wheelStage=node('div','mc-wheel-stage');
-    const ring=node('div','mc-wheel');
+    const isWeapon=kind==='weapons';
+    const sheet=frame(kind,isWeapon?'Inventaire':'Interactions',isWeapon?'Roue d’armes':'Émotes');
+    const stage=node('div','mc-wheel-stage'),ring=node('div','mc-wheel');
     ring.setAttribute('role','group');
-    ring.setAttribute('aria-label',isWeapon?'Choix de l’arme':'Choix de l’émote');
-    const groupSize=isWeapon?5:items.length,totalPages=Math.ceil(items.length/groupSize);
-    const pages=node('nav','mc-gear-pages');pages.setAttribute('aria-label','Pages d’équipement');
-    if(isWeapon){
-      for(let page=0;page<totalPages;page++){
-        const start=page*groupSize;
-        const pager=button((start+1)+'–'+Math.min(start+groupSize,items.length),'mc-gear-page',()=>setSelected(start));
-        pager.setAttribute('aria-label','Afficher les armes '+(start+1)+' à '+Math.min(start+groupSize,items.length));
-        pages.append(pager);
-      }
-    }
-    const ns='http://www.w3.org/2000/svg';
-    const graph=document.createElementNS(ns,'svg');
+    ring.setAttribute('aria-label',isWeapon?'Armes en possession':'Choix de l’émote');
+    const graph=document.createElementNS('http://www.w3.org/2000/svg','svg');
     graph.setAttribute('viewBox','0 0 200 200');graph.setAttribute('aria-hidden','true');graph.classList.add('mc-wheel-sectors');
-    const paths=items.map((_,i)=>{
-      const p=document.createElementNS(ns,'path');p.setAttribute('d',sectorPath(i,items.length));graph.append(p);
-      p.addEventListener('pointermove',()=>{if(selected!==i)setSelected(i);wheelDirty=true;});
-      p.addEventListener('click',()=>{setSelected(i);choose();});
-      return p;
-    });
-    ring.append(graph);
-    const center=node('div','mc-hub');
-    const hint=node('div','mc-drop-hint');
-    const hintLabel=node('span','mc-drop-caption','Dépôt à pied');
-    const hintPlace=node('strong');
-    const hintCopy=node('div');
-    hintCopy.setAttribute('aria-live','polite');
-    hintCopy.append(hintLabel,hintPlace);
-    hint.append(hintCopy,button('Voir le plan','mc-hint-map',()=>open('map')));
-    hint.hidden=true;
-    const large=node('div','mc-hub-glyph');
-    const centerLabel=node('strong','mc-hub-label');
-    const detail=node('small','mc-hub-detail');
-    center.append(large,centerLabel,detail);ring.append(center);
-    selected=isWeapon?Math.max(0,items.findIndex(it=>it.id===(initialId||state().weapon))):0;
-    const cells=items.map((it,i)=>{
-      const t=(i/items.length)*Math.PI*2-Math.PI/2;
-      const pick=button('', 'mc-choice',()=>{setSelected(i);choose();});
-      pick.style.left=(50+36.8*Math.cos(t))+'%';pick.style.top=(50+36.8*Math.sin(t))+'%';
-      pick.setAttribute('aria-label',it.name);
-      if(isWeapon){
-        const lock=node('span','mc-lock-badge');
-        lock.innerHTML=icon('lock');
-        pick.append(weaponCanvas(it.id,54),lock);
+    const hub=node('div','mc-hub'),large=node('div','mc-hub-glyph');
+    const label=node('strong','mc-hub-label'),detail=node('small','mc-hub-detail');
+    hub.append(large,label,detail);
+    const actions=node('div','mc-wheel-actions');
+    actions.innerHTML=key('←')+key('→')+'<span>Choisir</span>'+key('Entrée')+'<span>Valider</span>';
+    const tip=node('div','mc-wheel-touch',isWeapon?'Touche une arme ou glisse jusqu’à elle.':'Touche une émote pour l’envoyer.');
+    stage.append(ring);sheet.append(stage,actions,tip);
+    let paths=[],cells=[],finger=null;
+    function rebuild(next,initial){
+      choices=next;
+      const count=next.length;
+      ring.dataset.count=String(count);
+      ring.style.setProperty('--choice-size',Math.min(22,210/count)+'%');
+      graph.replaceChildren();ring.replaceChildren(graph,hub);
+      selected=Math.max(0,next.findIndex(item=>item.id===initial));
+      paths=[];cells=[];
+      for(const [i,it] of next.entries()){
+        const polar=firstAngle(count)+i*tau/count;
+        const path=document.createElementNS(graph.namespaceURI,'path');
+        path.setAttribute('d',sectorPath(i,count));paths.push(path);graph.append(path);
+        const cell=button('','mc-choice',event=>{
+          if(!event.detail){setSelected(i);choose();}
+        });
+        cell.style.left=(50+36.8*Math.cos(polar))+'%';
+        cell.style.top=(50+36.8*Math.sin(polar))+'%';
+        cell.setAttribute('aria-label',it.name);
+        if(isWeapon){
+          cell.dataset.weapon=it.id;
+          cell.append(weaponCanvas(it.id,80));
+          if(count<=5)cell.append(node('span','mc-choice-name',it.name));
+          if(it.id===state().weapon)cell.classList.add('mc-equipped');
+        }else cell.append(node('span','mc-emoji',it.id),node('span','mc-slot-key',String(i+1)));
+        cell.addEventListener('focus',()=>setSelected(i));
+        cells.push(cell);ring.append(cell);
       }
-      else pick.append(node('span','mc-emoji',it.id));
-      const shortcut=node('span','mc-slot-key',String(i+1));pick.append(shortcut);
-      pick.addEventListener('pointerenter',()=>{if(selected!==i)setSelected(i);wheelDirty=true;});
-      pick.addEventListener('focus',()=>setSelected(i));
-      ring.append(pick);
-      return pick;
-    });
-    setSelected=(i,focus=false)=>{
-      selected=(i+items.length)%items.length;
-      const it=items[selected];
-      const locked=isWeapon && !ownsWeapon(it.id);
-      const page=Math.floor(selected/groupSize),offset=page*groupSize,count=Math.min(groupSize,items.length-offset);
-      [...pages.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(i===page)));
-      paths.forEach((path,index)=>{
-        const local=index-offset;
-        path.style.display=local>=0 && local<count?'':'none';
-        if(local>=0 && local<count)path.setAttribute('d',sectorPath(local,count));
-        path.classList.toggle('mc-selected',index===selected);
-        path.classList.toggle('mc-locked',isWeapon && !ownsWeapon(items[index].id));
-      });
-      cells.forEach((c,index)=>{
-        const local=index-offset,t=(local/count)*Math.PI*2-Math.PI/2;
-        c.hidden=local<0||local>=count;
-        if(!c.hidden){c.style.left=(50+36.8*Math.cos(t))+'%';c.style.top=(50+36.8*Math.sin(t))+'%';}
-        const unavailable=isWeapon && !ownsWeapon(items[index].id);
-        c.classList.toggle('mc-locked',unavailable);
-        c.setAttribute('aria-label',items[index].name+(unavailable?' · À trouver · Voir l’indice':''));
-        c.setAttribute('aria-pressed',String(index===selected));
-        c.classList.toggle('mc-selected',index===selected);
-        c.tabIndex=index===selected?0:-1;
+      setSelected(selected);
+    }
+    setSelected=(index,focus=false)=>{
+      selected=(index+choices.length)%choices.length;
+      const it=choices[selected];
+      cells.forEach((cell,i)=>{
+        cell.classList.toggle('mc-selected',i===selected);
+        cell.setAttribute('aria-pressed',String(i===selected));
+        cell.tabIndex=i===selected?0:-1;
+        paths[i].classList.toggle('mc-selected',i===selected);
       });
       if(large.dataset.value!==it.id){
         large.dataset.value=it.id;
-        large.replaceChildren(isWeapon?weaponCanvas(it.id,54):node('span','mc-emoji',it.id));
+        large.replaceChildren(isWeapon?weaponCanvas(it.id,88):node('span','mc-emoji',it.id));
+        label.textContent=it.name;
       }
-      center.classList.toggle('mc-locked',locked);
-      centerLabel.textContent=it.name;
-      detail.textContent=locked?'À trouver':it.hint;
-      hint.hidden=!locked;
-      if(locked){
-        const location=dropHint(it.id);
-        if(hintPlace.textContent!==location)hintPlace.textContent=location;
-      }
+      detail.textContent=isWeapon?gearAmmo(it):it.hint;
       if(focus)cells[selected].focus({preventScroll:true});
     };
-    choose=(dismissLocked=false)=>{
-      const item=items[selected];
-      if(isWeapon && !ownsWeapon(item.id)){
-        if(dismissLocked)close();
-        return;
-      }
+    choose=()=>{
+      const it=choices[selected];
       close();
-      if(isWeapon) selectWeapon(item.id);
-      else game.emote(item.id);
+      if(isWeapon)selectWeapon(it.id);else game.emote(it.id);
     };
-    setSelected(selected);
-    if(isWeapon&&totalPages>1)wheelStage.append(pages);
-    wheelStage.append(ring,hint);
-    if(isWeapon)renderCurrent=()=>setSelected(selected);
-    const actions=node('div','mc-wheel-actions');
-    actions.innerHTML=key('←')+key('→')+'<span>Choisir</span>'+key('Entrée')+'<span>Valider</span>';
-    const tip=node('div','mc-wheel-touch',isWeapon?'Touche une arme pour l’équiper ou découvrir son emplacement.':'Touche une émote pour l’envoyer.');
-    sheet.append(wheelStage,actions,tip);
+    const getChoices=()=>isWeapon?inventoryWeapons(state().ownedWeapons):emotes;
+    rebuild(getChoices(),initialId||state().weapon);
+    if(isWeapon)renderCurrent=()=>{
+      const next=getChoices();
+      if(choices.length!==next.length||next.some((it,i)=>it!==choices[i])){
+        const focused=ring.contains(document.activeElement);
+        rebuild(next,choices[selected].id);
+        if(focused)cells[selected].focus({preventScroll:true});
+      }else{
+        cells.forEach((c,i)=>c.classList.toggle('mc-equipped',choices[i].id===state().weapon));
+        detail.textContent=gearAmmo(choices[selected]);
+      }
+    };
+    function pointing(event){
+      const bounds=ring.getBoundingClientRect();
+      if(!bounds.width||!bounds.height)return -1;
+      const x=(event.clientX-bounds.left)/bounds.width-.5,y=(event.clientY-bounds.top)/bounds.height-.5;
+      const radius=Math.hypot(x,y);
+      if(radius<.25||radius>.505)return -1;
+      const count=choices.length;
+      return (Math.round((Math.atan2(y,x)-firstAngle(count))*count/tau)+count)%count;
+    }
+    ring.addEventListener('pointerdown',event=>{
+      if(finger!==null||event.button!==0)return;
+      event.preventDefault();finger=event.pointerId;
+      ring.setPointerCapture?.(finger);
+      const i=pointing(event);if(i>=0){setSelected(i);wheelDirty=true;}
+    });
+    ring.addEventListener('pointermove',event=>{
+      if((finger!==null&&event.pointerId!==finger)||(finger===null&&event.pointerType==='touch'))return;
+      const i=pointing(event);if(i>=0){if(selected!==i)setSelected(i);wheelDirty=true;}
+    });
+    ring.addEventListener('pointerup',event=>{
+      if(event.pointerId!==finger)return;
+      event.preventDefault();finger=null;
+      const i=pointing(event);
+      if(i>=0){setSelected(i);choose();}
+    });
+    const cancel=event=>{if(event.pointerId===finger)finger=null;};
+    ring.addEventListener('pointercancel',cancel);ring.addEventListener('lostpointercapture',cancel);
   }
   function mapPanel() {
     const sheet=frame('map','Plan de ville',metadata.sector?.name||'Paris et petite couronne');
@@ -285,6 +268,32 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     [['mc-me',you],['mc-other','Autres joueurs'],['mc-car','Véhicules'],['mc-drop','Arme à trouver']].forEach(([c,value])=>{
       const line=node('span','mc-map-legend');line.append(node('i',c),node('span','',value));legends.append(line);
     });
+    const finder=node('details','mc-depot-search');
+    const missing=weaponList.filter(it=>!it.starter&&!state().ownedWeapons?.includes(it.id));
+    if(missing.length){
+      const summary=node('summary','','Localiser une arme à trouver');
+      const label=fieldLabel('Arme recherchée','mc-find-weapon');
+      const field=node('select','mc-input');field.id='mc-find-weapon';
+      for(const it of missing){
+        const option=node('option','',it.name);option.value=it.id;field.append(option);
+      }
+      const result=node('p','mc-depot-result');result.setAttribute('aria-live','polite');
+      function findDrop(){
+        if(!finder.open)return;
+        const from=game.getPosition(),cooldowns=net.world?.()?.pickups||{},now=net.serverTime?.()??Date.now();
+        let closest=null,distance=Infinity;
+        for(const drop of weaponDrops){
+          if(drop.weapon!==field.value||cooldowns[drop.id]>now)continue;
+          const reach=Math.hypot(drop.x-from.x,drop.y-from.y);
+          if(reach<distance){closest=drop;distance=reach;}
+        }
+        if(!closest){result.textContent='Aucun dépôt disponible dans ce secteur.';return;}
+        const street=streetAt(closest.x,closest.y),district=districtAt(closest.x,closest.y);
+        result.textContent=[street,street===district?'':district,Math.round(distance)+' m'].filter(Boolean).join(' · ');
+      }
+      field.addEventListener('change',findDrop);finder.addEventListener('toggle',findDrop);
+      finder.append(summary,label,field,result);
+    }else finder.hidden=true;
     const travel=node('div','mc-travel');
     const label=fieldLabel('Voyage rapide sur l’axe historique','mc-travel-target');
     const row=node('form','mc-travel-row');
@@ -303,7 +312,7 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     const credit=node('p','mc-map-credit');
     const source=node('a','','IGN · BD TOPO®');source.href='https://cartes.gouv.fr/rechercher-une-donnee/dataset/IGNF_BD-TOPO';source.target='_blank';source.rel='noopener';
     credit.append(source,document.createTextNode(' · Licence Ouverte 2.0. Emprises et voirie réelles. Relief interpolé entre les altitudes routières. Façades en laine.'));
-    detail.append(legends,travel,credit);pad.append(detail,regional);sheet.append(pad);
+    detail.append(legends,finder,travel,credit);pad.append(detail,regional);sheet.append(pad);
     let built=false,region=false;
     function switchMap(mode){
       region=mode==='region';detail.hidden=region;regional.hidden=!region;
@@ -334,8 +343,10 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     const body=node('div','mc-body mc-guide');
     const movement=node('section','mc-guide-section');
     movement.append(node('h3','','Saut et escalade'),node('p','','Appuie sur Espace ou touche Sauter. Face à un obstacle à portée, la commande devient Franchir pour passer par-dessus ou Grimper pour monter sur un rebord.'));
+    const combat=node('section','mc-guide-section');
+    combat.append(node('h3','','Corps à corps'),node('p','','À pied, approche-toi et frappe avec V ou le bouton Frapper. Enchaîne les pressions pour alterner les coups. Si tu équipes les poings, le clic gauche, F et le bouton principal servent aussi à frapper.'));
     const kit=node('section','mc-guide-section');
-    kit.append(node('h3','','Trouver une arme'),node('p','','Tu commences avec les poings et le pistolet. Dans la roue, sélectionne un cadenas pour localiser l’arme. Approche-toi à pied du dépôt pour la ramasser.'));
+    kit.append(node('h3','','Trouver une arme'),node('p','','Tu commences avec les poings et le pistolet. Le plan permet de localiser les armes à trouver. Approche-toi à pied du dépôt. Chaque arme ramassée rejoint ta roue.'));
     kit.append(node('p','mc-guide-aside','Après un ramassage, le dépôt redevient disponible pour tous au bout de 60 s.'));
 
     const alert=node('section','mc-guide-section');
@@ -365,7 +376,7 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     mobile.append(node('p','','Maintiens le bouton de tir pour accrocher une cible devant toi. Un réticule apparaît dessus. Glisse le pouce sur ce bouton pour ajuster la visée, puis relâche pour arrêter de tirer.'));
     const health=node('section','mc-guide-section');
     health.append(node('h3','','Vie et soins'),node('p','','Utilise une trousse avec H ou le bouton de soins. Un ambulancier peut te soigner et remplir ta trousse. À zéro point de vie, un compte à rebours indique quand tu reviens dans le jeu.'));
-    body.append(movement,kit,health,alert,mobile,controls);sheet.append(body);
+    body.append(movement,combat,kit,health,alert,mobile,controls);sheet.append(body);
   }
   function fieldLabel(text, id) {const l=node('label','mc-field-label',text);l.htmlFor=id;return l;}
   function settingsPanel() {
@@ -492,23 +503,22 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     if(!up && lower==='escape'){close();return consume();}
     if(up && held && lower===wheelTrigger){
       held=false;
-      if(wheelDirty || performance.now()-openedAt>240)choose?.(true);
+      if(wheelDirty || performance.now()-openedAt>240)choose?.();
       return consume();
     }
     if(up)return true;
     const isWheel=current==='weapons' || current==='emotes';
     if(!editable && isWheel){
-      const items=current==='weapons'?weapons:emotes;
-      if((lower==='enter' || lower===' ') && target?.closest?.('.mc-dismiss,.mc-hint-map,.mc-gear-page'))return true;
+      const items=choices;
+      if((lower==='enter' || lower===' ') && target?.closest?.('.mc-dismiss'))return true;
       if(lower===wheelTrigger) {
-        if(!e.repeat && !held)choose?.(true);
+        if(!e.repeat && !held)choose?.();
         return consume();
       }
       if(lower==='enter' || lower===' '){choose?.();return consume();}
       if(['arrowleft','arrowup','arrowright','arrowdown'].includes(lower)){
         wheelDirty=true;setSelected(selected+(['arrowleft','arrowup'].includes(lower)?-1:1),true);return consume();
       }
-      if(current==='weapons' && ['pageup','pagedown'].includes(lower)){setSelected(Math.max(0,Math.min(items.length-1,(Math.floor(selected/5)+(lower==='pageup'?-1:1))*5)),true);return consume();}
       const digit=/^(?:Digit|Numpad)([0-9])$/.exec(e.code) || /^([0-9])$/.exec(e.key);
       const slot=digit?(Number(digit[1])||10)-1:-1;
       if(slot>=0 && slot<items.length){setSelected(slot);choose();return consume();}
@@ -522,5 +532,5 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     }
     return true;
   }
-  return {open,close,isOpen:()=>Boolean(current),handleKey,refresh:()=>renderCurrent?.()};
+  return {open,close,isOpen:()=>Boolean(current),handleKey,refresh:kind=>{if(!kind||kind===current)renderCurrent?.();}};
 }

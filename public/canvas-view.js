@@ -1,3 +1,4 @@
+import {fiberLifetime,impactFibers} from './puppet-combat.js';
 import {terrainHeight,terrainGradient,buildingGround,waterLevel,walkingPose} from './terrain-height.js';
 import {terracePanels} from './street-terraces.js';
 import {buildShotEffect,effectDuration} from './weapon-effects.js';
@@ -636,7 +637,7 @@ export function createCanvasView(canvas,spawn,onNotice){
       g.drawImage(art,icon.x-iconWidth*.5,icon.y-iconWidth*.4,iconWidth,iconWidth*.8);
     }});
   }
-  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0){if(effects.length>60)effects.shift();effects.push({kind,x,y,angle,len,lift,born:clock});}
+  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0){if(effects.length>60)effects.shift();effects.push({kind,x,y,angle,len,lift,born:clock,fibers:kind==='meleeImpact'?impactFibers(angle,len):null});}
   function render(state,dt,time){
     if(!running)return;clock=time;
     if(time-last<1/32&&!state.snap&&drawn)return;const frameDt=Math.min(.1,time-last);last=time;drawn=true;
@@ -747,9 +748,24 @@ export function createCanvasView(canvas,spawn,onNotice){
     }
     queue.sort((a,b)=>b.z-a.z);for(const o of queue)o.draw();
     for(let i=effects.length-1;i>=0;i--){const e=effects[i],age=time-e.born;
-      const duration=e.kind==='burst'?.55:effectDuration(e.kind);
+      const duration=e.fibers?fiberLifetime:e.kind==='burst'?.55:effectDuration(e.kind);
       if(age>duration){effects.splice(i,1);continue;}
-      if(e.kind==='burst'){
+      if(e.fibers){
+        const height=terrainHeight(e.x,e.y)+e.lift;
+        g.save();g.globalAlpha=Math.min(1,(duration-age)*10);g.lineCap='round';g.lineJoin='round';
+        for(const strand of e.fibers){
+          const [vx,vy,vz]=strand.velocity;
+          const projected=strand.points.map(([dx,dy,dz])=>{
+            const x=e.x+dx+vx*age,z=e.y+dz+vz*age;
+            return at(x,z,height-terrainHeight(x,z)+dy+vy*age-3.5*age*age);
+          });
+          if(!projected.every(Boolean))continue;
+          g.lineWidth=clamp(.033*f/projected[0].d,.8,6);g.strokeStyle=strand.color;
+          g.beginPath();g.moveTo(projected[0].x,projected[0].y);
+          g.quadraticCurveTo(projected[1].x,projected[1].y,projected[2].x,projected[2].y);g.stroke();
+        }
+        g.restore();
+      }else if(e.kind==='burst'){
         const pp=at(e.x,e.y,.93+e.lift);if(!pp)continue;
         for(let j=0;j<8;j++){const v=j*2.39+age;g.fillStyle=j%2?'#f0c891':'#94b5a6';g.fillRect(pp.x+Math.cos(v)*age*80,pp.y+Math.sin(v)*age*80,3,3);}
       }else{

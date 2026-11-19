@@ -19,6 +19,7 @@ const paths={
  jump:'<path d="M5 20h4m4 0h6M12 15V3m-5 5 5-5 5 5"/>',
  vault:'<path d="M3 16c2-9 9-13 17-8m-1-4 2 5-5 2M9 20v-5h6v5"/>',
  climb:'<path d="M3 20h6v-5h6v-5h6M6 13V4m-3 3 3-3 3 3"/>',
+ fist:'<path d="M3 12.5V8a1.8 1.8 0 0 1 3.6 0v2.3-5a1.8 1.8 0 0 1 3.6 0v4.3-5.7a1.8 1.8 0 0 1 3.6 0v5.7-4.1a1.8 1.8 0 0 1 3.6 0v5.7l1.2-1.5a1.9 1.9 0 0 1 3 2.2L17.2 18H6.9L4 15.1a3.7 3.7 0 0 1-1-2.6Z"/><path d="M7 18v3h10v-3m-7-5h3.1"/>',
  aim:'<circle cx="12" cy="12" r="7"/><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/>',
  mouse:'<rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 2v7M6 10h12"/>',
  smile:'<circle cx="12" cy="12" r="9"/><path d="M8 14s1.2 3 4 3 4-3 4-3m-8-5h.1m7.8 0h.1"/>',

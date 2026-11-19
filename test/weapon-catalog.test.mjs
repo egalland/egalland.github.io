@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {weaponCatalog,weaponList,starterWeapons,findableWeaponIds} from '../public/weapon-catalog.js';
+import {weaponCatalog,weaponList,starterWeapons,findableWeaponIds,inventoryWeapons} from '../public/weapon-catalog.js';
 import {resolveWeaponShot} from '../public/weapon-patterns.js';
 import {buildShotEffect,effectDuration} from '../public/weapon-effects.js';
 import {drawToyWeapon} from '../public/weapon-artwork.js';
@@ -71,4 +71,11 @@ test('Area and chained hits depend on a clear path; identical targets never rece
   assert.deepEqual(spool.hits.map(v=>v.target.id),['first','second','third']);assert.equal(spool.rays.length,3);
   assert.equal(resolveWeaponShot('pompom',0,trace,options).hits.length,1);
   assert.equal(resolveWeaponShot('spool',0,trace,options,()=>false).hits.length,1);
+});
+
+test('the wheel and quick slots contain just the starting equipment and distinct collected weapons',()=>{
+  const ids=owned=>inventoryWeapons(owned).map(item=>item.id);
+  assert.deepEqual(ids(),['fist','pistol']);
+  assert.deepEqual(ids(['chime','unknown','chime','yarn','pistol']),['fist','pistol','yarn','chime']);
+  assert.deepEqual(ids(findableWeaponIds),weaponList.map(item=>item.id));
 });

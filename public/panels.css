@@ -162,19 +162,6 @@
 @media(max-width:520px){.gp-local,.gp-atlas{gap:9px}.gp-stage{height:clamp(185px,30dvh,260px)}.gp-selection{align-items:stretch;flex-direction:column}.gp-selection button{align-self:stretch}.gp-poi{min-height:29px;font-size:11px!important;padding:3px 8px}.gp-mode{justify-self:stretch}.gp-mode button{flex:1}.gp-zoom button{width:30px;height:30px}}
 @media(max-height:480px){.gp-stage{height:155px}.gp-atlas,.gp-local{gap:8px}}
 
-/* Uncollected gear is inspectable so every player can find its drop. */
-.mc-weapons .mc-wheel-sectors .mc-locked{fill:#25232b;stroke:#514750}
-.mc-weapons .mc-wheel-sectors .mc-locked.mc-selected{fill:#3c343a;stroke:#d9b999;filter:none}
-.mc-choice.mc-locked .mc-item,.mc-hub.mc-locked .mc-item{filter:brightness(0) saturate(100%) invert(57%) sepia(6%) saturate(374%) hue-rotate(269deg);opacity:.8}
-.mc-lock-badge{display:none}
-.mc-locked .mc-lock-badge{display:grid;place-items:center;position:absolute;right:8%;bottom:16%;width:20px;height:20px;border:1px solid #ac9480;border-radius:50%;background:#2b2730;color:#e4c6a3}
-.mc-lock-badge .mc-icon{width:12px;height:12px}
-.mc-hub.mc-locked .mc-hub-detail{color:#e5c6a3;font-weight:700}
-.mc-drop-hint{width:min(100%,335px);display:flex;align-items:center;justify-content:space-between;gap:9px;padding:9px 11px;margin:7px 0 1px;border:1px solid #67594d;border-radius:5px;background:#302c30}
-.mc-drop-hint>div{display:grid;gap:2px;min-width:0}
-.mc-drop-caption{font-size:11px;color:#d7b99c}
-.mc-drop-hint strong{color:#ffebce;font-size:13px;line-height:1.25;font-weight:650;overflow-wrap:break-word}
-.mc-panels .mc-hint-map{border:1px solid #8f7762;border-radius:4px;background:#453c37;white-space:nowrap;color:#ffe1b5;font-size:13px;padding:6px 9px;min-height:34px}
 .mc-map-legend .mc-drop{width:7px;height:7px;transform:rotate(45deg);background:#f4ca83;border:1px solid #fff0cc}
 .mc-guide{display:grid;gap:17px}
 .mc-guide-section{display:grid;gap:8px}
@@ -190,14 +177,60 @@
 .mc-thresholds{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin:1px 0;padding:0}
 .mc-thresholds li{display:grid;place-items:center;gap:3px;padding:7px 2px;border:1px solid #5c504d;border-radius:4px;background:#37302f}
 .mc-thresholds strong{font-size:13px;color:#f4ca83}.mc-thresholds small{font-size:11px;color:#eee0d2}
-@media(pointer:coarse){.mc-panels .mc-hint-map{min-height:42px}.mc-guide-details summary{padding-block:12px}}
-@media(max-height:505px){.mc-drop-hint{padding-block:4px;margin-block:1px}.mc-weapons:has(.mc-drop-hint:not([hidden])) .mc-wheel{width:min(100%,47dvh)}}
+@media(pointer:coarse){.mc-guide-details summary{padding-block:12px}}
 .mc-option-row label.mc-option-label{cursor:pointer;flex:1;min-height:44px}
 .mc-option-row .mc-switch{min-height:44px;flex-shrink:0}
-.mc-profile-actions,.mc-gear-pages{display:flex;gap:6px;flex-wrap:wrap}
+.mc-profile-actions{display:flex;gap:6px;flex-wrap:wrap}
 .mc-profile-actions button{flex:1}
-.mc-gear-pages{justify-content:center;gap:4px;margin-bottom:6px}
-.mc-panels .mc-gear-page{padding:4px 12px;min-height:32px;font:700 13px var(--ui,system-ui);color:#d5c8c8;border:1px solid #5f5260;background:#2b2631;border-radius:14px}
-.mc-panels .mc-gear-page[aria-pressed=true]{color:#ffdeb1;border-color:#9b8064;background:#453a35}
 .mc-hub-label{overflow-wrap:anywhere}
-@media(max-height:505px){.mc-gear-pages{margin:1px 0}.mc-panels .mc-gear-page{min-height:26px;padding:2px 10px}.mc-weapons .mc-wheel{width:min(100%,50dvh)}.mc-weapons:has(.mc-drop-hint:not([hidden])) .mc-wheel{width:min(100%,42dvh)}}
+
+.mc-weapons{width:min(490px,100%)}
+.mc-weapons .mc-header{background:#2c2830}
+.mc-weapons .mc-sign{color:#eac89c;background:#39332e;border-color:#7e694f;border-radius:50%}
+.mc-weapons .mc-eyebrow{color:#eac89c}
+.mc-weapons .mc-wheel-stage{
+  padding:16px 10px 8px;
+  background:
+    radial-gradient(circle at 50% 50%,#5b4e4690,transparent 69%),
+    repeating-linear-gradient(48deg,#3a334033 0 1px,transparent 1px 5px),#25212b;
+}
+.mc-weapons .mc-wheel{width:min(100%,408px,calc(100dvh - 195px));touch-action:none}
+.mc-weapons .mc-wheel::before{inset:1.4%;border-color:#b59b7f80;border-style:dashed}
+.mc-weapons .mc-wheel-sectors path{fill:#302b34;stroke:#837268;stroke-width:.58}
+.mc-weapons .mc-wheel-sectors path.mc-selected{fill:#584a3e;stroke:#ebc58d;stroke-width:1.15;filter:none}
+.mc-weapons .mc-hub{
+  inset:26%;gap:4px;padding:6%;
+  background:radial-gradient(circle at 48% 23%,#473c3e,#2c2731 83%);
+  border:1px solid #9a826b;box-shadow:0 0 0 3px #27222a,inset 0 0 0 3px #38313a;
+}
+.mc-weapons .mc-hub-glyph{width:53%;max-width:75px;flex:0 1 52%;min-height:0;aspect-ratio:auto}
+.mc-weapons .mc-hub-glyph canvas{height:auto;width:100%;max-height:100%}
+.mc-weapons .mc-hub-label{color:#fff1d6;font:italic 400 clamp(16px,3.7vw,25px)/.98 var(--display);text-wrap:balance}
+.mc-weapons .mc-hub-detail{margin-top:2px;font:650 clamp(9px,2.5vw,12px)/1.1 var(--ui);color:#efcfa3}
+.mc-weapons .mc-choice{
+  width:var(--choice-size);height:var(--choice-size);padding:3%;display:grid;
+  justify-items:center;align-content:center;gap:2px;touch-action:none;border-radius:50%;cursor:pointer;
+}
+.mc-weapons .mc-choice .mc-item{width:85%;height:auto;max-height:100%;image-rendering:auto}
+.mc-weapons .mc-item{image-rendering:auto}
+.mc-weapons .mc-choice-name{color:#e9d9cb;font:650 clamp(9px,2.5vw,13px)/1.05 var(--ui);text-align:center;white-space:normal}
+.mc-weapons .mc-selected .mc-choice-name{color:#fff0c8}
+.mc-weapons .mc-choice.mc-equipped::before{
+  content:"";position:absolute;right:12%;top:7%;width:6px;height:6px;
+  background:#ffe0a1;border:1px solid #382d2e;border-radius:50%;
+}
+.mc-weapons .mc-wheel[data-count="2"] .mc-choice{padding:1.5%}
+.mc-weapons .mc-wheel-actions,.mc-weapons .mc-wheel-touch{background:#25212b}
+@media(max-height:505px) and (min-width:490px){
+  .mc-weapons{max-width:690px;width:100%;display:grid;grid-template-columns:minmax(140px,.7fr) 1.3fr;align-items:center;background:#25212b}
+  .mc-weapons .mc-header{grid-column:1;grid-row:1;align-self:end;margin:14px 0;padding:12px;background:transparent;border:0}
+  .mc-weapons .mc-wheel-stage{grid-column:2;grid-row:1/span 2;padding:4px}
+  .mc-weapons .mc-wheel{width:min(100%,calc(100dvh - 50px))}
+  .mc-weapons :is(.mc-wheel-actions,.mc-wheel-touch){grid-column:1;grid-row:2;align-self:start;padding:8px;flex-wrap:wrap}
+  .mc-weapons .mc-sign{display:none}
+}
+
+.mc-depot-search{font:600 14px/1.4 var(--ui);color:#e7d6c5}
+.mc-depot-search summary{cursor:pointer;padding:5px 0}
+.mc-depot-search[open]{display:grid;gap:6px}
+.mc-depot-result{color:#eacfa8;font-size:13px}

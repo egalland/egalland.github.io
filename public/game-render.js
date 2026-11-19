@@ -1,3 +1,4 @@
+import {fiberLifetime,impactFibers} from './puppet-combat.js';
 import {terrainHeight,terrainGradient,walkingPose} from './terrain-height.js';
 import {buildShotEffect,effectDuration} from './weapon-effects.js';
 import { vehicleSpec } from './vehicle-types.js';
@@ -103,6 +104,18 @@ export function createView(canvas,spawn,onNotice) {
   }
   function effect(kind,x,y,angle=0,len=0,colors=[],lift=0) {
     if(!active || effects.length>42)return;
+    if(kind==='meleeImpact'){
+      const height=terrainHeight(x,y)+lift;
+      for(const strand of impactFibers(angle,len)){
+        const curve=new THREE.CatmullRomCurve3(strand.points.map(v=>new THREE.Vector3(...v)));
+        const geo=new THREE.TubeGeometry(curve,4,.017,4,false);
+        const mat=new THREE.MeshBasicMaterial({color:strand.color,transparent:true,depthWrite:false});
+        const mesh=new THREE.Mesh(geo,mat),[vx,vy,vz]=strand.velocity;
+        mesh.position.set(x,height,y);scene.add(mesh);
+        effects.push({mesh,life:fiberLifetime,max:fiberLifetime,vx,vy,vz,fiber:true});
+      }
+      return;
+    }
     if(kind!=='burst'){
       const duration=effectDuration(kind);
       for(const stroke of buildShotEffect(kind,x,y,angle,len)){
@@ -178,8 +191,8 @@ export function createView(canvas,spawn,onNotice) {
     for(let i=effects.length-1;i>=0;i--){
       const e=effects[i];e.life-=dt;
       if(e.life<=0){scene.remove(e.mesh);e.mesh.geometry.dispose();e.mesh.material.dispose();effects.splice(i,1);continue;}
-      if(e.vy!==undefined){e.vy-=7*dt;e.mesh.position.x+=e.vx*dt;e.mesh.position.z+=e.vz*dt;e.mesh.position.y=Math.max(terrainHeight(e.mesh.position.x,e.mesh.position.z)+.02,e.mesh.position.y+e.vy*dt);e.mesh.rotation.z+=dt*6;}
-      e.mesh.material.opacity=Math.min(1,e.life*5);
+      if(e.vy!==undefined){e.vy-=7*dt;e.mesh.position.x+=e.vx*dt;e.mesh.position.z+=e.vz*dt;e.mesh.position.y=Math.max(terrainHeight(e.mesh.position.x,e.mesh.position.z)+.02,e.mesh.position.y+e.vy*dt);if(!e.fiber)e.mesh.rotation.z+=dt*6;}
+      e.mesh.material.opacity=Math.min(1,e.life*(e.fiber?10:5));
     }
     renderer.render(scene,camera);
     if(dt>.049)slowCount++;else slowCount=Math.max(0,slowCount-.5);

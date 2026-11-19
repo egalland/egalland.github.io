@@ -15,7 +15,7 @@ export function createNet(options={}) {
   let rosterKey='', lifetimeChats=new Set();
   const listeners=new Set();
   const pickupRequests=new Map(),claimingItems=new Set();
-  let lastPickupPrune=0;
+  let lastPickupPrune=0,combatUntil=0;
   function rememberPickup(item,availableAt){
     if(Number.isFinite(availableAt)&&availableAt>Date.now()+offset&&availableAt>(context.pickups[item]||0))
       context.pickups[item]=availableAt;
@@ -49,6 +49,8 @@ export function createNet(options={}) {
   }
   function receive(e) {
     const d=e.data||{};
+    if(e.type==='melee'&&e.at>Date.now()+offset-1200&&Math.hypot(d.x-state.x,d.y-state.y)<70)
+      combatUntil=Date.now()+1100;
     if (e.type==='destroy' && !context.destroyed.includes(d.id)) context.destroyed.push(d.id);
     if (e.type==='vehicle') context.vehicles[d.id]=d;
     if (e.type==='npc') context.npcs[d.id]=d;
@@ -72,6 +74,7 @@ export function createNet(options={}) {
     if (pending.length) return 85;
     if (typeof document!=='undefined' && document.hidden) return 3200;
     if(roster.length<=1)return 1100;
+    if(Date.now()<combatUntil)return 110;
     const nearbyAction=roster.some(p=>p.id!==id&&Math.hypot(p.x-state.x,p.y-state.y)<150&&
       (actionPoses.has(state.motion)||actionPoses.has(p.motion)));
     return nearbyAction?140:300;
@@ -140,12 +143,13 @@ export function createNet(options={}) {
   function send(type,data) {
     if(type==='pickup')return false;
     if (!started) return false;
-    if (status!=='online' && ['chat','shot','hit','alert','emote'].includes(type)) return false;
+    if (status!=='online' && ['chat','shot','melee','hit','alert','emote'].includes(type)) return false;
     if (pending.length>=120) {
       const effects=pending.findIndex(e=>['shot','alert','emote'].includes(e.type));
       if (effects>=0) pending.splice(effects,1);
       else return false;
     }
+    if(type==='melee')combatUntil=Date.now()+1100;
     pending.push({op:(++op).toString(36),type,data});
     if (!busy && joined && status==='online') schedule(24);
     return true;

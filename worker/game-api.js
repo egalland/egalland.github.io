@@ -1,3 +1,4 @@
+import {meleeMoves} from '../public/melee-moves.js';
 import {cleanTrafficPacket} from '../public/traffic-sync.js';
 import {normalizeAppearance} from '../public/kikalmo-schema.js';
 import { decodeDropId, isEligibleDropId } from '../public/drop-id.js';
@@ -41,7 +42,7 @@ const PICKUP_REQUEST_AGE = 30_000;
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const KEY = /^[\w:-]{1,68}$/;
 const ITEM_TYPES = new Set(['destroy','vehicle','npc']);
-const EVENTS = new Set(['destroy','vehicle','npc','emote','shot','alert','hit','chat']);
+const EVENTS = new Set(['destroy','vehicle','npc','emote','shot','melee','alert','hit','chat']);
 const MEMBERS_SQL = 'SELECT id,name,state,joined,seen FROM mc_members WHERE room=? AND seen>? ORDER BY joined,id';
 function ready(db) {
   if (!schemaReady.has(db)) {
@@ -96,8 +97,29 @@ function movementFields(s,now){
   return {lift,verticalSpeed:num(s.verticalSpeed,0,-50,20),motion:locomotionModes.has(s.motion)?s.motion:'idle',
     motionPhase:num(s.motionPhase,0,0,1),stride:num(s.stride,0,0,1),slope:num(s.slope,0,-1,1),turn:num(s.turn,0,-1,1)};
 }
+const isMeleeKind=kind=>typeof kind==='string'&&Object.hasOwn(meleeMoves,kind);
+const recentSwing=(at,now)=>Number.isSafeInteger(at)&&at>=now-4000&&at<=now+350;
+function recoilState(raw,now){
+  if(!raw||!Number.isFinite(raw.at)||raw.at<now-4000||raw.at>now+350||!Number.isFinite(raw.angle))return {};
+  return {recoil:{at:Math.round(raw.at),angle:num(raw.angle,0,-7,7),force:num(raw.force,0,0,1)}};
+}
+function meleeState(s,now){
+  if(s.vehicle||s.downUntil>now||s.health===0)return {};
+  const swing=s.melee;
+  const fields=recoilState(s.recoil,now);
+  if(isMeleeKind(swing?.kind)&&recentSwing(swing.started,now)&&now-swing.started<=meleeMoves[swing.kind].duration*1000)
+    fields.melee={kind:swing.kind,started:swing.started};
+  return fields;
+}
+function impactFields(type,d,now){
+  const kind=type==='hit'?d.kind:d.swingKind;
+  if(!isMeleeKind(kind)||!recentSwing(d.swingAt,now))return null;
+  const fields={cause:'melee',swingAt:d.swingAt,[type==='hit'?'kind':'swingKind']:kind};
+  if(type!=='destroy')Object.assign(fields,{damage:meleeMoves[kind].damage,force:meleeMoves[kind].force});
+  return fields;
+}
 function playerState(raw,now) {
-  const s=dict(raw), result={...pose(s),...vitalityFields(s,now),...movementFields(s,now)};
+  const s=dict(raw), result={...pose(s),...vitalityFields(s,now),...movementFields(s,now),...meleeState(s,now)};
   const appearance=normalizeAppearance(s.appearance);if(appearance)result.appearance=appearance;
   if (!Number.isFinite(s.x) || !Number.isFinite(s.y)) return {};
   const traffic=cleanTrafficPacket(s.traffic,now);if(traffic)result.traffic=traffic;
@@ -110,15 +132,31 @@ function eventData(type,raw,now) {
   switch(type) {
     case 'chat': return clean(d.text,240) ? {text:clean(d.text,240)} : null;
     case 'emote': return clean(d.symbol,24) ? {symbol:clean(d.symbol,24)} : null;
-    case 'destroy': return key(d.id) ? {id:d.id} : null;
+    case 'destroy': {
+      if(!key(d.id))return null;
+      if(d.cause!=='melee')return {id:d.id};
+      const hit=impactFields(type,d,now);
+      return hit&&Number.isFinite(result.x)&&Number.isFinite(result.y)?{...hit,id:d.id,x:result.x,y:result.y}:null;
+    }
+    case 'melee':
+      return isMeleeKind(d.kind)&&recentSwing(d.started,now)&&Number.isFinite(d.x)&&Number.isFinite(d.y)?
+        {kind:d.kind,started:d.started,x:result.x,y:result.y,angle:num(d.angle,0,-7,7),lift:num(d.lift,0,0,64)}:null;
     case 'vehicle': return key(d.id) ? {...result,id:d.id,occupied:!!d.occupied} : null;
-    case 'npc':
+    case 'npc': {
       if (!key(d.id)) return null;
-      if (d.kind && Number.isFinite(d.started)) {
+      if (d.cause!=='melee' && d.kind && Number.isFinite(d.started)) {
         return {...result,id:d.id,started:num(d.started,now,now-120_000,now+2000),level:num(d.level,1,0,5)};
       }
-      return {...result,...vitalityFields(d,now),id:d.id,stunnedUntil:num(d.stunnedUntil,0,0,now+8000),
-        ...(Number.isFinite(d.damage)&&d.damage>0?{damage:num(d.damage,1,1,100)}:{})};
+      const state={...result,...vitalityFields(d,now),id:d.id,stunnedUntil:num(d.stunnedUntil,0,0,now+8000)};
+      if(d.cause==='melee'){
+        const hit=impactFields(type,d,now),{recoil}=recoilState(d.recoil,now);
+        if(!hit||!recoil||!Number.isFinite(d.x)||!Number.isFinite(d.y)||!Number.isFinite(d.recoil.fromX)||
+            !Number.isFinite(d.recoil.fromY)||Math.hypot(d.recoil.fromX-d.x,d.recoil.fromY-d.y)>1.5)return null;
+        delete state.kind;
+        return {...state,...hit,recoil:{...recoil,force:hit.force,fromX:d.recoil.fromX,fromY:d.recoil.fromY}};
+      }
+      return {...state,...(Number.isFinite(d.damage)&&d.damage>0?{damage:num(d.damage,1,1,100)}:{})};
+    }
     case 'shot': {
       const out={...result,length:num(d.length,80,0,400)};
       if(Number.isFinite(d.lift))out.lift=num(d.lift,0,0,64);
@@ -128,9 +166,15 @@ function eventData(type,raw,now) {
       return out;
     }
     case 'alert': return {...result,level:num(d.level,1,0,5)};
-    case 'hit': return UUID.test(d.target) ? {target:d.target,damage:num(d.damage,1,1,100),
+    case 'hit': {
+      if(d.cause==='melee'){
+        const hit=impactFields(type,d,now);
+        return hit&&UUID.test(d.target)?{...hit,target:d.target,angle:num(d.angle,0,-7,7)}:null;
+      }
+      return UUID.test(d.target) ? {target:d.target,damage:num(d.damage,1,1,100),
       ...(Number.isFinite(d.angle)?{angle:num(d.angle,0,-7,7)}:{}),...(Number.isFinite(d.force)?{force:num(d.force,0,0,1)}:{}),
       ...(['weapon','traffic'].includes(d.cause)?{cause:d.cause}:{})} : null;
+    }
     default: return null;
   }
 }
@@ -206,7 +250,7 @@ function recordPickup(stmts,q,{room,id,token,name,op,item,weapon,state,now}){
   return true;
 }
 // Resolve each hit against the preceding shared HP inside the same transaction as the event.
-function npcHitStatement(q,{room,id,op,name,data,now}) {
+function npcHitStatement(q,{room,id,op,name,data,now},guard) {
   return q(`WITH input(src,stamp) AS (VALUES (?,?)),
     previous AS (SELECT (SELECT data FROM mc_items WHERE room=? AND kind='npc' AND item=?) AS old,src,stamp FROM input),
     stats AS (SELECT *, COALESCE(json_extract(old,'$.health'),100) AS hp,
@@ -223,8 +267,31 @@ function npcHitStatement(q,{room,id,op,name,data,now}) {
         WHEN next_hp<=0 THEN json_set(src,'$.health',0,'$.healthAt',stamp,'$.downUntil',stamp+6500,'$.stunnedUntil',stamp+6500,
           '$.ragdoll',json_object('at',stamp,'until',stamp+6500,'angle',coalesce(json_extract(src,'$.ragdoll.angle'),json_extract(src,'$.angle'),0),
           'force',coalesce(json_extract(src,'$.ragdoll.force'),0.8),'seed',coalesce(json_extract(src,'$.ragdoll.seed'),stamp%65536)))
-        ELSE json_set(src,'$.health',next_hp,'$.healthAt',stamp,'$.downUntil',0) END,stamp FROM result`,
-      JSON.stringify(data),now,room,data.id,room,id,op,name);
+        ELSE json_set(src,'$.health',next_hp,'$.healthAt',stamp,'$.downUntil',0) END,stamp FROM result ${guard.clause}`,
+      JSON.stringify(data),now,room,data.id,room,id,op,name,...guard.args);
+}
+// A start and its single contact get stable operation IDs even across network retries.
+const swingOp=started=>'swing-'+started.toString(36);
+function contactGuard(type,data,actor,room,id,now){
+  const kind=data.swingKind||data.kind,range=meleeMoves[kind].reach+.5+1.75;
+  if(!Number.isFinite(actor.x)||!Number.isFinite(actor.y)||actor.vehicle||actor.health===0||actor.downUntil>now)return null;
+  let clause="WHERE EXISTS (SELECT 1 FROM mc_events WHERE room=? AND player=? AND op=? AND type='melee' AND json_extract(data,'$.kind')=?)";
+  const args=[room,id,swingOp(data.swingAt),kind];
+  if(type==='hit'){
+    if(data.target===id)return null;
+    // Both characters move between snapshots. The short margin covers that interval.
+    clause+=` AND EXISTS (SELECT 1 FROM (
+      SELECT json_extract(state,'$.x')-? AS dx,json_extract(state,'$.y')-? AS dy,
+        coalesce(json_extract(state,'$.lift'),0) AS lift FROM mc_members
+      WHERE room=? AND id=? AND seen>? AND json_extract(state,'$.vehicle.id') IS NULL
+      AND coalesce(json_extract(state,'$.health'),100)>0 AND coalesce(json_extract(state,'$.downUntil'),0)<=?
+    ) WHERE dx*dx+dy*dy<=? AND abs(lift-?)<=2.15)`;
+    args.push(actor.x,actor.y,room,data.target,now-GONE,now,range*range,actor.lift||0);
+  }else{
+    const x=data.recoil?.fromX??data.x,y=data.recoil?.fromY??data.y;
+    if(Math.hypot(actor.x-x,actor.y-y)>range)return null;
+  }
+  return {clause,args};
 }
 async function sync(db,b,now) {
   const {id,token}=b,room=WORLD_KEY;
@@ -234,6 +301,7 @@ async function sync(db,b,now) {
   const name=clean(b.name,24)||member.name;
   const rawState=playerState(b.state,now);
   const state=Number.isFinite(rawState.x) ? JSON.stringify(rawState) : member.state;
+  const actor=Number.isFinite(rawState.x)?rawState:JSON.parse(member.state);
   const stmts=[];
   if (now-member.seen>3500 || state!==member.state || name!==member.name) {
     stmts.push(q('UPDATE mc_members SET seen=?,state=?,name=? WHERE room=? AND id=? AND secret=?',now,state,name,room,id,token));
@@ -246,7 +314,8 @@ async function sync(db,b,now) {
   }
   const claims=new Set(),pickupOps=new Map();
   for (const input of (Array.isArray(b.events) ? b.events.slice(0,MAX_BATCH) : [])) {
-    const {type,op}=dict(input);
+    const {type}=dict(input);
+    let {op}=dict(input);
     if(type==='pickup'&&key(op)){
       const {id:item,weapon}=dict(input.data);
       if(key(item)&&recordPickup(stmts,q,{room,id,token,name,op,item,weapon,now,state:Number.isFinite(rawState.x)?rawState:JSON.parse(member.state)}))
@@ -254,9 +323,19 @@ async function sync(db,b,now) {
       continue;
     }
     if (!EVENTS.has(type) || !key(op)) continue;
-    if(op.startsWith('pick-')) continue;
+    if(/^(pick|swing|contact)-/.test(op))continue;
     const data=eventData(type,input.data,now);
     if (!data) continue;
+    let guard={clause:'',args:[]};
+    if(type==='melee'){
+      if(!Number.isFinite(actor.x)||!Number.isFinite(actor.y)||actor.vehicle||actor.health===0||actor.downUntil>now||
+          Math.hypot(actor.x-data.x,actor.y-data.y)>5)continue;
+      op=swingOp(data.started);
+    }else if(data.cause==='melee'){
+      guard=contactGuard(type,data,actor,room,id,now);
+      if(!guard)continue;
+      op='contact-'+data.swingAt.toString(36);
+    }
     const requiresCar=type==='vehicle';
     if (requiresCar) {
       data.owner=data.occupied ? id : '';
@@ -271,8 +350,8 @@ async function sync(db,b,now) {
         WHERE i.room=? AND i.kind='vehicle' AND i.item=? AND i.owner<>? AND m.seen>?)`,
         ...values,room,data.id,id,now-GONE));
     } else if(type==='npc' && data.damage>0) {
-      stmts.push(npcHitStatement(q,{room,id,op,name,data,now}));
-    } else stmts.push(q(accept,...values));
+      stmts.push(npcHitStatement(q,{room,id,op,name,data,now},guard));
+    } else stmts.push(q(accept+' '+guard.clause,...values,...guard.args));
     if (ITEM_TYPES.has(type)) {
       // Use the stored payload and sequence. Retrying an older operation cannot rewind a car.
       stmts.push(q(`INSERT INTO mc_items (room,kind,item,seq,owner,data,at)

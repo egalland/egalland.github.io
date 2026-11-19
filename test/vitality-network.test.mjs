@@ -153,3 +153,45 @@ test('a second online player receives the climb, landing, and vehicle transition
   await until(()=>peer()?.vehicle?.type==='scooter','driving replaces the traversal');
   assert.equal(peer().lift,0);assert.equal(peer().motion,'idle');
 });
+
+test('a swing reaches the second client once and can make a single nearby physical contact',async t=>{
+  const {browser,epoch,advance}=sharedWorld(t),a=browser('Gant'),b=browser('Pelote'),c=browser('Laine');
+  const pose={x:10,y:10,angle:0,lift:0,health:100};
+  const swing={...pose,kind:'jab',started:epoch};
+  const hit={target:b.net.id,cause:'melee',kind:'jab',swingAt:epoch,damage:99,force:1,angle:0};
+  a.net.publish({...pose,melee:{kind:'jab',started:epoch}});
+  b.net.publish({...pose,x:11.2});c.net.publish({...pose,x:39});
+  await Promise.all([a.net.start(),b.net.start(),c.net.start()]);
+  await until(()=>b.net.peers().some(p=>p.melee?.started===epoch),'joining observer receives live wind-up');
+  a.net.emit('melee',swing);a.net.emit('melee',swing);advance(150);
+  a.net.emit('hit',{...hit,target:c.net.id});
+  a.net.emit('hit',hit);a.net.emit('hit',hit);
+  a.net.emit('destroy',{id:'second-target',cause:'melee',swingAt:epoch,swingKind:'jab',x:10,y:11});
+  a.net.emit('emote',{symbol:'marker'});
+  await until(()=>c.events.some(e=>e.type==='emote'),'end of the batch observed');
+  const punches=c.events.filter(e=>e.type==='melee'),hits=c.events.filter(e=>e.type==='hit');
+  assert.equal(punches.length,1);assert.equal(hits.length,1);
+  assert.deepEqual(hits[0].data,{target:b.net.id,cause:'melee',kind:'jab',swingAt:epoch,damage:12,force:.18,angle:0});
+  assert.equal(c.net.world().destroyed.includes('second-target'),false);
+
+  advance(350);
+  const start=Date.now();
+  a.net.emit('melee',{...swing,kind:'hook',started:start});
+  const target={id:'ped-wool',x:11.6,y:10,type:'pedestrian',damage:16,cause:'melee',swingAt:start,swingKind:'hook',
+    recoil:{at:start+200,fromX:11.12,fromY:10,angle:0,force:.19},health:84,healthAt:start+200};
+  advance(200);a.net.emit('npc',target);a.net.emit('npc',target);
+  await until(()=>c.net.world().npcs[target.id]?.health===84,'NPC recoil and canonical health delivered together');
+  assert.deepEqual(c.net.world().npcs[target.id].recoil,target.recoil);
+  assert.equal(c.events.filter(e=>e.type==='npc'&&e.data.id===target.id).length,1);
+  b.net.publish({...pose,x:11.6,recoil:{at:Date.now(),force:.19,angle:0,debug:'private'}});
+  await until(()=>a.net.peers().some(p=>p.recoil?.force===.19),'recoil observed from the owner');
+  assert.equal(a.net.peers().find(p=>p.id===b.net.id).recoil.debug,undefined);
+
+  advance(100);
+  a.net.emit('hit',{...hit,swingAt:Date.now()});
+  a.net.emit('melee',{...swing,started:Date.now(),kind:'absent'});
+  a.net.emit('emote',{symbol:'end'});
+  await until(()=>c.events.some(e=>e.data.symbol==='end'),'unmatched contacts filtered');
+  assert.equal(c.events.filter(e=>e.type==='hit').length,1);
+  assert.equal(c.events.filter(e=>e.type==='melee').length,2);
+});

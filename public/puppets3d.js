@@ -349,19 +349,20 @@ export function createPuppet(type='fox',color,seed=0){
     if(!near.visible)return;
     bone.core.position.y=.69+motion.bob-.039*impact;
     bone.core.rotation.z=pose.stunned&&!pose.ragdoll?-1.26:-motion.lean+.12*impact;
-    bone.core.rotation.x=motion.roll;
+    bone.core.rotation.x=motion.roll;bone.core.rotation.y=motion.twist;
     const squash=motion.squash-.10*impact;
     bone.torso.scale.set(1-squash*.52,1+squash,1-squash*.50);
     bone.head.position.y=.49+.30*squash+.009*Math.cos(phase*2-.6)*rel;
     bone.head.rotation.z=motion.lean*.36+.022*b*rel+.057*impact+.009*(1-rel)*idleBreath;
     bone.head.rotation.x=-motion.roll*.55;
-    bone.head.rotation.y=-turn*.145+.14*em*Math.sin(phaseIdle*7);
+    bone.head.rotation.y=-motion.twist*.61-turn*.145+.14*em*Math.sin(phaseIdle*7);
     const blinkCycle=(phaseIdle+pick*.113)%3.63;
     bone.eyes.scale.y=1-.91*Math.max(0,1-Math.abs(blinkCycle-.10)/.079);
     for(const s of [-1,1]){
       const k=s<0?'L':'R',leg=bone['leg'+k],arm=bone['arm'+k],ear=bone['ear'+k];
       const limb=s<0?motion.left:motion.right;
       leg.rotation.z=limb.thigh+motion.lean*.52;
+      leg.scale.y=1+(limb.legStretch||0);arm.scale.y=1+(limb.armStretch||0);
       leg.rotation.x=-s*.036;bone['knee'+k].rotation.z=limb.shin;
       arm.rotation.z=limb.arm+motion.lean*.48;
       arm.rotation.x=-s*limb.splay;
