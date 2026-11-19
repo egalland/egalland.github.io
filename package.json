@@ -1,0 +1,1 @@
+{"name":"arda-atlas","version":"1.0.0","private":true,"type":"module","scripts":{"build":"node build.mjs"},"dependencies":{"three":"0.180.0","esbuild":"0.25.11"}}

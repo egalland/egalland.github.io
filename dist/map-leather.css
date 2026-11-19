@@ -1,0 +1,13 @@
+/* Material finish belongs to the geography; the existing elven UI stays intact. */
+.leather-map .marker{color:#f5e5bb;filter:drop-shadow(0 1px 1px #273c29)}
+.leather-map .marker span{color:#f4e1b5;text-shadow:0 1px 1px #263d2bed,0 -1px 0 #5e583b70}
+.leather-map .marker i{background:#bd9c60;border-color:#f5e4b7;box-shadow:0 0 0 2px #45352e44}
+.leather-map .marker.selected span{color:#fff1d0;background:#573e30e6;border:1px solid #c9aa6c;box-shadow:0 2px 5px #263d2e50;text-shadow:0 1px 1px #39271b}
+.leather-map .region-label{color:#f1d6a682;text-shadow:0 1px 1px #3d3b2d99,0 -1px 0 #fff0bd26;letter-spacing:5px}
+.leather-map .region-label.water{color:#d1d7c762;text-shadow:0 1px 1px #143a47aa}
+.leather-map .region-label.mountain{color:#f4d9ad99;text-shadow:0 1px 2px #47452e}
+.leather-map .map-scale{color:#eadbb6;text-shadow:0 1px 3px #213c35}
+.leather-map .map-scale small{color:#d9d4b4}.leather-map .map-scale i{border-color:#e4d4a9}
+.leather-map .map-vignette{box-shadow:inset 0 0 110px #22382950;background:linear-gradient(90deg,#163d3110,transparent 40%)}
+.basemaps button{line-height:1.5;padding:7px 5px;font-size:8px}.basemaps button:focus-visible{outline:2px solid #af945b;outline-offset:1px}
+@media(max-width:800px){.leather-map .region-label{letter-spacing:3px}}

@@ -1,0 +1,12 @@
+node_modules/
+*.tar.gz
+*.tgz
+.openai/*.local.json
+
+raw/
+dist/assets/height-[123].*
+dist/assets/leather-[123].*
+dist/assets/map-[123].*
+dist/assets/parchment-[123].*
+dist/assets/scatter-[123].*
+dist/assets/terrain-[123].*
