@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { AtSign, Check, ChevronDown, ExternalLink, FileArchive, Film as FilmIcon, Info, Layers, Play, Star, Upload, Users } from 'lucide-react';
 import { compareProfiles, importProfile, type Film, type Profile } from '@/lib/compare';
 import { demoProfiles } from '@/lib/demo';
+import { readLocalFeed } from '@/lib/local-feed';
 import './comparator.css';
 
 type Pair = [Profile, Profile];
@@ -21,7 +22,41 @@ function username(value: string) {
     const match = url.pathname.match(/^\/([a-z\d_]{1,40})\/?$/i);
     if (/^https?:$/.test(url.protocol) && /^(www\.)?letterboxd\.com$/i.test(url.hostname) && !url.port && !url.username && !url.password && match) return match[1].toLowerCase();
   } catch { /* A clear field error is shown below. */ }
-  throw new Error('Saisissez un pseudo Letterboxd ou le lien de son profil.');
+  return '';
+}
+
+function replaced<T>(pair: [T, T], side: 0 | 1, value: T): [T, T] {
+  return side === 0 ? [value, pair[1]] : [pair[0], value];
+}
+
+function LocalFeedPicker({ handle, side, open, file, onToggle, onFile }: {
+  handle: string;
+  side: 0 | 1;
+  open: boolean;
+  file: File | null;
+  onToggle: () => void;
+  onFile: (file: File | null) => void;
+}) {
+  const prompt = `dp-rss-${side}`;
+  return <div className="dp-feed-picker">
+    <button type="button" className="dp-rss-toggle" aria-expanded={open} aria-controls={prompt} onClick={onToggle}>
+      {file ? <Check size={14} aria-hidden="true"/> : <ChevronDown size={14} aria-hidden="true"/>}
+      {file ? 'Journal RSS sélectionné' : 'Importer un journal RSS'}
+      <span className="dp-sr"> pour {handle}</span>
+    </button>
+    <div id={prompt} className="dp-rss-panel" hidden={!open}>
+      <a href={`https://letterboxd.com/${encodeURIComponent(handle)}/rss/`} target="_blank" rel="noopener noreferrer">
+        Ouvrir le journal RSS <ExternalLink size={13} aria-hidden="true"/><span className="dp-sr"> de {handle}</span>
+      </a>
+      <p>Enregistrez la page au format XML depuis votre navigateur, puis choisissez le fichier ici.</p>
+      <label className="dp-rss-select">
+        <Upload size={15} aria-hidden="true"/><span>{file ? file.name : 'Choisir le journal téléchargé'}</span>
+        <input type="file" accept=".xml,.rss,application/rss+xml,application/xml,text/xml" aria-label={`Choisir le journal téléchargé de ${handle}`}
+          onChange={event => { const selected = event.currentTarget.files?.[0]; if (selected) onFile(selected); event.currentTarget.value = ''; }} />
+      </label>
+      {file && <button type="button" className="dp-rss-remove" onClick={() => onFile(null)}>Retirer le fichier</button>}
+    </div>
+  </div>;
 }
 
 async function fetchProfile(handle: string, signal: AbortSignal): Promise<Profile> {
@@ -88,6 +123,10 @@ export default function Comparator() {
   const [mode, setMode] = useState<Mode>('rss');
   const [handles, setHandles] = useState<[string,string]>(['','']);
   const [files, setFiles] = useState<[File | null, File | null]>([null,null]);
+  const [feeds, setFeeds] = useState<[File | null, File | null]>([null,null]);
+  const [feedOpen, setFeedOpen] = useState<[boolean, boolean]>([false,false]);
+  const partial = useRef<[Profile | null, Profile | null]>([null,null]);
+  const names = handles.map(username);
   const [errors, setErrors] = useState<[string,string]>(['','']);
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Pair | null>(null);
@@ -102,30 +141,60 @@ export default function Comparator() {
   function resetPending() { submission.current += 1; controller.current?.abort(); setLoading(false); setErrors(['','']); }
   function toggleMode(next: Mode) { if (next !== mode) { resetPending(); setMode(next); } }
   function showExample() { resetPending(); setProfiles([demoProfiles[0],demoProfiles[1]]); setRevision(v => v + 1); }
+  function changeHandle(side: 0 | 1, value: string) {
+    resetPending();
+    if (username(value) !== names[side]) {
+      setFeeds(previous => replaced(previous, side, null));
+      setFeedOpen(previous => replaced(previous, side, false));
+      partial.current[side] = null;
+    }
+    setHandles(previous => replaced(previous, side, value));
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     resetPending();
+    setProfiles(null);
     const current = submission.current;
     const fieldErrors: [string,string] = ['',''];
-    const names: [string,string] = ['',''];
     for (const i of SIDES) {
-      try { if (mode === 'rss') names[i] = username(handles[i]); else if (!files[i]) throw new Error('Choisissez un fichier ZIP ou CSV pour ce profil.'); }
-      catch (error) { fieldErrors[i] = error instanceof Error ? error.message : 'Vérifiez ce profil.'; }
+      if (mode === 'rss' && !names[i]) fieldErrors[i] = 'Saisissez un pseudo Letterboxd ou le lien de son profil.';
+      if (mode === 'export' && !files[i]) fieldErrors[i] = 'Choisissez un fichier ZIP ou CSV pour ce profil.';
     }
     if (mode === 'rss' && names[0] && names[0] === names[1]) fieldErrors[1] = 'Choisissez un deuxième profil différent.';
-    if (fieldErrors.some(Boolean)) { setErrors(fieldErrors); inputs.current[fieldErrors[0] ? 0 : 1]?.focus(); return; }
+    if (fieldErrors.some(Boolean)) {
+      setErrors(fieldErrors);
+      inputs.current[fieldErrors[0] ? 0 : 1]?.focus();
+      return;
+    }
     setLoading(true);
-    const request = new AbortController(); controller.current = request;
-    const results = await Promise.allSettled(SIDES.map(i => mode === 'rss' ? fetchProfile(names[i], request.signal) : importProfile(files[i]!, `Profil ${i === 0 ? 'A' : 'B'}`)));
+    const request = new AbortController();
+    controller.current = request;
+    async function loadSide(side: 0 | 1) {
+      if (mode === 'export') return importProfile(files[side]!, `Profil ${side === 0 ? 'A' : 'B'}`);
+      if (feeds[side]) return readLocalFeed(feeds[side], names[side]);
+      return partial.current[side] ?? fetchProfile(names[side], request.signal);
+    }
+    const results = await Promise.allSettled(SIDES.map(loadSide));
     if (current !== submission.current || request.signal.aborted) return;
     setLoading(false);
     for (const i of SIDES) {
       const result = results[i];
-      if (result.status === 'rejected') fieldErrors[i] = result.reason instanceof Error && result.reason.message !== 'Failed to fetch' ? result.reason.message : 'La connexion a échoué. Réessayez dans un instant.';
+      if (result.status === 'rejected') {
+        fieldErrors[i] = result.reason instanceof Error && result.reason.message !== 'Failed to fetch' ? result.reason.message : 'La connexion a échoué. Réessayez dans un instant.';
+        if (mode === 'rss') setFeedOpen(previous => replaced(previous, i, true));
+      }
+      if (result.status === 'fulfilled' && mode === 'rss' && !feeds[i]) partial.current[i] = result.value;
     }
-    if (fieldErrors.some(Boolean)) { setErrors(fieldErrors); inputs.current[fieldErrors[0] ? 0 : 1]?.focus(); return; }
+    if (fieldErrors.some(Boolean)) {
+      setErrors(fieldErrors);
+      inputs.current[fieldErrors[0] ? 0 : 1]?.focus();
+      return;
+    }
     if (results[0].status === 'fulfilled' && results[1].status === 'fulfilled') {
-      setProfiles([results[0].value, results[1].value]); setRevision(v => v + 1);
+      partial.current = [null,null];
+      setProfiles([results[0].value, results[1].value]);
+      setRevision(v => v + 1);
     }
   }
 
@@ -135,8 +204,11 @@ export default function Comparator() {
       <form onSubmit={submit} noValidate className="dp-form" aria-busy={loading}>
         <div className="dp-field-row">{SIDES.map(i => <div className={`dp-field dp-side-${i}`} key={i}>
           <label className="dp-label" htmlFor={`dp-field-${i}`}><span className="dp-side-dot" aria-hidden="true"/>{i === 0 ? 'Premier profil' : 'Deuxième profil'}</label>
-          {mode === 'rss' ? <div className={`dp-input-box ${errors[i] ? 'dp-invalid' : ''}`}><AtSign size={17} aria-hidden="true"/><input id={`dp-field-${i}`} ref={el => {inputs.current[i]=el;}} type="text" placeholder={PROFILE_HINTS[i]} value={handles[i]} autoCapitalize="none" autoCorrect="off" autoComplete="off" spellCheck={false} aria-invalid={Boolean(errors[i])} aria-describedby={errors[i] ? `dp-error-${i}` : undefined} onChange={e => { resetPending(); const next: [string,string] = [...handles]; next[i]=e.target.value; setHandles(next); }}/></div> : <div className={`dp-file-box ${errors[i] ? 'dp-invalid' : ''}`}><input type="file" id={`dp-field-${i}`} ref={el => {inputs.current[i]=el;}} accept=".zip,.csv" aria-invalid={Boolean(errors[i])} aria-describedby={errors[i] ? `dp-error-${i}` : undefined} onChange={e => {resetPending(); const next: [File|null, File|null] = [...files]; next[i]=e.target.files?.[0] ?? null; setFiles(next);}}/><span aria-hidden="true">{files[i] ? <Check size={17}/> : <FileArchive size={17}/>}<span>{files[i]?.name || 'Choisir un ZIP ou CSV'}</span></span></div>}
+          {mode === 'rss' ? <div className={`dp-input-box ${errors[i] ? 'dp-invalid' : ''}`}><AtSign size={17} aria-hidden="true"/><input id={`dp-field-${i}`} ref={el => {inputs.current[i]=el;}} type="text" placeholder={PROFILE_HINTS[i]} value={handles[i]} autoCapitalize="none" autoCorrect="off" autoComplete="off" spellCheck={false} aria-invalid={Boolean(errors[i])} aria-describedby={errors[i] ? `dp-error-${i}` : undefined} onChange={e => changeHandle(i, e.target.value)}/></div> : <div className={`dp-file-box ${errors[i] ? 'dp-invalid' : ''}`}><input type="file" id={`dp-field-${i}`} ref={el => {inputs.current[i]=el;}} accept=".zip,.csv" aria-invalid={Boolean(errors[i])} aria-describedby={errors[i] ? `dp-error-${i}` : undefined} onChange={e => {resetPending(); const next: [File|null, File|null] = [...files]; next[i]=e.target.files?.[0] ?? null; setFiles(next);}}/><span aria-hidden="true">{files[i] ? <Check size={17}/> : <FileArchive size={17}/>}<span>{files[i]?.name || 'Choisir un ZIP ou CSV'}</span></span></div>}
           {errors[i] && <div className="dp-error" id={`dp-error-${i}`} role="alert">{errors[i]}</div>}
+          {mode === 'rss' && names[i] && <LocalFeedPicker handle={names[i]} side={i} open={feedOpen[i]} file={feeds[i]}
+            onToggle={() => setFeedOpen(previous => replaced(previous, i, !previous[i]))}
+            onFile={file => { resetPending(); partial.current[i] = null; setFeeds(previous => replaced(previous, i, file)); }} />}
         </div>)}<button type="submit" className="dp-submit" disabled={loading}>{loading ? <span className="dp-spinner" aria-hidden="true"/> : <Layers size={18} aria-hidden="true"/>}{loading ? 'Comparaison…' : 'Comparer'}</button></div>
       </form>
       <div className="dp-form-foot"><p>{mode === 'rss' ? <><Info size={15} aria-hidden="true"/><span>Les pseudos comparent vos journaux récents. Pour tout l’historique, utilisez les exports.</span></> : <><FileArchive size={15} aria-hidden="true"/><span>ZIP Letterboxd ou CSV des films vus ou notés. Traitement sur votre appareil. <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noopener noreferrer">Obtenir un export <ExternalLink size={12} aria-hidden="true"/></a></span></>}</p><button type="button" onClick={showExample} className="dp-demo"><Play size={13} fill="currentColor" aria-hidden="true"/>Voir un exemple</button></div>
