@@ -14,7 +14,7 @@ export class VolumeView{
   catch{this.software=true;this.renderer=new SVGRenderer();this.renderer.setQuality('low');this.renderer.domElement.id='volume-software';this.renderer.domElement.setAttribute('aria-label','Vue 3D interactive');canvas.parentElement.insertBefore(this.renderer.domElement,canvas);}
   this.element=this.renderer.domElement;
   if(!this.software){this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.2;}
-  this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#eef2e9');this.camera=new THREE.PerspectiveCamera(36,1,.05,500);
+  this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#f2f0eb');this.camera=new THREE.PerspectiveCamera(36,1,.05,500);
   this.camera.position.set(16,17,21);this.controls=new OrbitControls(this.camera,this.element);this.controls.enableDamping=!this.software;this.controls.dampingFactor=.1;this.controls.maxPolarAngle=Math.PI*.47;this.controls.minPolarAngle=.12;this.controls.minDistance=2;this.controls.maxDistance=180;this.controls.screenSpacePanning=true;this.controls.rotateSpeed=.7;this.controls.zoomSpeed=.8;this.controls.touches.ONE=THREE.TOUCH.ROTATE;this.controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;
   this.controls.addEventListener('change',()=>{this.cutWalls();this.schedule();if(this.fitDistance)this.onZoom?.(this.fitDistance/this.camera.position.distanceTo(this.controls.target));});
   this.controls.addEventListener('start',()=>this.schedule());
@@ -139,7 +139,7 @@ export class VolumeView{
   const C=compute(s),levels=u.allLevels===false?C.levels.filter(l=>l.id===u.levelId):C.levels,offsets=levelOffsets(C.levels,u.exploded&&u.allLevels!==false),B=s.building;
   const poolsOn=id=>s.objects.filter(o=>o.kind==='pool'&&objectLevel(s,o)===id).map(o=>objectRect(s,o));
   this.order=-100;
-  for(const patch of unionCells([{x:0,y:0,w:B.w,l:B.l}],poolsOn(s.levels[0].id)))this.floor(this.content,patch,0,.2,'#d4dacf','plain');
+  for(const patch of unionCells([{x:0,y:0,w:B.w,l:B.l}],poolsOn(s.levels[0].id)))this.floor(this.content,patch,0,.2,'#d4d0c4','plain');
   const sliced=u.allLevels===false||u.exploded;
   const ordered=[...C.levels].sort((a,b)=>a.elevation-b.elevation);
   function shellTop(lev){return Math.min(B.h,ordered.find(l=>l.elevation>lev.elevation)?.elevation??B.h);}
@@ -147,7 +147,7 @@ export class VolumeView{
   const drawEnvelopeParts=(group,lower,upper,z)=>{
    const t=B.wallThickness;
    for(const p of envelopeWalls(s,lower,upper)){
-    const mesh=p.axis==='h'?this.box(group,p.start,z+p.bottom,p.pos-t/2,p.length,p.height,t,'#d9dfd0'):this.box(group,p.pos-t/2,z+p.bottom,p.start,t,p.height,p.length,'#ccd6c5');
+    const mesh=p.axis==='h'?this.box(group,p.start,z+p.bottom,p.pos-t/2,p.length,p.height,t,'#d8d3c7'):this.box(group,p.pos-t/2,z+p.bottom,p.start,t,p.height,p.length,'#ccc6b9');
     this.wallParts.push({mesh,p,z});
    }
    if(upper===B.h&&lower<upper&&B.shellCeiling&&u.overhead==='closed')drawShellCeiling(group,z+upper-lower);
@@ -192,14 +192,14 @@ export class VolumeView{
   }
   this.bounds=new THREE.Box3().setFromObject(this.content);const size=this.bounds.getSize(new THREE.Vector3()),center=this.bounds.getCenter(new THREE.Vector3()),extent=Math.max(size.x,size.y,size.z,8);
   // Studio ground and shadow field extend beyond exterior terraces.
-  const geo=new THREE.PlaneGeometry(extent*3,extent*3),ground=new THREE.Mesh(geo,this.material('#e9eee2'));ground.rotation.x=-Math.PI/2;ground.position.set(center.x,-.24,center.z);ground.receiveShadow=true;ground.userData.background=true;if(!this.software)this.content.add(ground);else geo.dispose();
+  const geo=new THREE.PlaneGeometry(extent*3,extent*3),ground=new THREE.Mesh(geo,this.material('#e8e4db'));ground.rotation.x=-Math.PI/2;ground.position.set(center.x,-.24,center.z);ground.receiveShadow=true;ground.userData.background=true;if(!this.software)this.content.add(ground);else geo.dispose();
   const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent;shadow.right=shadow.top=extent;shadow.near=.5;shadow.far=extent*6;shadow.updateProjectionMatrix();this.sun.position.set(center.x-extent,extent*1.8,center.z+extent);this.sun.target.position.copy(center);this.sun.shadow.needsUpdate=true;
  }
  highlight(s,selected){
   if(this.outline){this.scene.remove(this.outline);this.outline.geometry.dispose();this.outline.material.dispose();this.outline=null;}
   this.selectionBounds=null;if(!selected)return;const o=selected.type==='room'?s.rooms.find(q=>q.id===selected.id):selected.type==='surface'?s.surfaces?.find(q=>q.id===selected.id):selected.type==='object'?s.objects.find(q=>q.id===selected.id):null;if(!o)return;
   const group=new THREE.Box3();for(const root of this.content.children){if(root.userData.background)continue;root.traverse(mesh=>{if(mesh.userData.entity?.id===selected.id||mesh.parent?.userData.entity?.id===selected.id)group.expandByObject(mesh);});}
-  if(group.isEmpty())return;if(selected.type==='room')group.max.y+=o.h;this.selectionBounds=group.clone();this.outline=new THREE.Box3Helper(group,new THREE.Color('#4a7950'));this.outline.material.depthTest=false;this.outline.renderOrder=5;this.scene.add(this.outline);
+  if(group.isEmpty())return;if(selected.type==='room')group.max.y+=o.h;this.selectionBounds=group.clone();this.outline=new THREE.Box3Helper(group,new THREE.Color('#ba4a2e'));this.outline.material.depthTest=false;this.outline.renderOrder=5;this.scene.add(this.outline);
  }
  cutWalls(){
   if(!this.wallParts)return;const direction=this.camera.position.clone().sub(this.controls.target);
@@ -219,7 +219,7 @@ export class VolumeView{
   this.renderer.render(this.scene,this.camera);
   if(!this.software)return new Promise(resolve=>this.canvas.toBlob(resolve,'image/png'));
   // Paint the already projected vector paths directly; no SVG image decoder or external resource is needed.
-  const canvas=document.createElement('canvas');canvas.width=this.width*2;canvas.height=this.height*2;const context=canvas.getContext('2d');context.fillStyle='#eef2e9';context.fillRect(0,0,canvas.width,canvas.height);context.scale(2,2);context.translate(this.width/2,this.height/2);
+  const canvas=document.createElement('canvas');canvas.width=this.width*2;canvas.height=this.height*2;const context=canvas.getContext('2d');context.fillStyle='#f2f0eb';context.fillRect(0,0,canvas.width,canvas.height);context.scale(2,2);context.translate(this.width/2,this.height/2);
   for(const element of this.element.querySelectorAll('path')){const path=new Path2D(element.getAttribute('d')||''),style=element.style;if(style.fill&&style.fill!=='none'){context.globalAlpha=Number(style.fillOpacity||style.opacity||1);context.fillStyle=style.fill;context.fill(path);}if(style.stroke&&style.stroke!=='none'){context.globalAlpha=Number(style.strokeOpacity||style.opacity||1);context.strokeStyle=style.stroke;context.lineWidth=parseFloat(style.strokeWidth)||1;context.lineJoin=style.strokeLinejoin||'round';context.lineCap=style.strokeLinecap||'round';context.stroke(path);}}
   return new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
  }
