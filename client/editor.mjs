@@ -1,0 +1,11 @@
+import {tracts,slots,tile,costs,floorAt} from './engine.mjs';
+const names={crawler:'Rampant',cultist:'Cultiste',eye:'Œil',trap:'Piège rituel',boss:'Gardien',empty:'Retirer'};
+export function renderEditor(container,layout,onChange){
+ const plan=layout.slice(),root=document.createElement('section'),tools=document.createElement('div'),map=document.createElement('div'),meter=document.createElement('p'),msg=document.createElement('p');
+ tools.className='tools';map.className='plan';msg.setAttribute('role','status');let choice=container.dataset.choice||'crawler';
+ const spent=()=>plan.reduce((n,k)=>n+costs[k],0),update=()=>meter.textContent='Budget de défense · '+spent()+' / 12';
+ function icon(btn,k){btn.replaceChildren();if(!['empty','trap'].includes(k)){const img=new Image();img.src='/sprite-'+k+'.webp';img.alt='';btn.append(img)}else{const symbol=document.createElement('span');symbol.textContent=k==='empty'?'+':'✥';btn.append(symbol)}}
+ for(const k of Object.keys(names)){const btn=document.createElement('button');btn.dataset.k=k;icon(btn,k);btn.append(document.createTextNode(names[k]+' · '+costs[k]));btn.setAttribute('aria-pressed',k===choice);btn.onclick=()=>{choice=k;container.dataset.choice=k;for(const b of tools.children)b.setAttribute('aria-pressed',b.dataset.k===k)};tools.append(btn)}
+ for(const z of tracts){const block=document.createElement('div');block.className='tract';Object.assign(block.style,{left:z[1]/24*100+'%',top:z[2]/29*100+'%',width:(z[3]-z[1])/24*100+'%',height:(z[4]-z[2])/29*100+'%'});map.append(block)}
+ slots.forEach(({x,y},i)=>{const btn=document.createElement('button');btn.style.left=x/tile/24*100+'%';btn.style.top=y/tile/29*100+'%';function paint(){icon(btn,plan[i]);btn.title=(floorAt(Math.floor(x/tile),Math.floor(y/tile))?.[0]||'Château')+' · '+(i+1)+' · '+(plan[i]==='empty'?'Libre':names[plan[i]]);btn.setAttribute('aria-label',btn.title)}paint();btn.onclick=()=>{if(spent()-costs[plan[i]]+costs[choice]>12){msg.textContent='Budget insuffisant pour cette défense.';return}plan[i]=choice;paint();update();onChange([...plan]);msg.textContent=btn.title};map.append(btn)});
+ update();root.append(meter,tools,map,msg);container.replaceChildren(root)}
