@@ -1,6 +1,9 @@
 // Local coordinates are metres, east and south. All map layers share the IGN projection in paris-data.
 import { buildings, streets, water, green, metadata } from './paris-data.js';
 
+import { terrainHeight, buildingGround } from './terrain-height.js';
+import { terraceProfiles } from './street-terraces.js';
+import { authoredWeaponDrops } from './drop-id.js';
 import { vehicleSpec, vehicleDoorways } from './vehicle-types.js';
 import { buildTrafficRoutes, indexTrafficDetours, sampleRoadRoute } from './traffic-roads.js';
 
@@ -217,14 +220,55 @@ function withinBoundary(x,y,r=0) {
   if(x<landBounds.minX+r||x>landBounds.maxX-r||y<landBounds.minY+r||y>landBounds.maxY-r)return false;
   return inRing(x,y,boundary) && (r<=0 || !ringTouchesCircle(x,y,r,boundary));
 }
+export const vaultableProp = item => ['bench','bollard','hydrant','bin','postbox','crate'].includes(item.type);
+export function surfaceTop(item,x,y) {
+  const base=item.poly?buildingGround(item.poly):terrainHeight(item.x,item.y);
+  const relativeBase=base-terrainHeight(x,y)+(item.lift||0);
+  const height=item.h??(item.type==='building'?11:item.fallen ? .50 : 1.63);
+  if(item.type==='pickup'&&item.isCar){
+    const along=(x-item.x)*Math.cos(item.angle)+(y-item.y)*Math.sin(item.angle);
+    if(along < -item.halfLength*.10)return relativeBase+.93;
+    if(along > item.halfLength*.70)return relativeBase+1.16;
+  }
+  return relativeBase+height;
+}
+function coversFoot(item,x,y,margin){
+  if(item.poly)return shapeCircle(x,y,margin,item);
+  if(item.halfLength){
+    const dx=x-item.x,dy=y-item.y,c=Math.cos(item.angle||0),s=Math.sin(item.angle||0);
+    const a=Math.max(0,Math.abs(dx*c+dy*s)-item.halfLength),b=Math.max(0,Math.abs(dy*c-dx*s)-item.halfWidth);
+    return a*a+b*b<=margin*margin;
+  }
+  return sq(x-item.x)+sq(y-item.y)<=sq((item.r||.5)+margin);
+}
+// A support extends to the edge of the character's sole, keeping the capsule clear
+// of the vertical face as it walks off. Use margin zero to require a solid landing.
+export function supportAt(x,y,ceiling,opt={},margin=0){
+  let best=null,top=0;
+  function consider(item){
+    if(!item.standable && item.type!=='building' && !vaultableProp(item))return;
+    if(item.taperCenter || opt.destroyed?.has(item.id) || !coversFoot(item,x,y,margin))return;
+    const height=surfaceTop(item,x,y);
+    if(height<=ceiling+.002&&height>top){best=item;top=height;}
+  }
+  for(const b of terrain.area(x,y,margin))consider(b);
+  for(const d of decor.area(x,y,margin))consider(d);
+  for(const d of opt.colliders||[])consider(d);
+  return {top,id:best?.id??null};
+}
 function testPose(x,y,opt={},propsEnabled=true) {
   const r=opt.radius??.42, l=opt.halfLength,w=opt.halfWidth, box=!!(l&&w);
   const reach=box?Math.hypot(l,w):r, a=opt.angle||0,c=Math.cos(a),s=Math.sin(a);
   const z=opt.height??1.3;
+  const footZ=opt.footWorldZ==null?opt.footZ:opt.footWorldZ-terrainHeight(x,y);
   if(!withinBoundary(x,y,reach))return boundaryItem;
   for(const b of terrain.area(x,y,reach)){
     if(b.type==='water' && (opt.camera || isBridge(x,y,reach)))continue;
-    if(b.type==='building' && (z >= (b.h||11) || z<(b.minHeight||0)))continue;
+    if(b.type==='building'){
+      const clear=footZ==null ? z>=(b.h||11)||z<(b.minHeight||0)
+        : footZ>=surfaceTop(b,x,y)-.002 || (b.minHeight>0 && footZ+(opt.bodyHeight||1.55)<=surfaceTop(b,x,y)-b.h+b.minHeight);
+      if(clear)continue;
+    }
     // The glass pyramids narrow with height, so the camera can clear their sloped faces.
     let volume=b;
     if(b.taperCenter && opt.camera){
@@ -236,11 +280,17 @@ function testPose(x,y,opt={},propsEnabled=true) {
   const touchDynamic = d => {
     if(d.id && d.id===opt.ignoreId)return false;
     if(opt.camera && d.h && z>d.h)return false;
+    let overlaps;
     if(d.halfLength&&d.halfWidth){
-      if(box)return rectAgainstRect(x,y,a,l,w,d);
-      return rectCircle(d.x,d.y,Math.cos(d.angle||0),Math.sin(d.angle||0),d.halfLength,d.halfWidth,x,y,r);
+      overlaps=box?rectAgainstRect(x,y,a,l,w,d)
+        :rectCircle(d.x,d.y,Math.cos(d.angle||0),Math.sin(d.angle||0),d.halfLength,d.halfWidth,x,y,r);
+    }else overlaps=box?rectCircle(x,y,c,s,l,w,d.x,d.y,d.r||.5):sq(x-d.x)+sq(y-d.y)<sq(reach+(d.r||.5));
+    if(!overlaps)return false;
+    if(footZ!=null){
+      if(footZ>=surfaceTop(d,x,y)-.002)return false;
+      if(d.lift>0 && footZ+(opt.bodyHeight||1.55)<=d.lift+terrainHeight(d.x,d.y)-terrainHeight(x,y))return false;
     }
-    return box ? rectCircle(x,y,c,s,l,w,d.x,d.y,d.r||.5) : sq(x-d.x)+sq(y-d.y)<sq(reach+(d.r||.5));
+    return true;
   };
   if(propsEnabled){
     for(const d of decor.area(x,y,reach)){
@@ -399,9 +449,11 @@ export function moveBody(x,y,dx,dy,opt={}) {
 }
 export function cameraDistance(x,y,height,angle,distance,endHeight=height,destroyed=EMPTY) {
   const c=Math.cos(angle),s=Math.sin(angle), step=.35;
+  const start=terrainHeight(x,y)+height,end=terrainHeight(x+c*distance,y+s*distance)+endHeight;
   for(let l=step;l<distance+step;l+=step){
-    const dist=Math.min(l,distance),z=height+(endHeight-height)*dist/(distance||1);
-    if(testPose(x+c*dist,y+s*dist,{radius:.16,height:z,camera:true,destroyed}))
+    const dist=Math.min(l,distance),px=x+c*dist,py=y+s*dist;
+    const z=start+(end-start)*dist/(distance||1)-terrainHeight(px,py);
+    if(z<.13||testPose(px,py,{radius:.16,height:z,camera:true,destroyed}))
       return Math.max(.15,dist-step-.12);
   }
   return distance;
@@ -611,7 +663,7 @@ export function nearbyProps(x,y,radius){
 const tintedCars=['#8ac7b4','#bb6681','#bb8657','#65829d','#ab6256','#98aaa4','#bc9975'];
 const tintedPeds=['#91bcae','#c98a82','#c1a17c','#929dc3','#b7738c','#8fa27f','#9d81b4'];
 const serviceTypes=['police','firefighter','medic','swat'];
-const parkedFleet=['compact','taxi','sedan','van','compact','taxi','sport','sport','sedan','compact'];
+const parkedFleet=['compact','scooter','cargo','pickup','compact','taxi','sport','sport','sedan','compact'];
 const trafficSeeds=new Map(),walkerSeeds=new Map();
 const cellKey=(x,y,size)=>Math.floor(x/size)+4096*Math.floor(y/size);
 function considerSeed(store,key,candidate,rank){
@@ -728,6 +780,34 @@ function parkedVehicleAtStop(stop,i){
   return null;
 }
 export const parkedCars=destinations.map(parkedVehicleAtStop).filter(Boolean);
+// Keep both landings on pedestrian ground. Check the approach as well as the stones,
+// before generating walking circuits, so the furniture and the NPC routes agree.
+function placeTerrace(stop){
+  const key=stop.key==='sector'?sector?.preset:stop.key;
+  if(!['esplanade','arche','concorde','maillot','sacre-coeur'].includes(key))return;
+  const clearance=3.75, a=stop.angle, nx=-Math.sin(a),ny=Math.cos(a);
+  for(const distance of [13,19,28,40,54,70])for(let i=0;i<24;i++){
+    const bearing=a+(i%2?-1:1)*Math.ceil(i/2)*Math.PI/12;
+    const x=stop.x+distance*Math.cos(bearing),y=stop.y+distance*Math.sin(bearing);
+    if(testPose(x,y,{radius:clearance})||parkedCars.some(p=>Math.hypot(x-p.x,y-p.y)<clearance+vehicleSpec(p.type).halfLength+1))continue;
+    if(authoredWeaponDrops.some(p=>Math.hypot(x-p.x,y-p.y)<clearance+2))continue;
+    let onRoad=false;
+    for(const seg of roadGrid.area(x,y,clearance+2)){
+      if(seg.road.level!==0&&seg.road.level!=null)continue;
+      if(lineDist2(x,y,seg.a,seg.b)<sq(clearance+seg.road.w*.5)){onRoad=true;break;}
+    }
+    if(onRoad)continue;
+    for(const [type,spec] of Object.entries(terraceProfiles)){
+      const off=(type==='terraceStep'?-1:1)*spec.halfWidth;
+      const px=x+nx*off,py=y+ny*off,r=Math.hypot(spec.halfLength,spec.halfWidth);
+      const item={...spec,type,id:'terrace-'+key+'-'+type,x:px,y:py,angle:a,r,climbable:true,standable:true};
+      props.push(item);decor.insert(item,{minX:px-r,maxX:px+r,minY:py-r,maxY:py+r});
+    }
+    return;
+  }
+}
+for(const stop of destinations)placeTerrace(stop);
+
 function addPatrol(patrol,id,name){
   if(patrol.length<4)return;
   const path=pathGeometry(patrol);
@@ -753,7 +833,7 @@ for(const {p} of walkerSeeds.values()){
   }
 }
 const flocks=['pedestrian','pedestrian','pedestrian','pedestrian','police','pedestrian','pedestrian','firefighter','pedestrian','medic','pedestrian','swat','pedestrian','pedestrian'];
-const fleet=['compact','sedan','taxi','police','van','compact','sport','ambulance','sedan','bus','firetruck','van','taxi','swat','compact','sedan','car','bus'];
+const fleet=['compact','sedan','taxi','police','van','scooter','sport','ambulance','cargo','bus','firetruck','pickup','taxi','swat','compact','sedan','car','bus'];
 // Stable global identities let a delayed car keep the same wardrobe and footprint on every client.
 export function trafficVehicleAt(originRouteId,index,routeId=originRouteId){
   const route=trafficRoutes.get(originRouteId);

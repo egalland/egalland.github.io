@@ -1,3 +1,4 @@
+import {motionSeed,sampleLocomotion,linkedPose,kikalmoAnchors} from './locomotion-pose.js';
 import {getKikalmoLook,kikalmoFrame} from './kikalmo-avatar.js';
 import {kikalmoShell} from './kikalmo-shell.js';
 
@@ -38,6 +39,22 @@ function turntable(art,theta){
   }
   g.putImageData(out,0,0);
   const result={c,width:W*meter,height:dims.height,bottom:dims.bottom};
+  if(art.appearance.costume){
+    result.pixels=new Uint32Array(out.data.buffer,out.data.byteOffset,W*h);
+    // Cache the visible surface of the turntable on a small cloth mesh. Its
+    // side panels can follow a raised arm without also stretching the face.
+    const xs=[0,.22,.36,.5,.64,.78,1],ys=[0,.26,.40,.52,.67,.79,.90,1];
+    result.rows=ys.map(f=>xs.map(u=>{
+      const px=u*W,py=f*h,ix=Math.min(W-1,Math.floor(px)),iy=Math.min(h-1,Math.floor(py));
+      const lateral=(px-W*.5)*meter,dist=z[iy*W+ix];
+      const d=Number.isFinite(dist)?dist*meter:0;
+      const pos=[lateral*sin-d*cos,dims.bottom+(1-f)*dims.height,lateral*cos+d*sin];
+      const up=pos[1],side=pos[2]<0?0:1;
+      const leg=Math.min(1,Math.max(0,(.56-up)/.29));
+      const arm=Math.min(1,Math.max(0,(Math.abs(pos[2])-.18)/.18))*Math.min(1,Math.max(0,(up-.46)/.16),Math.max(0,(1.21-up)/.17));
+      return {px,py,pos,side,leg,arm};
+    }));
+  }
   cache.set(angle,result);if(cache.size>10)cache.delete(cache.keys().next().value);
   return result;
 }
@@ -47,6 +64,76 @@ function limb(g,a,b,r,color){
 function bead(g,p,rx,ry,col){
   g.fillStyle=col;g.beginPath();g.ellipse(p[0],p[1],rx,ry,0,0,tau);g.fill();
 }
+// Rasterize each little cloth triangle into a reusable sprite. A full costume
+// costs a single composite on the scene canvas even when both sleeves are bent.
+let clothLayer;
+function clothTriangle(target,view,a,b,c,pa,pb,pc){
+  const [ax,ay]=pa,[bx,by]=pb,[cx,cy]=pc;
+  const area=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+  if(Math.abs(area)<.01)return;
+  const dux=(b.px-a.px)*(cy-ay)/area,duy=-(b.px-a.px)*(cx-ax)/area;
+  const dvx=-(c.py-a.py)*(by-ay)/area,dvy=(c.py-a.py)*(bx-ax)/area;
+  const left=Math.max(0,Math.ceil(Math.min(ax,bx,cx)-.5)),right=Math.min(target.w-1,Math.floor(Math.max(ax,bx,cx)-.5));
+  const top=Math.max(0,Math.ceil(Math.min(ay,by,cy)-.5)),bottom=Math.min(target.h-1,Math.floor(Math.max(ay,by,cy)-.5));
+  const invWidth=1/(b.px-a.px),invHeight=1/(c.py-a.py);
+  const W=view.c.width,H=view.c.height,src=view.pixels,dst=target.pixels;
+  for(let y=top;y<=bottom;y++){
+    let u=a.px+(left+.5-ax)*dux+(y+.5-ay)*duy,v=a.py+(left+.5-ax)*dvx+(y+.5-ay)*dvy;
+    let k=y*target.w+left;
+    for(let x=left;x<=right;x++,k++,u+=dux,v+=dvx){
+      const across=(u-a.px)*invWidth,down=(v-a.py)*invHeight;
+      if(across<0||down<0||across+down>1)continue;
+      const color=src[Math.min(H-1,v|0)*W+Math.min(W-1,u|0)];
+      if(color)dst[k]=color;
+    }
+  }
+}
+function drawCostume(g,view,rig,gait,m,sin,cos){
+  const ppm=Math.min(view.c.height/view.height,m>70?89:53);
+  const w=Math.ceil((view.width+.9)*ppm),h=Math.ceil((view.height+.65)*ppm),base=Math.ceil((view.height+view.bottom+.30)*ppm);
+  // Keep a single high-water-mark backing store for every visible player.
+  if(!clothLayer||clothLayer.w<w||clothLayer.h<h){
+    const c=document.createElement('canvas');
+    c.width=Math.max(w,clothLayer?.w||0);c.height=Math.max(h,clothLayer?.h||0);
+    const ctx=c.getContext('2d'),im=ctx.createImageData(c.width,c.height);
+    clothLayer={c,ctx,im,w:c.width,h:c.height,pixels:new Uint32Array(im.data.buffer,im.data.byteOffset,c.width*c.height)};
+  }
+  const layer=clothLayer;layer.pixels.fill(0);
+  const {rows}=view;
+  function point(v){
+    const {pos:[x,y,z],side,arm,leg}=v;
+    const height=(y-.46)*(1+gait.squash);
+    let xx=x+height*Math.sin(gait.lean),yy=.46+gait.bob+height*Math.cos(gait.lean)-z*Math.sin(gait.roll);
+    let zz=z+height*Math.sin(gait.roll);
+    if(arm||leg){
+      const isArm=arm>leg,index=(isArm?3:5)+side;
+      // The catalog contains long dresses, coats and one-piece costumes: the
+      // fabric follows the limb loosely and keeps its original painted folds.
+      const weight=isArm?.44*arm:.54*leg;
+      const chain=isArm?rig.arms[side]:rig.legs[side];
+      const length=isArm?.36:.375;
+      const [ax,ay,az]=kikalmoAnchors[index];
+      const along=Math.max(0,Math.min(1,(ay-y)/length)),j=along>.5?1:0,t=along*2-j;
+      const p=chain[j],q=chain[j+1];
+      xx+=(p[0]+(q[0]-p[0])*t+x-ax-xx)*weight;
+      yy+=(p[1]+(q[1]-p[1])*t+y-ay+along*length-yy)*weight;
+      zz+=(p[2]+(q[2]-p[2])*t+z-az-zz)*weight;
+    }
+    return [w*.5+((v.px/view.c.width-.5)*view.width+(xx-x)*sin+(zz-z)*cos)*ppm,base-(yy+(xx-x)*cos*.12)*ppm];
+  }
+  let upper=rows[0].map(point);
+  for(let i=1;i<rows.length;i++){
+    const us=rows[i-1],ls=rows[i],lower=ls.map(point);
+    for(let j=0;j<ls.length-1;j++){
+      clothTriangle(layer,view,us[j],us[j+1],ls[j],upper[j],upper[j+1],lower[j]);
+      clothTriangle(layer,view,ls[j+1],ls[j],us[j+1],lower[j+1],lower[j],upper[j+1]);
+    }
+    upper=lower;
+  }
+  layer.ctx.putImageData(layer.im,0,0,0,0,w,h);
+  const scale=m/ppm;
+  g.drawImage(layer.c,0,0,w,h,-w*.5*scale,-base*scale,w*scale,h*scale);
+}
 const clothing=['#a17176','#768a6a','#745e77','#445d76','#ad7048','#917b63'];
 export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
   const pose=e.pose||e,frame=kikalmoFrame(e.appearance,t);
@@ -54,25 +141,21 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
   if(!art)return false;
   const a=art.appearance;
   const view=turntable(art,theta),m=height/1.78,cos=Math.cos(theta),sin=Math.sin(theta);
-  const speed=Math.min(1.45,(Math.abs(pose.speed||0)||((pose.move||pose.moving)?2.4:0))/3);
-  const phase=Number.isFinite(pose.walk)&&pose.walk?pose.walk:t*(speed>.1?8.3:2.5);
-  const stride=Math.sin(phase)*speed,bounce=Math.abs(Math.cos(phase))*speed*.038,rag=e.ragdoll||pose.ragdoll,b=rag?.blend||0;
-  const project=(p)=>[(p[0]*sin+p[2]*cos)*m,-p[1]*m];
+  const gait=sampleLocomotion(pose,t,motionSeed(e.id??e.seed)),rig=linkedPose(pose,gait,t);
+  const rag=e.ragdoll||pose.ragdoll,b=rag?.blend||0;
+  const project=p=>[(p[0]*sin+p[2]*cos)*m,(-p[1]-p[0]*cos*.14)*m];
   const blend=(joint,p)=>{const v=rag?.[joint];return v&&b?p.map((n,i)=>n+(v[i]-n)*b):p;};
   g.save();g.translate(x,ground);g.lineCap='round';
   function arm(s){
-    const n=s<0?'left':'right',wave=s>0&&pose.emote,shot=s>0?(pose.fire||0):0;
-    const p=project(blend(n+'Shoulder',[0,.87+bounce,s*.25]));
-    const q=project(blend(n+'Elbow',[-stride*s*.14,.69+bounce+(wave?.27:0),s*.29]));
-    const r=project(blend(n+'Hand',[-stride*s*.23+shot*.17,.52+bounce+(wave?.65:0)+shot*.1,s*(.32+(wave?.07:0))]));
+    const side=s>0?1:0,n=side?'right':'left',arm=rig.arms[side];
+    const [p,q,r]=['Shoulder','Elbow','Hand'].map((joint,i)=>project(blend(n+joint,arm[i])));
     limb(g,p,q,.072*m,clothing[a.outfit]||clothing[0]);limb(g,q,r,.054*m,a.color);
     bead(g,r,.076*m,.085*m,a.color);
   }
   if(!a.costume){
     for(const s of [-1,1]){
-      const n=s<0?'left':'right',leg=s*stride,hip=project(blend('hips',[0,.45+bounce,s*.14]));
-      const knee=project(blend(n+'Knee',[leg*.13,.23+bounce,s*.14]));
-      const foot=project(blend(n+'Foot',[leg*.22,.07+Math.max(0,-leg)*.09,s*.14]));
+      const side=s>0?1:0,n=side?'right':'left',leg=rig.legs[side];
+      const [hip,knee,foot]=['Hip','Knee','Foot'].map((joint,i)=>project(blend(n+joint,leg[i])));
       limb(g,hip,knee,.071*m,'#59505c');limb(g,knee,foot,.064*m,'#554c58');bead(g,foot,.099*m,.055*m,'#4b3e45');
     }
     arm(sin>0?-1:1);
@@ -82,9 +165,12 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
     const hip=project(blend('hips',[0,.46,0])),head=project(blend('head',[0,1.28,0]));
     g.save();g.translate(...hip);g.rotate(Math.atan2(head[0]-hip[0],hip[1]-head[1]));
     g.drawImage(view.c,-width*.5,-bottom-H+.46*m,width,H);g.restore();
+  }else if(view.rows&&height>=42&&(gait.effort>.025||gait.pace>.1||pose.emote||pose.fire)){
+    drawCostume(g,view,rig,gait,m,sin,cos);
   }else{
-    g.save();g.translate(0,-bounce*m);g.rotate(stride*.023);
-    g.drawImage(view.c,-width*.5,-bottom-H,width,H);g.restore();
+    g.save();g.translate(0,-(.46+gait.bob)*m);g.rotate(gait.lean*sin+gait.roll*cos);
+    g.scale(1-gait.squash*.5,1+gait.squash);
+    g.drawImage(view.c,-width*.5,-bottom-H+.46*m,width,H);g.restore();
   }
   if(!a.costume)arm(sin>0?1:-1);
   g.restore();return true;

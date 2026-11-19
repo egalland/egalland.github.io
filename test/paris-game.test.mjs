@@ -240,7 +240,7 @@ test('One action gives exactly one wanted event, preserves the action weight on 
   assert(h.actions.some(e=>e.name==='npc'&&e.data.kind==='swat'&&e.data.level===5));
 });
 
-test('Only the touch fire button uses assistance. Mouse, space, a dragged thumb, fists and a disabled setting remain manual',t=>{
+test('Only the touch fire button uses assistance. Mouse, F, a dragged thumb, fists and a disabled setting remain manual',t=>{
   const locks=[],prop=nearbyProps(SPAWN.x,SPAWN.y,23).sort((a,b)=>Math.hypot(a.x-SPAWN.x,a.y-SPAWN.y)-Math.hypot(b.x-SPAWN.x,b.y-SPAWN.y))[0];
   const peer={id:'tactile-target',x:SPAWN.x+(prop.x-SPAWN.x)*.65,y:SPAWN.y+(prop.y-SPAWN.y)*.65};
   const point={x:.58,y:.48},projectTarget=(x,y)=>Math.hypot(x-peer.x,y-peer.y)<.01?point:null;
@@ -252,8 +252,8 @@ test('Only the touch fire button uses assistance. Mouse, space, a dragged thumb,
   const totalHits=()=>h.actions.filter(e=>e.name==='hit'&&e.data.target===peer.id).length;
   const mousePoint={x:location.x+Math.cos(manual)*22,y:location.y+Math.sin(manual)*22};
   h.fireAt(mousePoint);h.step(20);assert.equal(totalHits(),0);
-  globalThis.window.dispatchEvent(Object.assign(new Event('keydown',{cancelable:true}),{key:' '}));h.step(2);
-  globalThis.window.dispatchEvent(Object.assign(new Event('keyup'),{key:' '}));h.step(20);
+  globalThis.window.dispatchEvent(Object.assign(new Event('keydown',{cancelable:true}),{key:'f'}));h.step(2);
+  globalThis.window.dispatchEvent(Object.assign(new Event('keyup'),{key:'f'}));h.step(20);
   assert.equal(totalHits(),0);assert.deepEqual(locks,[]);
   game.action('touchFire');assert.equal(totalHits(),1);assert.deepEqual(locks.at(-1),point);
   // Keep the fire button held while a second finger finishes orbiting the camera.

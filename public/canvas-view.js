@@ -1,8 +1,10 @@
+import {terrainHeight,terrainGradient,buildingGround,waterLevel,walkingPose} from './terrain-height.js';
+import {terracePanels} from './street-terraces.js';
 import {buildShotEffect,effectDuration} from './weapon-effects.js';
 import { vehicleSpec } from './vehicle-types.js';
 // Perspective software renderer for browsers without a WebGL 2 context.
 // It projects the same metre-space data, props, actors and camera boom as the GPU view.
-import {buildings,streets,water} from './paris-data.js';
+import {buildings,streets,water,green} from './paris-data.js';
 import {monuments,cameraDistance,nearbyProps} from './paris-world.js';
 import {drawCanvasPuppet,drawCanvasCar} from './canvas-puppets.js';
 import {drawKikalmoPuppet} from './kikalmo-canvas.js';
@@ -39,7 +41,7 @@ function getSpatial(){
     const bounds=loopBounds(o.poly);
     if(skipLandmark(o.id)||String(o.id)==='157326'||String(o.id)==='444657'||['245184969','245198908'].includes(String(o.id)))continue;
     let area=0;for(let i=0;i<o.poly.length;i++){const a=o.poly[i],b=o.poly[(i+1)%o.poly.length];area+=a[0]*b[1]-b[0]*a[1];}
-    blocks.add({o,bounds,wind:Math.sign(area),seed:Math.abs(Math.floor(Number(o.id)||bounds.x+bounds.y))});
+    blocks.add({o,bounds,ground:buildingGround(o.poly),wind:Math.sign(area),seed:Math.abs(Math.floor(Number(o.id)||bounds.x+bounds.y))});
   }
   for(const way of streets){if(way.level<0)continue;
     for(let i=1;i<way.path.length;i++){
@@ -298,21 +300,23 @@ export function createCanvasView(canvas,spawn,onNotice){
     canvas.after(surface);g=surface.getContext('2d',{alpha:false});
   }
   if(!g){onNotice?.('Le navigateur ne fournit pas de surface de dessin.');return {available:false,mode:'canvas',render(){},aim(){return null;},projectTarget(){return null;},effect(){},dispose(){surface!==canvas&&surface.remove();}};}
-  const spatial=getSpatial();
+  const spatial=getSpatial(),parks=green.map(a=>({a,bounds:loopBounds(a.poly)})),waters=water.map(a=>({a,level:waterLevel(a),bounds:loopBounds(a.poly)}));
+  let projectionBase=null;const terraceFaces=[];
   let w=0,h=0,f=0,camX=spawn.x,camY=spawn.y,camH=2.3,fx=1,fy=0,sin=0,cos=1,horizon=.42,sideLimit=1;
   let arm=5.25,followX=spawn.x,followY=spawn.y,cacheX=Infinity,cacheY=Infinity,nearBuildings=[],nearWays=[],props=[],lastProps=-10;
   let running=true,drawn=false,clock=0,last=-10;const effects=[],queue=[],occlusion=[];
   let foregroundLayer=null;
   let background=null,backX=Infinity,backY=Infinity,backYaw=0,backPitch=0,backArm=0,backHeight=0,backVersion=null,backPropCount=0;
   function xyz(x,y,height){
-    const dx=x-camX,dy=y-camY,forward=dx*fx+dy*fy,v=height-camH;
+    const ground=projectionBase??terrainHeight(x,y);
+    const dx=x-camX,dy=y-camY,forward=dx*fx+dy*fy,v=ground+height-camH;
     return {s:-dx*fy+dy*fx,v:v*cos-forward*sin,d:forward*cos+v*sin};
   }
   function project(v){return {x:w*.5+f*v.s/v.d,y:h*.5-f*v.v/v.d,d:v.d};}
   function at(x,y,z){const p=xyz(x,y,z);return p.d>=near?project(p):null;}
   function uprightBody(e){
     if(!e||e.isCar||e.stunned||e.ragdoll)return null;
-    const low=at(e.x,e.y,.48),high=at(e.x,e.y,1.49);
+    const lift=e.lift||0,low=at(e.x,e.y,.48+lift),high=at(e.x,e.y,1.49+lift);
     if(!low||!high)return null;
     const width=.38*f/((low.d+high.d)*.5);
     return {x:(low.x+high.x)*.5,r:width,top:high.y,bottom:low.y,depth:depth(e.x,e.y)};
@@ -369,6 +373,12 @@ export function createCanvasView(canvas,spawn,onNotice){
     return d>=-b.r&&d<r+b.r&&Math.abs(-dx*fy+dy*fx)<=Math.max(0,d)*sideLimit+b.r*2.0;
   }
   function roadRibbon(seg,extra,color,offset=0,a=seg.a,b=seg.b){
+    const len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    if(len>18){
+      const parts=Math.ceil(len/18);let p=a;
+      for(let j=1;j<=parts;j++){const q=[mix(a[0],b[0],j/parts),mix(a[1],b[1],j/parts)];roadRibbon(seg,extra,color,offset,p,q);p=q;}
+      return;
+    }
     const rad=Math.max(.035,seg.w*.5+extra),l=offset-rad,r=offset+rad,{nx,ny}=seg;
     poly3([[a[0]+nx*l,a[1]+ny*l,0],[b[0]+nx*l,b[1]+ny*l,0],[b[0]+nx*r,b[1]+ny*r,0],[a[0]+nx*r,a[1]+ny*r,0]],color);
   }
@@ -427,7 +437,7 @@ export function createCanvasView(canvas,spawn,onNotice){
       quads.push({q,j});
     }
     if(!quads.length)return;
-    queue.push({z:d-Math.abs(m.side*(ct*fx-st*fy))-1.3,draw:()=>{
+    queue.push({base:projectionBase,z:d-Math.abs(m.side*(ct*fx-st*fy))-1.3,draw:()=>{
       for(const {q,j} of quads){
         const a=q[0],b=q[1],c=q[2],d=q[3];
         g.save();g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.lineTo(c.x,c.y);g.lineTo(d.x,d.y);g.closePath();g.clip();
@@ -437,11 +447,30 @@ export function createCanvasView(canvas,spawn,onNotice){
       }
     }});
     const flag=surf(11,-.2,49.5),pole=surf(11,-.2,53.8),pp0=at(...flag),pp1=at(...pole);
-    if(pp0&&pp1)queue.push({z:d-5,draw:()=>{
+    if(pp0&&pp1)queue.push({base:projectionBase,z:d-5,draw:()=>{
       g.strokeStyle='#786e71';g.lineWidth=Math.max(.65,f/pp1.d*.11);g.beginPath();g.moveTo(pp0.x,pp0.y);g.lineTo(pp1.x,pp1.y);g.stroke();
       const scale=f/pp1.d;for(let j=0;j<3;j++){const offset=j*1.08,dy=Math.sin(j*1.4+clock*1.4)*.21;
         g.fillStyle=['#4d668c','#f5e8ca','#c5565a'][j];g.fillRect(pp1.x+scale*offset,pp1.y+scale*dy,scale*1.12,scale*1.65);}
     }});
+  }
+  function groundRelief(){
+    const distances=[.2,4,10,20,35,56,83,120,170,240,330,440,600,820,1150],strips=12;
+    let previous=null;
+    for(let k=distances.length-1;k>=0;k--){
+      const d=distances[k],row=[];
+      for(let i=0;i<=strips;i++){
+        const offset=(2*i/strips-1)*(d*sideLimit+3);
+        const x=camX+fx*d-fy*offset,y=camY+fy*d+fx*offset;
+        row.push([x,y,-.18]);
+      }
+      if(previous)for(let i=0;i<strips;i++){
+        const a=row[i],b=row[i+1],c=previous[i+1],e=previous[i];
+        const grade=(terrainHeight(c[0],c[1])-terrainHeight(b[0],b[1]))/(distances[k+1]-d);
+        const haze=clamp(d/900,0,1),light=clamp(grade*.52,-.08,.09);
+        poly3([a,b,c,e],tint('#b7a49a',.96+haze*.09+light));
+      }
+      previous=row;
+    }
   }
   function groundTexture(){
     // Small marks are projected in fixed world space. They stay attached to the pavement as the camera orbits.
@@ -491,9 +520,9 @@ export function createCanvasView(canvas,spawn,onNotice){
       const normalX=wind*dy/length,normalY=-wind*dx/length;
       if(normalX*(camX-a[0])+normalY*(camY-a[1])<0)continue;
       const d=depth((a[0]+b[0])*.5,(a[1]+b[1])*.5),shade=normalX*-.45+normalY*-.6>-.09?1:0;
-      const pts=[[a[0],a[1],0],[b[0],b[1],0],[b[0],b[1],eave],[a[0],a[1],eave]];
+      const pts=[[a[0],a[1],Math.min(0,terrainHeight(a[0],a[1])-item.ground)-.12],[b[0],b[1],Math.min(0,terrainHeight(b[0],b[1])-item.ground)-.12],[b[0],b[1],eave],[a[0],a[1],eave]];
       const pp=projectPoly(pts);if(!pp||hiddenByFacade(pp))continue;
-      queue.push({z:d,draw:()=>{
+      queue.push({z:d,base:item.ground,draw:()=>{
         fillPath(pp,glass?shade?'#91a3a8':'#798f9c':tint(stone[seed%8],shade?1.00:.85));
         const topA=top[j],topB=top[(j+1)%top.length];
         poly3([[a[0],a[1],eave],[b[0],b[1],eave],topB,topA],glass?'#acb8b5':roofs[seed%roofs.length]);
@@ -529,9 +558,23 @@ export function createCanvasView(canvas,spawn,onNotice){
         }
       }});
     }
-    const rooftop=projectPoly(top);if(rooftop&&H<camH)queue.push({z:depth(bounds.x,bounds.y),draw:()=>fillPath(rooftop,roofs[seed%roofs.length])});
+    const rooftop=projectPoly(top);if(rooftop&&H+item.ground<camH)queue.push({z:depth(bounds.x,bounds.y),draw:()=>fillPath(rooftop,roofs[seed%roofs.length])});
   }
   function showProp(o){
+    if(terracePanels[o.type]){
+      projectionBase=terrainHeight(o.x,o.y);
+      const c=Math.cos(o.angle),s=Math.sin(o.angle),cx=camX-o.x,cy=camY-o.y;
+      for(const {normal:[nx,ny],points,color} of terracePanels[o.type]){
+        if((nx||ny)&&nx*(c*cx+s*cy)+ny*(-s*cx+c*cy)<(nx?o.halfLength:o.halfWidth))continue;
+        const vertices=points.map(([along,h,across])=>[o.x+c*along-s*across,o.y+s*along+c*across,h]);
+        const plane=projectPoly(vertices);if(!plane)continue;
+        const depths=vertices.map(([x,y])=>depth(x,y));
+        const z=nx||ny?(Math.min(...depths)+Math.max(...depths))/2:depth(o.x,o.y)+o.r+.2;
+        queue.push({z,draw:()=>fillPath(plane,color)});
+        terraceFaces.push({plane,color,top:projectionBase+o.h,z,left:Math.min(...plane.map(v=>v.x)),right:Math.max(...plane.map(v=>v.x)),bottom:Math.max(...plane.map(v=>v.y)),upper:Math.min(...plane.map(v=>v.y))});
+      }
+      projectionBase=null;return;
+    }
     const base=at(o.x,o.y,0),height=o.type==='tree'?Math.max(4.7,o.h):o.h||1;
     if(!base||base.d>295)return;const top=at(o.x,o.y,height);if(!top)return;
     const ph=base.y-top.y;if(ph<2||base.x<-ph||base.x>w+ph)return;
@@ -542,10 +585,28 @@ export function createCanvasView(canvas,spawn,onNotice){
     }});
   }
   const pickupVisibility=new Map();
+  function coverBehindTerrace(e,base,top,height) {
+    if(!terraceFaces.length)return;
+    const foot=terrainHeight(e.x,e.y)+(e.lift||0),width=height*(e.isCar?1.8:.67),left=base.x-width,right=base.x+width,cut=base.d-.08;
+    for(const face of terraceFaces){
+      if(foot>=face.top-.05||right<face.left||left>face.right||top.y>face.bottom||base.y+2<face.upper)continue;
+      const clipped=[];let a=face.plane.at(-1);
+      for(const b of face.plane){
+        if((a.d<cut)!==(b.d<cut)){
+          // Perspective-correct interpolation of inverse depth on a projected edge.
+          const t=(1/cut-1/a.d)/(1/b.d-1/a.d);
+          clipped.push({x:mix(a.x,b.x,t),y:mix(a.y,b.y,t)});
+        }
+        if(b.d<cut)clipped.push(b);a=b;
+      }
+      if(clipped.length<3)continue;
+      g.save();g.beginPath();g.rect(left,top.y-2,2*width,height+5);g.clip();fillPath(clipped,face.color);g.restore();
+    }
+  }
   function pickupClear(id,x,y,height,reach,time,destroyed){
     const cached=pickupVisibility.get(id),revision=destroyed?.size||0;
     if(cached&&revision===cached.revision&&time-cached.time<.21&&Math.hypot(camX-cached.x,camY-cached.y)<.35&&Math.abs(camH-cached.h)<.12)return cached.clear;
-    const clear=reach<=1.65||cameraDistance(camX,camY,camH,Math.atan2(y-camY,x-camX),reach,height,destroyed)>=reach-.75;
+    const clear=reach<=1.65||cameraDistance(camX,camY,camH-terrainHeight(camX,camY),Math.atan2(y-camY,x-camX),reach,height,destroyed)>=reach-.75;
     if(pickupVisibility.size>128)pickupVisibility.clear();
     pickupVisibility.set(id,{x:camX,y:camY,h:camH,clear,time,revision});
     return clear;
@@ -563,7 +624,7 @@ export function createCanvasView(canvas,spawn,onNotice){
     queue.push({z:depth(p.x,p.y),draw:()=>{
       const pulse=1+.065*Math.sin(time*2.36+phase),radius=.735*unit*pulse;
       const ellipse=(x,y,rx,ry,col)=>{g.beginPath();g.ellipse(x,y,Math.max(.45,rx),Math.max(.32,ry),0,0,tau);g.fillStyle=col;g.fill();};
-      const perspective=clamp(camH/reach,.045,.81);
+      const perspective=clamp((camH-terrainHeight(p.x,p.y))/reach,.045,.81);
       ellipse(base.x,base.y,radius+unit*.08,radius*perspective+unit*.055,'rgba(55,40,57,.40)');
       g.beginPath();g.ellipse(base.x,base.y,radius,Math.max(.65,radius*perspective),0,0,tau);g.lineWidth=Math.max(.85,unit*.047);g.strokeStyle=style.accent;g.stroke();
       const rx=.52*unit,ry=Math.max(.65,rx*perspective);
@@ -575,7 +636,7 @@ export function createCanvasView(canvas,spawn,onNotice){
       g.drawImage(art,icon.x-iconWidth*.5,icon.y-iconWidth*.4,iconWidth,iconWidth*.8);
     }});
   }
-  function effect(kind,x,y,angle=0,len=0){if(effects.length>60)effects.shift();effects.push({kind,x,y,angle,len,born:clock});}
+  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0){if(effects.length>60)effects.shift();effects.push({kind,x,y,angle,len,lift,born:clock});}
   function render(state,dt,time){
     if(!running)return;clock=time;
     if(time-last<1/32&&!state.snap&&drawn)return;const frameDt=Math.min(.1,time-last);last=time;drawn=true;
@@ -591,11 +652,12 @@ export function createCanvasView(canvas,spawn,onNotice){
     followX+=(p.x-followX)*blend;followY+=(p.y-followY)*blend;
     const model=car?vehicleSpec(car.type):null;
     fx=Math.cos(yaw);fy=Math.sin(yaw);const goal=car?8.15+Math.max(0,model.halfLength-2)*1.24+Math.min(2.25,Math.abs(state.speed||0)*.065):5.25;
-    const focus=car?Math.max(1.35,model.height*.77):1.17,wantedH=(car?Math.max(2.92,model.height+1.05):2.18)+pitch*2.8;
+    const lift=car?0:p.lift||0,focus=lift+(car?Math.max(1.35,model.height*.77):1.17),wantedH=lift+(car?Math.max(2.92,model.height+1.05):2.18)+pitch*2.8;
+    const ground=terrainHeight(followX,followY),backGround=terrainHeight(followX-fx*goal,followY-fy*goal),look=car?6.3:4.15;
     const dist=clamp(cameraDistance(followX,followY,focus,yaw+Math.PI,goal,wantedH,destroyed),.3,goal);
     arm=snap?dist:Math.min(dist,arm+(dist-arm)*(1-Math.exp(-6*frameDt)));
-    camX=followX-fx*arm;camY=followY-fy*arm;camH=focus+(wantedH-focus)*arm/goal+.12;
-    const tilt=Math.atan2(focus+pitch*.95-camH,arm+(car?6.3:4.15));
+    camX=followX-fx*arm;camY=followY-fy*arm;camH=ground+focus+(backGround-ground+wantedH-focus)*arm/goal+.12;
+    const tilt=Math.atan2(terrainHeight(followX+fx*look,followY+fy*look)+focus+pitch*.95-camH,arm+look);
     sin=Math.sin(tilt);cos=Math.cos(tilt);horizon=h*.5+f*Math.tan(tilt);sideLimit=w/(2*f)+.1;
     if(Math.hypot(cacheX-p.x,cacheY-p.y)>35){
       cacheX=p.x;cacheY=p.y;nearBuildings=spatial.blocks.around(p.x,p.y,560);nearWays=spatial.ways.around(p.x,p.y,490);
@@ -608,8 +670,11 @@ export function createCanvasView(canvas,spawn,onNotice){
     if(!background)background=makeCanvas(w,h);
     if(background.width!==w||background.height!==h){background.width=w;background.height=h;}
     g=background.getContext('2d',{alpha:false});backX=camX;backY=camY;backHeight=camH;backYaw=yaw;backPitch=tilt;backVersion=version;backPropCount=props.length;
-    sky(yaw,time);
-    for(const a of water)if(a.poly.length>=3)poly3(a.poly.map(q=>[q[0],q[1],-.36]),'#679b9e');
+    sky(yaw,time);groundRelief();
+    for(const {a,bounds} of parks)if(seen(bounds,470))poly3(a.poly.map(q=>[q[0],q[1],0]),'#a4aa8c');
+    for(const {a,bounds,level} of waters)if(a.poly.length>=3&&seen(bounds,1000)){
+      projectionBase=level;poly3(a.poly.map(q=>[q[0],q[1],0]),'#679b9e');projectionBase=null;
+    }
     const visibleWays=nearWays.filter(s=>seen(s.bounds,230));
     const arc=monuments.arc;
     if(Math.hypot(arc.x-p.x,arc.y-p.y)<450)ellipseGround(arc.x,arc.y,115,0,'#7a717c');
@@ -624,11 +689,13 @@ export function createCanvasView(canvas,spawn,onNotice){
     if(Math.hypot(arc.x-p.x,arc.y-p.y)<450)ellipseGround(arc.x,arc.y,35.2,.025,'#c4b5a6');
     occlusion.length=0;
     const facadeSet=nearBuildings.filter(item=>seen(item.bounds,440)).sort((a,b)=>depth(a.bounds.x,a.bounds.y)-depth(b.bounds.x,b.bounds.y));
-    for(const item of facadeSet)building(item);
+    for(const item of facadeSet){projectionBase=item.ground;building(item);}
+    projectionBase=null;
     groundTexture();
     for(const obj of monumentModels){
       const reach=obj.m.range||2300,md=depth(obj.m.x,obj.m.y);
       if(Math.hypot(obj.m.x-camX,obj.m.y-camY)>reach||!seen({x:obj.m.x,y:obj.m.y,r:110},reach))continue;
+      projectionBase=terrainHeight(obj.m.x,obj.m.y);
       for(const face of obj.faces){
         if(face.line){
           const pp=at(...face.p[0]),qq=at(...face.p[1]);if(!pp||!qq||
@@ -639,26 +706,38 @@ export function createCanvasView(canvas,spawn,onNotice){
         }
         const pp=projectPoly(face.p);if(pp)queue.push({z:depth(face.x,face.y),draw:()=>fillPath(pp,face.color)});}
       if(obj.m.id==='arc')arcFront(obj.m);
+      projectionBase=null;
     }
+    terraceFaces.length=0;
     for(const o of props)if(!destroyed?.has(o.id))showProp(o);
-    queue.sort((a,b)=>b.z-a.z);for(const q of queue)q.draw();
+    terraceFaces.sort((a,b)=>b.z-a.z);
+    queue.sort((a,b)=>b.z-a.z);for(const q of queue){projectionBase=q.base??null;q.draw();}
+    projectionBase=null;
     g=oldG;
     }
     g.drawImage(background,0,0);queue.length=0;
     for(const pickup of state.pickups||[])queuePickup(pickup,time,destroyed);
     const playerBody=uprightBody(state.entities.find(e=>e.self));
     for(const e of state.entities){
-      const base=at(e.x,e.y,0),high=e.isCar?vehicleSpec(e.type).height:1.78,top=at(e.x,e.y,high);
+      const lift=e.lift||0,base=at(e.x,e.y,lift),high=e.isCar?vehicleSpec(e.type).height:1.78,top=at(e.x,e.y,lift+high);
       if(!base||!top||base.d>(e.isCar?160:96)||base.d<.61)continue;
       const ph=base.y-top.y;if(ph<2||base.x<-ph*2||base.x>w+ph*2)continue;
       // Collinear urban façades can hide traffic even though the shared simulation still runs behind them.
-      if(!e.self&&base.d>4){const d=Math.hypot(e.x-camX,e.y-camY);if(cameraDistance(camX,camY,camH,Math.atan2(e.y-camY,e.x-camX),d,high*.78,destroyed)<d-1.5)continue;}
+      if(!e.self&&base.d>4){const d=Math.hypot(e.x-camX,e.y-camY);if(cameraDistance(camX,camY,camH-terrainHeight(camX,camY),Math.atan2(e.y-camY,e.x-camX),d,lift+high*.78,destroyed)<d-1.5)continue;}
       queue.push({z:depth(e.x,e.y)-.09,draw:()=>{
         const wid=ph*(e.isCar?.77:.27);
-        g.fillStyle='rgba(62,49,64,.25)';g.beginPath();g.ellipse(base.x,base.y-1,Math.max(1,wid),Math.max(1,wid*.2),0,0,tau);g.fill();
+        const floor=e.supportHeight||0,shadow=at(e.x,e.y,floor),shadowScale=1/(1+Math.max(0,lift-floor)*.08);
+        if(shadow){g.fillStyle='rgba(62,49,64,.25)';g.beginPath();g.ellipse(shadow.x,shadow.y-1,Math.max(1,wid*shadowScale),Math.max(1,wid*.2*shadowScale),0,0,tau);g.fill();}
         const theta=Math.atan2(e.y-camY,e.x-camX)-(e.angle||0);
-        if(e.isCar)drawCanvasCar(g,e,base.x,base.y,ph,time,theta);
-        else uprightSprite(e,base,top,ph,time,theta,pedestrianOpacity(e,playerBody));
+        if(e.isCar){
+          const slope=terrainGradient(e.x,e.y);
+          g.save();g.translate(base.x,base.y);g.rotate(-Math.atan(-fy*slope.x+fx*slope.y));drawCanvasCar(g,e,0,0,ph,time,theta);g.restore();
+        }
+        else{
+          const pose=walkingPose(e);
+          uprightSprite(pose,base,top,ph,time,theta,pedestrianOpacity(e,playerBody));
+        }
+        coverBehindTerrace(e,base,top,ph);
         if(e.bubble||e.peer&&base.d<45){
           const label=String(e.bubble||e.name||'').slice(0,26);g.font=(e.bubble?'19px':'600 11px')+' sans-serif';
           const ww=g.measureText(label).width+12,yy=top.y-(e.isCar?10:6);
@@ -671,12 +750,12 @@ export function createCanvasView(canvas,spawn,onNotice){
       const duration=e.kind==='burst'?.55:effectDuration(e.kind);
       if(age>duration){effects.splice(i,1);continue;}
       if(e.kind==='burst'){
-        const pp=at(e.x,e.y,.93);if(!pp)continue;
+        const pp=at(e.x,e.y,.93+e.lift);if(!pp)continue;
         for(let j=0;j<8;j++){const v=j*2.39+age;g.fillStyle=j%2?'#f0c891':'#94b5a6';g.fillRect(pp.x+Math.cos(v)*age*80,pp.y+Math.sin(v)*age*80,3,3);}
       }else{
         for(const stroke of buildShotEffect(e.kind,e.x,e.y,e.angle,e.len,age/duration)){
           g.beginPath();g.strokeStyle=stroke.color;g.lineWidth=stroke.width;let pen=false;
-          for(const vertex of stroke.points){const pt=at(vertex.x,vertex.y,vertex.z);if(!pt){pen=false;continue;}if(pen)g.lineTo(pt.x,pt.y);else g.moveTo(pt.x,pt.y);pen=true;}
+          for(const vertex of stroke.points){const pt=at(vertex.x,vertex.y,vertex.z+e.lift+terrainHeight(e.x,e.y)-terrainHeight(vertex.x,vertex.y));if(!pt){pen=false;continue;}if(pen)g.lineTo(pt.x,pt.y);else g.moveTo(pt.x,pt.y);pen=true;}
           g.stroke();
         }
       }
@@ -692,7 +771,7 @@ export function createCanvasView(canvas,spawn,onNotice){
     const b=canvas.getBoundingClientRect();if(!w||!b.width||!b.height)return null;
     const s=((clientX-b.left)/b.width*w-w*.5)/f,v=(h*.5-(clientY-b.top)/b.height*h)/f;
     const height=v*cos+sin,forward=cos-v*sin,dx=fx*forward-fy*s,dy=fy*forward+fx*s;
-    const d=(.87-camH)/height;
+    const d=(terrainHeight(p.x,p.y)+(p.lift||0)+.87-camH)/height;
     return d>0&&d<180?Math.atan2(camY+dy*d-p.y,camX+dx*d-p.x):Math.atan2(dy,dx);
   }
   return {available:true,mode:'canvas',render,aim,projectTarget,effect,dispose(){running=false;effects.length=0;if(surface!==canvas)surface.remove();}};

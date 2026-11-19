@@ -1,3 +1,4 @@
+import {terrainHeight} from './terrain-height.js';
 import * as T from './three.js';
 import {pickupStyle,pickupPatch,pickupMarkerWidth,pickupRange,pickupLift,pickupPhase} from './pickup-art.js';
 
@@ -84,7 +85,7 @@ export function createPickupDisplay(scene){
       let item=instances.get(p.id);
       if(item&&item.kind!==p.weapon){item.group.removeFromParent();instances.delete(p.id);item=null;}
       if(!item){item=create(p.weapon);item.phase=pickupPhase(p.id);instances.set(p.id,item);}
-      item.keep=true;item.group.position.set(p.x,0,p.y);
+      item.keep=true;item.group.position.set(p.x,terrainHeight(p.x,p.y),p.y);
       const phase=t*2.36+item.phase,lift=pickupLift(t,item.phase);
       item.sprite.position.y=lift;
       item.model.position.y=.80+.055*Math.sin(phase);item.model.rotation.y=t*.81+item.phase;item.model.rotation.z=.07*Math.sin(phase*.7);

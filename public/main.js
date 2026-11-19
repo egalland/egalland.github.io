@@ -1,5 +1,6 @@
 import {weaponList,starterWeapons} from './weapon-catalog.js';
 import {installHudEditor} from './hud-editor.js';
+import {installTraversalControl} from './traversal-control.js';
 import {installKikalmoLink} from './kikalmo-link.js';
 import {createWanted,wantedRules,wantedThresholds} from './wanted.js';
 import {attachSectorTravel} from './sector-travel.js';
@@ -59,6 +60,7 @@ function setTouchAim(enabled) {
 }
 const controlsAreTouch=()=>matchMedia('(pointer:coarse),(max-width:670px)').matches;
 renderIcons();
+const traversal=installTraversalControl($('#jump'),$('#traversalShortcut'),pressed=>game.action('jump',pressed));
 drawBrand($('#brandMark').getContext('2d'));
 portrait($('#portrait').getContext('2d'),96);
 function appendChat({name,text,system=false}){
@@ -155,9 +157,16 @@ function onState(next){
   $('#street').textContent=street===state.district?'':street;
   $('#driveHud').hidden=!state.inVehicle;
   $('#carSpeed').textContent=(state.speed||0)+' km/h';
+  $('#vehicleName').textContent=state.vehicleName||'Au volant';
   const ride=$('#ride');
   ride.classList.toggle('near',Boolean(state.inVehicle||state.nearVehicle));
-  ride.setAttribute('aria-label',state.inVehicle?'Sortir du véhicule':'Monter dans un véhicule');
+  const vehicle=state.inVehicle?state.vehicleName:state.nearVehicleName;
+  const rideVerb=state.inVehicle?'Descendre':state.nearVehicle?'Monter':'Véhicule';
+  const rideLabel=vehicle?rideVerb+' · '+vehicle:'Monter ou descendre du véhicule';
+  ride.setAttribute('aria-label',rideLabel);
+  ride.title=$('#rideShortcut').title=rideLabel;
+  $('#rideShortcut span').textContent=rideVerb;
+  traversal.update(state);
   showLife();
   showWanted();
   $('#weaponLabel').textContent=weaponNames.get(state.weapon)||'';
@@ -187,7 +196,7 @@ $('#openAvatar').onclick=openAvatar;
 $('#healHud').onclick=()=>game.action('heal');
 $('#heal').onclick=()=>game.action('heal');
 editor=installHudEditor({scene:$('#scene'),onEdit:()=>{
-  if(panels?.isOpen())panels.close();stopStick();releaseFire();game.setPaused(true);
+  if(panels?.isOpen())panels.close();releaseTouchInputs();game.setPaused(true);
 },onFinish:()=>{game.setPaused(false);focusGame();}});
 $('#editHud').onclick=()=>editor.open();
 panels=createPanels({game,editLayout:()=>editor.open(),openAvatar,net,getState:()=>({...state,name:net.name}),selectWeapon,setName,setSound,getSound:()=>settingsSound,setTouchAim,getTouchAim:()=>touchAimEnabled,notify,returnFocus:focusGame});
@@ -215,9 +224,16 @@ function moveStick(e){const rect=stick.getBoundingClientRect(),radius=rect.width
  const sprint=!state.inVehicle && length>radius*1.08;
  if(sprint!==stickSprint){stickSprint=sprint;game.action('sprint',sprint);}
 }
-stick.onpointerdown=e=>{e.preventDefault();finger=e.pointerId;stick.setPointerCapture(finger);moveStick(e);};
+stick.onpointerdown=e=>{
+  if(finger!==null || e.button!==0)return;
+  e.preventDefault();finger=e.pointerId;stick.setPointerCapture(finger);moveStick(e);
+};
 stick.onpointermove=e=>{if(e.pointerId===finger)moveStick(e);};
-function stopStick(){if(stickSprint){stickSprint=false;game.action('sprint',false);}finger=null;stick.querySelector('span').style.transform='';game.setMove(0,0);}
+function stopStick(e){
+  if(finger===null || (e && e.pointerId!==finger))return;
+  if(stickSprint){stickSprint=false;game.action('sprint',false);}
+  finger=null;stick.querySelector('span').style.transform='';game.setMove(0,0);
+}
 stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=stopStick;
 $('#recenter').onpointerdown=e=>{e.preventDefault();game.action('recenter');};
 $('#ride').onpointerdown=e=>{e.preventDefault();game.action('vehicle');};
@@ -244,8 +260,9 @@ function releaseFire(e) {
   showAimLock(null);
 }
 fire.onpointerup=fire.onpointercancel=fire.onlostpointercapture=releaseFire;
-window.addEventListener('blur',()=>{stopStick();releaseFire();});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseFire();});
+function releaseTouchInputs(){stopStick();releaseFire();traversal.release();}
+window.addEventListener('blur',releaseTouchInputs);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseTouchInputs();});
 city.addEventListener('pointerdown',()=>{if(controlsAreTouch())chat.classList.remove('mobile-open');});
 window.addEventListener('pagehide',()=>{
   try{

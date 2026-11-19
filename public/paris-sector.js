@@ -1,9 +1,10 @@
+import {sectorHeightGrid} from './terrain-height.js';
 // Load metric geometry around a visitor-selected point, from the same IGN layers as the embedded map.
 const RADIUS = 660;
 const COUNT = 1000;
 const LAYERS = ['batiment', 'troncon_de_route', 'surface_hydrographique', 'zone_de_vegetation'];
 const CACHE_NAME = 'maille-city-ign-sectors-v1';
-const CACHE_SCHEMA = 2;
+const CACHE_SCHEMA = 3;
 const FRESH_FOR = 7 * 86400_000;
 const CACHE_LIMIT = 10;
 const inflight = new Map();
@@ -74,7 +75,7 @@ function clipLine(points,b) {
 }
 
 function projectFeatures(collections,bounds,center) {
-  const buildings=[],streets=[],water=[],green=[];
+  const buildings=[],streets=[],water=[],green=[],surfaceLines=[];
   let observedHeight=0, estimatedHeight=0, undergroundRoadsOmitted=0;
   for(const [layer,features] of collections) {
     for(const feature of features) {
@@ -91,6 +92,7 @@ function projectFeatures(collections,bounds,center) {
         const name=p.nom_voie_ban_gauche||p.nom_voie_ban_droite||p.nom_collaboratif_gauche||p.nom_collaboratif_droite||'';
         const oneway=p.sens_de_circulation==='Sens direct'?1:p.sens_de_circulation==='Sens inverse'?-1:0;
         const paths=g.type==='MultiLineString'?g.coordinates:g.type==='LineString'?[g.coordinates]:[];
+        surfaceLines.push(...paths);
         let index=0;
         for(const line of paths) for(const polyline of clipLine(line.map(toMap),bounds)) {
           const id=index?baseId+'-'+index:baseId;index++;
@@ -110,7 +112,10 @@ function projectFeatures(collections,bounds,center) {
           const h=known?rawHeight:Math.max(2.5,(Number(p.nombre_d_etages)||(p.usage_1==='Résidentiel'?4:2))*3);
           buildings.push({id:i?baseId+'-'+i:baseId,poly,holes,h,kind:uses[p.usage_1]||'mixed',observedHeight:known});
           if(known)observedHeight++;else estimatedHeight++;
-        }else if(layer==='surface_hydrographique')water.push({poly,holes});
+        }else if(layer==='surface_hydrographique'){
+          const heights=polygon[0].map(pt=>pt[2]).filter(z=>Number.isFinite(z)&&z>5&&z<260).sort((a,b)=>a-b);
+          water.push({poly,holes,elevation:heights.length?heights[Math.floor(heights.length/2)]:null});
+        }
         else green.push({poly,holes,kind:p.nature||'Végétation'});
       }
     }
@@ -119,7 +124,7 @@ function projectFeatures(collections,bounds,center) {
   // The world can use the sector axis for sampling. Keep both endpoints inside the playable area.
   const axis=[[center[0]-RADIUS*.7,center[1]],[center[0]+RADIUS*.7,center[1]]];
   if(!buildings.length&&!streets.length&&!water.length&&!green.length)throw Error('Aucune géométrie IGN disponible dans ce secteur.');
-  return {buildings,streets,water,green,metadata:{
+  return {buildings,streets,water,green,relief:sectorHeightGrid(surfaceLines,bounds),metadata:{
     source:'IGN • BD TOPO®',attribution:'© IGN, BD TOPO® · Licence Ouverte 2.0',
     url:'https://cartes.gouv.fr/rechercher-une-donnee/dataset/IGNF_BD-TOPO',
     license:'https://www.etalab.gouv.fr/licence-ouverte-open-licence/',extracted:new Date().toISOString().slice(0,10),

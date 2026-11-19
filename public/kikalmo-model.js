@@ -1,3 +1,4 @@
+import {motionSeed,sampleLocomotion,linkedPose,kikalmoAnchors as anchors} from './locomotion-pose.js';
 import * as THREE from './three.js';
 import {appearanceKey,getKikalmoLook,kikalmoFrame,zones} from './kikalmo-avatar.js';
 import {kikalmoShell} from './kikalmo-shell.js';
@@ -6,7 +7,6 @@ const built=new WeakMap(),inactive=new Map();
 const shape=new THREE.SphereGeometry(1,12,9);
 const colors=new Map(),clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const joints=['hips','chest','head','leftShoulder','rightShoulder','leftHip','rightHip'];
-const anchors=[[0,.46,0],[0,.83,0],[0,1.1,0],[0,.86,-.26],[0,.86,.26],[0,.44,-.14],[0,.44,.14]];
 function material(color){
   if(!colors.has(color))colors.set(color,new THREE.MeshLambertMaterial({color}));
   return colors.get(color);
@@ -73,7 +73,8 @@ export function createKikalmoModel(value,seed=0){
   }
   limb.visible=!a.costume;
   const p=new THREE.Vector3(),q=new THREE.Vector3(),r=new THREE.Vector3();
-  let active=null,entry=null,surface=null,elapsed=seed*.001,move=0;
+  let styleSeed=motionSeed(seed),lastId;
+  let active=null,entry=null,surface=null;
   function setSurface(art){
     if(art===active)return;
     if(surface){group.remove(surface);release();}
@@ -88,28 +89,30 @@ export function createKikalmoModel(value,seed=0){
     old.mesh.dispose();for(const m of old.mats){m.map.dispose();m.dispose();}
   }
   function update(e,dt=.016,t=0){
-    const goal=clamp((Math.abs(e.speed||0)||((e.move||e.moving)?2.5:0))/3,0,1.5);
-    move+=(goal-move)*(1-Math.exp(-dt*12));elapsed+=dt*(2.5+Math.min(1,move)*6.2);
+    if(e.id!==lastId){lastId=e.id;styleSeed=motionSeed(lastId??seed);}
+    const pose=e.pose||e,gait=sampleLocomotion(pose,t,styleSeed),rig=linkedPose(pose,gait,t);
     const art=getKikalmoLook(a,kikalmoFrame(a,t))?.art||getKikalmoLook(a,0)?.art;if(art)setSurface(art);
-    const st=Math.sin(elapsed)*move,bounce=Math.abs(Math.cos(elapsed))*move*.039;
-    const rag=e.ragdoll||e.pose?.ragdoll,blend=clamp(rag?.blend||0);
+    const rag=e.ragdoll||pose.ragdoll,blend=clamp(rag?.blend||0);
     for(let i=0;i<bones.length;i++){
-      const b=bones[i],co=anchors[i];b.position.set(co[0],co[1]+bounce,co[2]);
-      let rz=i===2?.016*Math.cos(elapsed*2):0;
-      if(i===3||i===4)rz=st*(i===3?.53:-.53)+(i===4&&e.emote?1.45:0)+(i===4?(e.fire||0)*.62:0);
-      if(i===5||i===6)rz=st*(i===5?-.57:.57);
-      b.rotation.set(i===2?-.027*st:0,i===2?-(e.turn||0)*.12:0,rz);
+      const b=bones[i];b.position.fromArray(rig.anchors[i]);
+      let rz=-gait.lean*(i===2?.63:1),rx=gait.roll,ry=i===2?-gait.turn*.12:0;
+      if(i===3||i===4){
+        const side=i-3,leg=side?gait.right:gait.left;
+        rz=rig.shoulders[side];rx=(side?-1:1)*leg.splay;
+      }else if(i>=5){rz=rig.hips[i-5];rx=0;}
+      b.rotation.set(rx,ry,rz);
+      const squash=i<3?gait.squash*(1-blend):0;
+      b.scale.set(1-.5*squash,1+squash,1-.5*squash);
       const joint=rag?.[joints[i]]||(i===5||i===6?rag?.hips:null);
       if(joint&&blend){tmp.fromArray(joint);b.position.lerp(tmp,blend);b.quaternion.slerp(identity,blend);}
     }
     if(limb.visible){
       for(const side of [0,1]){
-        const sign=side?1:-1,name=side?'right':'left',swing=st*sign,arm=arms[side],leg=legs[side];
-        p.copy(bones[3+side].position);q.set(-swing*.15,p.y-.20,p.z+sign*.035);r.set(-swing*.26,q.y-.17,q.z+sign*.018);
-        if(side&&e.emote){q.y=p.y+.10;r.y=p.y+.34;r.z+=.07*Math.sin(t*10);}else if(side&&e.fire){r.x+=e.fire*.20;r.y+=e.fire*.11;}
+        const name=side?'right':'left',arm=arms[side],leg=legs[side];
+        p.copy(bones[3+side].position);q.fromArray(rig.arms[side][1]);r.fromArray(rig.arms[side][2]);
         if(blend){if(rag[name+'Elbow'])q.lerp(tmp.fromArray(rag[name+'Elbow']),blend);if(rag[name+'Hand'])r.lerp(tmp.fromArray(rag[name+'Hand']),blend);}
         stick(arm[0],p,q,.068);stick(arm[1],q,r,.055);arm[2].position.copy(r);
-        p.copy(bones[5+side].position);q.set(swing*.12,p.y-.20,p.z);r.set(swing*.22,.07+Math.max(0,-swing)*.09,p.z);
+        p.copy(bones[5+side].position);q.fromArray(rig.legs[side][1]);r.fromArray(rig.legs[side][2]);
         if(blend){if(rag[name+'Knee'])q.lerp(tmp.fromArray(rag[name+'Knee']),blend);if(rag[name+'Foot'])r.lerp(tmp.fromArray(rag[name+'Foot']),blend);}
         stick(leg[0],p,q,.075);stick(leg[1],q,r,.064);leg[2].position.copy(r);leg[2].position.x+=.045;
       }

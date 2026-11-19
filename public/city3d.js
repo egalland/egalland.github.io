@@ -1,3 +1,5 @@
+import {terrainHeight,buildingGround,waterLevel} from './terrain-height.js';
+import {terracePanels} from './street-terraces.js';
 import * as T from './three.js';
 import * as source from './paris-data.js';
 const {buildings,streets,water}=source;
@@ -41,11 +43,16 @@ function triIndex(poly) {
 }
 const defaultUV=[[0,0],[1,0],[1,1],[0,1]];
 class Batch {
-  constructor(){this.buffers=new Map();}
+  constructor(){this.buffers=new Map();this.base=0;this.drape=false;this.foundation=false;}
+  lift(p){
+    const base=this.drape?terrainHeight(p[0],p[2]):this.base;
+    const floor=this.foundation&&p[1]===0?Math.min(base,terrainHeight(p[0],p[2]))-.18:base;
+    return [p[0],p[1]+floor,p[2]];
+  }
   tri(mat,a,b,c,col=white,uv=defaultUV) {
     let buf=this.buffers.get(mat);
     if(!buf){buf={pos:[],colors:[],tex:[]};this.buffers.set(mat,buf);}
-    buf.pos.push(...a,...b,...c);
+    buf.pos.push(...this.lift(a),...this.lift(b),...this.lift(c));
     const k=color(col);buf.colors.push(k.r,k.g,k.b,k.r,k.g,k.b,k.r,k.g,k.b);
     for(let i=0;i<3;i++)buf.tex.push(uv[i][0],uv[i][1]);
   }
@@ -248,6 +255,7 @@ function flatWithHoles(batch,mat,poly,holes,height,col,scale=1){
 function addBuilding(b,building,detail){
   const poly=distinct(building.poly);if(poly.length<3)return;
   const [cx,cz]=mean(poly);
+  b.base=buildingGround(building.poly);b.foundation=true;
   if(specialFootprint(String(building.id),cx,cz))return;
   const id=hash(building.id),h=Math.max(1.9,Math.min(260,Number(building.h)||14));
   const glass=h>48||(cx< -135&&cz< -625&&h>24);
@@ -320,11 +328,17 @@ function addBuilding(b,building,detail){
 }
 function strip(batch,mat,a,d,width,h,col,scale=5,xOffset=0){
   const dx=d[0]-a[0],dz=d[1]-a[1],len=Math.hypot(dx,dz);if(len<.04)return;
+  if(len>18){
+    const steps=Math.ceil(len/18);
+    for(let j=0;j<steps;j++)strip(batch,mat,[a[0]+dx*j/steps,a[1]+dz*j/steps],[a[0]+dx*(j+1)/steps,a[1]+dz*(j+1)/steps],width,h,col,scale,xOffset);
+    return;
+  }
   const nx=-dz/len,nz=dx/len,w=width/2;
   const points=[[a,-w],[a,w],[d,w],[d,-w]].map(([p,off])=>[p[0]+nx*(off+xOffset),p[1]+nz*(off+xOffset)]);
   batch.quad(mat,points,h,col,scale);
 }
 function addRoad(b,seg){
+  b.base=0;b.foundation=false;b.drape=true;
   const {a,d,street:s,i}=seg,dx=d[0]-a[0],dz=d[1]-a[1],len=Math.hypot(dx,dz);
   if(len<.2)return;
   const path=s.kind==='path',w=Number(s.w)||5;
@@ -366,7 +380,7 @@ function makeIndex(){
   for(const street of streets){
     const path=street.path||[];
     for(let i=0;i<path.length-1;i++){
-      const p=path[i],q=path[i+1],parts=Math.max(1,Math.ceil(Math.hypot(p[0]-q[0],p[1]-q[1])/68));
+      const p=path[i],q=path[i+1],parts=Math.max(1,Math.ceil(Math.hypot(p[0]-q[0],p[1]-q[1])/18));
       let a=p;
       for(let j=1;j<=parts;j++){
         const t=j/parts,d=[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t];
@@ -378,7 +392,9 @@ function makeIndex(){
 }
 function decoration(kind,variant) {
   const b=new Batch(),metal='#3c4e54',edge='#596967',brass='#ca9972';
-  if(kind==='tree'){
+  if(terracePanels[kind]){
+    for(const panel of terracePanels[kind])b.face('felt',...panel.points,panel.color);
+  }else if(kind==='tree'){
     const colors=[['#7e9f80','#94ad87','#aec39a'],['#94966d','#b1a676','#c5b88b'],['#698d80','#81a99a','#acc1a3']][variant%3];
     b.tube([0,.03,0],[.14,3.73,0],.24,.14,'#866957',8);
     b.tube([.09,2.25,0],[-.83,3.9,.15],.13,.07,'#806659',6);
@@ -428,11 +444,14 @@ function neuillyDeck(b){
   strip(b,'road',a,d,30,.056,white,6);
   strip(b,'pave',a,d,3.3,.082,'#a6a2a7',3.1);
   for(const sign of [-1,1]){
-    const v=offset(a,sign*20.4),w=offset(d,sign*20.4);
-    b.wall('felt',v,w,-1.7,.35,'#a8a0a6',len/3,1);
+    const v=offset(a,sign*20.4),parts=Math.ceil(len/12);
     const v3=(p,h)=>[p[0],h,p[1]];
-    b.tube(v3(v,.94),v3(w,.94),.09,.09,'#829295',6,'plain');
-    b.tube(v3(v,.63),v3(w,.63),.047,.047,'#9da6a5',5,'plain');
+    for(let j=0;j<parts;j++){
+      const from=[v[0]+dx*j/parts,v[1]+dz*j/parts],to=[v[0]+dx*(j+1)/parts,v[1]+dz*(j+1)/parts];
+      b.wall('felt',from,to,-1.7,.35,'#a8a0a6',len/(parts*3),1);
+      b.tube(v3(from,.94),v3(to,.94),.09,.09,'#829295',6,'plain');
+      b.tube(v3(from,.63),v3(to,.63),.047,.047,'#9da6a5',5,'plain');
+    }
     for(let i=0;i<len;i+=4.8){const f=i/len,x=v[0]+dx*f,z=v[1]+dz*f;
       b.tube([x,.28,z],[x,.98,z],.045,.045,'#728389',5,'plain');}
     for(const offs of [.71,1.31])strip(b,'plain',a,d,.10,.088,'#b7aa9d',3,sign*offs);
@@ -440,9 +459,9 @@ function neuillyDeck(b){
 }
 function makePlazas(b){
   // The Étoile's central forecourt and radial boulevards have separate pavements.
-  ring(b,arc.x,arc.z,.01,118,.026,white,'road',112);
+  for(let r=0;r<118;r+=10)ring(b,arc.x,arc.z,Math.max(.01,r),Math.min(118,r+10),.026,white,'road',112);
   ring(b,arc.x,arc.z,33.4,35.8,.082,'#e8d6c0','pave');
-  ring(b,arc.x,arc.z,.01,33.5,.082,'#e0c8b9','pave');
+  for(let r=0;r<33.5;r+=7)ring(b,arc.x,arc.z,Math.max(.01,r),Math.min(33.5,r+7),.082,'#e0c8b9','pave');
   for(const r of [36.0,115.5])ring(b,arc.x,arc.z,r,r+.18,.086,'#d7c9b9');
   for(const r of [55,76,94]){
     for(let i=0;i<96;i++){
@@ -453,7 +472,7 @@ function makePlazas(b){
   }
   // Central parvis paving is continuous below the two sides of the Grande Arche.
   const x=grande.x,z=grande.z,yaw=grande.yaw,pt=(a,d)=>[x+Math.cos(yaw)*a+Math.sin(yaw)*d,z-Math.sin(yaw)*a+Math.cos(yaw)*d];
-  b.quad('pave',[pt(-51,-57),pt(51,-57),pt(51,172),pt(-51,172)],.046,'#e1d8cd',5.15);
+  for(let a=-51;a<51;a+=12)for(let d=-57;d<172;d+=12){const x1=Math.min(a+12,51),z1=Math.min(d+12,172);b.quad('pave',[pt(a,d),pt(x1,d),pt(x1,z1),pt(a,z1)],.046,'#e1d8cd',5.15);}
 }
 function inRing(x,z,points){
   let yes=false;
@@ -462,14 +481,41 @@ function inRing(x,z,points){
     if((a[1]>z)!==(c[1]>z)&&x<(c[0]-a[0])*(z-a[1])/(c[1]-a[1])+a[0])yes=!yes;
   } return yes;
 }
+function surfaceAreas(features){
+  return features.filter(a=>a.poly?.length>2).map(a=>{
+    let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
+    for(const [x,z] of a.poly){minX=Math.min(x,minX);maxX=Math.max(x,maxX);minZ=Math.min(z,minZ);maxZ=Math.max(z,maxZ);}
+    return {a,minX,maxX,minZ,maxZ,level:features===water?waterLevel(a):0};
+  });
+}
+function containsArea(item,x,z){
+  return x>=item.minX&&x<=item.maxX&&z>=item.minZ&&z<=item.maxZ&&inRing(x,z,item.a.poly)&&!(item.a.holes||[]).some(h=>inRing(x,z,h));
+}
+function groundTile(batch,x0,z0,n,lakes,parks){
+  const near=item=>item.maxX>=x0&&item.minX<=x0+chunkSize&&item.maxZ>=z0&&item.minZ<=z0+chunkSize;
+  const wet=lakes.filter(near),green=parks.filter(near),step=chunkSize/n,points=[];
+  for(let j=0;j<=n;j++)for(let i=0;i<=n;i++){
+    const x=x0+i*step,z=z0+j*step,lake=wet.find(q=>containsArea(q,x,z));
+    points.push([x,lake?lake.level-.8:terrainHeight(x,z)-.07,z]);
+  }
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){
+    const k=j*(n+1)+i,a=points[k],b=points[k+n+1],c=points[k+n+2],d=points[k+1];
+    const park=green.some(q=>containsArea(q,a[0]+step*.5,a[2]+step*.5)),tex=park?4.7:5.3;
+    const uv=[a,b,c,d].map(p=>[p[0]/tex,p[2]/tex]);
+    batch.face(park?'felt':'pave',a,b,c,d,park?'#aebe91':'#e7d6c9',uv);
+  }
+}
 function makeGround(b) {
   b.quad('pave',[[-13000,-12000],[-13000,13000],[17000,13000],[17000,-12000]],-.12,'#e7d6c9',5.3);
-  for(const a of source.green||[])flatWithHoles(b,'felt',a.poly,a.holes,-.017,'#aebe91',4.7);
+
   for(const w of water){
     const poly=distinct(w.poly);if(poly.length<3)continue;
+    b.base=waterLevel(w);
     flatWithHoles(b,'water',poly,w.holes,.004,'#769ca6');
     for(let i=0;i<poly.length;i++){
       const a=poly[i],d=poly[(i+1)%poly.length];
+      const bank=Math.max(0,Math.min(5,terrainHeight(a[0],a[1])-b.base));
+      b.wall('felt',a,d,-.12,bank,'#b69e92',Math.max(1,Math.hypot(d[0]-a[0],d[1]-a[1])/4),1);
       strip(b,'plain',a,d,1.05,.008,'#99abb0',2.5);
     }
     const px=poly.map(p=>p[0]),pz=poly.map(p=>p[1]),x0=Math.min(...px),z0=Math.min(...pz),x1=Math.max(...px),z1=Math.max(...pz);
@@ -479,7 +525,32 @@ function makeGround(b) {
       b.quad('plain',[[x,z],[x+l,z+.8],[x+l+.4,z+.95],[x+.5,z+.29]],.012,seed%3?'#a9c2c2':'#688f9f');
     }
   }
-  makePlazas(b);neuillyDeck(b);
+  b.base=0;b.drape=true;makePlazas(b);neuillyDeck(b);
+}
+// A reusable outer mesh carries the skyline beyond the high-detail street chunks.
+function distantGround(root){
+  const spacing=80,n=44,geometry=new T.PlaneGeometry(n*spacing,n*spacing,n,n);
+  geometry.rotateX(-Math.PI/2);
+  const positions=geometry.getAttribute('position'),indices=geometry.getIndex(),outer=[];
+  for(let i=0;i<indices.count;i+=3){
+    const a=indices.getX(i),b=indices.getX(i+1),c=indices.getX(i+2);
+    if(Math.hypot(positions.getX(a),positions.getZ(a))>360)outer.push(a,b,c);
+  }
+  geometry.setIndex(outer);
+  const material=new T.MeshLambertMaterial({color:'#c4b1a1'}),mesh=new T.Mesh(geometry,material);
+  root.add(mesh);let lastX=Infinity,lastZ=Infinity;
+  return {update(x,z){
+    const cx=spacing*Math.round(x/spacing),cz=spacing*Math.round(z/spacing);
+    if(cx===lastX&&cz===lastZ)return;
+    lastX=cx;lastZ=cz;
+    for(let i=0;i<positions.count;i++){
+      const px=cx+positions.getX(i),pz=cz+positions.getZ(i);
+      // Stay beneath the fine mesh and the shoreline where the two resolutions overlap.
+      const h=Math.min(terrainHeight(px,pz),terrainHeight(px-30,pz),terrainHeight(px+30,pz),terrainHeight(px,pz-30),terrainHeight(px,pz+30))-8;
+      positions.setY(i,h);
+    }
+    positions.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();mesh.position.set(cx,0,cz);
+  },dispose(){material.dispose();}};
 }
 function pickProps(props,pos,visibleLimit){
   const found=[];
@@ -496,8 +567,9 @@ function disposeGroup(group){
 export function createCity3D(scene){
   const materials=cityMaterials(), index=makeIndex(),root=new T.Group();root.name='Maille City · Paris';
   const terrain=new Batch();makeGround(terrain);root.add(terrain.mesh(materials));
+  const distant=distantGround(root);
   function landmark(batch,site,yaw=site.yaw||0,scale=1){
-    const g=batch.mesh(materials);g.rotation.y=yaw;g.position.set(site.x,0,site.z);g.scale.setScalar(scale);root.add(g);
+    const g=batch.mesh(materials);g.rotation.y=yaw;g.position.set(site.x,terrainHeight(site.x,site.z),site.z);g.scale.setScalar(scale);root.add(g);
   }
   landmark(historicArch(),arc);landmark(futureArch(),grande);
   for(const site of parisLandmarks)landmark(famousLandmark(site.key,Batch),site);
@@ -516,9 +588,12 @@ export function createCity3D(scene){
   let lastX=Infinity,lastZ=Infinity,targets=[],tick=0,propX=Infinity,propZ=Infinity,destroyCount=-1,stamp=0,lastPropCount=-1;
   const groundShadows=new T.InstancedMesh(new T.CircleGeometry(1,12),new T.MeshBasicMaterial({color:0x695666,transparent:true,opacity:.19,depthWrite:false,side:T.DoubleSide}),460);
   groundShadows.count=0;groundShadows.frustumCulled=false;groundShadows.renderOrder=1;root.add(groundShadows);
+  const lakes=surfaceAreas(water),parks=surfaceAreas(source.green||[]);
   function buildChunk(target){
-    const geo=index.groups.get(target.key);if(!geo)return;
+    const geo=index.groups.get(target.key)||{buildings:[],segments:[]};
     const b=new Batch();
+    const [ix,iz]=target.key.split(',').map(Number);
+    groundTile(b,ix*chunkSize,iz*chunkSize,target.detail?16:8,lakes,parks);
     for(const building of geo.buildings)addBuilding(b,building,target.detail);
     for(const seg of geo.segments)addRoad(b,seg);
     const object=b.mesh(materials);root.add(object);
@@ -529,7 +604,6 @@ export function createCity3D(scene){
     const sx=Math.floor(pos.x/chunkSize),sz=Math.floor(pos.y/chunkSize),keys=new Set(),next=[];
     for(let i=-4;i<=4;i++)for(let j=-4;j<=4;j++){
       const cx=sx+i,cz=sz+j,k=cx+','+cz;
-      if(!index.groups.has(k))continue;
       const dd=Math.hypot((cx+.5)*chunkSize-pos.x,(cz+.5)*chunkSize-pos.y);
       if(dd>640)continue;
       const detail=dd<245,target={key:k,detail,dist:dd};keys.add(k);next.push(target);
@@ -555,7 +629,7 @@ export function createCity3D(scene){
       if(!propGroups.has(k))propGroups.set(k,{items:[],type,variant});
       propGroups.get(k).items.push(prop);
       const tree=type==='tree',lamp=type==='lamp',radius=tree?1.38:lamp?.42:.45;
-      helper.position.set(prop.x+radius*.55,.092,prop.y+radius*.13);helper.rotation.set(-Math.PI/2,0,-.30);
+      helper.position.set(prop.x+radius*.55,terrainHeight(prop.x+radius*.55,prop.y+radius*.13)+.105,prop.y+radius*.13);helper.rotation.set(-Math.PI/2,0,-.30);
       helper.scale.set(radius*(tree?1.8:1.5),radius*.76,1);helper.updateMatrix();
       if(shadowIndex<460)groundShadows.setMatrixAt(shadowIndex++,helper.matrix);
     }
@@ -565,7 +639,7 @@ export function createCity3D(scene){
       const meshes=propSet(type,variant);
       items.forEach((p,i)=>{
         const h=hash(p.id),scale=type==='tree'?.87+(h%41)/100:1;
-        helper.position.set(p.x,0,p.y);helper.rotation.set(0,p.angle===undefined?(h%628)/100:-p.angle,0);helper.scale.setScalar(scale);helper.updateMatrix();
+        helper.position.set(p.x,terrainHeight(p.x,p.y),p.y);helper.rotation.set(0,p.angle===undefined?(h%628)/100:-p.angle,0);helper.scale.setScalar(scale);helper.updateMatrix();
         for(const m of meshes)m.setMatrixAt(i,helper.matrix);
       });
       for(const m of meshes){m.count=items.length;m.instanceMatrix.needsUpdate=true;}
@@ -573,7 +647,7 @@ export function createCity3D(scene){
   }
   const update=(pos,time,worldState={})=>{
     if(!pos||!Number.isFinite(pos.x+pos.y))return;
-    const initial=lastX===Infinity;
+    const initial=lastX===Infinity;distant.update(pos.x,pos.y);
     if(initial||Math.hypot(lastX-pos.x,lastZ-pos.y)>38)setTargets(pos);
     const start=performance.now();let count=0;
     while(targets.length&&count<(initial?2:3)&&(count===0||performance.now()-start<(initial?26:4))){buildChunk(targets.shift());count++;}
@@ -583,7 +657,7 @@ export function createCity3D(scene){
     }
   };
   return {update,dispose(){
-    disposeGroup(root);groundShadows.material.dispose();
+    disposeGroup(root);distant.dispose();groundShadows.material.dispose();
     for(const m of Object.values(materials)){m.map?.dispose();m.dispose();}
   }};
 }

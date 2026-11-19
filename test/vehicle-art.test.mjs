@@ -52,7 +52,12 @@ test('the same falling body drives separate forearms, knees and head, then retur
   figure.update({speed:1.5},.016,3);
   figure.group.updateMatrixWorld(true);
   assert.ok(center(bone('head'),[0,.124,0]).y>1.24);
-  assert.ok(bone('kneeL').quaternion.angleTo(bone('kneeR').quaternion)<.001);
+  const reference=createPuppet('fox','#668877',4);
+  reference.update({speed:1.5},.016,3);
+  for(const name of ['kneeL','kneeR','elbowL','elbowR']){
+    assert.ok(bone(name).quaternion.angleTo(reference.group.getObjectByName(name).quaternion)<.001);
+  }
+  reference.dispose();
   figure.dispose();
 });
 

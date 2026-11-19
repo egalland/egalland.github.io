@@ -1,6 +1,7 @@
 import {decodeDropId,isEligibleDropId} from './drop-id.js';
 
 // Each tab is a separate player. State snapshots may coalesce; actions have stable IDs and are retried.
+const actionPoses=new Set(['jump','fall','vault','climb','land']);
 const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{},pickups:{}});
 const cleanName=s=>[...String(s||'Kikalmo').replace(/[\u0000-\u001f\u007f]/g,' ').trim()].slice(0,24).join('')||'Kikalmo';
 export function createNet(options={}) {
@@ -70,7 +71,10 @@ export function createNet(options={}) {
     if (options.pollMs) return options.pollMs;
     if (pending.length) return 85;
     if (typeof document!=='undefined' && document.hidden) return 3200;
-    return roster.length>1 ? 300 : 1100;
+    if(roster.length<=1)return 1100;
+    const nearbyAction=roster.some(p=>p.id!==id&&Math.hypot(p.x-state.x,p.y-state.y)<150&&
+      (actionPoses.has(state.motion)||actionPoses.has(p.motion)));
+    return nearbyAction?140:300;
   }
   async function tick() {
     if (!started || busy) return false;
@@ -177,7 +181,12 @@ export function createNet(options={}) {
     peers:()=>roster.filter(p=>p.id!==id && Number.isFinite(p.x) && Number.isFinite(p.y)),
     world:()=>context,
     serverTime:()=>Date.now()+offset,
-    publish(next){state=next||{};},
+    publish(next){
+      const previous=state.motion;
+      state=next||{};
+      if(started&&joined&&!busy&&status==='online'&&previous!==state.motion&&
+          (actionPoses.has(previous)||actionPoses.has(state.motion))&&!options.pollMs)schedule(24);
+    },
     claimPickup,
     emit:send,
     onEvent(fn){listeners.add(fn);return ()=>listeners.delete(fn);},

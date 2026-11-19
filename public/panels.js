@@ -1,5 +1,6 @@
 import {drawItemIcon, drawAvatar} from './sprites.js';
 import {metadata} from './paris-data.js';
+import {terrainHeight} from './terrain-height.js';
 import {coreDestinations, districtAt, streetAt} from './paris-world.js';
 import {weaponDrops} from './weapon-drops.js';
 import {wantedRules, wantedThresholds, wantedTuning} from './wanted.js';
@@ -18,7 +19,8 @@ const emotes = [
 const shortcuts = [
   ['Se déplacer', ['ZQSD', 'WASD', '↑↓←→']],
   ['Courir', ['Maj']],
-  ['Tirer', ['Clic gauche', 'Espace']],
+  ['Sauter, franchir ou grimper', ['Espace']],
+  ['Tirer', ['Clic gauche', 'F']],
   ['Tourner la caméra', ['Glisser clic droit']],
   ['Recentrer la caméra', ['C']],
   ['Recharger', ['R']],
@@ -278,7 +280,9 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     canvas.setAttribute('aria-label','Plan local avec les joueurs, les véhicules et les armes à trouver');
     map.append(canvas);detail.append(map);
     const legends=node('div','mc-map-legends');
-    [['mc-me','Vous'],['mc-other','Autres joueurs'],['mc-car','Véhicules'],['mc-drop','Arme à trouver']].forEach(([c,value])=>{
+    const position=game.getPosition?.();
+    const you=position&&Number.isFinite(position.x+position.y)?'Vous · sol à ≈ '+Math.round(terrainHeight(position.x,position.y))+' m':'Vous';
+    [['mc-me',you],['mc-other','Autres joueurs'],['mc-car','Véhicules'],['mc-drop','Arme à trouver']].forEach(([c,value])=>{
       const line=node('span','mc-map-legend');line.append(node('i',c),node('span','',value));legends.append(line);
     });
     const travel=node('div','mc-travel');
@@ -298,7 +302,7 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     row.append(target,go);travel.append(label,row);
     const credit=node('p','mc-map-credit');
     const source=node('a','','IGN · BD TOPO®');source.href='https://cartes.gouv.fr/rechercher-une-donnee/dataset/IGNF_BD-TOPO';source.target='_blank';source.rel='noopener';
-    credit.append(source,document.createTextNode(' · Licence Ouverte 2.0. Emprises et voirie réelles, façades réinterprétées en laine.'));
+    credit.append(source,document.createTextNode(' · Licence Ouverte 2.0. Emprises et voirie réelles. Relief interpolé entre les altitudes routières. Façades en laine.'));
     detail.append(legends,travel,credit);pad.append(detail,regional);sheet.append(pad);
     let built=false,region=false;
     function switchMap(mode){
@@ -328,6 +332,8 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
   function helpPanel() {
     const sheet=frame('help','Guide de jeu','Comment jouer');
     const body=node('div','mc-body mc-guide');
+    const movement=node('section','mc-guide-section');
+    movement.append(node('h3','','Saut et escalade'),node('p','','Appuie sur Espace ou touche Sauter. Face à un obstacle à portée, la commande devient Franchir pour passer par-dessus ou Grimper pour monter sur un rebord.'));
     const kit=node('section','mc-guide-section');
     kit.append(node('h3','','Trouver une arme'),node('p','','Tu commences avec les poings et le pistolet. Dans la roue, sélectionne un cadenas pour localiser l’arme. Approche-toi à pied du dépôt pour la ramasser.'));
     kit.append(node('p','mc-guide-aside','Après un ramassage, le dépôt redevient disponible pour tous au bout de 60 s.'));
@@ -355,11 +361,11 @@ export function createPanels({game,net,editLayout,openAvatar,getState,selectWeap
     const controls=node('details','mc-guide-details');
     controls.append(node('summary','','Commandes clavier et souris'),keyRows());
     const mobile=node('section','mc-guide-section');
-    mobile.append(node('h3','','Commandes tactiles'),node('p','','Pousse le joystick à fond pour courir. Glisse sur le décor pour tourner la caméra. Au volant, pousse vers le haut pour accélérer ou vers le bas pour freiner puis reculer.'));
+    mobile.append(node('h3','','Commandes tactiles'),node('p','','À pied, déplace légèrement le joystick pour marcher, puis pousse-le vers le bord pour courir. Glisse sur le décor pour tourner la caméra. Au volant, pousse vers le haut pour accélérer ou vers le bas pour freiner puis reculer.'));
     mobile.append(node('p','','Maintiens le bouton de tir pour accrocher une cible devant toi. Un réticule apparaît dessus. Glisse le pouce sur ce bouton pour ajuster la visée, puis relâche pour arrêter de tirer.'));
     const health=node('section','mc-guide-section');
     health.append(node('h3','','Vie et soins'),node('p','','Utilise une trousse avec H ou le bouton de soins. Un ambulancier peut te soigner et remplir ta trousse. À zéro point de vie, un compte à rebours indique quand tu reviens dans le jeu.'));
-    body.append(kit,health,alert,mobile,controls);sheet.append(body);
+    body.append(movement,kit,health,alert,mobile,controls);sheet.append(body);
   }
   function fieldLabel(text, id) {const l=node('label','mc-field-label',text);l.htmlFor=id;return l;}
   function settingsPanel() {

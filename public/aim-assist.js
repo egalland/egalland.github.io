@@ -27,7 +27,7 @@ const radians=Math.PI/180;
 const cone=11*radians;
 export function targetHeight(target){
   if(target.hitKind==='prop')return Math.max(.32,Math.min(1.1,(target.h||1.5)*.67));
-  return target.isCar?1.05:1.12;
+  return target.isCar?1.05:1.12+(Number.isFinite(target.lift)?target.lift:0);
 }
 
 export function chooseTouchShot({position,yaw,muzzle,range,targets,wanted,previousId,project,trace,direct}){

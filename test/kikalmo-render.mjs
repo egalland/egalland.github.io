@@ -70,6 +70,13 @@ for(const appearance of testLooks){
     assert.ok(d.some((x,i)=>i%4===3&&x>230));views.add(digest(d));
   }
   assert.equal(views.size,3,'front, back and side of '+JSON.stringify(appearance));
+  function frame(motion,motionPhase){
+    const c=native.createCanvas(180,200);
+    drawKikalmoPuppet(c.getContext('2d'),{appearance,id:'pose',motion,motionPhase,walk:1,speed:0},90,195,174,.1,.9);
+    return square(c);
+  }
+  const idle=frame('idle',0),reach=frame('climb',.25),pull=frame('climb',.66);
+  assert.ok(changed(idle,reach)>190&&changed(reach,pull)>190,'linked silhouette reaches and pulls '+JSON.stringify(appearance));
   assert.ok(art.tag.width>30);
 }
 assert.equal(volumes.size,testLooks.length);

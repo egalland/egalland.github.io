@@ -1,4 +1,6 @@
+import {motionSeed,sampleLocomotion} from './locomotion-pose.js';
 import * as THREE from './three.js';
+import { createStreetVehicle, isStreetVehicle } from './street-vehicles.js';
 import { vehicleSpec } from './vehicle-types.js';
 import { createRagdollRig } from './ragdoll-render.js';
 
@@ -6,7 +8,7 @@ import { createRagdollRig } from './ragdoll-render.js';
 const geo={
   ball:new THREE.SphereGeometry(1,12,8), detailBall:new THREE.SphereGeometry(1,18,12),
   littleBall:new THREE.SphereGeometry(1,8,6), box:new THREE.BoxGeometry(1,1,1),
-  cylinder:new THREE.CylinderGeometry(1,1,1,16),
+  cylinder:new THREE.CylinderGeometry(1,1,1,16),cone:new THREE.ConeGeometry(1,1,12),
 };
 const TAU=Math.PI*2;
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
@@ -326,47 +328,45 @@ export function createPuppet(type='fox',color,seed=0){
   const template=peopleTemplates.get(key),near=template.near.clone(true),far=template.far.clone(true);
   const group=new THREE.Group(),lod=new THREE.LOD();group.add(lod);lod.addLevel(near,0);lod.addLevel(far,type==='fox'?48:29,.12);
   const bone={};near.traverse(o=>{if(o.name)bone[o.name]=o;});
-  let phase=(pick%283)*.007,phaseIdle=(pick%141)*.039,smooth=0,previous=0,tailLag=0,em=0,impact=0,shot=0;
+  let styleSeed=motionSeed(seed),lastId;
+  let phaseIdle=(pick%141)*.039,tailLag=0,em=0,impact=0,shot=0;
   const hero=type==='fox',ragRig=createRagdollRig(bone),farDistance=lod.levels[1].distance;
   function update(pose={},dt=1/60,time=0){
     ragRig.restore();
-    lod.levels[1].distance=pose.ragdoll?Infinity:farDistance;
-    if(pose.ragdoll){near.visible=true;far.visible=false;}
-    dt=clamp(Number(dt)||0,0,.1);
-    const speed=Math.abs(Number(pose.speed)||0);
-    const target=pose.stunned?0:clamp(speed>0?speed/2.2:(pose.move||pose.moving)?1:0,0,1.6);
-    const f=1-Math.exp(-dt*12);smooth+=(target-smooth)*f;
-    const run=pose.sprinting||speed>3.3?1:0;
-    phase+=dt*(2.65+smooth*(5.6+run*1.9));phaseIdle+=dt;
-    const a=Math.sin(phase),b=Math.cos(phase*2),rel=clamp(smooth,0,1);
-    const turn=clamp(Number(pose.turn)||0,-1,1);
-    const acceleration=clamp((smooth-previous)/Math.max(.01,dt),-4,4);previous=smooth;
-    const idleBreath=Math.sin(phaseIdle*2.55);
+    if(pose.id!==lastId){lastId=pose.id;styleSeed=motionSeed(lastId??seed);}
+    const motion=sampleLocomotion(pose,time,styleSeed);
+    const articulated=pose.ragdoll||motion.effort>.02;
+    lod.levels[1].distance=articulated?Infinity:farDistance;
+    if(articulated){near.visible=true;far.visible=false;}
+    dt=clamp(Number(dt)||0,0,.1);phaseIdle+=dt;
+    const {phase,step:a,pace:rel,turn,breath:idleBreath}=motion,b=Math.cos(phase*2);
     const waveSignal=pose.emote?1:0;
     em+=(waveSignal-em)*(1-Math.exp(-dt*14));
     impact=Math.max(clamp(Number(pose.impact)||0,0,1),impact*Math.exp(-dt*8));
     shot=Math.max(clamp(Number(pose.fire)||0,0,1),shot*Math.exp(-dt*14));
-    far.position.y=(1-b)*.024*rel;
+    far.position.y=motion.bob;
+    far.rotation.set(motion.roll*.55,0,-motion.lean*.50);
     if(!near.visible)return;
-    const bounce=(1-b)*.024*rel;
-    bone.core.position.y=.69+bounce+.007*(1-rel)*idleBreath-.039*impact;
-    bone.core.rotation.z=pose.stunned&&!pose.ragdoll?-1.26:-(.034+.045*run)*rel-.009*acceleration+.12*impact;
-    bone.core.rotation.x=turn*.065+a*.027*rel;
-    const squash=.023*b*rel+.008*(1-rel)*idleBreath-.1*impact;
+    bone.core.position.y=.69+motion.bob-.039*impact;
+    bone.core.rotation.z=pose.stunned&&!pose.ragdoll?-1.26:-motion.lean+.12*impact;
+    bone.core.rotation.x=motion.roll;
+    const squash=motion.squash-.10*impact;
     bone.torso.scale.set(1-squash*.52,1+squash,1-squash*.50);
-    bone.head.position.y=.49+.012*Math.cos(phase*2-.6)*rel+.008*(1-rel)*idleBreath;
-    bone.head.rotation.z=.022*b*rel+.057*impact+.009*(1-rel)*Math.sin(phaseIdle*1.8);
-    bone.head.rotation.x=-a*.035*rel+.025*(1-rel)*Math.sin(phaseIdle*1.6);
+    bone.head.position.y=.49+.30*squash+.009*Math.cos(phase*2-.6)*rel;
+    bone.head.rotation.z=motion.lean*.36+.022*b*rel+.057*impact+.009*(1-rel)*idleBreath;
+    bone.head.rotation.x=-motion.roll*.55;
     bone.head.rotation.y=-turn*.145+.14*em*Math.sin(phaseIdle*7);
     const blinkCycle=(phaseIdle+pick*.113)%3.63;
     bone.eyes.scale.y=1-.91*Math.max(0,1-Math.abs(blinkCycle-.10)/.079);
     for(const s of [-1,1]){
-      const k=s<0?'L':'R',swing=s*a,leg=bone['leg'+k],arm=bone['arm'+k],ear=bone['ear'+k];
-      leg.rotation.z=swing*(.56+.28*run)*rel;
-      leg.rotation.x=-s*.036;bendLeg(leg,swing,rel);
-      arm.rotation.z=-swing*(.49+.26*run)*rel-.09+.012*idleBreath;
-      arm.rotation.x=-s*(.055+Math.abs(swing)*.035*rel);
-      if(s>0){arm.rotation.z+=1.11*shot+em*(2.4+.20*Math.sin(phaseIdle*13));arm.rotation.x+=em*(.36+.16*Math.sin(phaseIdle*14));}
+      const k=s<0?'L':'R',leg=bone['leg'+k],arm=bone['arm'+k],ear=bone['ear'+k];
+      const limb=s<0?motion.left:motion.right;
+      leg.rotation.z=limb.thigh+motion.lean*.52;
+      leg.rotation.x=-s*.036;bone['knee'+k].rotation.z=limb.shin;
+      arm.rotation.z=limb.arm+motion.lean*.48;
+      arm.rotation.x=-s*limb.splay;
+      bone['elbow'+k].rotation.z=limb.elbow;
+      if(s>0){const free=1-motion.effort;arm.rotation.z+=free*(1.11*shot+em*(2.4+.20*Math.sin(phaseIdle*13)));arm.rotation.x+=free*em*(.36+.16*Math.sin(phaseIdle*14));}
       ear.rotation.x=s*(.085+.029*Math.sin(phase*2-.5)*rel)+turn*.07;
       ear.rotation.z=-.025*(1-rel)*idleBreath+.069*Math.sin(phase*2-.38)*rel+.13*impact;
     }
@@ -377,10 +377,6 @@ export function createPuppet(type='fox',color,seed=0){
       bone.tail.rotation.z=(hero?.06:.02)+.075*Math.sin(phase*2-.9)*rel+.048*idleBreath-em*.17;
     }
     if(pose.ragdoll)ragRig.apply(pose.ragdoll);
-  }
-  function bendLeg(leg,swing,amount){
-    const lift=Math.max(0,swing)*amount;
-    leg.scale.y=1-.09*lift;leg.position.y=-.24+.025*lift;
   }
   return {group,update,dispose(){group.removeFromParent();}};
 }
@@ -673,6 +669,7 @@ function carServiceDetails(g,type,isVan){
 }
 export function createCar(type='car',color,seed=0){
   type=String(type?.type??type).toLowerCase();
+  if(isStreetVehicle(type))return createStreetVehicle(THREE,{geo,addPart,batchGroup},type,color,seed);
   if(type==='fire'||type==='firefighter')type='firetruck';
   if(type==='medic')type='ambulance';
   if(type==='cop')type='police';

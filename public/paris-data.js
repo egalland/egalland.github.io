@@ -1,3 +1,4 @@
+import {selectSectorTerrain} from './terrain-height.js';
 // One coordinate system for the embedded historic axis and every on-demand neighbourhood.
 const presets=[
   ['eiffel',2.29232,48.85935],['notre-dame',2.34790,48.85348],['sacre-coeur',2.34318,48.88480]
@@ -31,4 +32,5 @@ async function selectData(){
   return loadSector(lon,lat,name);
 }
 const data=await selectData();
+selectSectorTerrain(data.relief);
 export const {buildings,streets,water,green,metadata}=data;

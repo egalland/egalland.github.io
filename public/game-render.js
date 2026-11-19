@@ -1,3 +1,4 @@
+import {terrainHeight,terrainGradient,walkingPose} from './terrain-height.js';
 import {buildShotEffect,effectDuration} from './weapon-effects.js';
 import { vehicleSpec } from './vehicle-types.js';
 import * as THREE from './three.js';
@@ -80,25 +81,32 @@ export function createView(canvas,spawn,onNotice) {
     if(item && item.kind!==id){scene.remove(item.object.group);item.object.dispose?.();models.delete(key);item=null;}
     if(!item){const seed=hash(String(e.id))%65535;const object=look?createKikalmoModel(e.appearance,seed):(vehicle?createCar:createPuppet)(e.type,e.color,seed);item={kind:id,object};models.set(key,item);scene.add(object.group);}
     item.used=inFrame;const g=item.object.group;
-    g.position.set(e.x,0,e.y);g.rotation.y=-(e.angle||0);g.visible=true;
-    item.object.update(e,dt,t);
+    const angle=e.angle||0;
+    g.position.set(e.x,terrainHeight(e.x,e.y)+(e.lift||0),e.y);
+    g.rotation.set(0,-angle,0,'YXZ');
+    if(vehicle){
+      const slope=terrainGradient(e.x,e.y),c=Math.cos(angle),s=Math.sin(angle);
+      g.rotation.z=Math.atan(slope.x*c+slope.y*s);g.rotation.x=-Math.atan(-slope.x*s+slope.y*c);
+    }
+    g.visible=true;
+    item.object.update(vehicle?e:walkingPose(e),dt,t);
     return item;
   }
   function badge(e,label,bubble){
     let el=names.get(e.id);
     if(!el){el=document.createElement('span');el.style.cssText='position:absolute;transform:translate(-50%,-100%);font:650 11px system-ui;color:#fff3e5;background:#251f30df;border:1px solid #a68ba48a;border-radius:5px;padding:2px 6px;white-space:nowrap;text-shadow:0 1px #302735;';labels.append(el);names.set(e.id,el);}
-    el._used=inFrame;projection.set(e.x,e.isCar?vehicleSpec(e.type).height+.43:2.14,e.y);projection.project(camera);
+    el._used=inFrame;projection.set(e.x,terrainHeight(e.x,e.y)+(e.lift||0)+(e.isCar?vehicleSpec(e.type).height+.43:2.14),e.y);projection.project(camera);
     const visible=projection.z>0&&projection.z<1&&Math.abs(projection.x)<1.1&&Math.abs(projection.y)<1;
     el.hidden=!visible;if(!visible)return;
     el.style.left=(50+50*projection.x)+'%';el.style.top=(50-50*projection.y)+'%';
     el.style.fontSize=bubble?'20px':'11px';if(el.textContent!==label)el.textContent=label;
   }
-  function effect(kind,x,y,angle=0,len=0,colors=[]) {
+  function effect(kind,x,y,angle=0,len=0,colors=[],lift=0) {
     if(!active || effects.length>42)return;
     if(kind!=='burst'){
       const duration=effectDuration(kind);
       for(const stroke of buildShotEffect(kind,x,y,angle,len)){
-        const points=stroke.points.map(p=>new THREE.Vector3(p.x,p.z,p.y));
+        const points=stroke.points.map(p=>new THREE.Vector3(p.x,terrainHeight(x,y)+lift+p.z,p.y));
         const geo=new THREE.BufferGeometry().setFromPoints(points);
         const mat=new THREE.LineBasicMaterial({color:stroke.color,transparent:true,depthWrite:false});
         const mesh=new THREE.Line(geo,mat);
@@ -109,7 +117,7 @@ export function createView(canvas,spawn,onNotice) {
     const palette=colors.length?colors:['#e69ea7','#ffdc9f','#8fcabf','#d6a787'];
     for(let i=0;i<7;i++){
       const m=new THREE.Mesh(new THREE.IcosahedronGeometry(.09+Math.random()*.07),new THREE.MeshBasicMaterial({color:palette[i%palette.length],transparent:true}));
-      m.position.set(x,.3+Math.random()*.5,y);scene.add(m);
+      m.position.set(x,terrainHeight(x,y)+lift+.3+Math.random()*.5,y);scene.add(m);
       const a=Math.random()*Math.PI*2,v=1.3+Math.random()*2;
       effects.push({mesh:m,life:.65,max:.65,vx:Math.cos(a)*v,vy:2+Math.random()*2.5,vz:Math.sin(a)*v});
     }
@@ -121,17 +129,19 @@ export function createView(canvas,spawn,onNotice) {
     // Tighten the boom immediately at walls, extend it gently after clearing a corner.
     const model=car?vehicleSpec(car.type):null;
     const follow=car?8.15+Math.max(0,model.halfLength-2)*1.24:5.25;
-    const focusY=car?Math.max(1.35,model.height*.77):1.17,lift=car?Math.max(2.92,model.height+1.05):2.18;
+    const feet=car?0:p.lift||0;
+    const focusY=feet+(car?Math.max(1.35,model.height*.77):1.17),lift=feet+(car?Math.max(2.92,model.height+1.05):2.18);
     const snap=state.snap || Math.hypot(camX-p.x,camY-p.y)>25 || inFrame===1;
     const f=snap?1:blend(car?11:19,dt);
     camX+=(p.x-camX)*f;camY+=(p.y-camY)*f;
     const goal=follow+(car?Math.min(2.25,Math.abs(state.speed)*.065):0),wantedY=lift+pitch*2.8,back=yaw+Math.PI;
+    const ground=terrainHeight(camX,camY),groundBehind=terrainHeight(camX+Math.cos(back)*goal,camY+Math.sin(back)*goal);
     const available=clamp(cameraDistance(camX,camY,focusY,back,goal,wantedY,destroyed),.30,goal);
     cameraArm=snap?available:Math.min(available,cameraArm+(available-cameraArm)*blend(6,dt));
-    const armHeight=focusY+(wantedY-focusY)*cameraArm/goal;
+    const armHeight=ground+focusY+(groundBehind-ground+wantedY-focusY)*cameraArm/goal;
     camera.position.set(camX+Math.cos(back)*cameraArm,armHeight+.12,camY+Math.sin(back)*cameraArm);
     const aimForward=car?6.3:4.15;
-    cameraAim.set(camX+Math.cos(yaw)*aimForward,focusY+pitch*.95,camY+Math.sin(yaw)*aimForward);
+    cameraAim.set(camX+Math.cos(yaw)*aimForward,terrainHeight(camX+Math.cos(yaw)*aimForward,camY+Math.sin(yaw)*aimForward)+focusY+pitch*.95,camY+Math.sin(yaw)*aimForward);
     camera.lookAt(cameraAim);camera.updateMatrixWorld();
     sky.position.copy(camera.position);
     if(time-lastPropTick>.30 || snap){props=nearbyProps(p.x,p.y,320);lastPropTick=time;}
@@ -148,10 +158,13 @@ export function createView(canvas,spawn,onNotice) {
       if(e.isCar)cars++;else npcs++;
       entity(e,dt,time);
       if(index<65){
-        shadowTransform.position.set(e.x,.052,e.y);
-        shadowTransform.rotation.set(0,-(e.angle||0),0);
+        const floor=e.supportHeight||0,angle=e.angle||0,c=Math.cos(angle),s=Math.sin(angle);
+        const slope=floor>.12?{x:0,y:0}:terrainGradient(e.x,e.y);
+        const scale=1/(1+.08*Math.max(0,(e.lift||0)-floor));
+        shadowTransform.position.set(e.x,terrainHeight(e.x,e.y)+floor+.10,e.y);
+        shadowTransform.rotation.set(-Math.atan(-slope.x*s+slope.y*c),-angle,Math.atan(slope.x*c+slope.y*s),'YXZ');
         const footprint=e.isCar?vehicleSpec(e.type):null;
-        shadowTransform.scale.set(footprint?footprint.halfLength*2.1:1.1,1,footprint?footprint.halfWidth*2.2:.74);
+        shadowTransform.scale.set(scale*(footprint?footprint.halfLength*2.1:1.1),1,scale*(footprint?footprint.halfWidth*2.2:.74));
         shadowTransform.updateMatrix();shadows.setMatrixAt(index++,shadowTransform.matrix);
       }
       if(e.bubble || (e.peer && d<48))badge(e,e.bubble||e.name,!!e.bubble);
@@ -165,7 +178,7 @@ export function createView(canvas,spawn,onNotice) {
     for(let i=effects.length-1;i>=0;i--){
       const e=effects[i];e.life-=dt;
       if(e.life<=0){scene.remove(e.mesh);e.mesh.geometry.dispose();e.mesh.material.dispose();effects.splice(i,1);continue;}
-      if(e.vy!==undefined){e.vy-=7*dt;e.mesh.position.x+=e.vx*dt;e.mesh.position.z+=e.vz*dt;e.mesh.position.y=Math.max(.02,e.mesh.position.y+e.vy*dt);e.mesh.rotation.z+=dt*6;}
+      if(e.vy!==undefined){e.vy-=7*dt;e.mesh.position.x+=e.vx*dt;e.mesh.position.z+=e.vz*dt;e.mesh.position.y=Math.max(terrainHeight(e.mesh.position.x,e.mesh.position.z)+.02,e.mesh.position.y+e.vy*dt);e.mesh.rotation.z+=dt*6;}
       e.mesh.material.opacity=Math.min(1,e.life*5);
     }
     renderer.render(scene,camera);
@@ -175,7 +188,7 @@ export function createView(canvas,spawn,onNotice) {
   // World (east, south, elevation) to the last drawn viewport; depth is along the camera axis in metres.
   function projectTarget(x,y,elevation=1){
     if(!active||!inFrame||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(elevation))return null;
-    projection.set(x,elevation,y).applyMatrix4(camera.matrixWorldInverse);
+    projection.set(x,terrainHeight(x,y)+elevation,y).applyMatrix4(camera.matrixWorldInverse);
     const depth=-projection.z;
     if(depth<camera.near||depth>camera.far)return null;
     projection.applyMatrix4(camera.projectionMatrix);
@@ -186,6 +199,7 @@ export function createView(canvas,spawn,onNotice) {
   function aim(x,y,p){
     const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return null;
     ray.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,1-(y-r.top)/r.height*2),camera);
+    floor.constant=-(terrainHeight(p.x,p.y)+(p.lift||0)+.87);
     if(ray.ray.intersectPlane(floor,point)&&point.distanceTo(camera.position)<160)return Math.atan2(point.z-p.y,point.x-p.x);
     return Math.atan2(ray.ray.direction.z,ray.ray.direction.x);
   }

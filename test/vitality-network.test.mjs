@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {localDatabase} from '../scripts/local-db.mjs';
 import {createNet} from '../public/net.js';
 import {handleApi} from '../worker/game-api.js';
+import {authoredWeaponDrops} from '../public/drop-id.js';
 
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(condition,label){
@@ -120,11 +121,35 @@ test('Peers receive bounded player vitality, a public avatar without linking dat
   const origin={x:11,y:12};
   const rays=[{...origin,angle:20,length:800},null,{x:2000,y:12,length:5},{x:'11',y:12},
     ...Array.from({length:12},(_,i)=>({x:12+i,y:13,angle:-20,length:-5,profileId:secrets.profileId}))];
-  assert(a.net.emit('shot',{...origin,kind:'confetti',length:1000,rays,impact:{x:14,y:13,radius:50,email:secrets.email}}));
+  assert(a.net.emit('shot',{...origin,kind:'confetti',lift:1.6,length:1000,rays,impact:{x:14,y:13,radius:50,email:secrets.email}}));
   assert(a.net.emit('shot',{...origin,kind:'chime',length:-3,rays:[{x:140,y:12}],impact:{x:900,y:12,radius:4}}));
   await until(()=>b.events.filter(e=>e.type==='shot').length===2,'The observer should receive both shot effects');
   const [first,second]=b.events.filter(e=>e.type==='shot').map(e=>e.data);
-  assert.equal(first.length,400);assert.deepEqual(first.impact,{x:14,y:13,radius:12});
+  assert.equal(first.lift,1.6);assert.equal(first.length,400);assert.deepEqual(first.impact,{x:14,y:13,radius:12});
   assert.deepEqual(first.rays,[{...origin,angle:8,length:100},...Array.from({length:9},(_,i)=>({x:12+i,y:13,angle:-8,length:0}))]);
   assert.equal(second.length,0);assert.deepEqual(second.rays,[]);assert(!Object.hasOwn(second,'impact'));
+});
+
+
+test('a second online player receives the climb, landing, and vehicle transition; pavement pickups require ground reach',async t=>{
+  const {browser}=sharedWorld(t),a=browser('Grimpe'),b=browser('Parvis');
+  const {id,weapon,x,y}=authoredWeaponDrops[0];
+  const pose={x,y,health:100,motion:'climb',motionPhase:.45,lift:1.6,verticalSpeed:3,stride:.6,slope:.16};
+  a.net.publish(pose);b.net.publish({x:x+4,y,health:100});
+  assert.deepEqual(await Promise.all([a.net.start(),b.net.start()]),[true,true]);
+  const peer=()=>b.net.peers().find(p=>p.id===a.net.id);
+  await until(()=>peer()?.motion==='climb','climb relayed through the shared worker');
+  for(const k of ['lift','motionPhase','verticalSpeed','stride','slope'])assert.equal(peer()[k],pose[k]);
+  assert.equal((await a.net.claimPickup(id,weapon)).ok,false);
+  a.net.publish({...pose,lift:.5,motion:'fall',verticalSpeed:-4});
+  assert.equal((await a.net.claimPickup(id,weapon)).ok,false);
+  a.net.publish({...pose,lift:0,motion:'land',verticalSpeed:0});
+  assert.equal((await a.net.claimPickup(id,weapon)).ok,true);
+  await until(()=>peer()?.motion==='land'&&peer().lift===0,'landing clears previous height');
+  a.net.publish({...pose,lift:100,motion:'unexpected',verticalSpeed:-100,motionPhase:9,stride:-4,slope:8});
+  await until(()=>peer()?.lift===64,'movement fields have finite bounds');
+  assert.deepEqual([peer().verticalSpeed,peer().motion,peer().motionPhase,peer().stride,peer().slope],[-50,'idle',1,0,1]);
+  a.net.publish({...pose,vehicle:{id:'car-maillot',type:'scooter',x,y}});
+  await until(()=>peer()?.vehicle?.type==='scooter','driving replaces the traversal');
+  assert.equal(peer().lift,0);assert.equal(peer().motion,'idle');
 });

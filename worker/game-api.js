@@ -88,8 +88,16 @@ function vitalityFields(source,now) {
   }
   return result;
 }
+const locomotionModes=new Set(['idle','walk','run','jump','fall','land','vault','climb']);
+function movementFields(s,now){
+  if(!Number.isFinite(s.lift))return {};
+  const lift=num(s.lift,0,0,64);
+  if(s.vehicle||s.downUntil>now||s.health===0)return {lift:s.vehicle?0:lift,motion:'idle'};
+  return {lift,verticalSpeed:num(s.verticalSpeed,0,-50,20),motion:locomotionModes.has(s.motion)?s.motion:'idle',
+    motionPhase:num(s.motionPhase,0,0,1),stride:num(s.stride,0,0,1),slope:num(s.slope,0,-1,1),turn:num(s.turn,0,-1,1)};
+}
 function playerState(raw,now) {
-  const s=dict(raw), result={...pose(s),...vitalityFields(s,now)};
+  const s=dict(raw), result={...pose(s),...vitalityFields(s,now),...movementFields(s,now)};
   const appearance=normalizeAppearance(s.appearance);if(appearance)result.appearance=appearance;
   if (!Number.isFinite(s.x) || !Number.isFinite(s.y)) return {};
   const traffic=cleanTrafficPacket(s.traffic,now);if(traffic)result.traffic=traffic;
@@ -113,6 +121,7 @@ function eventData(type,raw,now) {
         ...(Number.isFinite(d.damage)&&d.damage>0?{damage:num(d.damage,1,1,100)}:{})};
     case 'shot': {
       const out={...result,length:num(d.length,80,0,400)};
+      if(Number.isFinite(d.lift))out.lift=num(d.lift,0,0,64);
       const near=r=>Number.isFinite(r?.x)&&Number.isFinite(r?.y)&&Math.hypot(r.x-result.x,r.y-result.y)<=100;
       if(Array.isArray(d.rays))out.rays=d.rays.slice(0,13).filter(near).map(r=>({x:r.x,y:r.y,angle:num(r.angle,0,-8,8),length:num(r.length,0,0,100)}));
       if(near(d.impact))out.impact={x:d.impact.x,y:d.impact.y,radius:num(d.impact.radius,1,0,12)};
@@ -171,6 +180,7 @@ async function join(db,b,now) {
   return json({now,players:roster(results[5].results,id),history:events(results[6].results.reverse()),
     cursor:results[7].results[0].last,world});
 }
+const airbornePickup=new Set(['jump','fall','climb','vault']);
 function recordPickup(stmts,q,{room,id,token,name,op,item,weapon,state,now}){
   const p=decodeDropId(item);
   if(!p||p.weapon!==weapon||!isEligibleDropId(item))return false;
@@ -179,7 +189,7 @@ function recordPickup(stmts,q,{room,id,token,name,op,item,weapon,state,now}){
   const issued=parseInt(match[1],36);
   const fresh=issued>=now-PICKUP_REQUEST_AGE&&issued<=now+2500;
   if(!fresh)return true; // An expired operation can only read its original receipt.
-  const close=Number.isFinite(state.x)&&Number.isFinite(state.y)&&!state.vehicle&&state.health!==0&&!(state.downUntil>now)&&Math.hypot(state.x-p.x,state.y-p.y)<=4;
+  const close=Number.isFinite(state.x)&&Number.isFinite(state.y)&&!state.vehicle&&state.health!==0&&!(state.downUntil>now)&&(state.lift||0)<=.8&&!airbornePickup.has(state.motion)&&Math.hypot(state.x-p.x,state.y-p.y)<=4;
   // Reads, receipt and winner event share one D1 batch transaction. Another player
   // can enter only after it commits and will see the winning availability timestamp.
   stmts.push(q(`INSERT OR IGNORE INTO mc_pickup_claims (room,player,op,item,ok,available,at)

@@ -1,6 +1,6 @@
 // Store positions as fractions of the space in which each widget can travel.
-const labels={district:'Quartier',vitals:'Profil et vie',radar:'Mini-carte',inventory:'Équipement',chat:'Chat',speed:'Compteur véhicule',stick:'Joystick',fire:'Tir',ride:'Véhicule',recenter:'Caméra',heal:'Soins'};
-const touchOnly=new Set(['stick','fire','ride','recenter','heal']);
+const labels={district:'Quartier',vitals:'Profil et vie',radar:'Mini-carte',inventory:'Équipement',chat:'Chat',speed:'Compteur véhicule',stick:'Joystick',jump:'Saut et escalade',fire:'Tir',ride:'Véhicule',recenter:'Caméra',heal:'Soins'};
+const touchOnly=new Set(['stick','jump','fire','ride','recenter','heal']);
 const limit=(n,lo,hi)=>Math.min(hi,Math.max(lo,n));
 const profileKey='maillecity.hud.v1.';
 const element=(tag,cls,text)=>{
