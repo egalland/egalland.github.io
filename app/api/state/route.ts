@@ -1,0 +1,2 @@
+import {read} from '../../../lib/service';
+export async function GET(){try{return Response.json({snapshots:await read()},{headers:{'Cache-Control':'no-store'}})}catch(e){return Response.json({error:String(e)},{status:503})}}

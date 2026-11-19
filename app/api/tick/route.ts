@@ -1,0 +1,2 @@
+import {tick} from '../../../lib/service';
+export async function POST(request:Request){const origin=request.headers.get('origin');if(origin&&origin!==new URL(request.url).origin)return Response.json({error:'Origine refusée'},{status:403});try{return Response.json(await tick())}catch(e){return Response.json({error:String(e)},{status:503})}}
