@@ -111,9 +111,10 @@ test('les quatre en-têtes partagent le même sélecteur et gardent le projet da
   assert.match(header,/<header class="portfolio-bar[^"]*"><a class="bar-brand".*?<b aria-hidden="true">eg\.<\/b><span>Emmanuel Galland<\/span><\/a><div class="theme-switch"/);
   assert.ok(header.indexOf('class="bar-actions') > header.indexOf('class="theme-switch'));
   for(const target of Object.keys(views).filter(t=>t!==current)){
-   assert.ok(control.includes('href="/?theme='+target+'"'));
+   assert.ok(control.includes('href="' + (target === 'dossier' ? '/dossier/' : '/?theme=' + target) + '"'));
    for(const [chapter,expected] of [['pills','pills'],['atelier','livre'],['chrome','home']]){
     const url=new URL(themeUrl(target,chapter,'https://egalland.github.io/?lang=fr&theme='+current),'https://egalland.github.io/');
+    assert.equal(url.pathname, target === 'dossier' ? '/dossier/' : '/');
     assert.equal(url.hash,'#'+expected);
     assert.equal(url.searchParams.get('theme'),target);
     assert.equal(url.searchParams.get('lang'),'fr');

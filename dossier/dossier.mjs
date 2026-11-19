@@ -1,4 +1,4 @@
-import {themeSwitch} from '/portfolio-assets/theme-switch.mjs?v=dossier1';
+import {themeSwitch} from '/portfolio-assets/theme-switch.mjs?v=dossier2';
 
 const updateLinks = themeSwitch();
 const index = [...document.querySelectorAll('.dossier-index a')];

@@ -52,7 +52,7 @@ const themes = {curseurs:'Curseur', points:'Points', chrome:'Chrome', dossier:'D
 function themeSwitchHtml(current) {
  const items = Object.entries(themes).map(([id, label]) => id === current
   ? `<span data-theme-choice="${id}" aria-current="page">${label}</span>`
-  : `<a data-theme-choice="${id}" href="/?theme=${id}">${label}</a>`);
+  : `<a data-theme-choice="${id}" href="${id === 'dossier' ? '/dossier/' : '/?theme=' + id}">${label}</a>`);
  return `<div class="theme-switch" role="navigation" aria-label="Thème visuel">${items.join('')}</div>`;
 }
 function headerFields(theme) {
