@@ -149,3 +149,15 @@ test('les ancres propres au CV pointent vers Pratiques dans les autres vues', as
   }
  }
 });
+
+test('les commandes de cabine ouvrent chacune un étage du Dossier', () => {
+ const html = read('dossier/index.html');
+ const nav = html.match(/<nav class="lift-buttons"[\s\S]*?<\/nav>/)[0];
+ const buttons = [...nav.matchAll(/href="#([^"]+)" data-floor="([^"]+)"/g)].map(([, id, number]) => [id, number]);
+ assert.deepEqual(buttons, [
+  ['home', 'R'], ['parcours', '01'], ['competences', '02'], ['work', '03'],
+  ['atelier', '04'], ['about', '05'], ['contact', '06']
+ ]);
+ for (const [id] of buttons) assert.match(html, new RegExp('<section[^>]+id="' + id + '"'));
+ assert.match(html, /class="lift-doors" aria-hidden="true"/);
+});

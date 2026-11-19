@@ -31,32 +31,148 @@ header.dossier-bar {
 .dossier-bar .bar-brand b {color: var(--acid)}
 .dossier-bar .bar-actions a {font: 600 12px/1 var(--mono); text-decoration: none; padding-block: 12px}
 .dossier-bar .bar-actions a:hover {color: var(--acid)}
-.dossier-layout {
- width: min(100% - 64px, 1264px);
- margin-inline: auto;
+.dossier-layout {width: min(100% - 48px, 1272px); margin: clamp(16px, 3.2vw, 48px) auto}
+.lift {
  display: grid;
- grid-template-columns: minmax(130px, 15%) minmax(0, 1fr);
- gap: clamp(24px, 4vw, 64px);
+ grid-template-columns: minmax(0, 1fr) 232px;
+ grid-template-areas: "opening console";
+ gap: clamp(10px, 2vw, 24px);
+ align-items: start;
+ padding: clamp(8px, 1.4vw, 20px);
+ background: linear-gradient(135deg, #282d29, #101410 62%, #242922);
+ border: 1px solid #50564b;
+ box-shadow: 0 20px 75px #0007, inset 0 0 0 3px #090b09;
 }
-.dossier-index {padding-block: 46px}
-.dossier-index nav {position: sticky; top: 107px; display: grid; gap: 2px}
-.dossier-index a {
- display: block;
- padding: 10px 8px 10px 14px;
- border-left: 1px solid var(--rule);
- color: var(--muted);
+.lift-opening {
+ grid-area: opening;
+ position: relative;
+ isolation: isolate;
+ overflow: hidden;
+ min-width: 0;
+ border: 1px solid #5d645a;
+ background: #131610;
+ box-shadow: 0 0 0 3px #080a08, 0 0 0 4px #3d433b;
+}
+.lift-header {
+ position: relative;
+ z-index: 2;
+ min-height: 37px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ gap: 12px;
+ padding: 5px 14px;
+ border-bottom: 1px solid #4f5549;
+ background: #1d211c;
+ font: 600 11px/1.2 var(--mono);
+}
+.floor-label {color: var(--acid); text-transform: uppercase; letter-spacing: .1em}
+.lift-header a {color: var(--muted); padding-block: 7px; text-underline-offset: 3px}
+.lift-header a:hover {color: var(--acid)}
+.lift-console {
+ grid-area: console;
+ padding: 12px;
+ border: 1px solid #50574c;
+ background: repeating-linear-gradient(0deg, #fff0 0 3px, #fff1 4px, #fff0 5px), linear-gradient(135deg, #424942 0%, #252b25 48%, #363d35 100%);
+ box-shadow: inset 0 0 0 3px #121612, 0 5px 15px #0005;
+}
+.console-heading {display: flex; justify-content: space-between; margin: 0 2px 9px; gap: 7px; color: #d0d7ca; font: 650 10px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .12em}
+.lift-display {
+ display: grid;
+ grid-template-columns: minmax(0, 1fr) auto;
+ grid-template-areas: "number direction" "readout readout";
+ align-items: start;
+ padding: 10px 12px;
+ margin-bottom: 12px;
+ border: 1px solid #647457;
+ box-shadow: inset 0 0 0 3px #10160d;
+ background: repeating-linear-gradient(0deg, #8ec75d0c 0 1px, transparent 1px 4px), #171f13;
+ color: var(--acid);
+ font-family: var(--mono);
+}
+.lift-number {grid-area: number; font-size: 48px; font-weight: 600; line-height: 1; letter-spacing: -.1em; text-shadow: 0 0 20px #cafa78a0}
+.lift-direction {grid-area: direction; display: block; line-height: 1; border: 1px solid #43563a; padding: 5px 7px}
+.lift-readout {grid-area: readout; margin-top: 7px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase}
+.lift-buttons {display: grid; gap: 6px}
+.lift-buttons a, .lift-travel button {
+ display: grid;
+ grid-template-columns: 32px minmax(0, 1fr);
+ align-items: center;
+ gap: 8px;
+ min-height: 42px;
+ padding: 4px 9px 4px 5px;
+ background: linear-gradient(180deg, #353e34, #252b25);
+ border: 1px solid #586055;
+ border-radius: 3px;
+ box-shadow: 0 2px 0 #141913;
+ color: #e9ede6;
  text-decoration: none;
- font: 12px/1.4 var(--mono);
+ font: 600 11px/1.25 var(--mono);
 }
-.dossier-index a:hover, .dossier-index a[aria-current] {color: var(--acid); border-color: var(--acid)}
+.lift-buttons b {
+ display: grid;
+ place-items: center;
+ height: 29px;
+ border: 1px solid #6c7466;
+ border-radius: 2px;
+ color: #d8dfd3;
+ background: #161c15;
+ font-size: 12px;
+}
+.lift-buttons a:hover, .lift-buttons a[aria-current] {border-color: #b7cb83; color: var(--acid)}
+.lift-buttons a[aria-current] b, .lift-buttons a:hover b {
+ background: var(--acid);
+ border-color: var(--acid);
+ color: #18220f;
+ box-shadow: 0 0 12px #d9fa7755;
+}
+.lift-travel {display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 11px}
+.lift-travel button {display: block; cursor: pointer; min-height: 38px; padding: 3px 9px; font-size: 19px}
+.lift-travel button:hover {border-color: var(--acid)}
+.lift-travel [aria-disabled="true"] {opacity: .45; cursor: default}
+.lift-announcement {position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
+.lift-doors {display: none}
 main {min-width: 0}
+html[data-lift="ready"] .lift-viewport {
+ height: clamp(530px, calc(100dvh - 178px), 850px);
+ position: relative;
+ overflow: auto;
+ scrollbar-gutter: stable;
+ scrollbar-color: #6d785e #1b211a;
+}
+html[data-lift="ready"] .dossier-section:not([data-active-floor]) {display: none}
+html[data-lift="ready"] .dossier-section {
+ min-height: 100%;
+ margin: 0;
+}
+html[data-lift="ready"] main {min-height: 100%}
+html[data-lift="ready"] .dossier-section:not(.cover) {padding: clamp(20px, 4vw, 60px)}
+html[data-lift="ready"] .cover {border: 0; min-height: max(100%, clamp(530px, calc(100dvh - 178px), 850px))}
+html[data-lift="ready"] .lift-doors {
+ position: absolute;
+ z-index: 1;
+ pointer-events: none;
+ inset: 37px 0 0;
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+}
+.lift-doors i {
+ position: relative;
+ transform: translateX(-101%);
+ border-right: 1px solid #9eaa9d;
+ background: repeating-linear-gradient(0deg, #d9e8d909 0 1px, transparent 1px 3px), linear-gradient(90deg, #414c45, #6e7b70 42%, #3a483e 90%, #161d17);
+ box-shadow: inset 0 0 25px #18231b8c;
+ transition: transform .23s cubic-bezier(.53,.02,.33,1);
+}
+.lift-doors i + i {transform: translateX(101%); border: 0; border-left: 1px solid #111813; background: repeating-linear-gradient(0deg, #d9e8d909 0 1px, transparent 1px 3px), linear-gradient(90deg, #222d25, #626f64 58%, #384639)}
+.lift-opening[data-doors="closed"] .lift-doors i {transform: translateX(0)}
 .cover {
  position: relative;
  isolation: isolate;
  display: grid;
  align-items: end;
  min-height: 500px;
- margin-top: 36px;
+ margin-top: 0;
  padding: clamp(26px, 5.5vw, 76px);
  overflow: hidden;
  border: 1px solid var(--rule);
@@ -182,29 +298,28 @@ h1, h2, h3 {font-family: var(--display)}
 .practices strong {font-size: 21px}
 .practices span {font-size: 14px; color: var(--muted)}
 .practices small {color: var(--acid); font: 12px/1.6 var(--mono)}
-.dossier-footer {display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 65px; padding: 22px 0 38px; border-top: 1px solid var(--rule); color: var(--muted); font: 12px/1.5 var(--mono)}
-.dossier-footer a {text-underline-offset: 4px}
-.print-link {display: none}
-
-@media (min-width: 850px) and (prefers-reduced-motion: no-preference) {
- html {scroll-behavior: smooth}
-}
-@media (max-width: 849px) {
- html {scroll-padding-top: 120px}
- .dossier-layout {width: min(100% - 32px, 680px); display: block}
- .dossier-index {position: sticky; z-index: 3; top: 64px; padding: 0; background: var(--paper); border-bottom: 1px solid var(--rule)}
- .dossier-index nav {position: static; display: flex; overflow-x: auto; scrollbar-width: thin}
- .dossier-index a {flex: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 9px; white-space: nowrap}
- .cover {margin-top: 18px; min-height: 420px}
-}
-@media (max-width: 720px) {
- .dossier-index {top: 54px}
+.dossier-footer {display: none}
+@media (max-width: 800px) {
+ .dossier-layout {width: calc(100% - 24px)}
+ .lift {display: block}
+ .lift-opening {margin-top: 12px}
+ .lift-console {display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: start; gap: 8px; padding: 8px}
+ .console-heading {grid-column: 1 / -1; margin: 0}
+ .lift-buttons {grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px}
+ .lift-buttons a {grid-template-columns: 1fr; justify-items: center; padding: 3px 0; gap: 2px; font-size: 10px; min-height: 43px}
+ .lift-buttons b {min-width: 23px; height: 21px; font-size: 11px}
+ .lift-display {margin: 0; padding: 6px; min-height: 68px}
+ .lift-number {font-size: 31px}
+ .lift-direction {font-size: 11px; padding: 3px}
+ .lift-readout {font-size: 8px}
+ .lift-travel {display: none}
+ html[data-lift="ready"] .lift-viewport {height: clamp(390px, calc(100dvh - 234px), 690px)}
+ html[data-lift="ready"] .cover {min-height: clamp(390px, calc(100dvh - 234px), 690px)}
 }
 @media (max-width: 540px) {
- .dossier-layout {width: calc(100% - 24px)}
  .cover {min-height: 400px; padding: 25px 17px}
  .cover-art {background-position: 63% center}
- .cover h1 {font-size: clamp(47px, 11vw, 61px)}
+ .cover h1 {font-size: clamp(40px, 11vw, 61px)}
  .cover h1, .cover-label {margin-bottom: 19px}
  .action {gap: 6px; padding-inline: 8px; font-size: 11px}
  .timeline li, .credentials, .reel-entry {grid-template-columns: 1fr}
@@ -213,12 +328,30 @@ h1, h2, h3 {font-family: var(--display)}
  .practices {grid-template-columns: 1fr}
  .dossier-bar .bar-actions a {font-size: 11px}
 }
+@media (max-width: 460px) {
+ .lift-console {grid-template-columns: 69px minmax(0, 1fr); gap: 5px}
+ .lift-buttons {grid-template-columns: repeat(3, minmax(0, 1fr))}
+ .lift-buttons a {font-size: 9px}
+ .lift-display {align-self: stretch}
+ .lift-header {padding-inline: 9px}
+ html[data-lift="ready"] .lift-viewport {height: clamp(345px, calc(100dvh - 282px), 570px)}
+ html[data-lift="ready"] .cover {min-height: clamp(345px, calc(100dvh - 282px), 570px)}
+}
+@media (prefers-reduced-motion: reduce) {
+ .lift-doors i {transition: none}
+}
 @media print {
  @page {size: A4; margin: 15mm}
  :root {color-scheme: light; --paper: white; --ink: #171717; --muted: #343434; --rule: #bdbdbd; --acid: #26391a}
  body {font-size: 10.5pt}
  .dossier-layout {display: block; width: auto}
- header.dossier-bar, .dossier-index, .skip, .cover-art, .cover-actions, .screen-section, .screen-link {display: none}
+ header.dossier-bar, .lift-console, .lift-header, .lift-announcement, .skip, .cover-art, .cover-actions {display: none}
+ .lift, .lift-opening {display: block; background: none; border: 0; box-shadow: none; padding: 0; margin: 0; overflow: visible}
+ html[data-lift="ready"] .lift-viewport {height: auto; overflow: visible}
+ html[data-lift="ready"] .lift-doors {display: none}
+ html[data-lift="ready"] .dossier-section:is(.cover,.cv-core) {display: block; min-height: 0; margin-top: 15px; padding: 0}
+ html[data-lift="ready"] .dossier-section.cover {margin-top: 0; padding-bottom: 12px; border-bottom: 1px solid var(--rule)}
+ .screen-section {display: none}
  .cover {margin: 0; display: block; min-height: 0; padding: 0 0 12px; border: 0; border-bottom: 1px solid var(--rule); background: none}
  .cover h1 {font-size: 35pt; margin-bottom: 9px; line-height: 1}
  .cover h1 br {display: none}
@@ -234,6 +367,5 @@ h1, h2, h3 {font-family: var(--display)}
  .credentials {grid-template-columns: 1.4fr 1fr; padding-top: 8px; gap: 15px}
  .skills dd {margin: 1px 0 6px}
  .education li {padding-top: 4px}
- .dossier-footer {margin-top: 15px; padding: 10px 0; font-size: 9pt}
- .print-link {display: inline}
+ .dossier-footer {display: block; margin-top: 15px; padding: 10px 0; font-size: 9pt}
 }

@@ -8,26 +8,44 @@
  <meta name="description" content="Le CV interactif d’Emmanuel Galland, analyste Tarif & Référentiel et développeur web. Parcours, compétences et projets.">
  <link rel="canonical" href="https://egalland.github.io/?theme=dossier">
  <link rel="stylesheet" href="/portfolio-assets/theme-switch.css?v=dossier1">
- <link rel="stylesheet" href="/dossier/dossier.css">
+ <link rel="stylesheet" href="/dossier/dossier.css?v=ascenseur1">
  <link rel="stylesheet" href="/dossier/cover.css">
- <script type="module" src="/dossier/dossier.mjs?v=dossier2"></script>
+ <script type="module" src="/dossier/dossier.mjs?v=ascenseur1"></script>
  <title>Emmanuel Galland — CV & projets</title>
 </head>
 <body>
  <a class="skip" href="#home">Aller au contenu</a>
  <header class="portfolio-bar dossier-bar"><a class="bar-brand" href="#home" aria-label="Emmanuel Galland, accueil"><b aria-hidden="true">eg.</b><span>Emmanuel Galland</span></a><div class="theme-switch" role="navigation" aria-label="Thème visuel"><a data-theme-choice="curseurs" href="/?theme=curseurs">Curseur</a><a data-theme-choice="points" href="/?theme=points">Points</a><a data-theme-choice="chrome" href="/?theme=chrome">Chrome</a><span data-theme-choice="dossier" aria-current="page">Dossier</span></div><div class="bar-actions"><a href="https://github.com/egalland" aria-label="Profil GitHub d’Emmanuel Galland">GitHub ↗</a></div></header>
  <div class="dossier-layout">
-  <aside class="dossier-index">
-   <nav aria-label="Sommaire du CV">
-    <a href="#home" aria-current="location">Profil</a>
-    <a href="#parcours">Parcours</a>
-    <a href="#competences">Compétences</a>
-    <a href="#work">Projets</a>
-    <a href="#atelier">Atelier</a>
-    <a href="#about">Pratiques</a>
-   </nav>
-  </aside>
-  <main>
+  <div class="lift">
+   <aside class="lift-console" aria-label="Commandes de l’ascenseur">
+    <div class="console-heading"><span>Ascenseur</span><span>EG / CV</span></div>
+    <div class="lift-display" aria-hidden="true">
+     <span class="lift-direction">–</span>
+     <strong class="lift-number">R</strong>
+     <span class="lift-readout">Rez-de-chaussée</span>
+    </div>
+    <nav class="lift-buttons" aria-label="Choisir un étage">
+     <a href="#home" data-floor="R" aria-current="location"><b>R</b><span>Profil</span></a>
+     <a href="#parcours" data-floor="01"><b>01</b><span>Parcours</span></a>
+     <a href="#competences" data-floor="02"><b>02</b><span>Compétences</span></a>
+     <a href="#work" data-floor="03"><b>03</b><span>Projets</span></a>
+     <a href="#atelier" data-floor="04"><b>04</b><span>Atelier</span></a>
+     <a href="#about" data-floor="05"><b>05</b><span>Pratiques</span></a>
+     <a href="#contact" data-floor="06"><b>06</b><span>Contact</span></a>
+    </nav>
+    <div class="lift-travel" hidden>
+     <button type="button" data-step="-1" aria-label="Descendre d’un étage">↓</button>
+     <button type="button" data-step="1" aria-label="Monter d’un étage">↑</button>
+    </div>
+   </aside>
+   <div class="lift-opening">
+    <div class="lift-header">
+     <span class="floor-label">R / Profil</span>
+     <a href="#work">Voir les projets ↗</a>
+    </div>
+    <div class="lift-viewport">
+     <main>
    <section class="cover dossier-section" id="home" aria-labelledby="cover-title">
     <div class="cover-art" aria-hidden="true"></div>
     <div class="cover-copy">
@@ -35,7 +53,7 @@
      <h1 id="cover-title">Emmanuel<br> Galland<span>.</span></h1>
      <p class="role">Analyste Tarif &amp; Référentiel · Développeur web</p>
      <p class="intro">Je conçois des outils qui rendent les données plus faciles à traiter, les tâches répétitives plus simples et les interfaces agréables à utiliser.</p>
-     <div class="cover-actions"><a class="action primary" href="#parcours">Voir le parcours <span aria-hidden="true">↓</span></a><button class="action" id="print-cv" type="button" hidden>Imprimer le CV <span aria-hidden="true">↗</span></button></div>
+     <div class="cover-actions"><a class="action primary" href="#parcours">Parcours · 01 <span aria-hidden="true">↑</span></a><button class="action" id="print-cv" type="button" hidden>Imprimer le CV <span aria-hidden="true">↗</span></button></div>
     </div>
    </section>
 
@@ -162,13 +180,18 @@
 <li><a href="#pills"><strong>Relier</strong><span>Modélisation de données · Catalogues d’œuvres</span><small>Pills ↗</small></a></li>
 <li><a href="#market-plus"><strong>Automatiser</strong><span>Imports de données · Tableaux de bord</span><small>Market Plus ↗</small></a></li></ul>
    </section>
-   <footer class="dossier-footer" id="contact">
-    <span>Emmanuel Galland</span>
-    <a class="screen-link" href="https://github.com/egalland">Code source sur GitHub ↗</a>
-    <a class="screen-link" href="#home">Haut de page ↑</a>
-    <a class="print-link" href="https://egalland.github.io/?theme=dossier">egalland.github.io/?theme=dossier</a>
-   </footer>
-  </main>
+   <section class="dossier-section screen-section" id="contact" aria-labelledby="contact-title">
+    <h2 id="contact-title">Contact</h2>
+    <p class="project-summary">Retrouve mes projets et leur code source sur mon profil GitHub.</p>
+    <div class="cover-actions"><a class="action primary" href="https://github.com/egalland">GitHub ↗</a><a class="action" href="#home">Retour au rez-de-chaussée ↓</a></div>
+   </section>
+   <footer class="dossier-footer"><a href="https://egalland.github.io/?theme=dossier">egalland.github.io/?theme=dossier</a></footer>
+     </main>
+    </div>
+    <div class="lift-doors" aria-hidden="true"><i></i><i></i></div>
+   </div>
+  </div>
  </div>
+ <p class="lift-announcement" role="status"></p>
 </body>
 </html>

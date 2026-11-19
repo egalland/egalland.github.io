@@ -1,6 +1,6 @@
 # Projets d’Emmanuel
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur donne aussi accès à Points, [Chrome](https://egalland.github.io/?theme=chrome) et [Dossier](https://egalland.github.io/?theme=dossier), le CV interactif. Les quatre vues partagent la sélection de projets et les liens. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur donne aussi accès à Points, [Chrome](https://egalland.github.io/?theme=chrome) et [Dossier](https://egalland.github.io/?theme=dossier), le CV interactif dont chaque rubrique occupe un étage. Les quatre vues partagent la sélection de projets et les liens. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
 
 ## Organisation
 
