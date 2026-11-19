@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 595 842" role="img">
+<title>Orbites</title><desc>Trois trajectoires se rencontrent sur un fond nocturne.</desc>
+<rect width="595" height="842" fill="#242139"/><g fill="none" stroke="#ffc778" stroke-width="4"><ellipse cx="305" cy="321" rx="222" ry="132" transform="rotate(-32 305 321)"/><ellipse cx="305" cy="321" rx="204" ry="132" transform="rotate(23 305 321)"/><ellipse cx="305" cy="321" rx="159" ry="132" transform="rotate(77 305 321)"/></g><circle cx="305" cy="321" r="33" fill="#f4b1cf"/>
+<text x="42" y="704" fill="#ffc778" font-family="sans-serif" font-size="78" font-weight="bold">ORBITES</text>
+<path d="M44 726H552" stroke="#ffc778" stroke-width="3"/>
+</svg>

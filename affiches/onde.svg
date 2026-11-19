@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 595 842" role="img">
+<title>Onde</title><desc>Une série de courbes trace le mouvement de l’eau.</desc>
+<rect width="595" height="842" fill="#123c50"/><g fill="none" stroke="#ccf3dd" stroke-width="6"><path d="M-20 172 Q 105 75 237 218 T 445 209 T 640 122"/><path d="M-20 200 Q 105 103 237 246 T 445 237 T 640 150"/><path d="M-20 228 Q 105 131 237 274 T 445 265 T 640 178"/><path d="M-20 256 Q 105 159 237 302 T 445 293 T 640 206"/><path d="M-20 284 Q 105 187 237 330 T 445 321 T 640 234"/><path d="M-20 312 Q 105 215 237 358 T 445 349 T 640 262"/><path d="M-20 340 Q 105 243 237 386 T 445 377 T 640 290"/><path d="M-20 368 Q 105 271 237 414 T 445 405 T 640 318"/><path d="M-20 396 Q 105 299 237 442 T 445 433 T 640 346"/><path d="M-20 424 Q 105 327 237 470 T 445 461 T 640 374"/></g>
+<text x="42" y="704" fill="#ccf3dd" font-family="sans-serif" font-size="78" font-weight="bold">ONDE</text>
+<path d="M44 726H552" stroke="#ccf3dd" stroke-width="3"/>
+</svg>
