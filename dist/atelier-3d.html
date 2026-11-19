@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#121815">
+  <title>Atelier 3D · Tekno MT410 2.0 · Rover Link</title>
+  <meta name="description" content="Explore les pièces du projet RC Tekno MT410 2.0 en 3D, de la carrosserie à la transmission.">
+  <link rel="preload" as="image" href="model/poster.webp">
+  <link rel="stylesheet" href="model/atelier.css">
+</head>
+<body>
+  <header class="topline">
+    <a class="wordmark" href="index.html" aria-label="Rover Link, accueil"><span class="brand-mark" aria-hidden="true">◈</span> ROVER<span>LINK</span></a>
+    <nav aria-label="Navigation principale">
+      <a href="index.html">Pilotage</a>
+      <a href="atelier-3d.html" aria-current="page">Atelier 3D</a>
+      <a href="index.html#materiel">Matériel</a>
+    </nav>
+  </header>
+  <main>
+    <div class="title-row">
+      <div>
+        <p class="kicker">Atelier 3D <span>/</span> Monster truck</p>
+        <h1>Tekno MT410 <em>2.0</em></h1>
+      </div>
+      <div class="spec"><span>Échelle</span><b>1/10</b></div>
+      <div class="spec"><span>Transmission</span><b>4×4</b></div>
+    </div>
+    <div class="workspace">
+      <section class="viewer" id="viewer" aria-label="Vue 3D du véhicule">
+        <div class="studio" id="studio">
+          <canvas id="modelCanvas" aria-label="Modèle 3D interactif du véhicule. Les pièces sont aussi accessibles dans la nomenclature."></canvas>
+          <div class="studio-top">
+            <div class="segmented" aria-label="Disposition des pièces">
+              <button id="assembled" type="button" aria-pressed="true">Assemblé</button>
+              <button id="exploded" type="button" aria-pressed="false">Éclaté</button>
+            </div>
+            <button class="fullscreen" id="fullscreen" type="button" aria-label="Afficher la vue en plein écran" title="Plein écran">⛶</button>
+          </div>
+          <div class="studio-bottom">
+            <span id="partTag" class="part-tag" hidden></span>
+            <div class="zoom-bar" aria-label="Cadrage">
+              <button type="button" id="zoomOut" aria-label="Dézoomer" title="Dézoomer">−</button>
+              <button type="button" id="zoomIn" aria-label="Zoomer" title="Zoomer">+</button>
+              <button type="button" id="homeView" aria-label="Rétablir la vue trois quarts" title="Vue initiale">↺</button>
+            </div>
+          </div>
+          <div id="loading" class="loading"><span>Chargement du modèle 3D…</span></div>
+        </div>
+        <div class="stage-tools">
+          <div class="explosion-control">
+            <label for="separation">Écartement</label>
+            <input id="separation" type="range" min="0" max="100" step="1" value="0" aria-label="Écartement des pièces">
+            <output id="amount" for="separation">0 %</output>
+          </div>
+          <div class="view-tools">
+            <label class="view-select"><span class="visually-hidden">Orientation</span><select id="angle"><option value="perspective">Trois quarts</option><option value="front">Face</option><option value="side">Profil</option><option value="top">Dessus</option></select></label>
+            <button id="shell" type="button" aria-pressed="true">Carrosserie visible</button>
+          </div>
+        </div>
+        <p class="gestures"><span class="orbit-symbol" aria-hidden="true">⤾</span> Glisse pour tourner · molette ou deux doigts pour zoomer · touche une pièce pour l’inspecter.</p>
+      </section>
+      <aside class="parts-panel" aria-label="Nomenclature et fiche de pièce">
+        <div class="panel-head"><h2>Nomenclature</h2><span class="part-count" id="count">…</span></div>
+        <div class="search-wrap"><span class="magnifier" aria-hidden="true"></span><input type="search" id="filter" aria-label="Rechercher une pièce" placeholder="Rechercher une pièce…"></div>
+        <section class="part-card" id="detail" hidden aria-label="Pièce sélectionnée">
+          <div class="part-card-top"><span class="family" id="detailFamily"></span><button id="unselect" class="small-clear" type="button" aria-label="Effacer la sélection">×</button></div>
+          <h3 id="detailName"></h3>
+          <p id="detailDescription"></p>
+          <div class="detail-actions"><button type="button" id="isolate" aria-pressed="false">Isoler la pièce</button><button type="button" id="focus">Cadrer</button></div>
+        </section>
+        <div id="parts" class="part-list" aria-label="Familles de pièces"></div>
+        <p id="empty" hidden>Aucune pièce trouvée.</p>
+      </aside>
+    </div>
+    <div class="source">
+      <p><b>À propos du modèle</b> Interprétation du kit MT410 2.0 avec l’électronique et les supports caméra envisagés pour Rover Link. Les formes et les fixations sont indicatives.</p>
+      <a href="https://www.teknorc.com/wp-content/uploads/2023/11/MT4102.0_instructions_complete_small.pdf" rel="noopener" target="_blank">Notice de montage Tekno ↗</a>
+    </div>
+    <p class="visually-hidden" aria-live="polite" id="announce"></p>
+    <noscript>Active JavaScript pour explorer les pièces en 3D.</noscript>
+  </main>
+  <script type="module" src="model/atelier.js"></script>
+</body>
+</html>
