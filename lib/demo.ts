@@ -23,3 +23,22 @@ export const demoProfiles: [Profile, Profile] = [
       film("Cléo de 5 à 7", "1962", "cleo-from-5-to-7", 5),
       film("In the Mood for Love", "2000", "in-the-mood-for-love", 4.5)] },
 ];
+
+export const demoHistoryProfiles: [Profile, Profile] = [
+  {
+    ...demoProfiles[0], complete: true,
+    diary: [
+      { film: demoProfiles[0].films[0], watchedDate: "2026-11-08", rewatch: true },
+      { film: demoProfiles[0].films[3], watchedDate: "2025-10-12", rewatch: false },
+      { film: { ...demoProfiles[0].films[0], rating: 4 }, watchedDate: "2021-02-07", rewatch: false },
+    ],
+  },
+  {
+    ...demoProfiles[1], complete: true,
+    diary: [
+      { film: demoProfiles[1].films[5], watchedDate: "2026-11-02", rewatch: false },
+      { film: demoProfiles[1].films[1], watchedDate: "2025-10-12", rewatch: true },
+      { film: { ...demoProfiles[1].films[1], rating: 4 }, watchedDate: "2020-08-16", rewatch: false },
+    ],
+  },
+];

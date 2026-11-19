@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { AtSign, Check, ChevronDown, ExternalLink, FileArchive, Film as FilmIcon, Info, Layers, Play, Star, Upload, Users } from 'lucide-react';
 import { compareProfiles, importProfile, type Film, type Profile } from '@/lib/compare';
-import { demoProfiles } from '@/lib/demo';
+import { demoProfiles, demoHistoryProfiles } from '@/lib/demo';
+import { HistoryView } from './history';
 import { readLocalFeed } from '@/lib/local-feed';
 import './comparator.css';
 
 type Pair = [Profile, Profile];
 type Mode = 'rss' | 'export';
-type ResultsTab = 'common' | 'agreements' | 'differences' | 'recommendations';
+type ResultsTab = 'common' | 'agreements' | 'differences' | 'recommendations' | 'history';
 const SIDES = [0, 1] as const;
 const PAGE_SIZE = 15;
 const PROFILE_HINTS = ['Ex. davidehrlich', 'Ex. demiadejuyigbe'];
@@ -91,7 +92,9 @@ function FilmTitle({ film }: { film: Film }) {
 function Results({ profiles }: { profiles: Pair }) {
   const [a, b] = profiles;
   const comparison = useMemo(() => compareProfiles(a, b), [a, b]);
-  const [tab, setTab] = useState<ResultsTab>('common');
+  const hasDiary = profiles.some(profile => profile.diary !== undefined);
+  const showHistoryTab = hasDiary || a.source === 'export';
+  const [tab, setTab] = useState<ResultsTab>(hasDiary ? 'history' : 'common');
   const [direction, setDirection] = useState<0 | 1>(1);
   const [visible, setVisible] = useState(PAGE_SIZE);
   const differences = useMemo(() => comparison.differences.filter(({ a, b }) => a.rating !== b.rating), [comparison]);
@@ -102,9 +105,11 @@ function Results({ profiles }: { profiles: Pair }) {
   const total = tab === 'recommendations' ? suggestions.length : pairs.length;
   const demo = a.source === 'demo';
   const tabs: [ResultsTab, string][] = [['common','Films en commun'], ['agreements','Accords'], ['differences','Désaccords'], ['recommendations','À découvrir']];
+  if (showHistoryTab) tabs.unshift(['history', 'Chronologie']);
+  const scope = a.complete && b.complete ? 'Catalogues complets' : 'Données importées';
   const empty = tab === 'common' ? 'Aucun film en commun dans les données comparées.' : tab === 'agreements' ? 'Il faut au moins un film que vous avez tous les deux noté.' : tab === 'differences' ? (comparison.ratedCount ? 'Vous avez attribué les mêmes notes à tous vos films co-notés.' : 'Aucun film co-noté à comparer.') : `Aucun film à proposer à ${recipient.name} avec ces données.`;
   return <div className="dp-output">
-    <div className="dp-results-head"><div className="dp-results-names"><span>{a.name}</span><i> & </i><span>{b.name}</span></div><span className="dp-source">{demo ? 'Exemple · profils fictifs' : a.source === 'rss' ? 'Journaux publics récents' : 'Exports Letterboxd'}</span></div>
+    <div className="dp-results-head"><div className="dp-results-names"><span>{a.name}</span><i> & </i><span>{b.name}</span></div><span className="dp-source">{demo ? 'Exemple · profils fictifs' : a.source === 'rss' ? 'Journaux publics récents' : scope}</span></div>
     <div className="dp-stats">
       <div className="dp-stat dp-stat-main"><strong>{comparison.score === null ? '—' : <>{comparison.score}<small> %</small></>}</strong><span>Affinité des notes</span></div>
       <div className="dp-stat"><strong>{comparison.commonCount.toLocaleString('fr-FR')}</strong><span>{comparison.commonCount > 1 ? 'Films en commun' : 'Film en commun'}</span></div>
@@ -113,14 +118,16 @@ function Results({ profiles }: { profiles: Pair }) {
     <details className="dp-score-method"><summary><Info size={15} aria-hidden="true"/>Comprendre ce résultat<ChevronDown size={15} aria-hidden="true"/></summary><div><p>Le score mesure la proximité de vos notes sur les films co-notés. Des notes identiques donnent 100 %. Chaque demi-étoile d’écart moyen retire environ 11 points.</p><p>{a.name} · {plural(a.films.length,'film','films')} dans la comparaison. {b.name} · {plural(b.films.length,'film','films')}.</p>{!demo && <p>{a.source === 'rss' ? 'Les pseudos donnent accès aux entrées récentes des journaux publics. Les films plus anciens ou simplement marqués comme vus peuvent manquer.' : a.complete && b.complete ? 'Les deux exports incluent la liste des films marqués comme vus.' : 'Les résultats portent sur les films présents dans les fichiers fournis. Un fichier de notes seul couvre uniquement les films notés.'}</p>}</div></details>
     {comparison.ratedCount < 5 && <p className="dp-sample">{comparison.ratedCount === 0 ? 'Aucun score d’affinité sans film co-noté.' : `Le score repose sur ${plural(comparison.ratedCount, 'film co-noté', 'films co-notés')}. Il peut beaucoup évoluer.`}</p>}
     <div className="dp-results-nav" aria-label="Vues de comparaison" role="group">{tabs.map(([key,label]) => <button type="button" aria-pressed={tab === key} onClick={() => {setTab(key); setVisible(PAGE_SIZE);}} key={key}>{label}</button>)}</div>
+    {tab === 'history' ? <HistoryView profiles={profiles}/> : <>
     {tab === 'recommendations' ? <div className="dp-reco-intro"><div className="dp-for" aria-label="Destinataire" role="group">{SIDES.map(i => <button type="button" key={i} aria-pressed={direction === i} onClick={() => {setDirection(i); setVisible(PAGE_SIZE);}}>Pour {profiles[i].name}</button>)}</div><p>Films notés au moins 3,5/5 par {donor.name} et absents des données de {recipient.name}.</p></div> : <p className="dp-list-note">{tab === 'common' ? 'Les films présents dans vos deux profils, avec vos notes sur cinq.' : tab === 'agreements' ? 'Vos films co-notés, du plus petit au plus grand écart.' : 'Les films sur lesquels vos notes s’éloignent le plus, par écart décroissant.'}</p>}
     {total > 0 ? <div className="dp-film-table-wrap"><table className="dp-film-table"><thead><tr><th scope="col">Film</th>{tab === 'recommendations' ? <th scope="col">{donor.name}</th> : <><th scope="col">{a.name}</th><th scope="col">{b.name}</th></>}</tr></thead><tbody>{tab === 'recommendations' ? suggestions.slice(0,visible).map((film,i) => <tr key={`${film.title}-${film.year}-${i}`}><td><FilmTitle film={film}/></td><td><Rating film={film}/></td></tr>) : pairs.slice(0,visible).map((pair,i) => <tr key={`${pair.a.title}-${pair.a.year}-${i}`}><td><FilmTitle film={pair.a}/></td><td><Rating film={pair.a}/></td><td><Rating film={pair.b}/></td></tr>)}</tbody></table></div> : <div className="dp-empty"><FilmIcon size={23} aria-hidden="true"/><span>{empty}</span></div>}
     {total > visible && <button type="button" className="dp-more" onClick={() => setVisible(v => v + PAGE_SIZE)}>Afficher {Math.min(PAGE_SIZE,total-visible)} de plus <ChevronDown size={16} aria-hidden="true"/></button>}
+    </>}
   </div>;
 }
 
-export default function Comparator() {
-  const [mode, setMode] = useState<Mode>('rss');
+export default function Comparator({ initialMode = 'rss' }: { initialMode?: Mode }) {
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [handles, setHandles] = useState<[string,string]>(['','']);
   const [files, setFiles] = useState<[File | null, File | null]>([null,null]);
   const [feeds, setFeeds] = useState<[File | null, File | null]>([null,null]);
@@ -139,8 +146,17 @@ export default function Comparator() {
   useEffect(() => { if (revision && output.current) { output.current.focus({preventScroll:true}); output.current.scrollIntoView({block:'start', behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}); } }, [revision]);
 
   function resetPending() { submission.current += 1; controller.current?.abort(); setLoading(false); setErrors(['','']); }
-  function toggleMode(next: Mode) { if (next !== mode) { resetPending(); setMode(next); } }
-  function showExample() { resetPending(); setProfiles([demoProfiles[0],demoProfiles[1]]); setRevision(v => v + 1); }
+  function toggleMode(next: Mode) {
+    if (next === mode) return;
+    resetPending();
+    setProfiles(null);
+    setMode(next);
+    const url = new URL(window.location.href);
+    if (next === 'export') url.searchParams.set('mode', 'historique');
+    else url.searchParams.delete('mode');
+    window.history.replaceState(window.history.state, '', url);
+  }
+  function showExample() { resetPending(); setProfiles(mode === 'export' ? demoHistoryProfiles : demoProfiles); setRevision(v => v + 1); }
   function changeHandle(side: 0 | 1, value: string) {
     resetPending();
     if (username(value) !== names[side]) {
@@ -200,7 +216,11 @@ export default function Comparator() {
 
   return <>
     <section className="dp-comparator" id="comparateur" aria-labelledby="dp-form-title">
-      <div className="dp-form-top"><h2 id="dp-form-title">Comparer deux profils</h2><div className="dp-modes" role="group" aria-label="Source des profils"><button type="button" aria-pressed={mode === 'rss'} onClick={() => toggleMode('rss')}><Users size={16} aria-hidden="true"/>Pseudos</button><button type="button" aria-pressed={mode === 'export'} onClick={() => toggleMode('export')}><Upload size={16} aria-hidden="true"/>Exports</button></div></div>
+      <div className="dp-form-top"><h2 id="dp-form-title">Comparer deux profils</h2><div className="dp-modes" role="group" aria-label="Source des profils"><button type="button" aria-pressed={mode === 'rss'} onClick={() => toggleMode('rss')}><Users size={16} aria-hidden="true"/>Pseudos</button><button type="button" aria-pressed={mode === 'export'} onClick={() => toggleMode('export')}><Upload size={16} aria-hidden="true"/>Historique complet</button></div></div>
+      {mode === 'export' && <div className="dp-history-import-intro">
+        <p>Choisissez <strong>le ZIP de chaque profil</strong> pour comparer tous les films marqués comme vus et parcourir les deux journaux de visionnage.</p>
+        <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noopener noreferrer">Télécharger mon export Letterboxd <ExternalLink size={13} aria-hidden="true"/></a>
+      </div>}
       <form onSubmit={submit} noValidate className="dp-form" aria-busy={loading}>
         <div className="dp-field-row">{SIDES.map(i => <div className={`dp-field dp-side-${i}`} key={i}>
           <label className="dp-label" htmlFor={`dp-field-${i}`}><span className="dp-side-dot" aria-hidden="true"/>{i === 0 ? 'Premier profil' : 'Deuxième profil'}</label>
@@ -211,7 +231,7 @@ export default function Comparator() {
             onFile={file => { resetPending(); partial.current[i] = null; setFeeds(previous => replaced(previous, i, file)); }} />}
         </div>)}<button type="submit" className="dp-submit" disabled={loading}>{loading ? <span className="dp-spinner" aria-hidden="true"/> : <Layers size={18} aria-hidden="true"/>}{loading ? 'Comparaison…' : 'Comparer'}</button></div>
       </form>
-      <div className="dp-form-foot"><p>{mode === 'rss' ? <><Info size={15} aria-hidden="true"/><span>Les pseudos comparent vos journaux récents. Pour tout l’historique, utilisez les exports.</span></> : <><FileArchive size={15} aria-hidden="true"/><span>ZIP Letterboxd ou CSV des films vus ou notés. Traitement sur votre appareil. <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noopener noreferrer">Obtenir un export <ExternalLink size={12} aria-hidden="true"/></a></span></>}</p><button type="button" onClick={showExample} className="dp-demo"><Play size={13} fill="currentColor" aria-hidden="true"/>Voir un exemple</button></div>
+      <div className="dp-form-foot"><p>{mode === 'rss' ? <><Info size={15} aria-hidden="true"/><span>Les pseudos comparent vos journaux récents. Pour remonter plus loin, choisissez « Historique complet ».</span></> : <><FileArchive size={15} aria-hidden="true"/><span>Les fichiers restent sur votre appareil. Un CSV seul compare uniquement ce qu’il contient (journal, films vus ou notes).</span></>}</p><button type="button" onClick={showExample} className="dp-demo"><Play size={13} fill="currentColor" aria-hidden="true"/>Voir un exemple</button></div>
     </section>
     {profiles && <section className="dp-comparison-result" id="resultats" ref={output} tabIndex={-1} aria-label="Résultat de la comparaison"><Results key={revision} profiles={profiles}/></section>}
   </>;

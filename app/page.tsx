@@ -7,7 +7,8 @@ function Wordmark() {
   </span>;
 }
 
-export default function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { mode } = await searchParams;
   return <div className="dp-shell" id="haut">
     <header className="dp-mast">
       <div className="dp-mast-inner">
@@ -29,12 +30,12 @@ export default function Home() {
           <img src="/salle-print.webp" alt="" fetchPriority="high" width="1500" height="750"/>
         </div>
       </section>
-      <Comparator/>
+      <Comparator initialMode={mode === "historique" ? "export" : "rss"}/>
       <section id="fonctionnement" className="dp-method" aria-labelledby="method-title">
         <h2 id="method-title">Mode<br className="dp-method-break"/> d’emploi</h2>
         <div className="dp-questions">
         <details><summary>Que peut-on comparer avec deux pseudos&nbsp;?</summary><p>Chaque pseudo donne accès aux films présents dans le journal public récent de ce membre. Un film peut déjà avoir été vu sans apparaître dans ce flux.</p></details>
-        <details><summary>Comment comparer tous les films enregistrés&nbsp;?</summary><p>Depuis un navigateur sur ordinateur, chaque personne peut <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noreferrer">télécharger son export Letterboxd</a>. Dans « Exports », sélectionnez les deux ZIP. Leur contenu est lu sur votre appareil. Un fichier de notes CSV seul permet aussi de comparer les notes qu’il contient.</p></details>
+        <details><summary>Comment comparer tous les films enregistrés&nbsp;?</summary><p>Depuis un navigateur sur ordinateur, chaque personne peut <a href="https://letterboxd.com/user/exportdata/" target="_blank" rel="noreferrer">télécharger son export Letterboxd</a>. Dans « Historique complet », sélectionnez les deux ZIP. La chronologie utilise les dates consignées dans les journaux et conserve chaque revisionnage. Les films simplement marqués comme vus comptent dans le catalogue. Les fichiers restent sur votre appareil.</p></details>
         <details><summary>Comment lire le score d’affinité&nbsp;?</summary><p>Il mesure la proximité de vos notes sur les films que vous avez tous les deux notés. Des notes identiques donnent 100 %. Un écart moyen d’une étoile donne environ 78 %. Le nombre de films pris en compte est indiqué à côté du score.</p></details>
         </div>
       </section>

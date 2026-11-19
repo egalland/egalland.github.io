@@ -7,11 +7,18 @@ export type Film = {
   tmdb?: string;
 };
 
+export type DiaryEntry = {
+  film: Film;
+  watchedDate: string | null;
+  rewatch: boolean;
+};
+
 export type Profile = {
   name: string;
   source: "rss" | "export" | "demo";
   films: Film[];
   complete: boolean;
+  diary?: DiaryEntry[];
 };
 
 type Pair = { a: Film; b: Film };
@@ -24,8 +31,9 @@ function filmLink(value?: string) {
     const url = new URL(value);
     if (url.port || url.username || url.password) return undefined;
     const host = url.hostname.toLowerCase().replace(/^www\./, "");
-    if (host === "letterboxd.com" && /^\/film\/[\w%-]+\/?$/i.test(url.pathname)) {
-      return "https://letterboxd.com" + url.pathname.toLowerCase().replace(/\/?$/, "/");
+    if (host === "letterboxd.com") {
+      const slug = /^\/(?:[a-z0-9_]+\/)?film\/([\w%-]+)(?:\/\d+)?\/?$/i.exec(url.pathname)?.[1];
+      if (slug) return "https://letterboxd.com/film/" + slug.toLowerCase() + "/";
     }
     if (host === "boxd.it" && /^\/[A-Za-z0-9]+\/?$/.test(url.pathname)) {
       return "https://boxd.it" + url.pathname.replace(/\/$/, "");
@@ -160,16 +168,20 @@ function csvRows(text: string) {
   return rows;
 }
 
-function catalog(csv: string, watched: boolean) {
-  const rows = csvRows(csv);
-  const header = (rows.shift() ?? []).map(cell => cell.trim().toLowerCase());
+type FilmCsv = { header: string[]; rows: string[][] };
+function filmCsv(text: string): FilmCsv {
+  const rows = csvRows(text);
+  return { header: (rows.shift() ?? []).map(cell => cell.trim().toLowerCase()), rows };
+}
+
+function rowFilms(file: FilmCsv, kind: "watched" | "ratings" | "diary") {
+  const { header, rows } = file;
   const titleCol = header.indexOf("name"), yearCol = header.indexOf("year");
   const ratingCol = header.indexOf("rating"), urlCol = header.indexOf("letterboxd uri");
-  if (titleCol < 0 || yearCol < 0 || (!watched && ratingCol < 0)) {
-    throw new Error("Format CSV inattendu. Choisis le fichier ratings.csv ou watched.csv de ton export Letterboxd.");
+  if (titleCol < 0 || yearCol < 0 || (kind === "ratings" && ratingCol < 0)) {
+    throw new Error("Format CSV inattendu. Choisissez ratings.csv, watched.csv ou diary.csv dans un export Letterboxd.");
   }
-  const films = new Map<string, Film>();
-  rows.forEach((row, index) => {
+  return rows.map((row, index): Film => {
     const title = row[titleCol]?.trim();
     if (!title) throw new Error("Titre de film manquant à la ligne " + (index + 2) + " du CSV.");
     const rawRating = row[ratingCol]?.trim();
@@ -177,14 +189,80 @@ function catalog(csv: string, watched: boolean) {
     if (rating !== null && (!Number.isFinite(rating) || rating < 0.5 || rating > 5 || !Number.isInteger(rating * 2))) {
       throw new Error("Note invalide à la ligne " + (index + 2) + " du CSV. Les notes Letterboxd vont de ½ à 5.");
     }
-    const url = filmLink(row[urlCol]);
-    const year = row[yearCol]?.trim() ?? "";
-    const film: Film = { title, year, rating, ...(url ? { url } : {}) };
-    const key = url ?? titleKey(film) ?? ("row:" + index);
-    const earlier = films.get(key);
-    if (!earlier || rating !== null) films.set(key, film);
+    const link = filmLink(row[urlCol]);
+    // Short diary links can identify the individual log, not the film.
+    const url = kind === "diary" && link?.startsWith("https://boxd.it/") ? undefined : link;
+    return { title, year: row[yearCol]?.trim() ?? "", rating, ...(url ? { url } : {}) };
+  });
+}
+
+function catalog(file: FilmCsv, watched: boolean) {
+  const films = new Map<string, Film>();
+  rowFilms(file, watched ? "watched" : "ratings").forEach((film, index) => {
+    const key = film.url ?? titleKey(film) ?? ("row:" + index);
+    if (!films.has(key) || film.rating !== null) films.set(key, film);
   });
   return [...films.values()];
+}
+
+function parseDiary(file: FilmCsv): DiaryEntry[] {
+  const watchedCol = file.header.indexOf("watched date");
+  const rewatchCol = file.header.indexOf("rewatch");
+  if (watchedCol < 0) throw new Error("La colonne « Watched Date » manque dans le journal Letterboxd.");
+  const entries = rowFilms(file, "diary").map((film, index) => {
+    const row = file.rows[index];
+    const watchedDate = row[watchedCol]?.trim() || null;
+    if (watchedDate) {
+      const day = new Date(watchedDate + "T00:00:00Z");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(watchedDate) || !Number.isFinite(day.getTime()) || day.toISOString().slice(0,10) !== watchedDate) {
+        throw new Error("Date de visionnage invalide à la ligne " + (index + 2) + " du journal.");
+      }
+    }
+    return { film, watchedDate, rewatch: /^(yes|true|1)$/i.test(row[rewatchCol]?.trim() ?? "") };
+  });
+  return entries.sort((a,b) => (b.watchedDate ?? "").localeCompare(a.watchedDate ?? ""));
+}
+
+function addDiary(films: Film[], diary: DiaryEntry[], hasWatched: boolean, hasRatings: boolean) {
+  const catalogTitles = titleIndex(films);
+  const byUrl = new Map<string, Film>();
+  for (const film of films) if (film.url) byUrl.set(film.url, film);
+
+  // A diary-only export can include several screenings of a film. Resolve known
+  // film slugs before title/year so a short log link can join an unambiguous film.
+  const knownSlugs = new Map<string, string | null>();
+  for (const { film } of diary) {
+    const key = titleKey(film);
+    if (!key || !film.url) continue;
+    const previous = knownSlugs.get(key);
+    knownSlugs.set(key, previous === undefined || previous === film.url ? film.url : null);
+  }
+  const extra = new Map<string, Film>();
+  for (const entry of diary) {
+    const logged = entry.film;
+    const key = titleKey(logged);
+    const slug = logged.url ?? (key ? knownSlugs.get(key) : undefined);
+    let found = slug ? byUrl.get(slug) : undefined;
+    const candidate = key ? catalogTitles.get(key) : undefined;
+    if (!found && key && candidate !== undefined && candidate >= 0 && knownSlugs.get(key) !== null) {
+      const film = films[candidate];
+      if (!slug || !film.url?.startsWith("https://letterboxd.com/film/") || film.url === slug) found = film;
+    }
+    if (!found && !hasWatched) {
+      if (!slug && (candidate === -1 || (key && knownSlugs.get(key) === null))) continue;
+      const extraKey = slug ?? key ?? ("untitled-year:" + normalizeTitle(logged.title));
+      found = extra.get(extraKey);
+      if (!found) {
+        found = { ...logged, rating: null, ...(slug ? { url: slug } : {}) };
+        extra.set(extraKey, found);
+      }
+    }
+    if (found) {
+      if (!hasRatings && found.rating === null) found.rating = logged.rating;
+      entry.film = { ...found, rating: logged.rating };
+    }
+  }
+  return films.concat([...extra.values()]);
 }
 
 type ZipEntry = { method: number; size: number; packed: number; offset: number; flags: number };
@@ -214,7 +292,7 @@ async function zipFiles(file: File) {
     const next = at + 46 + nameLength + directory.getUint16(at + 30, true) + directory.getUint16(at + 32, true);
     if (next > directory.byteLength) throw archiveError();
     const name = decoder.decode(new Uint8Array(directory.buffer, at + 46, nameLength));
-    const match = /^(?:(?!deleted\/|lists\/|__macosx\/)([^/]+)\/)?(ratings\.csv|watched\.csv|profile\.csv)$/i.exec(name);
+    const match = /^(?:(?!deleted\/|lists\/|__macosx\/)([^/]+)\/)?(ratings\.csv|watched\.csv|diary\.csv|profile\.csv)$/i.exec(name);
     if (match) {
       const path = match[1] ?? "";
       const group = groups.get(path) ?? new Map<string, ZipEntry>();
@@ -229,11 +307,11 @@ async function zipFiles(file: File) {
     }
     at = next;
   }
-  const candidates = [...groups].filter(([, entries]) => entries.has("ratings.csv") || entries.has("watched.csv"));
+  const candidates = [...groups].filter(([, entries]) => entries.has("ratings.csv") || entries.has("watched.csv") || entries.has("diary.csv"));
   const root = candidates.find(([path]) => !path);
   if (root) return root[1];
   if (candidates.length === 1) return candidates[0][1];
-  throw new Error("L’archive doit contenir les films d’un seul profil Letterboxd (ratings.csv ou watched.csv).");
+  throw new Error("L’archive doit contenir les films d’un seul profil Letterboxd (ratings.csv, watched.csv ou diary.csv).");
 }
 
 async function readEntry(file: File, entry: ZipEntry, limit = csvLimit) {
@@ -284,18 +362,24 @@ export async function importProfile(file: File, fallbackName: string): Promise<P
   const fallback = fallbackName.trim() || "Profil importé";
   let name = fallback;
   let complete = false;
+  let diary: DiaryEntry[] | undefined;
   let films: Film[];
   if (zip) {
     const entries = await zipFiles(file);
     const watched = entries.get("watched.csv"), ratings = entries.get("ratings.csv");
-    const watchedFilms = watched ? catalog(await readEntry(file, watched), true) : [];
-    const ratedFilms = ratings ? catalog(await readEntry(file, ratings), false) : [];
+    const watchedFilms = watched ? catalog(filmCsv(await readEntry(file, watched)), true) : [];
+    const ratedFilms = ratings ? catalog(filmCsv(await readEntry(file, ratings)), false) : [];
     const { matches, used } = matchFilms(watchedFilms, ratedFilms);
     films = watchedFilms.map((film, index) => {
       const match = matches.get(index);
       return match === undefined ? film : { ...film, ...ratedFilms[match] };
     }).concat(ratedFilms.filter((_, i) => !used.has(i)));
     complete = Boolean(watched);
+    const journal = entries.get("diary.csv");
+    if (journal) {
+      diary = parseDiary(filmCsv(await readEntry(file, journal)));
+      films = addDiary(films, diary, complete, Boolean(ratings));
+    }
     const profile = entries.get("profile.csv");
     let username: string | undefined;
     if (profile && profile.size <= 512 * 1024) {
@@ -305,14 +389,21 @@ export async function importProfile(file: File, fallbackName: string): Promise<P
     name = username || /^letterboxd-([a-z0-9_-]+?)-\d{4}-\d{2}-\d{2}(?:-|\.)/i.exec(file.name)?.[1] || fallback;
   } else if (/\.csv$/i.test(file.name)) {
     if (file.size > csvLimit) throw new Error("Le CSV dépasse 32 Mo.");
-    if (/^(?:watchlist|reviews|diary|profile)\.csv$/i.test(file.name)) {
-      throw new Error("Choisis ratings.csv, watched.csv ou le ZIP complet de ton export Letterboxd.");
+    if (/^(?:watchlist|reviews|profile|comments|likes)\.csv$/i.test(file.name)) {
+      throw new Error("Choisissez ratings.csv, watched.csv, diary.csv ou le ZIP complet.");
     }
-    complete = /^watched\.csv$/i.test(file.name);
-    films = catalog(await file.text(), complete);
+    const csv = filmCsv(await file.text());
+    if (csv.header.includes("review")) throw new Error("Choisissez diary.csv pour lire votre journal de visionnage.");
+    if (/^diary\.csv$/i.test(file.name) || csv.header.includes("watched date")) {
+      diary = parseDiary(csv);
+      films = addDiary([], diary, false, false);
+    } else {
+      complete = /^watched\.csv$/i.test(file.name);
+      films = catalog(csv, complete);
+    }
   } else {
     throw new Error("Choisis un export Letterboxd au format ZIP ou CSV.");
   }
   if (!films.length) throw new Error("Ce fichier ne contient encore aucun film à comparer.");
-  return { source: "export", name, films, complete };
+  return { source: "export", name, films, complete, ...(diary ? { diary } : {}) };
 }

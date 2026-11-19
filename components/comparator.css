@@ -600,3 +600,23 @@
   .dp-comparator .dp-submit { transition: none; }
   .dp-spinner { animation: none; }
 }
+
+.dp-history-import-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .55rem 1.5rem;
+  padding: 1rem var(--gutter);
+  background: var(--print-lilac);
+  border-bottom: 1px solid var(--print-ink);
+}
+.dp-history-import-intro p { margin: 0; max-width: 62ch; }
+.dp-history-import-intro a { font-weight: 700; text-underline-offset: .18em; }
+.dp-history-import-intro svg { vertical-align: middle; }
+@media (max-width: 600px) {
+  .dp-results-nav button:nth-child(odd) { border-left: 0; }
+  .dp-results-nav button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .dp-modes { max-width: 100%; }
+  .dp-modes button { padding-inline: .55rem; }
+}
