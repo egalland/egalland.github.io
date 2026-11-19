@@ -1,0 +1,79 @@
+[
+  {
+    "family": "Anton",
+    "style": "normal",
+    "weight": "400",
+    "url": "https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm0K0.ttf",
+    "file": "Anton-400.ttf"
+  },
+  {
+    "family": "Archivo Black",
+    "style": "normal",
+    "weight": "400",
+    "url": "https://fonts.gstatic.com/s/archivoblack/v23/HTxqL289NzCGg4MzN6KJ7eW6OYs.ttf",
+    "file": "ArchivoBlack-400.ttf"
+  },
+  {
+    "family": "Barlow Condensed",
+    "style": "italic",
+    "weight": "900",
+    "url": "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxyL3I-JCGChYJ8VI-L6OO_au7B6xTrW3bWvA.ttf",
+    "file": "BarlowCondensed-900-Italic.ttf"
+  },
+  {
+    "family": "Black Ops One",
+    "style": "normal",
+    "weight": "400",
+    "url": "https://fonts.gstatic.com/s/blackopsone/v21/qWcsB6-ypo7xBdr6Xshe96H3WDw.ttf",
+    "file": "BlackOpsOne-400.ttf"
+  },
+  {
+    "family": "Bungee",
+    "style": "normal",
+    "weight": "400",
+    "url": "https://fonts.gstatic.com/s/bungee/v17/N0bU2SZBIuF2PU_ECg.ttf",
+    "file": "Bungee-400.ttf"
+  },
+  {
+    "family": "Chakra Petch",
+    "style": "normal",
+    "weight": "700",
+    "url": "https://fonts.gstatic.com/s/chakrapetch/v13/cIflMapbsEk7TDLdtEz1BwkeJI9FQA.ttf",
+    "file": "ChakraPetch-700.ttf"
+  },
+  {
+    "family": "Fjalla One",
+    "style": "normal",
+    "weight": "400",
+    "url": "https://fonts.gstatic.com/s/fjallaone/v16/Yq6R-LCAWCX3-6Ky7FAFnOY.ttf",
+    "file": "FjallaOne-400.ttf"
+  },
+  {
+    "family": "Fugaz One",
+    "style": "normal",
+    "weight": "400",
+    "url": "https://fonts.gstatic.com/s/fugazone/v21/rax_HiWKp9EAITukFslMBA.ttf",
+    "file": "FugazOne-400.ttf"
+  },
+  {
+    "family": "Racing Sans One",
+    "style": "normal",
+    "weight": "400",
+    "url": "https://fonts.gstatic.com/s/racingsansone/v17/sykr-yRtm7EvTrXNxkv5jfKKyDCwLw.ttf",
+    "file": "RacingSansOne-400.ttf"
+  },
+  {
+    "family": "Space Grotesk",
+    "style": "normal",
+    "weight": "700",
+    "url": "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj4PVksj.ttf",
+    "file": "SpaceGrotesk-700.ttf"
+  },
+  {
+    "family": "Teko",
+    "style": "normal",
+    "weight": "700",
+    "url": "https://fonts.gstatic.com/s/teko/v23/LYjYdG7kmE0gV69VVPPdFl06VN_wHLSy.ttf",
+    "file": "Teko-700.ttf"
+  }
+]
