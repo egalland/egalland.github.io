@@ -17,6 +17,7 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [Bilans de code](https://github.com/egalland/egalland.github.io/tree/source/bilans-code-emmanuel) | Exploration interactive de bilans de développement avec données de démonstration. |
 | [Biscuit du jour](https://github.com/egalland/egalland.github.io/tree/master/biscuit-du-jour) | Code source |
 | [BodyOS · Anatomie 3D](https://github.com/egalland/egalland.github.io/tree/source/emmanuel-bodyos) | Visionneuse anatomique autonome et modèle musculaire générique. |
+| [BodyOS · Démonstration locale](https://github.com/egalland/egalland.github.io/tree/source/bodyos-demo) | Application locale de suivi avec profil fictif, journal, mesures, activités et récoltes. |
 | [Cactocalypse](https://github.com/egalland/cactocalypse) | Code source |
 | [Carnet du compost](https://github.com/egalland/carnet-du-compost) | Code source |
 | [Chrome — Emmanuel Galland](https://github.com/egalland/egalland.github.io/tree/master/chrome) | Code source |
@@ -58,7 +59,7 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [Petites victoires](https://github.com/egalland/petites-victoires) | Code source |
 | [Pills](https://github.com/egalland/Pills) | Code source |
 | [Pills 2026](https://github.com/egalland/Pills/tree/rewrite-2026) | Code source |
-| [Point Marché · Édition générique](https://github.com/egalland/egalland.github.io/tree/source/point-marche) | Consulter le README pour le périmètre de l’édition générique. |
+| [Point Marché · Édition générique](https://github.com/egalland/egalland.github.io/tree/source/point-marche) | Application de réunion hors ligne fournie en un fichier HTML, avec classeur vierge, export de présentation et préparation de courriels. |
 | [Priorités fragiles](https://github.com/egalland/priorites-fragiles) | Code source |
 | [Product Lab](https://github.com/egalland/egalland.github.io/tree/source/emmanuel-product-lab) | Édition avec catalogue de démonstration et propriétaire configurable. |
 | [Projet NASA](https://github.com/egalland/projetNasa) | Code source |

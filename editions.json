@@ -35,6 +35,13 @@
     "dossier": ""
   },
   {
+    "depot": "bodyos-demo",
+    "titre": "BodyOS · Démonstration locale",
+    "commit": "683bdf607804d4bdb2728e66c516a0787ec64ee2",
+    "arbre": "c6dadf16825caa110a77298f73ffe7d5541f163e",
+    "dossier": ""
+  },
+  {
     "depot": "elan-actions-revenus",
     "titre": "Élan · Planifier un projet de revenus",
     "commit": "574d06ad426d3c517f52ed756eae06fe8c779ecd",
