@@ -1,10 +1,11 @@
 // Shared geographic positions. The IGN road layer determines which regional candidates can be reached on foot.
 import { authoredWeaponDrops, dropCellSize, gridDrop, isActiveGridDrop } from './drop-id.js';
 import { streets } from './paris-data.js';
+import { vehicleSpec } from './vehicle-types.js';
 import { contactAt, moveBody, parkedCars } from './paris-world.js';
 
 const gridKey=(x,y)=>x+4096*y;
-const parked=parkedCars.map(car=>({...car,halfLength:2.06,halfWidth:.9}));
+const parked=parkedCars.map(car=>({...car,...vehicleSpec(car.type)}));
 const shapes={radius:.47,colliders:parked};
 const maxAccess=9;
 const roadCells=new Map();

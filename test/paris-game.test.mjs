@@ -131,7 +131,7 @@ function startGame(t,options={}){
   const saved=new Map(globals.map(k=>[k,globalThis[k]]));
   const hooks={notices:[],actions:[],loadouts:[],players:[],world:{pickups:{}}};
   const canvas=Object.assign(new EventTarget(),{focus(){},setPointerCapture(){}});
-  const net={id:'self-id',status:'online',world:()=>hooks.world,peers:()=>hooks.players,
+  const net={id:'self-id',status:'online',world:()=>hooks.world,peers:()=>hooks.players,onEvent:fn=>{hooks.receive=fn;},
     publish:pose=>{hooks.published=pose;},emit:(name,data)=>{hooks.actions.push({name,data});return true;},
     serverTime:()=>hooks.epoch};
   let frame,stamp=performance.now();
@@ -275,4 +275,45 @@ test('An assisted impact on scenery stays visible briefly and disappears when to
   assert.deepEqual(marks,[{x:.55,y:.43}]);
   h.step(7);assert.equal(marks.at(-1),null);assert.equal(marks.length,2);
   h.game.action('touchFire',false);assert.equal(marks.length,2);
+});
+
+test('The local player, observers and returning tabs share falls, life and appearance across a knockout',t=>{
+  const h=startGame(t),{game}=h;
+  const peer={id:'neighbour',x:SPAWN.x+3,y:SPAWN.y,health:100,angle:0,appearance:{hat:'beret'}};
+  h.players.push(peer);h.step(21);
+  const appearance={shape:'round',color:'#b08276',outfit:'street'};
+  game.setAppearance(appearance);h.step(8);
+  assert.deepEqual(h.published.appearance,appearance);assert.deepEqual(h.scene.entities.find(e=>e.self).appearance,appearance);
+  assert.deepEqual(h.scene.entities.find(e=>e.id===peer.id).appearance,peer.appearance);
+  const hit=(seq,damage,force,at=h.epoch)=>h.receive({type:'hit',player:peer.id,at,seq,data:{target:h.net.id,damage,force,angle:.5,cause:'weapon'}});
+  hit(1,19,.1,h.epoch-8000);assert.equal(h.state.health,100);
+  hit(2,19,.1);hit(2,19,.1);assert.equal(h.state.health,81);
+  game.action('heal');assert.equal(h.state.health,100);assert.equal(h.state.medkits,0);
+  hit(3,31,.7);h.step(10);assert(h.scene.entities.find(e=>e.self).ragdoll?.leftElbow);
+  assert(h.published.ragdoll);assert.equal(h.state.health,69);
+  Object.assign(peer,{ragdoll:{...h.published.ragdoll},angle:h.published.angle,health:69});h.step(16);
+  const fallen=h.scene.entities.find(e=>e.id===peer.id);assert(fallen.ragdoll?.rightFoot);assert.equal(fallen.stunned,true);
+  const origin=game.getPosition();game.setMove(1,0);game.action('vehicle');game.action('fire');h.step(16);
+  assert.deepEqual(game.getPosition(),origin);assert.equal(h.state.inVehicle,false);
+  hit(4,95,1);h.step(10);assert.equal(h.state.health,0);assert.equal(h.state.lifeState,'down');assert(h.state.downSeconds>0);
+  assert.equal(game.travel('louvre'),false);
+  const snapshot=game.exportTravelState();assert.equal(snapshot.vitality.health,0);assert.deepEqual(snapshot.vitality,game.getVitalitySnapshot());
+  assert(game.restoreTravelState(snapshot));assert.equal(h.state.lifeState,'down');
+  const count=h.actions.filter(e=>e.name==='shot').length;game.action('fire');h.step(50);
+  assert.equal(h.actions.filter(e=>e.name==='shot').length,count);
+  h.step(360);assert(h.state.health>0);assert.equal(h.scene.entities.find(e=>e.self).ragdoll,null);
+  assert(game.selectWeapon('fist'));assert.equal(h.state.medkits,1);
+});
+
+test('A witnessed NPC knockout renders from its shared impulse and an older snapshot cannot rewind it',t=>{
+  const h=startGame(t),{game}=h;
+  const id='delayed-passerby',now=h.epoch,actor={id,x:SPAWN.x+3,y:SPAWN.y+7,type:'pedestrian',angle:.2,color:'#ab9692',health:0,healthAt:now,downUntil:now+6500,stunnedUntil:now+6500,
+    ragdoll:{at:now,until:now+6500,angle:.9,force:.81,seed:42}};
+  h.receive({type:'npc',player:'another',data:actor});h.step(20);
+  let model=h.scene.entities.find(e=>e.id===id);
+  assert.equal(model.health,0);assert(model.down&&model.stunned&&model.ragdoll.head[1]<1.1);
+  h.world.npcs={[id]:{...actor,healthAt:now-100,health:75,stunnedUntil:0,downUntil:0,ragdoll:null}};
+  h.step(45);model=h.scene.entities.find(e=>e.id===id);assert(model.down&&model.ragdoll);
+  assert.equal(game.selectWeapon('pistol'),true);h.step(370);
+  assert(!h.scene.entities.some(e=>e.id===id&&e.down));
 });

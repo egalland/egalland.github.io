@@ -1,3 +1,5 @@
+import {drawToyWeapon} from './weapon-artwork.js';
+
 /* Pixel sprites for Maille City. All artwork is drawn on a small integer grid. */
 const INK = '#21182f';
 const SHADOW = '#342240';
@@ -453,6 +455,7 @@ const ITEMS = {
 };
 const ITEM_PALETTE = {x:'#352943',s:'#79526a',v:'#ab7694',c:'#dab096',h:'#fff1d3',l:'#d5c4e2',d:'#918399',e:'#d5a1ce'};
 export function drawItemIcon(ctx, kind, x, y, size) {
+  if(drawToyWeapon(ctx,kind,x,y,size))return;
   const item = ITEMS[kind] ? kind : 'fist';
   const palette = item === 'yarn' ? {...ITEM_PALETTE,h:'#f4c5e9',e:'#cc93d0',v:'#a36bae',x:'#46314d'} : ITEM_PALETTE;
   ctx.save();ctx.imageSmoothingEnabled=false;

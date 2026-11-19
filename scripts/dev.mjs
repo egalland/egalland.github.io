@@ -7,7 +7,7 @@ import { localDatabase } from './local-db.mjs';
 
 const env={DB:localDatabase()};
 const contentType={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
-  '.js':'text/javascript; charset=utf-8','.png':'image/png','.woff2':'font/woff2','.woff':'font/woff','.ico':'image/x-icon','.gz':'application/octet-stream'};
+  '.js':'text/javascript; charset=utf-8','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.woff':'font/woff','.ico':'image/x-icon','.gz':'application/octet-stream'};
 const publicDir=new URL('../public/',import.meta.url);
 const args=process.argv.slice(2);
 const portFlag=args.indexOf('--port');

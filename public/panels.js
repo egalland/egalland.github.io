@@ -5,13 +5,8 @@ import {weaponDrops} from './weapon-drops.js';
 import {wantedRules, wantedThresholds, wantedTuning} from './wanted.js';
 import {mountAtlas,sectorURL,historicURL} from './grand-paris.js';
 
-const weapons = [
-  {id:'fist', name:'Poings', hint:'Corps à corps'},
-  {id:'pistol', name:'Pistolet', hint:'Tir de précision'},
-  {id:'smg', name:'Mitraillette', hint:'Tir rapide'},
-  {id:'shotgun', name:'Fusil à pompe', hint:'Courte portée'},
-  {id:'yarn', name:'Pelote', hint:'Projectile de laine'}
-];
+import {weaponList as weapons} from './weapon-catalog.js';
+
 const emotes = [
   {id:'👋', name:'Salut !', hint:'Saluer les joueurs'},
   {id:'❤️', name:'Cœur', hint:'Envoyer un cœur'},
@@ -27,6 +22,7 @@ const shortcuts = [
   ['Tourner la caméra', ['Glisser clic droit']],
   ['Recentrer la caméra', ['C']],
   ['Recharger', ['R']],
+  ['Utiliser une trousse de secours', ['H']],
   ['Entrer ou sortir d’un véhicule', ['E']],
   ['Roue d’armes', ['Tab']],
   ['Émotes', ['B']],
@@ -90,7 +86,7 @@ function gameShareURL() {
   return coreDestinations.some(d=>d.key===halt)?historicURL(url.href,halt):url.href;
 }
 
-export function createPanels({game,net,getState,selectWeapon,setName,setSound,getSound,setTouchAim,getTouchAim,notify,returnFocus}) {
+export function createPanels({game,net,editLayout,openAvatar,getState,selectWeapon,setName,setSound,getSound,setTouchAim,getTouchAim,notify,returnFocus}) {
   const root=document.getElementById('panels');
   let current='', dialog=null, selected=0, choose=null, setSelected=null;
   let held=false, wheelDirty=false, openedAt=0, interval=0, renderCurrent=null;
@@ -154,13 +150,23 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     header.append(info,dismiss);dialog.append(header);backdrop.append(dialog);root.replaceChildren(backdrop);
     return dialog;
   }
-  function wheel(kind) {
+  function wheel(kind,initialId) {
     const isWeapon=kind==='weapons', items=isWeapon?weapons:emotes;
     const sheet=frame(kind,isWeapon?'Équipement':'Interactions',isWeapon?'Roue d’armes':'Émotes');
     const wheelStage=node('div','mc-wheel-stage');
     const ring=node('div','mc-wheel');
     ring.setAttribute('role','group');
     ring.setAttribute('aria-label',isWeapon?'Choix de l’arme':'Choix de l’émote');
+    const groupSize=isWeapon?5:items.length,totalPages=Math.ceil(items.length/groupSize);
+    const pages=node('nav','mc-gear-pages');pages.setAttribute('aria-label','Pages d’équipement');
+    if(isWeapon){
+      for(let page=0;page<totalPages;page++){
+        const start=page*groupSize;
+        const pager=button((start+1)+'–'+Math.min(start+groupSize,items.length),'mc-gear-page',()=>setSelected(start));
+        pager.setAttribute('aria-label','Afficher les armes '+(start+1)+' à '+Math.min(start+groupSize,items.length));
+        pages.append(pager);
+      }
+    }
     const ns='http://www.w3.org/2000/svg';
     const graph=document.createElementNS(ns,'svg');
     graph.setAttribute('viewBox','0 0 200 200');graph.setAttribute('aria-hidden','true');graph.classList.add('mc-wheel-sectors');
@@ -184,7 +190,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const centerLabel=node('strong','mc-hub-label');
     const detail=node('small','mc-hub-detail');
     center.append(large,centerLabel,detail);ring.append(center);
-    selected=isWeapon?Math.max(0,items.findIndex(it=>it.id===state().weapon)):0;
+    selected=isWeapon?Math.max(0,items.findIndex(it=>it.id===(initialId||state().weapon))):0;
     const cells=items.map((it,i)=>{
       const t=(i/items.length)*Math.PI*2-Math.PI/2;
       const pick=button('', 'mc-choice',()=>{setSelected(i);choose();});
@@ -206,11 +212,19 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
       selected=(i+items.length)%items.length;
       const it=items[selected];
       const locked=isWeapon && !ownsWeapon(it.id);
+      const page=Math.floor(selected/groupSize),offset=page*groupSize,count=Math.min(groupSize,items.length-offset);
+      [...pages.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(i===page)));
       paths.forEach((path,index)=>{
+        const local=index-offset;
+        path.style.display=local>=0 && local<count?'':'none';
+        if(local>=0 && local<count)path.setAttribute('d',sectorPath(local,count));
         path.classList.toggle('mc-selected',index===selected);
         path.classList.toggle('mc-locked',isWeapon && !ownsWeapon(items[index].id));
       });
       cells.forEach((c,index)=>{
+        const local=index-offset,t=(local/count)*Math.PI*2-Math.PI/2;
+        c.hidden=local<0||local>=count;
+        if(!c.hidden){c.style.left=(50+36.8*Math.cos(t))+'%';c.style.top=(50+36.8*Math.sin(t))+'%';}
         const unavailable=isWeapon && !ownsWeapon(items[index].id);
         c.classList.toggle('mc-locked',unavailable);
         c.setAttribute('aria-label',items[index].name+(unavailable?' · À trouver · Voir l’indice':''));
@@ -243,6 +257,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
       else game.emote(item.id);
     };
     setSelected(selected);
+    if(isWeapon&&totalPages>1)wheelStage.append(pages);
     wheelStage.append(ring,hint);
     if(isWeapon)renderCurrent=()=>setSelected(selected);
     const actions=node('div','mc-wheel-actions');
@@ -342,7 +357,9 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const mobile=node('section','mc-guide-section');
     mobile.append(node('h3','','Commandes tactiles'),node('p','','Pousse le joystick à fond pour courir. Glisse sur le décor pour tourner la caméra. Au volant, pousse vers le haut pour accélérer ou vers le bas pour freiner puis reculer.'));
     mobile.append(node('p','','Maintiens le bouton de tir pour accrocher une cible devant toi. Un réticule apparaît dessus. Glisse le pouce sur ce bouton pour ajuster la visée, puis relâche pour arrêter de tirer.'));
-    body.append(kit,alert,mobile,controls);sheet.append(body);
+    const health=node('section','mc-guide-section');
+    health.append(node('h3','','Vie et soins'),node('p','','Utilise une trousse avec H ou le bouton de soins. Un ambulancier peut te soigner et remplir ta trousse. À zéro point de vie, un compte à rebours indique quand tu reviens dans le jeu.'));
+    body.append(kit,health,alert,mobile,controls);sheet.append(body);
   }
   function fieldLabel(text, id) {const l=node('label','mc-field-label',text);l.htmlFor=id;return l;}
   function settingsPanel() {
@@ -375,7 +392,9 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const actions=node('div','mc-form-actions');
     const controls=button('Commandes','mc-secondary',()=>open('help'));
     controls.innerHTML=icon('help')+'<span>Commandes</span>';
-    actions.append(controls,confirm);form.append(group,soundRow,aimRow,display,actions);
+    const custom=node('div','mc-profile-actions');
+    custom.append(button('Modifier la disposition','mc-secondary',()=>{close(false);editLayout();}),button('Mon avatar Kikalmo','mc-secondary',()=>{close(false);openAvatar();}));
+    actions.append(controls,confirm);form.append(group,custom,soundRow,aimRow,display,actions);
     form.addEventListener('submit',e=>{
       e.preventDefault();const name=username.value.trim();
       if(!name){username.setCustomValidity('Entre un nom de joueur.');username.reportValidity();return;}
@@ -436,14 +455,14 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     };
     renderCurrent();interval=setInterval(()=>renderCurrent?.(),900);
   }
-  function open(kind) {
+  function open(kind,id) {
     const kinds=['weapons','emotes','map','settings','players','help'];
     if(!kinds.includes(kind))return;
     if(current===kind){close();return;}
     const activeFocus=current?previousFocus:document.activeElement;
     if(current)close(false);
     previousFocus=activeFocus;current=kind;root.hidden=false;game.setPaused?.(true);
-    if(kind==='weapons' || kind==='emotes')wheel(kind);
+    if(kind==='weapons' || kind==='emotes')wheel(kind,id);
     else if(kind==='map')mapPanel();
     else if(kind==='settings')settingsPanel();
     else if(kind==='help')helpPanel();
@@ -474,7 +493,7 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
     const isWheel=current==='weapons' || current==='emotes';
     if(!editable && isWheel){
       const items=current==='weapons'?weapons:emotes;
-      if((lower==='enter' || lower===' ') && target?.closest?.('.mc-dismiss,.mc-hint-map'))return true;
+      if((lower==='enter' || lower===' ') && target?.closest?.('.mc-dismiss,.mc-hint-map,.mc-gear-page'))return true;
       if(lower===wheelTrigger) {
         if(!e.repeat && !held)choose?.(true);
         return consume();
@@ -483,8 +502,10 @@ export function createPanels({game,net,getState,selectWeapon,setName,setSound,ge
       if(['arrowleft','arrowup','arrowright','arrowdown'].includes(lower)){
         wheelDirty=true;setSelected(selected+(['arrowleft','arrowup'].includes(lower)?-1:1),true);return consume();
       }
-      const digit=/^(?:Digit|Numpad)([1-6])$/.exec(e.code) || /^([1-6])$/.exec(e.key);
-      if(digit && Number(digit[1])<=items.length){setSelected(Number(digit[1])-1);choose();return consume();}
+      if(current==='weapons' && ['pageup','pagedown'].includes(lower)){setSelected(Math.max(0,Math.min(items.length-1,(Math.floor(selected/5)+(lower==='pageup'?-1:1))*5)),true);return consume();}
+      const digit=/^(?:Digit|Numpad)([0-9])$/.exec(e.code) || /^([0-9])$/.exec(e.key);
+      const slot=digit?(Number(digit[1])||10)-1:-1;
+      if(slot>=0 && slot<items.length){setSelected(slot);choose();return consume();}
     }
     if(!editable && current==='map' && lower==='m' && !e.repeat){close();return consume();}
     if(lower==='tab' && !isWheel){

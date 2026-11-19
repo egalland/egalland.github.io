@@ -1,8 +1,11 @@
+import {buildShotEffect,effectDuration} from './weapon-effects.js';
+import { vehicleSpec } from './vehicle-types.js';
 // Perspective software renderer for browsers without a WebGL 2 context.
 // It projects the same metre-space data, props, actors and camera boom as the GPU view.
 import {buildings,streets,water} from './paris-data.js';
 import {monuments,cameraDistance,nearbyProps} from './paris-world.js';
 import {drawCanvasPuppet,drawCanvasCar} from './canvas-puppets.js';
+import {drawKikalmoPuppet} from './kikalmo-canvas.js';
 import {pickupPatch,pickupStyle,pickupLift,pickupPhase,pickupRange,pickupMarkerWidth} from './pickup-art.js';
 import {grandParisModels,skipLandmark} from './canvas-landmarks.js';
 
@@ -550,8 +553,9 @@ export function createCanvasView(canvas,spawn,onNotice){
     const {p,yaw,pitch=0,car,destroyed}=state,snap=state.snap||!Number.isFinite(followX)||Math.hypot(followX-p.x,followY-p.y)>25;
     const blend=snap?1:1-Math.exp(-(car?11:19)*frameDt);
     followX+=(p.x-followX)*blend;followY+=(p.y-followY)*blend;
-    fx=Math.cos(yaw);fy=Math.sin(yaw);const goal=car?8.15+Math.min(2.25,Math.abs(state.speed||0)*.065):5.25;
-    const focus=car?1.35:1.17,wantedH=(car?2.92:2.18)+pitch*2.8;
+    const model=car?vehicleSpec(car.type):null;
+    fx=Math.cos(yaw);fy=Math.sin(yaw);const goal=car?8.15+Math.max(0,model.halfLength-2)*1.24+Math.min(2.25,Math.abs(state.speed||0)*.065):5.25;
+    const focus=car?Math.max(1.35,model.height*.77):1.17,wantedH=(car?Math.max(2.92,model.height+1.05):2.18)+pitch*2.8;
     const dist=clamp(cameraDistance(followX,followY,focus,yaw+Math.PI,goal,wantedH,destroyed),.3,goal);
     arm=snap?dist:Math.min(dist,arm+(dist-arm)*(1-Math.exp(-6*frameDt)));
     camX=followX-fx*arm;camY=followY-fy*arm;camH=focus+(wantedH-focus)*arm/goal+.12;
@@ -607,7 +611,7 @@ export function createCanvasView(canvas,spawn,onNotice){
     g.drawImage(background,0,0);queue.length=0;
     for(const pickup of state.pickups||[])queuePickup(pickup,time,destroyed);
     for(const e of state.entities){
-      const base=at(e.x,e.y,0),high=e.isCar?1.75:1.78,top=at(e.x,e.y,high);
+      const base=at(e.x,e.y,0),high=e.isCar?vehicleSpec(e.type).height:1.78,top=at(e.x,e.y,high);
       if(!base||!top||base.d>(e.isCar?160:96)||base.d<.61)continue;
       const ph=base.y-top.y;if(ph<2||base.x<-ph*2||base.x>w+ph*2)continue;
       // Collinear urban façades can hide traffic even though the shared simulation still runs behind them.
@@ -616,7 +620,7 @@ export function createCanvasView(canvas,spawn,onNotice){
         const wid=ph*(e.isCar?.77:.27);
         g.fillStyle='rgba(62,49,64,.25)';g.beginPath();g.ellipse(base.x,base.y-1,Math.max(1,wid),Math.max(1,wid*.2),0,0,tau);g.fill();
         const theta=Math.atan2(e.y-camY,e.x-camX)-(e.angle||0);
-        (e.isCar?drawCanvasCar:drawCanvasPuppet)(g,e,base.x,base.y,ph,time,theta);
+        (e.isCar?drawCanvasCar:e.appearance?drawKikalmoPuppet:drawCanvasPuppet)(g,e,base.x,base.y,ph,time,theta);
         if(e.bubble||e.peer&&base.d<45){
           const label=String(e.bubble||e.name||'').slice(0,26);g.font=(e.bubble?'19px':'600 11px')+' sans-serif';
           const ww=g.measureText(label).width+12,yy=top.y-(e.isCar?10:6);
@@ -626,11 +630,18 @@ export function createCanvasView(canvas,spawn,onNotice){
     }
     queue.sort((a,b)=>b.z-a.z);for(const o of queue)o.draw();
     for(let i=effects.length-1;i>=0;i--){const e=effects[i],age=time-e.born;
-      if(age>(e.kind==='burst'?.55:.22)){effects.splice(i,1);continue;}
-      const pp=at(e.x,e.y,.93);if(!pp)continue;
-      const isYarn=e.kind==='yarn';g.strokeStyle=isYarn?'#ffadc9':'#ffe3a4';g.lineWidth=isYarn?2.5:1.5;
-      if(e.kind==='burst'){for(let j=0;j<8;j++){const v=j*2.39+age;g.fillStyle=j%2?'#f0c891':'#94b5a6';g.fillRect(pp.x+Math.cos(v)*age*80,pp.y+Math.sin(v)*age*80,3,3);}}
-      else {g.beginPath();g.moveTo(pp.x,pp.y);const steps=isYarn?15:1;for(let j=1;j<=steps;j++){const t=j/steps,swing=isYarn?Math.sin(j*1.2)*.23:0,pt=at(e.x+Math.cos(e.angle)*e.len*t-Math.sin(e.angle)*swing,e.y+Math.sin(e.angle)*e.len*t+Math.cos(e.angle)*swing,.96+swing*.1);if(pt)g.lineTo(pt.x,pt.y);}g.stroke();}
+      const duration=e.kind==='burst'?.55:effectDuration(e.kind);
+      if(age>duration){effects.splice(i,1);continue;}
+      if(e.kind==='burst'){
+        const pp=at(e.x,e.y,.93);if(!pp)continue;
+        for(let j=0;j<8;j++){const v=j*2.39+age;g.fillStyle=j%2?'#f0c891':'#94b5a6';g.fillRect(pp.x+Math.cos(v)*age*80,pp.y+Math.sin(v)*age*80,3,3);}
+      }else{
+        for(const stroke of buildShotEffect(e.kind,e.x,e.y,e.angle,e.len,age/duration)){
+          g.beginPath();g.strokeStyle=stroke.color;g.lineWidth=stroke.width;let pen=false;
+          for(const vertex of stroke.points){const pt=at(vertex.x,vertex.y,vertex.z);if(!pt){pen=false;continue;}if(pen)g.lineTo(pt.x,pt.y);else g.moveTo(pt.x,pt.y);pen=true;}
+          g.stroke();
+        }
+      }
     }
   }
   function projectTarget(x,y,elevation=1){

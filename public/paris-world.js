@@ -1,6 +1,8 @@
 // Local coordinates are metres, east and south. All map layers share the IGN projection in paris-data.
 import { buildings, streets, water, green, metadata } from './paris-data.js';
 
+import { vehicleSpec } from './vehicle-types.js';
+
 const EMPTY = new Set();
 const TAU = Math.PI * 2;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -487,12 +489,21 @@ export function nearbyProps(x,y,radius){
 const tintedCars=['#8ac7b4','#bb6681','#bb8657','#65829d','#ab6256','#98aaa4','#bc9975'];
 const tintedPeds=['#91bcae','#c98a82','#c1a17c','#929dc3','#b7738c','#8fa27f','#9d81b4'];
 const serviceTypes=['police','firefighter','medic','swat'];
+const parkedFleet=['compact','taxi','sedan','van','compact','taxi','sport','sport','sedan','compact'];
 const vehiclesAtStops=destinations.map((d,i)=>{
+  const preferred=sector?parkedFleet[hash(Math.round(midX)+':'+Math.round(midY))%parkedFleet.length]:parkedFleet[i];
+  const canPark=(p,type)=>{
+    const {halfLength,halfWidth}=vehicleSpec(type);
+    return !testPose(p.x,p.y,{angle:p.angle??d.angle,halfLength,halfWidth});
+  };
   const coords=[];
   for(const distance of [3.75,4.35,5.4,7,9])for(const offset of [-Math.PI/2,Math.PI/2,Math.PI,0,2.22,-2.22])
     coords.push({x:d.x+distance*Math.cos(d.angle+offset),y:d.y+distance*Math.sin(d.angle+offset)});
-  const v=d.park || coords.find(c=>!testPose(c.x,c.y,{angle:d.angle,halfLength:1.96,halfWidth:.85}))||coords[0];
-  return {...v,id:d.key==='sector'?'car-region-'+hash((sector.key||'')+':'+Math.round(midX)+':'+Math.round(midY)):'car-'+d.key,angle:v.angle??d.angle,kind:'car',type:'car',color:tintedCars[(i+1)%tintedCars.length],speed:0,moving:false,parked:true};
+  if(d.park)coords.unshift(d.park);
+  let type=preferred;
+  let v=coords.find(p=>canPark(p,type));
+  if(!v){type='compact';v=coords.find(p=>canPark(p,type))||coords[0];}
+  return {...v,id:d.key==='sector'?'car-region-'+hash((sector.key||'')+':'+Math.round(midX)+':'+Math.round(midY)):'car-'+d.key,angle:v.angle??d.angle,kind:'car',type,color:tintedCars[(i+1)%tintedCars.length],speed:0,moving:false,parked:true};
 });
 export const parkedCars=vehiclesAtStops;
 
@@ -565,7 +576,7 @@ for(const {p} of trafficSeeds.values()){
   if(loop.length<40)continue;
   const clipped=sections.some(e=>e.p.part);
   const id=clipped?p.road.id+':'+hash(sections.map(e=>e.p.id).join('/')).toString(36):p.road.id;
-  const rec={...loop,id,key:p.key,road:p.road,count:Math.max(1,Math.round(loop.length/208))};
+  const rec={...loop,id,key:p.key,road:p.road,wide:sections.every(s=>s.p.road.w>=6),count:Math.max(1,Math.round(loop.length/208))};
   circulation.insert(rec,bounds(loop.path,4));
 }
 function addPatrol(patrol,id,name){
@@ -593,7 +604,7 @@ for(const {p} of walkerSeeds.values()){
   }
 }
 const flocks=['pedestrian','pedestrian','pedestrian','pedestrian','police','pedestrian','pedestrian','firefighter','pedestrian','medic','pedestrian','swat','pedestrian','pedestrian'];
-const fleet=['car','car','car','police','car','car','car','ambulance','car','car','firetruck','car','car','swat','car','car','car','car'];
+const fleet=['compact','sedan','taxi','police','van','compact','sport','ambulance','sedan','bus','firetruck','van','taxi','swat','compact','sedan','car','bus'];
 export function routeAgents(x,y,radius=140,epochMs=Date.now()){
   const actors=[],cars=[],r2=radius*radius,sec=epochMs*.001;
   const consider=(list,entity)=>{
@@ -601,13 +612,15 @@ export function routeAgents(x,y,radius=140,epochMs=Date.now()){
     if(d2<=r2){entity.distanceSq=d2;list.push(entity);}
   };
   for(const route of circulation.area(x,y,radius)){
-    const base=4.7+(route.key%51)*.08, span=route.length;
+    const nominalSpeed=4.7+(route.key%51)*.08,span=route.length;
     for(let i=0;i<route.count;i++){
+      let type=fleet[(route.key+i*5)%fleet.length];
+      if(type==='bus' && !route.wide)type='compact';
+      const spec=vehicleSpec(type),base=nominalSpeed*spec.cruise;
       const d=wrap(sec*base+route.key%span+i*span/route.count,span);
       const p=alongPath(route,d),ahead=alongPath(route,wrap(d+2.2,span)),back=alongPath(route,wrap(d-1.5,span));
       p.angle=Math.atan2(ahead.y-back.y,ahead.x-back.x);
-      if(sq(x-p.x)+sq(y-p.y)>r2 || testPose(p.x,p.y,{radius:.42},false))continue;
-      const type=fleet[(route.key+i*2)%fleet.length];
+      if(sq(x-p.x)+sq(y-p.y)>r2 || testPose(p.x,p.y,{angle:p.angle,halfLength:spec.halfLength,halfWidth:spec.halfWidth},false))continue;
       consider(cars,{...p,id:'v'+route.id+'-'+i,type,kind:type,color:tintedCars[(route.key+i)%tintedCars.length],speed:base,moving:true});
     }
   }

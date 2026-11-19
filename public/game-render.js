@@ -1,6 +1,10 @@
+import {buildShotEffect,effectDuration} from './weapon-effects.js';
+import { vehicleSpec } from './vehicle-types.js';
 import * as THREE from './three.js';
 import { createCity3D } from './city3d.js';
 import { createPuppet, createCar } from './puppets3d.js';
+import {appearanceKey} from './kikalmo-avatar.js';
+import {createKikalmoModel} from './kikalmo-model.js';
 import { createCanvasView } from './canvas-view.js';
 import { createPickupDisplay } from './pickup-models.js';
 import { cameraDistance, nearbyProps } from './paris-world.js';
@@ -69,10 +73,11 @@ export function createView(canvas,spawn,onNotice) {
     renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=touch&&w<h?68:58;camera.updateProjectionMatrix();
   }
   function entity(e,dt,t){
-    const vehicle=!!e.isCar,key=e.renderId||e.id,id=vehicle?'car/'+e.type:'puppet/'+e.type;
+    const vehicle=!!e.isCar,key=e.renderId||e.id,look=vehicle?'':appearanceKey(e.appearance);
+    const id=vehicle?'car/'+e.type:look?'kikalmo/'+look:'puppet/'+e.type;
     let item=models.get(key);
     if(item && item.kind!==id){scene.remove(item.object.group);item.object.dispose?.();models.delete(key);item=null;}
-    if(!item){const object=(vehicle?createCar:createPuppet)(e.type,e.color,hash(String(e.id))%65535);item={kind:id,object};models.set(key,item);scene.add(object.group);}
+    if(!item){const seed=hash(String(e.id))%65535;const object=look?createKikalmoModel(e.appearance,seed):(vehicle?createCar:createPuppet)(e.type,e.color,seed);item={kind:id,object};models.set(key,item);scene.add(object.group);}
     item.used=inFrame;const g=item.object.group;
     g.position.set(e.x,0,e.y);g.rotation.y=-(e.angle||0);g.visible=true;
     item.object.update(e,dt,t);
@@ -81,7 +86,7 @@ export function createView(canvas,spawn,onNotice) {
   function badge(e,label,bubble){
     let el=names.get(e.id);
     if(!el){el=document.createElement('span');el.style.cssText='position:absolute;transform:translate(-50%,-100%);font:650 11px system-ui;color:#fff3e5;background:#251f30df;border:1px solid #a68ba48a;border-radius:5px;padding:2px 6px;white-space:nowrap;text-shadow:0 1px #302735;';labels.append(el);names.set(e.id,el);}
-    el._used=inFrame;projection.set(e.x,e.isCar?2.25:2.14,e.y);projection.project(camera);
+    el._used=inFrame;projection.set(e.x,e.isCar?vehicleSpec(e.type).height+.43:2.14,e.y);projection.project(camera);
     const visible=projection.z>0&&projection.z<1&&Math.abs(projection.x)<1.1&&Math.abs(projection.y)<1;
     el.hidden=!visible;if(!visible)return;
     el.style.left=(50+50*projection.x)+'%';el.style.top=(50-50*projection.y)+'%';
@@ -89,13 +94,15 @@ export function createView(canvas,spawn,onNotice) {
   }
   function effect(kind,x,y,angle=0,len=0,colors=[]) {
     if(!active || effects.length>42)return;
-    if(kind==='shot' || kind==='yarn' || kind==='fist'){
-      const trace=new THREE.BufferGeometry(),pts=[];
-      const steps=kind==='yarn'?15:1;
-      for(let i=0;i<=steps;i++){const f=i/steps;const curve=kind==='yarn'?Math.sin(f*15)*Math.sin(Math.PI*f)*.22:0;pts.push(new THREE.Vector3(x+Math.cos(angle)*len*f-Math.sin(angle)*curve,1.02+curve*.3,y+Math.sin(angle)*len*f+Math.cos(angle)*curve));}
-      trace.setFromPoints(pts);
-      const material=new THREE.LineBasicMaterial({color:kind==='yarn'?0xff9cc3:0xffda91,transparent:true,depthWrite:false});
-      const line=new THREE.Line(trace,material);scene.add(line);effects.push({mesh:line,life:kind==='yarn'?.28:.12,max:kind==='yarn'?.28:.12});
+    if(kind!=='burst'){
+      const duration=effectDuration(kind);
+      for(const stroke of buildShotEffect(kind,x,y,angle,len)){
+        const points=stroke.points.map(p=>new THREE.Vector3(p.x,p.z,p.y));
+        const geo=new THREE.BufferGeometry().setFromPoints(points);
+        const mat=new THREE.LineBasicMaterial({color:stroke.color,transparent:true,depthWrite:false});
+        const mesh=new THREE.Line(geo,mat);
+        scene.add(mesh);effects.push({mesh,life:duration,max:duration});
+      }
       return;
     }
     const palette=colors.length?colors:['#e69ea7','#ffdc9f','#8fcabf','#d6a787'];
@@ -111,7 +118,9 @@ export function createView(canvas,spawn,onNotice) {
     resize();inFrame++;
     const {p,car,yaw,pitch,destroyed}=state;
     // Tighten the boom immediately at walls, extend it gently after clearing a corner.
-    const follow=car?8.15:5.25, focusY=car?1.35:1.17, lift=car?2.92:2.18;
+    const model=car?vehicleSpec(car.type):null;
+    const follow=car?8.15+Math.max(0,model.halfLength-2)*1.24:5.25;
+    const focusY=car?Math.max(1.35,model.height*.77):1.17,lift=car?Math.max(2.92,model.height+1.05):2.18;
     const snap=state.snap || Math.hypot(camX-p.x,camY-p.y)>25 || inFrame===1;
     const f=snap?1:blend(car?11:19,dt);
     camX+=(p.x-camX)*f;camY+=(p.y-camY)*f;
@@ -140,7 +149,8 @@ export function createView(canvas,spawn,onNotice) {
       if(index<65){
         shadowTransform.position.set(e.x,.052,e.y);
         shadowTransform.rotation.set(0,-(e.angle||0),0);
-        shadowTransform.scale.set(e.isCar?4.35:1.1,1,e.isCar?2.05:.74);
+        const footprint=e.isCar?vehicleSpec(e.type):null;
+        shadowTransform.scale.set(footprint?footprint.halfLength*2.1:1.1,1,footprint?footprint.halfWidth*2.2:.74);
         shadowTransform.updateMatrix();shadows.setMatrixAt(index++,shadowTransform.matrix);
       }
       if(e.bubble || (e.peer && d<48))badge(e,e.bubble||e.name,!!e.bubble);

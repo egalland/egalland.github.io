@@ -1,3 +1,4 @@
+import {normalizeAppearance} from '../public/kikalmo-schema.js';
 import { decodeDropId, isEligibleDropId } from '../public/drop-id.js';
 
 // The Worker owns these tables. They are initialized once per D1 binding and isolate.
@@ -73,8 +74,22 @@ function pose(source) {
   }
   return copy;
 }
-function playerState(raw) {
-  const s=dict(raw), result=pose(s);
+function vitalityFields(source,now) {
+  const result={};
+  if(Number.isFinite(source.health))result.health=num(source.health,100,0,100);
+  if(Number.isFinite(source.downUntil))result.downUntil=num(source.downUntil,0,0,now+8000);
+  if(Number.isFinite(source.healthAt))result.healthAt=num(source.healthAt,now,0,now+1000);
+  const rag=source.ragdoll;
+  if(rag && Number.isFinite(rag.at) && Number.isFinite(rag.until) && rag.at>=now-9000 && rag.until>now-1000){
+    const at=num(rag.at,now,now-9000,now+500);
+    result.ragdoll={at,until:num(rag.until,at,at,Math.min(at+8000,now+8000)),angle:num(rag.angle,0,-Math.PI*2,Math.PI*2),
+      force:num(rag.force,.5,0,1),seed:Math.trunc(num(rag.seed,0,0,65535))};
+  }
+  return result;
+}
+function playerState(raw,now) {
+  const s=dict(raw), result={...pose(s),...vitalityFields(s,now)};
+  const appearance=normalizeAppearance(s.appearance);if(appearance)result.appearance=appearance;
   if (!Number.isFinite(s.x) || !Number.isFinite(s.y)) return {};
   if (s.vehicle && key(s.vehicle.id)) result.vehicle={...pose(s.vehicle),id:key(s.vehicle.id)};
   else result.vehicle=null;
@@ -92,10 +107,19 @@ function eventData(type,raw,now) {
       if (d.kind && Number.isFinite(d.started)) {
         return {...result,id:d.id,started:num(d.started,now,now-120_000,now+2000),level:num(d.level,1,0,5)};
       }
-      return {...result,id:d.id,stunnedUntil:num(d.stunnedUntil,now,0,now+90_000)};
-    case 'shot': return {...result,length:num(d.length,80,0,400)};
+      return {...result,...vitalityFields(d,now),id:d.id,stunnedUntil:num(d.stunnedUntil,0,0,now+8000),
+        ...(Number.isFinite(d.damage)&&d.damage>0?{damage:num(d.damage,1,1,100)}:{})};
+    case 'shot': {
+      const out={...result,length:num(d.length,80,0,400)};
+      const near=r=>Number.isFinite(r?.x)&&Number.isFinite(r?.y)&&Math.hypot(r.x-result.x,r.y-result.y)<=100;
+      if(Array.isArray(d.rays))out.rays=d.rays.slice(0,13).filter(near).map(r=>({x:r.x,y:r.y,angle:num(r.angle,0,-8,8),length:num(r.length,0,0,100)}));
+      if(near(d.impact))out.impact={x:d.impact.x,y:d.impact.y,radius:num(d.impact.radius,1,0,12)};
+      return out;
+    }
     case 'alert': return {...result,level:num(d.level,1,0,5)};
-    case 'hit': return UUID.test(d.target) ? {target:d.target,damage:num(d.damage,1,1,100)} : null;
+    case 'hit': return UUID.test(d.target) ? {target:d.target,damage:num(d.damage,1,1,100),
+      ...(Number.isFinite(d.angle)?{angle:num(d.angle,0,-7,7)}:{}),...(Number.isFinite(d.force)?{force:num(d.force,0,0,1)}:{}),
+      ...(['weapon','traffic'].includes(d.cause)?{cause:d.cause}:{})} : null;
     default: return null;
   }
 }
@@ -127,7 +151,7 @@ async function join(db,b,now) {
        ON CONFLICT (room,id) DO UPDATE SET seen=excluded.seen,name=excluded.name,
        state=CASE WHEN excluded.state='{}' THEN mc_members.state ELSE excluded.state END
        WHERE mc_members.secret=excluded.secret`,
-       room,id,token,name,JSON.stringify(playerState(b.state)),now,now),
+       room,id,token,name,JSON.stringify(playerState(b.state,now)),now,now),
     q('SELECT 1 AS ok FROM mc_members WHERE room=? AND id=? AND secret=?',room,id,token),
     q(MEMBERS_SQL,room,now-GONE),
     q('SELECT seq,player,name,type,data,at FROM mc_events WHERE room=? AND type=\'chat\' ORDER BY seq DESC LIMIT 30',room),
@@ -150,7 +174,7 @@ function recordPickup(stmts,q,{room,id,token,name,op,item,weapon,state,now}){
   const issued=parseInt(match[1],36);
   const fresh=issued>=now-PICKUP_REQUEST_AGE&&issued<=now+2500;
   if(!fresh)return true; // An expired operation can only read its original receipt.
-  const close=Number.isFinite(state.x)&&Number.isFinite(state.y)&&!state.vehicle&&Math.hypot(state.x-p.x,state.y-p.y)<=4;
+  const close=Number.isFinite(state.x)&&Number.isFinite(state.y)&&!state.vehicle&&state.health!==0&&!(state.downUntil>now)&&Math.hypot(state.x-p.x,state.y-p.y)<=4;
   // Reads, receipt and winner event share one D1 batch transaction. Another player
   // can enter only after it commits and will see the winning availability timestamp.
   stmts.push(q(`INSERT OR IGNORE INTO mc_pickup_claims (room,player,op,item,ok,available,at)
@@ -166,13 +190,34 @@ function recordPickup(stmts,q,{room,id,token,name,op,item,weapon,state,now}){
     name,weapon,room,id,op,item,now));
   return true;
 }
+// Resolve each hit against the preceding shared HP inside the same transaction as the event.
+function npcHitStatement(q,{room,id,op,name,data,now}) {
+  return q(`WITH input(src,stamp) AS (VALUES (?,?)),
+    previous AS (SELECT (SELECT data FROM mc_items WHERE room=? AND kind='npc' AND item=?) AS old,src,stamp FROM input),
+    stats AS (SELECT *, COALESCE(json_extract(old,'$.health'),100) AS hp,
+      COALESCE(json_extract(old,'$.healthAt'),stamp) AS last_hit,
+      COALESCE(json_extract(old,'$.downUntil'),0) AS down_at FROM previous),
+    remaining AS (SELECT *,
+      CASE WHEN down_at>stamp THEN 0
+        WHEN down_at>0 AND hp=0 THEN min(100,65+max(0,stamp-down_at-10000)*0.004)
+        ELSE min(100,hp+max(0,stamp-last_hit-10000)*0.004) END AS current_hp FROM stats),
+    result AS (SELECT *,max(0,current_hp-json_extract(src,'$.damage')) AS next_hp FROM remaining)
+    INSERT OR IGNORE INTO mc_events (room,player,op,name,type,data,at)
+      SELECT ?,?,?,?,'npc',
+        CASE WHEN down_at>stamp THEN json_set(old,'$.damage',0)
+        WHEN next_hp<=0 THEN json_set(src,'$.health',0,'$.healthAt',stamp,'$.downUntil',stamp+6500,'$.stunnedUntil',stamp+6500,
+          '$.ragdoll',json_object('at',stamp,'until',stamp+6500,'angle',coalesce(json_extract(src,'$.ragdoll.angle'),json_extract(src,'$.angle'),0),
+          'force',coalesce(json_extract(src,'$.ragdoll.force'),0.8),'seed',coalesce(json_extract(src,'$.ragdoll.seed'),stamp%65536)))
+        ELSE json_set(src,'$.health',next_hp,'$.healthAt',stamp,'$.downUntil',0) END,stamp FROM result`,
+      JSON.stringify(data),now,room,data.id,room,id,op,name);
+}
 async function sync(db,b,now) {
   const {id,token}=b,room=WORLD_KEY;
   const q=(sql,...args)=>db.prepare(sql).bind(...args);
   const member=await q('SELECT name,seen,state FROM mc_members WHERE room=? AND id=? AND secret=? AND seen>?',room,id,token,now-GONE).first();
   if (!member) return json({error:'rejoin'},401);
   const name=clean(b.name,24)||member.name;
-  const rawState=playerState(b.state);
+  const rawState=playerState(b.state,now);
   const state=Number.isFinite(rawState.x) ? JSON.stringify(rawState) : member.state;
   const stmts=[];
   if (now-member.seen>3500 || state!==member.state || name!==member.name) {
@@ -210,6 +255,8 @@ async function sync(db,b,now) {
         SELECT 1 FROM mc_items i JOIN mc_members m ON m.room=i.room AND m.id=i.owner
         WHERE i.room=? AND i.kind='vehicle' AND i.item=? AND i.owner<>? AND m.seen>?)`,
         ...values,room,data.id,id,now-GONE));
+    } else if(type==='npc' && data.damage>0) {
+      stmts.push(npcHitStatement(q,{room,id,op,name,data,now}));
     } else stmts.push(q(accept,...values));
     if (ITEM_TYPES.has(type)) {
       // Use the stored payload and sequence. Retrying an older operation cannot rewind a car.

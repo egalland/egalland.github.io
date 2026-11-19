@@ -2,7 +2,7 @@ import { readdir, readFile, writeFile, mkdir, copyFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto';
 import { extname } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const mime = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.woff2':'font/woff2','.woff':'font/woff','.png':'image/png','.gz':'application/octet-stream'};
+const mime = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.woff2':'font/woff2','.woff':'font/woff','.png':'image/png','.webp':'image/webp','.gz':'application/octet-stream'};
 const assets = {};
 for (const file of (await readdir('public')).sort()) {
   const type = mime[extname(file)];
@@ -16,9 +16,16 @@ for (const file of (await readdir('public')).sort()) {
   const contents = type.startsWith('text/') ? {text:bytes.toString('utf8')} : {encoded:bytes.toString('base64')};
   assets['/' + file] = {type,etag,...contents};
 }
-const dropLogic = assets['/drop-id.js'].text.replace(/^export /gm,'');
-const api = (await readFile('worker/game-api.js','utf8'))
-  .replace("import { decodeDropId, isEligibleDropId } from '../public/drop-id.js';",()=>dropLogic);
+// Keep shared map rules and appearance validation byte-for-byte identical on the client and the Worker.
+function inlineShared(source) {
+  return source.replace(/^import\s*\{([^}]+)\}\s*from\s*['"](?:\.\.\/public\/|\.\/)([\w-]+\.js)['"];?/gm, (_, names, file) => {
+    const module=assets['/'+file];
+    if(!module?.text)throw Error('Missing shared module '+file);
+    const body=inlineShared(module.text).replace(/^export /gm,'');
+    return 'const {'+names+'} = (()=>{\n'+body+'\nreturn {'+names+'};\n})();';
+  });
+}
+const api = inlineShared(await readFile('worker/game-api.js','utf8'));
 const geo = await readFile('worker/geo-api.js','utf8');
 const router = (await readFile('worker/index.js','utf8')).replace("import { handleApi } from './game-api.js';", '').replace("import { handleGeo } from './geo-api.js';", '');
 await mkdir('dist/server',{recursive:true});

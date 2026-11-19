@@ -14,7 +14,9 @@
 <link rel="modulepreload" href="/three.core.min.js">
 <link rel="modulepreload" href="/paris-data.js">
 <link rel="stylesheet" href="/paris.css">
+<link rel="stylesheet" href="/hud-editor.css">
 <script type="module" src="/entry.js"></script>
+<link rel="stylesheet" href="/kikalmo-link.css">
 </head>
 <body>
 <div id="app">
@@ -29,6 +31,7 @@
     <button class="online-chip" id="online" data-panel="players" title="Voir les joueurs connectés dans le monde" aria-label="Voir les joueurs connectés dans le monde"><b class="status-dot"></b><span id="onlineLabel">Connexion…</span></button>
     <span class="tool-divider"></span>
     <button class="tool" id="sound" aria-label="Activer le son" title="Activer le son"><i data-icon="volumeOff"></i></button>
+    <button class="tool" id="editHud" aria-pressed="false" aria-label="Modifier la disposition du jeu" title="Modifier la disposition du jeu"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16M3 14h11"/></svg><span>Disposition</span></button>
     <button class="tool" data-panel="settings" aria-label="Réglages" title="Réglages"><i data-icon="settings"></i></button>
   </div>
 </header>
@@ -38,15 +41,15 @@
   <span id="touchAimMarker" aria-hidden="true" hidden><svg viewBox="0 0 28 28" focusable="false">
     <path d="M3 10V7a4 4 0 0 1 4-4h3m8 0h3a4 4 0 0 1 4 4v3m0 8v3a4 4 0 0 1-4 4h-3m-8 0H7a4 4 0 0 1-4-4v-3"/>
   </svg></span>
-  <section class="district" aria-label="Position actuelle">
+  <section data-hud="district" class="district" aria-label="Position actuelle">
     <div class="district-line"><i data-icon="pin"></i><span>PARIS · PETITE COURONNE</span></div>
     <h2 id="district">Place de l’Étoile</h2><span id="street" class="street"></span>
   </section>
-  <section class="player-panel hud" aria-label="État du personnage">
-    <div class="portrait"><canvas id="portrait" width="96" height="96" role="img" aria-label="Renard Kikalmo"></canvas></div>
+  <section data-hud="vitals" class="player-panel hud" aria-label="État du personnage">
+    <button type="button" class="portrait" id="openAvatar" title="Avatar Kikalmo" aria-label="Lier ou modifier mon avatar Kikalmo"><canvas id="portrait" width="96" height="96" role="img" aria-label="Renard Kikalmo"></canvas></button>
     <div class="vitals">
       <div class="name-row"><strong id="playerName">Renard</strong><span class="you">VOUS</span></div>
-      <div class="health-row"><i data-icon="heart"></i><div class="health-track"><div id="hpBar"></div></div><span id="hpNum">100</span></div>
+      <div class="health-row"><button id="healHud" title="Utiliser une trousse (H)" aria-label="Utiliser une trousse de secours"><i data-icon="heart"></i></button><div class="health-track" id="healthMeter" role="progressbar" aria-label="Vie" aria-valuemin="0" aria-valuemax="100"><div id="hpBar"></div></div><span id="hpNum">100</span></div>
       <div class="alert-row">
         <div class="wanted" id="stars" role="img" aria-label="Aucune étoile de recherche"><span aria-hidden="true">★★★★★</span><div aria-hidden="true">★★★★★</div></div>
         <span id="wantedRatio" class="alert-ratio" aria-hidden="true"></span>
@@ -55,26 +58,27 @@
       <div id="wantedFeedback" class="alert-feedback" hidden></div>
     </div>
   </section>
-  <div id="driveHud" class="drive-hud" hidden><i data-icon="car"></i><span>Au volant</span><b id="carSpeed">0 km/h</b></div>
+  <div data-hud="speed" id="driveHud" class="drive-hud" hidden><i data-icon="car"></i><span>Au volant</span><b id="carSpeed">0 km/h</b></div>
+  <div class="ko-notice" id="koNotice" role="status" hidden><strong>K.-O.</strong><span id="reviveTimer"></span></div>
   <button id="sectorEdge" type="button" hidden></button>
   <div class="game-notice" id="notice" role="status" aria-live="polite"></div>
-  <button class="hud radar" data-panel="map" title="Ouvrir la carte (M)" aria-label="Ouvrir la carte de la ville">
+  <button data-hud="radar" class="hud radar" data-panel="map" title="Ouvrir la carte (M)" aria-label="Ouvrir la carte de la ville">
     <div class="radar-map"><canvas id="minimap" width="330" height="170"></canvas><span class="north">N</span><span class="radar-expand"><i data-icon="expand"></i></span></div>
     <div class="radar-cap"><span><i data-icon="radar"></i>MINI-CARTE</span><kbd>M</kbd></div>
   </button>
-  <section class="inventory" aria-label="Équipement du joueur">
+  <section data-hud="inventory" class="inventory" aria-label="Équipement du joueur">
     <div id="pickupHint" class="pickup-hint" hidden></div>
-    <div class="inventory-cap"><span><i data-icon="pack"></i>ÉQUIPEMENT <small id="ownedCount">2/5</small></span><span id="weaponLabel">Pistolet</span></div>
-    <div class="inventory-slots" id="slots"></div>
+    <div class="inventory-cap"><span><i data-icon="pack"></i>ÉQUIPEMENT <small id="ownedCount">2/13</small></span><span id="weaponLabel">Pistolet</span></div>
+    <div class="inventory-rail"><button type="button" class="slot-page" id="prevSlots" title="Armes précédentes" aria-label="Armes précédentes">‹</button><div class="inventory-slots" id="slots"></div><button type="button" class="slot-page" id="nextSlots" title="Armes suivantes" aria-label="Armes suivantes">›</button></div>
   </section>
-  <aside class="hud chat" id="chat" aria-label="Chat mondial">
+  <aside data-hud="chat" class="hud chat" id="chat" aria-label="Chat mondial">
     <button class="chat-head" id="chatToggle" aria-expanded="true"><span><i data-icon="chat"></i>Chat mondial</span><i data-icon="chevronDown"></i></button>
     <div class="chat-body"><div class="chat-log" id="chatLog" role="log" aria-live="polite"></div>
     <form id="chatForm"><input id="chatEntry" aria-label="Message pour le chat mondial" placeholder="Écrire un message…" autocomplete="off" enterkeyhint="send" maxlength="180"><button aria-label="Envoyer le message" title="Envoyer"><i data-icon="send"></i></button></form></div>
   </aside>
   <div id="touchControls" aria-label="Commandes tactiles">
-    <div class="stick" id="stick" role="group" aria-label="Joystick de déplacement"><span></span><b></b></div>
-    <div class="touch-actions"><button id="recenter" title="Recentrer la caméra" aria-label="Recentrer la caméra"><i data-icon="camera"></i></button><button id="ride" aria-label="Monter ou descendre du véhicule"><i data-icon="car"></i></button><button id="fire" aria-label="Utiliser l’arme"><i data-icon="aim"></i></button></div>
+    <div data-hud="stick" class="stick" id="stick" role="group" aria-label="Joystick de déplacement"><span></span><b></b></div>
+    <div class="touch-actions"><button data-hud="heal" id="heal" aria-label="Utiliser une trousse de secours" title="Soins"><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4h8v3m-7 7h6m-3-3v6"/></svg><small id="kitCount">1</small></button><button data-hud="recenter" id="recenter" title="Recentrer la caméra" aria-label="Recentrer la caméra"><i data-icon="camera"></i></button><button data-hud="ride" id="ride" aria-label="Monter ou descendre du véhicule"><i data-icon="car"></i></button><button data-hud="fire" id="fire" aria-label="Utiliser l’arme"><i data-icon="aim"></i></button></div>
   </div>
   <div class="scene-load" id="loadScene" role="status"><div class="load-frame"><img src="/favicon.png" alt=""><strong>Maille City</strong><span id="loadingText">Ouverture de Paris en laine…</span><div class="load-progress"></div><button id="retryLoad" type="button" hidden>Réessayer</button><a id="returnToCity" hidden>Revenir avenue de la Grande Armée</a></div></div>
   <div id="panels"></div>

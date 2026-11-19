@@ -1,13 +1,10 @@
 // All pickup markers, including the software view, share the same embroidered patch.
+import {weaponCatalog} from './weapon-catalog.js';
+import {drawToyWeapon} from './weapon-artwork.js';
 const patches=new Map();
-const palettes={
-  smg:{accent:'#76e2cc',thread:'#338d84',cloth:'#24444c',trim:'#bff5d6'},
-  shotgun:{accent:'#ffd084',thread:'#c68f55',cloth:'#58444e',trim:'#fff0c2'},
-  yarn:{accent:'#ffa4cd',thread:'#be6a98',cloth:'#4e3656',trim:'#ffdbec'},
-};
 export const pickupRange=110;
 export const pickupMarkerWidth=2.15;
-export const pickupStyle=kind=>palettes[kind];
+export const pickupStyle=kind=>weaponCatalog[kind]?.palette;
 export function pickupLift(time,seed){return 1.54+.14*Math.sin(time*2.36+seed);}
 export function pickupPhase(id){
   let h=2166136261;for(const c of String(id)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return (h>>>0)%628/100;
@@ -64,7 +61,9 @@ export function pickupPatch(kind){
   c.save();c.globalAlpha=.21;
   for(let y=29;y<70;y+=6)for(let x=25+(y%2)*3;x<97;x+=8){line(c,[[x,y],[x+1.8,y+1.3],[x+3.2,y-.5]],p.trim,.7);}
   c.restore();
-  if(kind==='yarn')yarn(c);else softGun(c,kind);
+  if(kind==='yarn')yarn(c);
+  else if(kind==='smg'||kind==='shotgun')softGun(c,kind);
+  else drawToyWeapon(c,kind,10,18,100,60);
   shape(c,[[90,18],[92,12],[94,17],[99,19],[94,21],[92,27],[90,22],[86,20]],'#fff5cf',p.cloth,1.6);
   patches.set(kind,canvas);return canvas;
 }

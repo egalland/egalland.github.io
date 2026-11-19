@@ -1,4 +1,6 @@
 import * as THREE from './three.js';
+import { vehicleSpec } from './vehicle-types.js';
+import { createRagdollRig } from './ragdoll-render.js';
 
 // All figures face +X and stand on y=0. The scenery and the game camera use metres.
 const geo={
@@ -270,18 +272,21 @@ function makeBody(type,animal,cloth,seed,high){
   }
   for(const s of [-1,1]){
     const side=s<0?'L':'R',arm=joint(core,'arm'+side,.001,.182,s*.224),leg=joint(core,'leg'+side,-.016,-.24,s*.112);
-    const armCurve=taper([[0,0,0],[.005,-.13,.056*s],[.027,-.27,.054*s],[.059,-.32,.045*s]],[.071,.07,.048,.046],8);
-    addPart(arm,armCurve,0,0,0,1,1,1,isFox?'#385561':out[0]);
-    ball(arm,.045,-.269,.05*s,.063,.043,.063,isFox?colors.trim:out[1]);
-    ball(arm,.069,-.328,.051*s,.085,.083,.080,colors.glove,.1*s,0,.05);
-    ball(arm,.119,-.311,.022*s,.043,.057,.042,colors.glove);
-    for(let k=0;k<2;k++)cord(arm,[[.049+k*.033,-.33,.123*s],[.055+k*.027,-.355,.119*s]],.0045,'#aa8974');
-    const legCurve=taper([[0,0,0],[-.013,-.134,0],[.005,-.252,0]], [.075,.061,.051],8);
-    addPart(leg,legCurve,0,0,0,1,1,1,'#454052');
-    ball(leg,.017,-.275,0,.081,.068,.073,'#8b675c');
-    ball(leg,.061,-.352,.002*s,.147,.088,.093,colors.boot,0,0,-.08);
-    ball(leg,.066,-.394,.002*s,.15,.039,.095,colors.sole);
-    cord(leg,[[.081,-.295,-.046],[.099,-.291,0],[.082,-.297,.046]],.006,'#c69a75');
+    const sleeve=isFox?'#385561':out[0];
+    const elbow=joint(arm,'elbow'+side,.008,-.162,.040*s);
+    const knee=joint(leg,'knee'+side,-.012,-.141,0);
+    addPart(arm,taper([[0,0,0],[.003,-.085,.031*s],[.008,-.17,.040*s]],[.071,.069,.058],8),0,0,0,1,1,1,sleeve);
+    addPart(elbow,taper([[0,.012,0],[.013,-.080,.014*s],[.04,-.15,.01*s]],[.059,.054,.047],8),0,0,0,1,1,1,sleeve);
+    ball(elbow,.037,-.107,.010*s,.063,.043,.063,isFox?colors.trim:out[1]);
+    ball(elbow,.061,-.166,.011*s,.085,.083,.080,colors.glove,.1*s,0,.05);
+    ball(elbow,.111,-.149,-.018*s,.043,.057,.042,colors.glove);
+    for(let k=0;k<2;k++)cord(elbow,[[.041+k*.033,-.168,.083*s],[.047+k*.027,-.193,.079*s]],.0045,'#aa8974');
+    addPart(leg,taper([[0,0,0],[-.009,-.074,0],[-.012,-.147,0]],[.075,.071,.06],8),0,0,0,1,1,1,'#454052');
+    addPart(knee,taper([[0,.009,0],[.007,-.054,0],[.016,-.114,0]],[.061,.057,.051],8),0,0,0,1,1,1,'#454052');
+    ball(knee,.029,-.134,0,.081,.068,.073,'#8b675c');
+    ball(knee,.073,-.211,.002*s,.147,.088,.093,colors.boot,0,0,-.08);
+    ball(knee,.078,-.253,.002*s,.15,.039,.095,colors.sole);
+    cord(knee,[[.093,-.154,-.046],[.111,-.150,0],[.094,-.156,.046]],.006,'#c69a75');
   }
   if(animal==='fox'||animal==='raccoon'||animal==='cat'){
     const tail=joint(core,'tail',-.108,-.158,.095);
@@ -322,8 +327,11 @@ export function createPuppet(type='fox',color,seed=0){
   const group=new THREE.Group(),lod=new THREE.LOD();group.add(lod);lod.addLevel(near,0);lod.addLevel(far,type==='fox'?48:29,.12);
   const bone={};near.traverse(o=>{if(o.name)bone[o.name]=o;});
   let phase=(pick%283)*.007,phaseIdle=(pick%141)*.039,smooth=0,previous=0,tailLag=0,em=0,impact=0,shot=0;
-  const hero=type==='fox';
+  const hero=type==='fox',ragRig=createRagdollRig(bone),farDistance=lod.levels[1].distance;
   function update(pose={},dt=1/60,time=0){
+    ragRig.restore();
+    lod.levels[1].distance=pose.ragdoll?Infinity:farDistance;
+    if(pose.ragdoll){near.visible=true;far.visible=false;}
     dt=clamp(Number(dt)||0,0,.1);
     const speed=Math.abs(Number(pose.speed)||0);
     const target=pose.stunned?0:clamp(speed>0?speed/2.2:(pose.move||pose.moving)?1:0,0,1.6);
@@ -342,7 +350,7 @@ export function createPuppet(type='fox',color,seed=0){
     if(!near.visible)return;
     const bounce=(1-b)*.024*rel;
     bone.core.position.y=.69+bounce+.007*(1-rel)*idleBreath-.039*impact;
-    bone.core.rotation.z=pose.stunned?-1.26:-(.034+.045*run)*rel-.009*acceleration+.12*impact;
+    bone.core.rotation.z=pose.stunned&&!pose.ragdoll?-1.26:-(.034+.045*run)*rel-.009*acceleration+.12*impact;
     bone.core.rotation.x=turn*.065+a*.027*rel;
     const squash=.023*b*rel+.008*(1-rel)*idleBreath-.1*impact;
     bone.torso.scale.set(1-squash*.52,1+squash,1-squash*.50);
@@ -368,6 +376,7 @@ export function createPuppet(type='fox',color,seed=0){
       bone.tail.rotation.y=.10*Math.sin(phaseIdle*2.4)+.15*Math.sin(phase-.6)*rel-.3*tailLag;
       bone.tail.rotation.z=(hero?.06:.02)+.075*Math.sin(phase*2-.9)*rel+.048*idleBreath-em*.17;
     }
+    if(pose.ragdoll)ragRig.apply(pose.ragdoll);
   }
   function bendLeg(leg,swing,amount){
     const lift=Math.max(0,swing)*amount;
@@ -435,7 +444,7 @@ function carSideWindow(front,side) {
   carShapeCache.set(key,geometry);return geometry;
 }
 const carPaint=['#b44954','#35a7a4','#eac257','#827eb9','#c68b6d','#6e98b2','#bd6a85','#7fa083'];
-const fleetPaint={police:'#496f9d',ambulance:'#e7dbbe',firetruck:'#b64241',swat:'#3d4b63',taxi:'#e6b557'};
+const fleetPaint={police:'#496f9d',ambulance:'#e7dbbe',firetruck:'#b64241',swat:'#3d4b63',taxi:'#b15c65',bus:'#408d82'};
 const carCloth = '#f4dcb4', carDark = '#303443', carCream = '#f8e5c1';
 function carPart(group,geom,x,y,z,sx,sy,sz,color,rx=0,ry=0,rz=0,style='yarn'){
   return addPart(group,geom,x,y,z,sx,sy,sz,color,rx,ry,rz,style);
@@ -507,6 +516,89 @@ function carChassis(g,paint,service,variant){
   carGrille(g,1.91,.72,.40);
   carBumpers(g,1.98,-1.94,.86);
 }
+function carPanel(g,points,color){
+  const [a,b,c]=points.map(p=>new THREE.Vector3(...p));
+  const normal=b.clone().sub(a).cross(c.clone().sub(a));
+  const center=points.reduce((v,p)=>[v[0]+p[0],v[1]+p[1],v[2]+p[2]],[0,0,0]);
+  const reverse=normal.x*center[0]+normal.z*center[2]<0;
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(points.flat(),3));
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1,0,1],2));
+  geometry.setIndex(reverse?[0,2,1,0,3,2]:[0,1,2,0,2,3]);geometry.computeVertexNormals();
+  return carPart(g,geometry,0,0,0,1,1,1,color,0,0,0,'plain');
+}
+function townCar(g,type,paint){
+  const sport=type==='sport',l=sport?2.12:1.71,w=sport?.94:.79;
+  const belt=sport?.70:.91,roof=sport?1.20:1.58;
+  const rear=sport?-1.57:-1.45,front=sport?1.04:.86;
+  const rearTop=sport?-.58:-1.02,frontTop=sport?.17:.23,glass=w*.87,top=w*.72;
+  const shell=carLoft(type+'-shell',[
+    [-l+.09,.38,belt*.87,w*.72],[-l+.20,.30,belt*.99,w*.93],[-l*.65,.30,belt+.03,w],
+    [0,.31,belt+.015,w],[l*.64,.30,belt-.06,w*.96],[l-.18,.34,belt-.12,w*.89],[l-.09,.39,belt-.17,w*.70]
+  ],.46);
+  carPart(g,shell,0,0,0,1,1,1,paint);
+  // A tall, short greenhouse on the hatch and a swept, low canopy on the coupé.
+  const lower=belt-.014;
+  const canopy=carLoft(type+'-canopy',[[rear,lower,lower+.065,glass],[rearTop,lower,roof,top],
+    [frontTop,lower,roof-.012,top],[front,lower,lower+.065,glass]],.3);
+  carPart(g,canopy,0,0,0,1,1,1,'#456977');
+  const wind=(bottom,end,sign)=>carPanel(g,[[bottom+sign*.017,lower+.036,-glass*.84],[bottom+sign*.017,lower+.036,glass*.84],
+    [end+sign*.016,roof-.046,top*.83],[end+sign*.016,roof-.046,-top*.83]],sign>0?'#98c3c6':'#6b949e');
+  wind(front,frontTop,1);wind(rear,rearTop,-1);
+  carBox(g,(rearTop+frontTop)/2,roof-.005,0,frontTop-rearTop+.08,.080,top*1.94,sport?paint:'#efe3c2');
+  for(const s of [-1,1]){
+    carPanel(g,[[rear+.10,belt+.072,s*glass],[front-.10,belt+.072,s*glass],
+      [frontTop-.03,roof-.078,s*top],[rearTop+.05,roof-.078,s*top]],'#81aab3');
+    for(const [foot,tip] of [[rear,rearTop],[front,frontTop],[sport?-.58:-.60,sport?-.37:-.52]])
+      carTrim(g,[foot,belt+.032,s*glass],[tip,roof-.017,s*top],.032,paint);
+    carTrim(g,[rear+.005,belt+.05,s*glass],[front-.005,belt+.05,s*glass],.022,'#ecd8a2');
+    carBox(g,-.28,belt-.055,s*w,.20,.028,.027,'#d3c4a1');
+    carBox(g,0,.41,s*w*.99,2*l*.70,.05,.045,sport?'#344350':'#dbceb5');
+    carBall(g,l-.12,belt-.16,s*w*.68,.09,sport?.047:.10,sport?.17:.114,'#ffeba0','glow');
+    carBall(g,-l+.08,belt-.12,s*w*.68,.045,sport?.047:.10,.121,'#ed786b','glow');
+    if(sport){
+      carBox(g,-1.50,belt+.105,s*.58,.08,.2,.07,'#3b3e49',0,0,-.16);
+      carBox(g,1.42,belt-.087,s*.19,.77,.035,.075,'#e8d8ad',0,0,-.06);
+    }else carTrim(g,[rearTop-.01,roof+.047,s*.36],[frontTop+.01,roof+.047,s*.36],.014,'#c8af8d');
+  }
+  if(sport)carBox(g,-1.56,belt+.24,0,.32,.065,1.76,paint,0,0,-.06);
+  carBox(g,l-.098,belt-.26,0,.04,.13,w*(sport?1.12:.68),carDark);
+  carBumpers(g,l-.098,-l+.098,w*.96);
+}
+function cityBus(g,paint){
+  const l=4.25,w=1.19,lower=1.20,top=2.80;
+  const shell=carLoft('city-bus',[
+    [-4.24,.42,2.58,1.10],[-4.11,.35,2.77,w],[-3.91,.35,2.82,w],
+    [3.92,.35,2.82,w],[4.10,.37,2.76,1.16],[4.23,.48,2.56,1.08]
+  ],.22);
+  carPart(g,shell,0,0,0,1,1,1,paint);
+  for(const s of [-1,1]){
+    carBox(g,0,1.05,s*w,7.99,.55,.032,'#ece2c5');
+    carBox(g,0,lower+.05,s*(w+.016),8.02,.047,.021,'#e7b05f');
+    for(let i=0;i<7;i++){
+      const x=-3.45+i*1.13;
+      const door=s>0 && (i===3||i===6);
+      carBox(g,x,door?1.54:1.83,s*w,door?.94:1.00,door?1.79:.91,.041,'#354f60');
+      carBox(g,x,1.89,s*(w+.023),.90,.72,.012,door?'#71a7ab':i%2?'#99c4bf':'#77a9ac');
+      if(door)carBox(g,x,1.48,s*(w+.032),.060,1.77,.018,'#586c70');
+      else carBox(g,x,2.08,s*(w+.032),.92,.027,.018,'#dde4cb');
+    }
+    carBall(g,4.16,.84,s*.78,.094,.10,.14,'#f9dfa4','glow');
+    carBall(g,-4.16,1.04,s*.91,.055,.17,.092,'#e67e76','glow');
+  }
+  for(const s of [-1,1]){
+    carBox(g,s*(l-.026),1.82,0,.035,1.0,1.92,s>0?'#9abfc0':'#6e929a',0,0,0,'plain');
+    carBox(g,s*(l-.014),2.43,0,.04,.28,1.51,'#33444b');
+    for(const [y,z,ww] of [[2.49,-.48,.16],[2.48,-.11,.18],[2.42,-.11,.17],[2.36,-.11,.18],[2.40,.34,.24],[2.40,.62,.09]]){
+      carBox(g,s*(l+.009),y,z,.016,.021,ww,'#eec16e');
+    }
+    for(const [y,z] of [[2.45,-.40],[2.39,-.40],[2.45,-.04],[2.39,-.04]])carBox(g,s*(l+.009),y,z,.016,.067,.025,'#edba68');
+  }
+  carBox(g,0,top+.035,0,7.73,.13,2.15,'#d5d4b6');
+  carBox(g,-1.12,top+.14,0,1.36,.17,.94,'#8eada4');
+  for(let i=0;i<5;i++)carBox(g,-1.63+i*.22,top+.232,0,.089,.014,.68,'#576c70');
+}
+
 function carVan(g,type,paint){
   const body=carLoft('van-body',[
     [-2.45,.42,1.00,.72],[-2.37,.39,1.93,.94],[-2.16,.39,2.00,.98],[-.46,.39,2.00,.98],
@@ -519,8 +611,11 @@ function carVan(g,type,paint){
     carBox(g,-.74,1.05,s*.974,2.90,.13,.028,stripe);
     carBox(g,-1.25,.66,s*.975,1.68,.25,.023,type==='firetruck'?'#b4a098':paint);
     for(let i=0;i<4;i++)if(type==='firetruck')carBox(g,-1.25,.57+i*.064,s*.992,1.58,.017,.012,'#716d73');
-    carBox(g,-.46,1.56,s*.940,.68,.41,.035,'#5a8692');
-    carBox(g,-1.47,1.56,s*.945,.66,.40,.035,type==='swat'?'#414858':'#6c99a0');
+    if(type==='van'){
+      carBox(g,-1.11,1.55,s*.972,1.53,.52,.022,'#ead9ad');
+      for(let i=0;i<3;i++)carTrim(g,[-1.65+i*.26,1.45,s*.995],[-1.42+i*.26,1.66,s*.995],.027,'#99885a');
+    }else carBox(g,-.46,1.56,s*.940,.68,.41,.035,'#5a8692');
+    if(type!=='van')carBox(g,-1.47,1.56,s*.945,.66,.40,.035,type==='swat'?'#414858':'#6c99a0');
     carBox(g,.24,1.49,s*.883,.37,.34,.044,'#6e9ca1',0,0,-.22);
     carBall(g,1.9,1.03,s*.65,.23,.15,.19,paint);
     carBall(g,2.09,1.04,s*.66,.096,.10,.12,'#ffe4a1','glow');
@@ -583,21 +678,32 @@ export function createCar(type='car',color,seed=0){
   if(type==='cop')type='police';
   const index=(Math.abs(Number(seed)||0)*1741)|0, variant=Math.abs(index)%carPaint.length;
   const supplied=typeof color==='string' && /^#(?:[0-9a-f]{3}){1,2}$/i.test(color);
-  const isVan=['firetruck','swat','ambulance'].includes(type);
+  const isVan=['van','firetruck','swat','ambulance'].includes(type),bus=type==='bus';
+  const shaped=type==='compact'||type==='sport';
+  const spec=vehicleSpec(type);
   const paint=fleetPaint[type] || (supplied ? color : carPaint[variant]);
-  const group=new THREE.Group(), body=new THREE.Group();
+  const group=new THREE.Group(),frame=new THREE.Group(),body=new THREE.Group();
   group.name='Maille véhicule '+type;body.name='Carrosserie';
-  group.add(body);
-  if(isVan)carVan(body,type,paint);else carChassis(body,paint,type,variant);
+  group.add(frame);frame.add(body);
+  if(bus)cityBus(body,paint);
+  else if(shaped)townCar(body,type,paint);
+  else if(isVan)carVan(body,type,paint);
+  else carChassis(body,paint,type,variant);
+  if(!bus&&!shaped){
+    const sourceLength=isVan?2.54:2.06,sourceWidth=isVan?1.10:.97;
+    frame.scale.set(spec.halfLength/sourceLength,spec.height/(isVan?2.30:type==='taxi'||type==='police'?1.93:1.72),spec.halfWidth/sourceWidth);
+  }
   const beacon=carServiceDetails(body,type,isVan);
   batchGroup(body);
-  const wheelRadius=isVan?.434:.372, axleZ=isVan?.94:.805;
+  const wheelRadius=bus?.48:isVan?.434:type==='compact'?.304:type==='sport'?.34:.372;
+  const axleZ=bus?1.10:isVan?.94:type==='compact'?.68:type==='sport'?.82:.805;
+  const axles=bus?[-2.50,2.73]:isVan?[-1.54,1.45]:type==='compact'?[-1.06,1.03]:type==='sport'?[-1.31,1.36]:[-1.22,1.25];
   const wheels=[];
-  for(const x of isVan?[-1.54,1.45]:[-1.22,1.25])for(const s of [-1,1]){
+  for(const x of axles)for(const s of [-1,1]){
     const wheel=carWheel(wheelRadius,s,type);
     wheel.userData.front=x>0;
     wheel.position.set(x,wheelRadius,s*axleZ);
-    group.add(wheel);wheels.push(wheel);
+    frame.add(wheel);wheels.push(wheel);
   }
   let spin=0,previousSpeed=0,lastHeading=null,pitch=0,roll=0,compression=0,steer=0;
   const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));

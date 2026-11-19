@@ -3,15 +3,19 @@ import assert from 'node:assert/strict';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { readFile } from 'node:fs/promises';
 import { authoredWeaponDrops, decodeDropId, encodeDropId, gridDrop, isEligibleDropId } from '../public/drop-id.js';
+import { findableWeaponIds } from '../public/weapon-catalog.js';
 
-const kinds=['shotgun','smg','yarn'];
+const kinds=[...findableWeaponIds].sort();
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
 async function checkLocalGround() {
   const { weaponDrops, nearbyWeaponDrops }=await import('../public/weapon-drops.js');
   const { SPAWN, destinations, parkedCars, moveBody, contactAt }=await import('../public/paris-world.js');
   const colliders=parkedCars.map(car=>({...car,halfLength:2.06,halfWidth:.9}));
-  assert.deepEqual([...new Set(weaponDrops.map(d=>d.weapon))].sort(),kinds);
+  const localKinds=[...new Set(weaponDrops.map(d=>d.weapon))].sort();
+  assert(localKinds.every(k=>kinds.includes(k)));
+  if(isMainThread)assert.deepEqual(localKinds,kinds);
+  else assert(localKinds.length>=3);
   assert.equal(new Set(weaponDrops.map(d=>d.id)).size,weaponDrops.length);
   for(const drop of weaponDrops){
     assert.ok(isEligibleDropId(drop.id),drop.id);

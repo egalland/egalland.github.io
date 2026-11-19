@@ -194,3 +194,10 @@
 @media(max-height:505px){.mc-drop-hint{padding-block:4px;margin-block:1px}.mc-weapons:has(.mc-drop-hint:not([hidden])) .mc-wheel{width:min(100%,47dvh)}}
 .mc-option-row label.mc-option-label{cursor:pointer;flex:1;min-height:44px}
 .mc-option-row .mc-switch{min-height:44px;flex-shrink:0}
+.mc-profile-actions,.mc-gear-pages{display:flex;gap:6px;flex-wrap:wrap}
+.mc-profile-actions button{flex:1}
+.mc-gear-pages{justify-content:center;gap:4px;margin-bottom:6px}
+.mc-panels .mc-gear-page{padding:4px 12px;min-height:32px;font:700 13px var(--ui,system-ui);color:#d5c8c8;border:1px solid #5f5260;background:#2b2631;border-radius:14px}
+.mc-panels .mc-gear-page[aria-pressed=true]{color:#ffdeb1;border-color:#9b8064;background:#453a35}
+.mc-hub-label{overflow-wrap:anywhere}
+@media(max-height:505px){.mc-gear-pages{margin:1px 0}.mc-panels .mc-gear-page{min-height:26px;padding:2px 10px}.mc-weapons .mc-wheel{width:min(100%,50dvh)}.mc-weapons:has(.mc-drop-hint:not([hidden])) .mc-wheel{width:min(100%,42dvh)}}

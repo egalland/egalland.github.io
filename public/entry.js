@@ -1,6 +1,18 @@
 import {worldURL} from './world-link.js';
 
 const canonical=worldURL(location.href);
+// Restore the sector before its geography modules load on a same-tab Kikalmo return.
+if(canonical.hash.startsWith('#kikalmo=')){
+  try{
+    const packet=JSON.parse(new URLSearchParams(canonical.hash.slice(1)).get('kikalmo'));
+    const last=JSON.parse(sessionStorage.getItem('maillecity.kikalmo.request.v1.route')||'null');
+    const pending=JSON.parse(localStorage.getItem('maillecity.kikalmo.request.v1')||'null');
+    if(last?.state===packet?.state && pending?.state===packet?.state && Date.now()-pending.created<600000){
+      const prior=new URL(last.route,location.origin);
+      if(prior.origin===location.origin&&prior.pathname==='/')canonical.search=prior.search;
+    }
+  }catch{}
+}
 if(canonical.href!==location.href)history.replaceState(history.state,'',canonical.href);
 // The loading scene remains interactive if a module fails on a slow mobile connection.
 const retry=document.getElementById('retryLoad');

@@ -1,13 +1,19 @@
 // Shared by the map and the server. Positions use projected metres; IDs carry whole decimetres.
-const dropKinds=['smg','shotgun','yarn'];
+import { findableWeaponIds } from './weapon-catalog.js';
+
+// These accessible pavements along the historic axis introduce each special toy.
+const featuredCells=new Map([
+  ['13:2','ribbonbow'],['10:0','pompom'],['7:0','confetti'],['4:-1','boomerang'],
+  ['0:-4','bubbles'],['-1:-5','spool'],['18:6','star'],['24:7','chime']
+]);
 export const dropCellSize=220;
 export function encodeDropId(weapon,x,y){
-  if(!dropKinds.includes(weapon)||!Number.isFinite(x)||!Number.isFinite(y)||Math.abs(x)>100000||Math.abs(y)>100000)return null;
+  if(!findableWeaponIds.includes(weapon)||!Number.isFinite(x)||!Number.isFinite(y)||Math.abs(x)>100000||Math.abs(y)>100000)return null;
   return 'wp-'+weapon+':'+Math.round(x*10)+':'+Math.round(y*10);
 }
 export function decodeDropId(id){
   if(typeof id!=='string')return null;
-  const m=/^wp-(smg|shotgun|yarn):(-?\d{1,7}):(-?\d{1,7})$/.exec(id);
+  const m=/^wp-([a-z]{1,12}):(-?\d{1,7}):(-?\d{1,7})$/.exec(id);
   if(!m)return null;
   const x=Number(m[2])/10,y=Number(m[3])/10;
   return encodeDropId(m[1],x,y)===id?{weapon:m[1],x,y}:null;
@@ -21,7 +27,7 @@ export function gridDrop(ix,iy){
   // The central 110 m of each 220 m cell keeps neighbouring boxes at least 110 m apart.
   const offset=salt=>55+(mixDropSeed(ix,iy,salt)%1101)/10;
   const x=Math.round((ix*dropCellSize+offset(2953))*10)/10,y=Math.round((iy*dropCellSize+offset(6539))*10)/10;
-  const weapon=dropKinds[mixDropSeed(ix,iy,13011)%dropKinds.length];
+  const weapon=featuredCells.get(ix+':'+iy) || findableWeaponIds[mixDropSeed(ix,iy,13011)%findableWeaponIds.length];
   return {id:encodeDropId(weapon,x,y),weapon,x,y};
 }
 export const authoredWeaponDrops=Object.freeze([
