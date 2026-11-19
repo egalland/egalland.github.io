@@ -21,6 +21,7 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [Carnet du compost](https://github.com/egalland/carnet-du-compost) | Code source |
 | [Chrome — Emmanuel Galland](https://github.com/egalland/egalland.github.io/tree/master/chrome) | Code source |
 | [Configurateur de cuisine](https://github.com/egalland/egalland.github.io/tree/source/configurateur-cuisine-emmanuel) | Démonstration sur un plan de cuisine fictif. |
+| [CV et portfolio](https://github.com/egalland/cv2) | Code source |
 | [Dames de porcelaine](https://github.com/egalland/dames-de-porcelaine) | Code source |
 | [Dev Pulse](https://github.com/egalland/dev-pulse) | Code source |
 | [Emmanuel Galland — Atelier & projets](https://github.com/egalland/egalland.github.io/tree/master/curseurs) | Code source |
@@ -43,10 +44,13 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [Le Conseil — Laboratoire crypto](https://github.com/egalland/egalland.github.io/tree/source/le-conseil-crypto) | Code source |
 | [Le Garde du pont](https://github.com/egalland/le-garde-du-pont) | Code source |
 | [Le Reliquaire englouti](https://github.com/egalland/egalland.github.io/tree/source/reliquaire-englouti-eg) | Code source |
+| [Le Reliquaire · Chasse au trésor](https://github.com/egalland/le-reliquaire) | Code source |
 | [Les Banars](https://github.com/egalland/egalland.github.io/tree/source/les-banars-cinema) | Code source |
 | [Maille · Atelier tricot](https://github.com/egalland/egalland.github.io/tree/source/maille-atelier-pulls) | Code source |
 | [Micro · Habitudes](https://github.com/egalland/micro-habitudes) | Code source |
+| [Mémento Web](https://github.com/egalland/Memento) | Code source |
 | [Mémoire vive](https://github.com/egalland/egalland.github.io/tree/a7476dc2d64f30ccce1ed4d3959eaa8380ab2480/apps/memoire-vive) | Code source |
+| [Navigation GSAP](https://github.com/egalland/next_gsap) | Code source |
 | [One More Thing](https://github.com/egalland/one-more-thing) | Code source |
 | [Orbite · Station de développement](https://github.com/egalland/egalland.github.io/tree/source/orbite-station) | Station de développement avec inventaire vierge et API de démonstration en lecture seule. |
 | [Panique](https://github.com/egalland/panique) | Code source |
@@ -54,8 +58,10 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [Petites victoires](https://github.com/egalland/petites-victoires) | Code source |
 | [Pills](https://github.com/egalland/Pills) | Code source |
 | [Pills 2026](https://github.com/egalland/Pills/tree/rewrite-2026) | Code source |
+| [Point Marché · Édition générique](https://github.com/egalland/egalland.github.io/tree/source/point-marche) | Consulter le README pour le périmètre de l’édition générique. |
 | [Priorités fragiles](https://github.com/egalland/priorites-fragiles) | Code source |
 | [Product Lab](https://github.com/egalland/egalland.github.io/tree/source/emmanuel-product-lab) | Édition avec catalogue de démonstration et propriétaire configurable. |
+| [Projet NASA](https://github.com/egalland/projetNasa) | Code source |
 | [Realevate — Animation d’arrivée](https://github.com/egalland/egalland.github.io/tree/source/realevate-arrival) | Animation d’arrivée et triptyque architectural original. |
 | [Redimensionnement d’images](https://github.com/egalland/redimensionnement-images) | Code source |
 | [Redline — Matière vivante / Prototype 03 — Points](https://github.com/egalland/egalland.github.io/tree/master/points) | Code source |
@@ -66,7 +72,11 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [STRATE · Analyse de la simulation](https://github.com/egalland/egalland.github.io/tree/source/strate-rapport-ia) | Analyse des résultats d’une simulation à partir de valeurs modifiables. |
 | [Sudoku des saisons](https://github.com/egalland/egalland.github.io/tree/source/sudoku-des-saisons) | Code source |
 | [Surface optique · MX Master](https://github.com/egalland/egalland.github.io/tree/f11f817056c3318f88ee506d8fa72e2182201c54/apps/surface-optique-mx-master) | Code source |
+| [Tests de dossiers réseau et faux SQL](https://github.com/egalland/egalland.github.io/tree/source/tests-dossiers-reseau) | Deux utilitaires de démonstration pour les fichiers d’un dossier partagé. |
+| [Todo list Express](https://github.com/egalland/nodeTP) | Code source |
+| [Transitions Framer Motion](https://github.com/egalland/next_framer) | Code source |
 | [VibraJiggler](https://github.com/egalland/egalland.github.io/tree/5f73892b55a49a15f10462a28bb565aaa0a717b1/apps/vibrajiggler) | Code source |
+| [Visioconférence](https://github.com/egalland/zoom) | Code source |
 | [WikiCartes — cartes Wikipédia](https://github.com/egalland/wikicartes) | Code source |
 | [Élan · Planifier un projet de revenus](https://github.com/egalland/egalland.github.io/tree/source/elan-actions-revenus) | Planification des tâches, routines et estimation des temps. |
 | [Élégant — Data in motion](https://github.com/egalland/elegant) | Code source |
