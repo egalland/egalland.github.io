@@ -9,8 +9,8 @@
   {
     "depot": "atelier-habitat",
     "titre": "Atelier Habitat",
-    "commit": "4e155f5cfd7848122a6ea8a0da0c7ea86a6e3969",
-    "arbre": "7b582336904ed7c234169994605445db578ae205",
+    "commit": "c90b1441d05b6efaf3944d779c0f9a8278e39082",
+    "arbre": "18131b2855c49a6277161c26411b227f859ba0e8",
     "dossier": ""
   },
   {
@@ -42,10 +42,17 @@
     "dossier": ""
   },
   {
+    "depot": "double-programme",
+    "titre": "Double Programme",
+    "commit": "51077b0bf1c592afe39e8aa5328dc02e4e67478d",
+    "arbre": "8a8dc91632ac05a3cc572bae57170318b1ac9fc7",
+    "dossier": ""
+  },
+  {
     "depot": "elan-actions-revenus",
     "titre": "Élan · Planifier un projet de revenus",
-    "commit": "574d06ad426d3c517f52ed756eae06fe8c779ecd",
-    "arbre": "0492d2e2fcc8aac9c6686c86667d27cebf297ebf",
+    "commit": "03de98c79d023c701cfc1254be413fbc27e924c2",
+    "arbre": "f97107ced795ef528b33bf7d66d6960a0d5fb047",
     "dossier": ""
   },
   {
@@ -123,6 +130,13 @@
     "titre": "Maille · Atelier tricot",
     "commit": "e573416a19102f1345835b5be13fa1d5a14c8f65",
     "arbre": "b025baeaee4da5e709c3e1255bc34d919a0d3dbd",
+    "dossier": ""
+  },
+  {
+    "depot": "maille-city-kikalmo",
+    "titre": "Maille City",
+    "commit": "9fb39b4d20ac49affe22a6cb7262e1f5cef70eec",
+    "arbre": "04eb858f947b980dc9c0c2813431addcb90cf987",
     "dossier": ""
   },
   {

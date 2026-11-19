@@ -2,6 +2,10 @@
 
 Cet index réunit les sources publiques des applications, jeux et prototypes. Chaque lien ouvre le dépôt ou la branche qui contient le projet. Les éditions de démonstration précisent leurs données de départ et les ressources à importer dans leur README.
 
+## Développements du 19 novembre 2026
+
+Les sources de Maille City, Double Programme, Atelier Habitat et Élan sont accessibles dans le tableau. Les 34 commits aux dates d’origine et les journaux de prompts retrouvés sont téléchargeables au format Git. [Historiques Git](https://github.com/egalland/egalland.github.io/tree/archives/developpements-2026-11-19)
+
 | Application | Accès |
 |---|---|
 | [Archives du Voile](https://github.com/egalland/archives-du-voile) | Code source |
@@ -47,6 +51,7 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [Le Reliquaire englouti](https://github.com/egalland/egalland.github.io/tree/source/reliquaire-englouti-eg) | Code source |
 | [Le Reliquaire · Chasse au trésor](https://github.com/egalland/le-reliquaire) | Code source |
 | [Les Banars](https://github.com/egalland/egalland.github.io/tree/source/les-banars-cinema) | Code source |
+| [Maille City](https://github.com/egalland/egalland.github.io/tree/source/maille-city-kikalmo) | Jeu 3D multijoueur en laine, avec véhicules et ville continue. |
 | [Maille · Atelier tricot](https://github.com/egalland/egalland.github.io/tree/source/maille-atelier-pulls) | Code source |
 | [Micro · Habitudes](https://github.com/egalland/micro-habitudes) | Code source |
 | [Mémento Web](https://github.com/egalland/Memento) | Code source |
@@ -79,6 +84,7 @@ Cet index réunit les sources publiques des applications, jeux et prototypes. Ch
 | [VibraJiggler](https://github.com/egalland/egalland.github.io/tree/5f73892b55a49a15f10462a28bb565aaa0a717b1/apps/vibrajiggler) | Code source |
 | [Visioconférence](https://github.com/egalland/zoom) | Code source |
 | [WikiCartes — cartes Wikipédia](https://github.com/egalland/wikicartes) | Code source |
+| [Double Programme](https://github.com/egalland/egalland.github.io/tree/source/double-programme) | Comparateur de profils Letterboxd. |
 | [Élan · Planifier un projet de revenus](https://github.com/egalland/egalland.github.io/tree/source/elan-actions-revenus) | Planification des tâches, routines et estimation des temps. |
 | [Élégant — Data in motion](https://github.com/egalland/elegant) | Code source |
 
