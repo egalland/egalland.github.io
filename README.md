@@ -1,5 +1,5 @@
 # Product Lab
-     
+
 Portfolio interactif, tableau de suivi des projets et journal de création. Les trois projets initiaux sont des exemples. Les tables D1 sont définies par les migrations dans `drizzle/`.
 
 L’atelier et ses API d’écriture utilisent l’identité fournie par la passerelle ChatGPT Sites. Configurez la variable serveur `PRODUCT_LAB_OWNER_ID` avec l’identifiant stable de l’utilisateur sur votre propre Site. L’accès à l’atelier reste fermé tant que cette variable est vide. Utilisez une nouvelle base D1 avec le binding `DB` et déclarez votre propre identifiant de Site lors du déploiement.
