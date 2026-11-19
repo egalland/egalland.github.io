@@ -51,6 +51,14 @@ test('the Kikalmo profile closes with opaque dyed knits bound to the existing co
     assert.ok(await getKikalmoLook(appearance).promise);
     const person=createKikalmoModel(appearance),actor={appearance,id:'profile',angle:0};
     person.update(actor,.016,0);person.group.updateMatrixWorld(true);
+    if(appearance.costume){
+      const limbs=person.group.children.find(o=>o.isGroup);
+      assert.equal(limbs.children.filter(limb=>limb.visible&&limb.position.y<.27).length,4);
+      const before=limbs.children[5].position.clone();
+      person.update({...actor,moving:true,speed:4,walk:2},.016,.33);
+      assert.ok(limbs.children[5].position.distanceTo(before)>.025,'a boot follows the legs of the walking costume');
+      person.update(actor,.016,0);
+    }
     const surface=person.group.children.find(o=>o.isSkinnedMesh),seam=surface.geometry.groups[2];
     const material=surface.material[seam.materialIndex];
     assert.ok(material.vertexColors&&material.alphaTest===0);

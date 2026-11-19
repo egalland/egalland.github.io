@@ -5,6 +5,7 @@ import {motionSeed,sampleLocomotion} from './locomotion-pose.js';
 import * as THREE from './three.js';
 import { createStreetVehicle, isStreetVehicle } from './street-vehicles.js';
 import { vehicleSpec } from './vehicle-types.js';
+import {chassisStage} from './vehicle-damage.js';
 import {bodyFabric as carPaint,serviceFabric as fleetPaint,fleetFabric as carYarn} from './vehicle-fabric.js';
 import { createRagdollRig } from './ragdoll-render.js';
 
@@ -714,7 +715,7 @@ function carServiceDetails(g,type,isVan){
   batchGroup(beacon);
   g.add(beacon);return beacon;
 }
-export function createCar(type='car',color,seed=0){
+function createCarBody(type='car',color,seed=0){
   type=String(type?.type??type).toLowerCase();
   if(isStreetVehicle(type))return createStreetVehicle(THREE,{geo,addPart,batchGroup},type,color,seed);
   if(type==='fire'||type==='firefighter')type='firetruck';
@@ -765,7 +766,8 @@ export function createCar(type='car',color,seed=0){
     roll+=(steer*velocity*.22-roll)*blend;
     compression+=(Math.min(.14,Math.abs(Number(pose.impact)||0)*.12)-compression)*Math.min(1,dt*15);
     body.position.y=(Math.sin(t*(4+velocity*5)+variant)*.009+Math.sin(t*13+variant)*.004)*velocity-compression*.26;
-    body.scale.set(1+compression*.12,1-compression*.6,1+compression*.34);
+    const wear=chassisStage(pose.chassisHp);
+    body.scale.set(1+compression*.12-wear*.019,1-compression*.6-wear*.024,1+compression*.34);
     body.rotation.z=pitch;body.rotation.x=roll;
     spin-=speed*dt/wheelRadius;
     for(const wheel of wheels){wheel.rotation.order='YXZ';wheel.rotation.y=wheel.userData.front?-steer:0;wheel.rotation.z=spin;}
@@ -780,4 +782,37 @@ export function createCar(type='car',color,seed=0){
     group.traverse(o=>{if(o.isMesh && o.geometry && !Object.values(geo).includes(o.geometry) && ![...carShapeCache.values()].includes(o.geometry))o.geometry.dispose();});
     group.removeFromParent();
   }};
+}
+
+const frayedChassis=new THREE.MeshLambertMaterial({color:'#493940'});
+const cottonSmoke=new THREE.MeshBasicMaterial({color:'#82747e',transparent:true,opacity:.42,depthWrite:false});
+export function createCar(type='car',color,seed=0){
+  const body=createCarBody(type,color,seed),spec=vehicleSpec(type?.type??type);
+  let wear=null;
+  function update(pose={},dt,time=0){
+    body.update(pose,dt,time);
+    const stage=chassisStage(pose.chassisHp);
+    if(!stage){if(wear)wear.group.visible=false;return;}
+    if(!wear){
+      const group=new THREE.Group(),marks=[],puffs=[];
+      for(let i=0;i<6;i++){
+        const patch=new THREE.Mesh(geo.box,frayedChassis);
+        const width=spec.halfWidth*(i%2===0?1:-1);
+        patch.position.set(spec.halfLength*(.15-.15*(i>>1)),spec.height*(.43-.05*(i>>1)),width);
+        patch.rotation.z=(i%3-1)*.32;
+        patch.scale.set(spec.halfLength*.20,.041,.027);group.add(patch);marks.push(patch);
+      }
+      for(let i=0;i<4;i++){const puff=new THREE.Mesh(geo.littleBall,cottonSmoke);group.add(puff);puffs.push(puff);}
+      body.group.add(group);wear={group,marks,puffs};
+    }
+    wear.group.visible=true;
+    wear.marks.forEach((patch,i)=>patch.visible=i<stage*2);
+    wear.puffs.forEach((puff,i)=>{
+      const age=(time*.94+i*.25)%1;
+      puff.visible=stage>=2&&(stage===3||i%2===0);
+      puff.position.set(spec.halfLength*.65-age*(.28+Math.abs(pose.speed||0)*.025),spec.height*.64+age*1.45,.13*Math.sin(age*4+i));
+      puff.scale.setScalar(.075+.34*age);
+    });
+  }
+  return {...body,update};
 }

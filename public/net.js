@@ -10,7 +10,7 @@ const combatActions=new Set(['fire','shot','hit','melee']);
 const onlineOnly=new Set([...combatActions,'chat','alert','emote']);
 const COMBAT_WINDOW=1400;
 const MAX_BATCH=20, MAX_QUEUE=120;
-const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{},pickups:{},propHealth:{}});
+const blankWorld=()=>({destroyed:[],vehicles:{},npcs:{},pickups:{},propHealth:{},vehicleDamage:{}});
 const cleanName=s=>[...String(s||'Kikalmo').replace(/[\u0000-\u001f\u007f]/g,' ').trim()].slice(0,24).join('')||'Kikalmo';
 const uuid=/^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i;
 export function createNet(options={}) {
@@ -91,6 +91,11 @@ export function createNet(options={}) {
       if(d.health===0 && !context.destroyed.includes(d.id))context.destroyed.push(d.id);
     }
     if (e.type==='vehicle') context.vehicles[d.id]=d;
+    if(e.type==='vehicleDamage'){
+      const prior=context.vehicleDamage[d.id];
+      if(prior&&prior.hp<=d.hp)return;
+      context.vehicleDamage[d.id]=d;
+    }
     if (e.type==='npc') context.npcs[d.id]=d;
     if (e.type==='pickup') rememberPickup(d.id,d.availableAt);
     if (e.type==='chat') {
@@ -98,7 +103,7 @@ export function createNet(options={}) {
       lifetimeChats.add(e.seq);
       if (lifetimeChats.size>1000) lifetimeChats.delete(lifetimeChats.values().next().value);
       onChat({seq:e.seq,player:e.player,name:e.name,text:d.text,at:e.at});
-    } else if (e.player!==id || e.type==='propDamage' || (e.type==='npc' && Number.isFinite(d.damage))) {
+    } else if (e.player!==id || e.type==='propDamage' || e.type==='vehicleDamage' || (e.type==='npc' && Number.isFinite(d.damage))) {
       for (const fn of listeners) fn(e);
     }
   }
@@ -249,7 +254,7 @@ export function createNet(options={}) {
       if (effects>=0) pending.splice(effects,1);
       else return false;
     }
-    const combat=combatActions.has(type)||((type==='npc'||type==='propDamage')&&Number.isFinite(data?.damage));
+    const combat=combatActions.has(type)||type==='vehicleDamage'||((type==='npc'||type==='propDamage')&&Number.isFinite(data?.damage));
     if(combat)combatUntil=now+COMBAT_WINDOW;
     pending.push({op:(++op).toString(36),type,data,queuedAt:now});
     if (!busy && joined){

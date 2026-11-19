@@ -182,15 +182,15 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
   const view=turntable(art,theta),m=height/1.78,cos=Math.cos(theta),sin=Math.sin(theta);
   const gait=sampleLocomotion(pose,t,motionSeed(e.id??e.seed)),rig=linkedPose(pose,gait,t);
   const rag=e.ragdoll||pose.ragdoll,b=rag?.blend||0;
-  const threads=a.costume&&(gait.footSide||gait.handSide)?costumeThreads(art):null;
+  const threads=a.costume?costumeThreads(art):null;
   const project=p=>[(p[0]*sin+p[2]*cos)*m,(-p[1]-p[0]*cos*.14)*m];
   const blend=(joint,p)=>{const v=rag?.[joint];return v&&b?p.map((n,i)=>n+(v[i]-n)*b):p;};
   g.save();g.translate(x,ground);g.lineCap='round';
   function arm(s){
     const side=s>0?1:0,n=side?'right':'left',arm=rig.arms[side];
     const [p,q,r]=['Shoulder','Elbow','Hand'].map((joint,i)=>project(blend(n+joint,arm[i])));
-    limb(g,p,q,.072*m,threads?.sleeve||clothing[a.outfit]||clothing[0]);limb(g,q,r,.054*m,threads?.sleeve||a.color);
-    const glove=threads?'#efcfaa':a.color;
+    limb(g,p,q,.072*m,threads?.sleeve||clothing[a.outfit]||clothing[0]);limb(g,q,r,.054*m,threads?.cuff||a.color);
+    const glove=a.color;
     if(threads)bead(g,r,.091*m,.087*m,'#5d4748');
     bead(g,r,.078*m,.075*m,glove);
     if(threads)bead(g,[r[0]+s*m*.039,r[1]+.043*m],.040*m,.042*m,glove);
@@ -198,7 +198,7 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
   function leg(s){
     const side=s>0?1:0,n=side?'right':'left',leg=rig.legs[side];
     const [hip,knee,foot]=['Hip','Knee','Foot'].map((joint,i)=>project(blend(n+joint,leg[i])));
-    limb(g,hip,knee,.071*m,threads?.boot||'#59505c');limb(g,knee,foot,.064*m,threads?.boot||'#554c58');
+    limb(g,hip,knee,.071*m,threads?.trouser||'#59505c');limb(g,knee,foot,.064*m,threads?.trouser||'#554c58');
     if(threads)bead(g,[foot[0]+sin*.035*m,foot[1]+.03*m],.116*m,.050*m,'#42333c');
     bead(g,[foot[0]+sin*.035*m,foot[1]],.109*m,.056*m,threads?.boot||'#4b3e45');
   }
@@ -206,13 +206,8 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
   // Paint the sleeve before the cloth so only the part beyond its silhouette shows.
   const away=cos>.58,backArm=sin>0?-1:1,frontArm=-backArm;
   const hiddenByBody=s=>away&&gait.handSide===s;
-  if(!a.costume){
-    leg(-1);leg(1);arm(backArm);
-    if(hiddenByBody(frontArm))arm(frontArm);
-  }else if(!b&&away){
-    if(gait.handSide)arm(gait.handSide);
-    if(gait.footSide)leg(gait.footSide);
-  }
+  leg(-1);leg(1);arm(backArm);
+  if(hiddenByBody(frontArm))arm(frontArm);
   const width=view.width*m,H=view.height*m,bottom=view.bottom*m;
   if(b&&rag?.head&&rag?.hips){
     const hip=project(blend('hips',[0,.46,0])),head=project(blend('head',[0,1.28,0]));
@@ -225,10 +220,6 @@ export function drawKikalmoPuppet(g,e,x,ground,height,t,theta){
     g.scale(1-gait.squash*.5,1+gait.squash);
     g.drawImage(view.c,-width*.5,-bottom-H+.46*m,width,H);g.restore();
   }
-  if(!a.costume){if(!hiddenByBody(frontArm))arm(frontArm);}
-  else if(!b&&!away){
-    if(gait.handSide)arm(gait.handSide);
-    if(gait.footSide)leg(gait.footSide);
-  }
+  if(!hiddenByBody(frontArm))arm(frontArm);
   g.restore();return true;
 }

@@ -32,7 +32,7 @@ export function kikalmoShell(art){
 }
 
 
-// A gloved fist or boot emerging from a one-piece outfit picks up that costume's yarn.
+// Extend the authored bust with matching sleeves, trousers, knit gloves and boots.
 export function costumeThreads(art){
   const shell=kikalmoShell(art);
   if(shell.threads)return shell.threads;
@@ -48,6 +48,6 @@ export function costumeThreads(art){
     const c=samples[Math.floor(samples.length*.52)]||[101,77,73];
     return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join('');
   }
-  shell.threads={sleeve:swatch(.58,.76),boot:swatch(.83,.96)};
+  shell.threads={sleeve:swatch(.58,.76),trouser:swatch(.76,.90),boot:swatch(.88,.99),cuff:swatch(.68,.84)};
   return shell.threads;
 }

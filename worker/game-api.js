@@ -1,7 +1,8 @@
 import {hitSeverity, woundDuration, activeBleeding} from '../public/bleeding.js';
 import {weaponCatalog} from '../public/weapon-catalog.js';
 import {propMaxHealth, vehiclePropDamage} from '../public/prop-damage.js';
-import {vehicleSpec} from '../public/vehicle-types.js';
+import {isVehicleType,vehicleSpec} from '../public/vehicle-types.js';
+import {chassisDamage} from '../public/vehicle-damage.js';
 import {meleeMoves} from '../public/melee-moves.js';
 import {cleanTrafficPacket} from '../public/traffic-sync.js';
 import {normalizeAppearance} from '../public/kikalmo-schema.js';
@@ -54,8 +55,8 @@ const PICKUP_COOLDOWN = 60_000;
 const PICKUP_REQUEST_AGE = 30_000;
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const KEY = /^[\w:-]{1,68}$/;
-const ITEM_TYPES = new Set(['propDamage','destroy','vehicle','npc']);
-const EVENTS = new Set(['propDamage','destroy','vehicle','npc','emote','shot','melee','alert','hit','chat']);
+const ITEM_TYPES = new Set(['propDamage','destroy','vehicle','vehicleDamage','npc']);
+const EVENTS = new Set(['propDamage','destroy','vehicle','vehicleDamage','npc','emote','shot','melee','alert','hit','chat']);
 const MEMBERS_SQL = 'SELECT id,name,state,joined,seen FROM mc_members WHERE room=? AND seen>? ORDER BY joined,id';
 function ready(db) {
   if (!schemaReady.has(db)) {
@@ -231,7 +232,7 @@ function events(rows) {
   return rows.map(r=>({seq:r.seq,player:r.player,name:r.name,type:r.type,data:JSON.parse(r.data),at:r.at}));
 }
 function shared(rows) {
-  const world={destroyed:[],vehicles:{},npcs:{},pickups:{},propHealth:{}};
+  const world={destroyed:[],vehicles:{},npcs:{},pickups:{},propHealth:{},vehicleDamage:{}};
   const broken=new Set();
   for (const r of rows) {
     if (r.kind==='destroy') broken.add(r.item);
@@ -240,6 +241,7 @@ function shared(rows) {
       if(item.health===0)broken.add(r.item);
     }
     if (r.kind==='vehicle') world.vehicles[r.item]={...JSON.parse(r.data),owner:r.owner};
+    if(r.kind==='vehicleDamage')world.vehicleDamage[r.item]=JSON.parse(r.data);
     if (r.kind==='npc') world.npcs[r.item]=JSON.parse(r.data);
   }
   world.destroyed=[...broken];
@@ -346,6 +348,23 @@ function npcHitStatement(q,{room,id,op,name,data,now},guard) {
 }
 // A start and its single contact get stable operation IDs even across network retries.
 const swingOp=started=>'swing-'+started.toString(36);
+function vehicleImpact(raw,actor,previous){
+  const {id,type,cause,weapon,speed,x,y,angle}=dict(raw);
+  if(!key(id)||!isVehicleType(type)||![x,y,actor.x,actor.y].every(Number.isFinite))return null;
+  const distance=Math.hypot(x-actor.x,y-actor.y);
+  if(cause==='weapon'){
+    if(!Object.hasOwn(weaponCatalog,weapon)||distance>weaponCatalog[weapon].range+12)return null;
+  }else if(cause!=='crash'||distance>15||!(actor.vehicle||previous.vehicle))return null;
+  const damage=chassisDamage(type,{cause,speed,weapon});
+  return damage?{id,type,cause,x:num(x),y:num(y),angle:num(angle,0,-7,7),damage}:null;
+}
+function vehicleDamageStatement(q,{room,id,op,name,data,now}){
+  return q(`WITH prior AS (
+    SELECT coalesce((SELECT json_extract(data,'$.hp') FROM mc_items WHERE room=? AND kind='vehicleDamage' AND item=?),100) AS hp
+  ) INSERT OR IGNORE INTO mc_events (room,player,op,name,type,data,at)
+  SELECT ?,?,?,?,'vehicleDamage',json_set(?,'$.hp',max(0,hp-?),'$.damage',min(hp,?)),?
+  FROM prior WHERE hp>0`,room,data.id,room,id,op,name,JSON.stringify(data),data.damage,data.damage,now);
+}
 function contactGuard(type,data,actor,room,id,now){
   const kind=data.swingKind||data.kind,range=meleeMoves[kind].reach+.5+1.75;
   if(!Number.isFinite(actor.x)||!Number.isFinite(actor.y)||actor.vehicle||actor.health===0||actor.downUntil>now)return null;
@@ -413,7 +432,7 @@ async function sync(db,b,now) {
     }
     if (!EVENTS.has(type) || !key(op)) continue;
     if(/^(?:(?:pick|swing|contact)-|break:|fire:)/.test(op))continue;
-    const data=eventData(type,input.data,now);
+    const data=type==='vehicleDamage'?vehicleImpact(input.data,actor,priorState):eventData(type,input.data,now);
     if (!data) continue;
     let guard={clause:'',args:[]};
     if(type==='melee'){
@@ -450,6 +469,8 @@ async function sync(db,b,now) {
         SELECT 1 FROM mc_items i JOIN mc_members m ON m.room=i.room AND m.id=i.owner
         WHERE i.room=? AND i.kind='vehicle' AND i.item=? AND i.owner<>? AND m.seen>?)`,
         ...values,room,data.id,id,now-GONE));
+    } else if(type==='vehicleDamage'){
+      stmts.push(vehicleDamageStatement(q,{room,id,op,name,data,now}));
     } else if(type==='propDamage'){
       stmts.push(propDamageStatement(q,{room,id,op,name,data,now},guard));
       // Older open tabs understand the final break, but only the durability transaction can produce it.

@@ -59,7 +59,7 @@
       <div id="wantedFeedback" class="alert-feedback" hidden></div>
     </div>
   </section>
-  <div data-hud="speed" id="driveHud" class="drive-hud" hidden><i data-icon="car"></i><span id="vehicleName">Au volant</span><b id="carSpeed">0 km/h</b></div>
+  <div data-hud="speed" id="driveHud" class="drive-hud" hidden><i data-icon="car"></i><span><span id="vehicleName">Au volant</span><span class="chassis-status" id="chassisStatus"></span></span><b id="carSpeed">0 km/h</b></div>
   <div class="ko-notice" id="koNotice" role="status" hidden><strong>K.-O.</strong><span id="reviveTimer"></span></div>
   <div id="sectorEdge" role="status" hidden></div>
   <div class="game-notice" id="notice" role="status" aria-live="polite"></div>
@@ -82,6 +82,20 @@
   </aside>
   <div id="touchControls" aria-label="Commandes tactiles">
     <div data-hud="stick" class="stick" id="stick" role="group" aria-label="Joystick de déplacement"><span></span><b></b></div>
+    <div id="driveControls" class="drive-controls" aria-label="Commandes de conduite" role="group" hidden>
+      <div class="drive-steering">
+        <button type="button" data-drive="left" aria-label="Braquer à gauche"><strong aria-hidden="true">‹</strong><span>Gauche</span></button>
+        <button type="button" data-drive="right" aria-label="Braquer à droite"><strong aria-hidden="true">›</strong><span>Droite</span></button>
+      </div>
+      <div class="drive-utilities">
+        <button type="button" id="driveCamera" aria-label="Recentrer la caméra"><i data-icon="camera"></i></button>
+        <button type="button" id="driveExit"><i data-icon="car"></i><span>Sortir</span></button>
+      </div>
+      <div class="drive-pedals">
+        <button type="button" data-drive="brake" aria-label="Freiner puis reculer à l’arrêt"><strong aria-hidden="true">▥</strong><span>Frein · Recul</span></button>
+        <button type="button" data-drive="throttle"><strong aria-hidden="true">↑</strong><span>Accélérer</span></button>
+      </div>
+    </div>
     <div class="touch-actions">
       <button type="button" data-hud="jump" id="jump" data-action="jump" aria-label="Sauter" title="Sauter"><i data-icon="jump"></i><span>Sauter</span></button>
       <button data-hud="heal" id="heal" aria-label="Utiliser une trousse de secours" title="Soins"><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4h8v3m-7 7h6m-3-3v6"/></svg><small id="kitCount">1</small></button><button data-hud="recenter" id="recenter" title="Recentrer la caméra" aria-label="Recentrer la caméra"><i data-icon="camera"></i></button><button data-hud="ride" id="ride" aria-label="Monter ou descendre du véhicule"><i data-icon="car"></i></button><button type="button" data-hud="melee" id="melee" aria-label="Frapper" title="Frapper"><i data-icon="fist"></i><span>Frapper</span></button>

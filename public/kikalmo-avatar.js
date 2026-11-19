@@ -178,6 +178,6 @@ export function kikalmoFrame(value,time){
   return Math.floor((Number(time)||0)/.52)%8;
 }
 export function kikalmoDimensions(art){
-  const h=art.appearance.costume?1.70:1.29;
-  return {height:h,width:h*art.front.width/art.front.height,bottom:art.appearance.costume?.055:.40};
+  const h=art.appearance.costume?1.47:1.29;
+  return {height:h,width:h*art.front.width/art.front.height,bottom:art.appearance.costume?.39:.40};
 }

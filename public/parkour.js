@@ -15,7 +15,7 @@ function samplePlan(plan,t){
   return {x:plan.x+advance*plan.dx,y:plan.y+advance*plan.dy,z:lerp(lerp(plan.startZ,plan.peak,up),plan.endZ,down)};
 }
 
-export function createParkour(p,ground,gradient){
+export function createParkour(p,ground,gradient,{onImpact=()=>{}}={}){
   let airborne=false,grace=0,queued=0,held=false,landing=0,vertical=0,airTime=0,plan=null;
   let speedX=0,speedY=0;
   function reset(vx=0,vy=0){
@@ -73,6 +73,7 @@ export function createParkour(p,ground,gradient){
   function onLanding(impact){
     if(impact>1.35)landing=cap(.12+impact*.016,.13,.25);
     airborne=false;airTime=0;vertical=0;grace=.09;
+    if(impact>8.5)onImpact(impact);
   }
   function step(dt,input,world){
     const oldX=p.x,oldY=p.y,oldGround=ground(p.x,p.y),oldZ=oldGround+p.lift;
@@ -122,6 +123,9 @@ export function createParkour(p,ground,gradient){
     }
     p.x=result.x;p.y=result.y;
     const groundZ=ground(p.x,p.y);
+    if(!airborne&&p.lift<.04&&oldZ-groundZ>.27){
+      p.lift=oldZ-groundZ;airborne=true;vertical=0;airTime=0;
+    }
     const support=p.lift>.015?supportAt(p.x,p.y,Math.max(0,oldZ-groundZ)+.07,geometry,PLAYER_RADIUS+.003).top:0;
     const floor=groundZ+support;
     if(!airborne&&p.lift>.03&&p.lift-support>.13){airborne=true;vertical=0;airTime=0;}

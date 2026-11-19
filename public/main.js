@@ -2,6 +2,7 @@ import {weaponList,starterWeapons,inventoryWeapons} from './weapon-catalog.js';
 import {installHudEditor} from './hud-editor.js';
 import {installTraversalControl} from './traversal-control.js';
 import {installCombatControls} from './combat-controls.js';
+import {installDriveControls} from './drive-controls.js';
 import {installKikalmoLink} from './kikalmo-link.js';
 import {createWanted,wantedRules,wantedThresholds} from './wanted.js';
 import {attachSectorTravel} from './sector-travel.js';
@@ -62,6 +63,7 @@ function setTouchAim(enabled) {
 const controlsAreTouch=()=>matchMedia('(pointer:coarse),(max-width:670px)').matches;
 renderIcons();
 const traversal=installTraversalControl($('#jump'),$('#traversalShortcut'),pressed=>game.action('jump',pressed));
+const driving=installDriveControls($('#driveControls'),(steering,throttle)=>game?.setDrive(steering,throttle));
 const combat=installCombatControls($('#fire'),$('#melee'),{
   action:(name,pressed)=>game?.action(name,pressed),
   setAim:(x,y)=>game?.setAim(x,y),
@@ -172,13 +174,20 @@ function showLife(){
   }
 }
 function onState(next){
+  const wasDriving=Boolean(state.inVehicle);
   state={...state,...next};
+  const drivingNow=Boolean(state.inVehicle);
+  if(wasDriving!==drivingNow){stopStick();$('#scene').toggleAttribute('data-driving',drivingNow);}
+  driving.setActive(drivingNow&&state.lifeState!=='down');
   $('#district').textContent=state.district;
   const street=state.street||'';
   $('#street').textContent=street===state.district?'':street;
   $('#driveHud').hidden=!state.inVehicle;
   $('#carSpeed').textContent=(state.speed||0)+' km/h';
   $('#vehicleName').textContent=state.vehicleName||'Au volant';
+  const condition=$('#chassisStatus'),integrity=Math.round(state.vehicleHealth??100);
+  condition.textContent=integrity===0?'En panne':'Carrosserie · '+integrity+' %';
+  condition.dataset.damaged=integrity<=32?'severe':integrity<=72?'worn':'';
   const ride=$('#ride');
   ride.classList.toggle('near',Boolean(state.inVehicle||state.nearVehicle));
   const vehicle=state.inVehicle?state.vehicleName:state.nearVehicleName;
@@ -237,7 +246,7 @@ function moveStick(e){const rect=stick.getBoundingClientRect(),radius=rect.width
  if(sprint!==stickSprint){stickSprint=sprint;game.action('sprint',sprint);}
 }
 stick.onpointerdown=e=>{
-  if(finger!==null || e.button!==0)return;
+  if(state.inVehicle||finger!==null||e.button!==0)return;
   e.preventDefault();finger=e.pointerId;stick.setPointerCapture(finger);moveStick(e);
 };
 stick.onpointermove=e=>{if(e.pointerId===finger)moveStick(e);};
@@ -249,7 +258,9 @@ function stopStick(e){
 stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=stopStick;
 $('#recenter').onpointerdown=e=>{e.preventDefault();game.action('recenter');};
 $('#ride').onpointerdown=e=>{e.preventDefault();game.action('vehicle');};
-function releaseTouchInputs(){stopStick();combat.release();traversal.release();}
+$('#driveExit').onclick=()=>{driving.release();game.action('vehicle');};
+$('#driveCamera').onclick=()=>game.action('recenter');
+function releaseTouchInputs(){stopStick();combat.release();traversal.release();driving.release();}
 $('#panels').addEventListener('focusin',releaseTouchInputs);
 entry.addEventListener('focus',releaseTouchInputs);
 window.addEventListener('blur',releaseTouchInputs);

@@ -1,3 +1,4 @@
+import {chassisStage} from './vehicle-damage.js';
 import {yarnPalette,paintKnit} from './wool-art.js';
 import {puppetAppearance} from './puppet-dyes.js';
 import {motionSeed,posedLimb,sampleLocomotion} from './locomotion-pose.js';
@@ -287,7 +288,28 @@ function carFace(c,pts,fill,stroke,width,woven,curve=.055){
   }
   if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}
 }
+
 export function drawCanvasCar(c,o,x,groundY,height,time=0,viewAngle=0){
+  drawCarBody(c,o,x,groundY,height,time,viewAngle);
+  const stage=chassisStage(o?.chassisHp);
+  if(!stage||height<8)return;
+  const spec=vehicleSpec(o.type),scale=height/spec.height,side=Math.sign(Math.cos(viewAngle))||1;
+  const nose=Math.sin(viewAngle)*-.53*spec.halfLength*scale;
+  c.save();c.translate(x,groundY);c.lineCap='round';
+  for(let i=0;i<stage+1;i++){
+    const dx=side*(.14+i*.095)*height;
+    const y=-(.43-i*.045)*height;
+    stitch(c,[[nose+dx,y],[nose+dx+height*.065,y-height*.05]],Math.max(1,height*.017),'#4e3944');
+  }
+  if(stage>=2)for(let i=0;i<(stage===3?4:2);i++){
+    const age=(time*.94+i/(stage===3?4:2))%1;
+    const radius=(.08+.28*age)*scale;
+    c.globalAlpha=.45*(1-age*.78);c.fillStyle='#82747e';c.beginPath();
+    c.ellipse(nose+age*scale*.42,-height*.65-age*1.45*scale,radius,radius*.82,0,0,Math.PI*2);c.fill();
+  }
+  c.restore();
+}
+function drawCarBody(c,o,x,groundY,height,time=0,viewAngle=0){
   if(!o||height<1)return;
   if(isStreetVehicle(o.type))return drawStreetVehicle(c,o,x,groundY,height,time,viewAngle,cloth);
   const pose=o.pose||o,t=Number(time)||0,id=hash(o.id??o.seed);

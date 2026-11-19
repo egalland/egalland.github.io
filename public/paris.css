@@ -169,3 +169,36 @@
 .world-label.world-emote{padding:0;border-radius:9px}.world-emote canvas{display:block;width:28px;height:28px}
 .mc-choice .mc-stitched-emote{width:62%;height:auto;max-height:76%;object-fit:contain}
 .mc-hub-glyph .mc-stitched-emote{width:100%;height:100%;object-fit:contain}
+
+.drive-controls,.drive-controls[hidden]{display:none}
+.drive-hud .chassis-status{display:block;margin-top:3px;color:#d9cbaf;font-size:10px;white-space:nowrap}
+.drive-hud .chassis-status[data-damaged=worn]{color:#edce8d}
+.drive-hud .chassis-status[data-damaged=severe]{color:#ffaeaa}
+@media(pointer:coarse),(max-width:670px){
+  #scene[data-driving]:not(.he-editing) :is(#stick,#jump,#melee,#heal,#ride,#recenter){display:none}
+  #scene[data-driving]:not(.he-editing) #fire{width:42px;height:42px;right:14px;bottom:111px}
+  #scene[data-driving] .drive-hud>span{display:block}
+  #scene[data-driving] .drive-hud #vehicleName{display:block}
+  .drive-controls{--drive-bottom:39px;position:absolute;inset:0;z-index:4;pointer-events:none}
+  .drive-controls:not([hidden]){display:block}
+  .drive-controls>div{position:absolute;display:flex;gap:6px;align-items:end}
+  .drive-steering{left:12px;bottom:var(--drive-bottom)}
+  .drive-pedals{right:12px;bottom:var(--drive-bottom)}
+  .drive-utilities{left:50%;transform:translateX(-50%);bottom:calc(var(--drive-bottom) + 75px)}
+  .drive-controls button{pointer-events:auto;touch-action:none;user-select:none;display:grid;align-content:center;justify-items:center;gap:2px;min-height:48px;padding:4px 5px;border:1px solid #b9c4b6;border-radius:12px;background:var(--weft),#29464bea;color:#fff0d5;font:750 11px/1.05 var(--ui);box-shadow:0 2px 8px #28333855,inset 0 0 0 2px #33424770}
+  .drive-controls button strong{font-size:25px;line-height:.95}
+  .drive-steering button{width:clamp(45px,13vw,66px)}
+  .drive-steering button strong{font-size:31px}
+  .drive-pedals button{width:clamp(59px,17.5vw,82px);height:67px}
+  .drive-pedals [data-drive=brake]{background:var(--weft),#724d46f2;border-color:#dbab94}
+  .drive-pedals [data-drive=throttle]{background:var(--weft),#426257f2;border-color:#a7c5a8}
+  .drive-controls button.is-pressed{background:#e5c99e;color:#213638;border-color:#fff1cb;transform:translateY(2px)}
+  .drive-utilities button{width:46px;min-height:38px;padding:4px;gap:2px}
+  .drive-utilities button i{font-size:15px}
+  .drive-utilities button span{font-size:10px}
+  .he-editing .drive-controls{display:none}
+}
+@media(max-height:515px) and (pointer:coarse){
+  .drive-controls{--drive-bottom:10px}
+  #scene[data-driving]:not(.he-editing) #fire{bottom:80px}
+}

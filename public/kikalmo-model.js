@@ -138,7 +138,6 @@ export function createKikalmoModel(value,seed=0){
     arms.push([sphere(limb,shirts[a.outfit]||shirts[0],1,1,1),sphere(limb,a.color,1,1,1),sphere(limb,a.color,.093,.10,.088)]);
     legs.push([sphere(limb,'#51495a',1,1,1),sphere(limb,'#51495a',1,1,1),sphere(limb,'#503f43',.133,.070,.083)]);
   }
-  limb.visible=!a.costume;
   const p=new THREE.Vector3(),q=new THREE.Vector3(),r=new THREE.Vector3();
   let styleSeed=motionSeed(seed),lastId;
   let active=null,entry=null,surface=null;
@@ -147,9 +146,9 @@ export function createKikalmoModel(value,seed=0){
     if(surface){group.remove(surface);release();}
     active=art;entry=geometry(art);
     if(a.costume){
-      const {sleeve,boot}=costumeThreads(art);
-      for(const [upper,lower,palm] of arms){upper.material=lower.material=material(sleeve);palm.material=material('#efcfaa');}
-      for(const leg of legs)for(const part of leg)part.material=material(boot);
+      const {sleeve,trouser,boot,cuff}=costumeThreads(art);
+      for(const [upper,lower,palm] of arms){upper.material=material(sleeve);lower.material=material(cuff);palm.material=material(a.color);}
+      for(const [thigh,shin,shoe] of legs){thigh.material=shin.material=material(trouser);shoe.material=material(boot);}
     }
     inactive.delete(art);entry.refs++;surface=new THREE.SkinnedMesh(entry.mesh,entry.mats);
     surface.frustumCulled=false;surface.bind(skeleton,new THREE.Matrix4());group.add(surface);
@@ -179,16 +178,9 @@ export function createKikalmoModel(value,seed=0){
       const joint=rag?.[joints[i]]||(i===5||i===6?rag?.hips:null);
       if(joint&&blend){tmp.fromArray(joint);b.position.lerp(tmp,blend);b.quaternion.slerp(identity,blend);}
     }
-    // A one-piece costume supplies its resting hands and boots in the cloth itself.
-    // Its striking hand or foot emerges from the sleeve only during the swing.
-    limb.visible=!a.costume||(!blend&&(!!gait.handSide||!!gait.footSide));
-    if(limb.visible){
+    {
       for(const side of [0,1]){
         const name=side?'right':'left',arm=arms[side],leg=legs[side];
-        if(a.costume){
-          for(const part of arm)part.visible=gait.handSide===(side?1:-1);
-          for(const part of leg)part.visible=gait.footSide===(side?1:-1);
-        }
         p.copy(bones[3+side].position);q.fromArray(rig.arms[side][1]);r.fromArray(rig.arms[side][2]);
         if(blend){if(rag[name+'Elbow'])q.lerp(tmp.fromArray(rag[name+'Elbow']),blend);if(rag[name+'Hand'])r.lerp(tmp.fromArray(rag[name+'Hand']),blend);}
         stick(arm[0],p,q,.068);stick(arm[1],q,r,.055);arm[2].position.copy(r);

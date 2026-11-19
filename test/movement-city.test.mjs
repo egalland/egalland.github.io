@@ -188,8 +188,8 @@ for(const [key,type] of [['maillot','scooter'],['sablons','cargo'],['neuilly','p
     player.game.action('vehicle');advance(30,.35);
     assert.equal(player.hud.vehicleName,vehicleSpec(type).label);assert.equal(avatar(player).type,type);
     const start=avatar(player);
-    player.game.setMove(0,-1);advance(30,.8);
-    player.game.setMove(0,0);advance(30,.16);
+    player.game.setDrive(0,1);advance(30,.8);
+    player.game.setDrive(0,0);advance(30,.16);
     const driven=avatar(player);
     assert.ok(driven.speed>0&&dist(start,driven)>.3,`${type} moved ${dist(start,driven)} m`);
     assert.equal(player.published.vehicle.type,type);

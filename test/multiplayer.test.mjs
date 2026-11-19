@@ -170,3 +170,24 @@ test('an automatic road transfer keeps the same presence and continues the share
     await Promise.allSettled([...requests]);DB.close();
   }
 });
+
+test('durability from shots and collisions accumulates once and is restored on join',async()=>{
+  const DB=localDatabase();
+  const a={...session('Conductrice'),state:{x:20,y:0,vehicle:{id:'contact-a',type:'car'}}};
+  const b={...session('Témoin'),state:{x:15,y:2}};
+  const target={id:'damage-test',type:'compact',x:24,y:0};
+  try{
+    await accepted(api(DB,'/api/world/join',a));await accepted(api(DB,'/api/world/join',b));
+    const crash={op:'1',type:'vehicleDamage',data:{...target,cause:'crash',speed:25}};
+    const shot={op:'1',type:'vehicleDamage',data:{...target,cause:'weapon',weapon:'pistol'}};
+    const sync=(player,events)=>accepted(api(DB,'/api/world/sync',{...player,events}));
+    await Promise.all([sync(a,[crash,crash]),sync(b,[shot,shot])]);
+    const read=async()=>(await accepted(api(DB,'/api/world/join',b))).world.vehicleDamage[target.id];
+    const first=await read();
+    assert.ok(first.hp>0&&first.hp<40,JSON.stringify(first));
+    await sync(a,[{...crash,op:'2'}]);
+    assert.equal((await read()).hp,0);
+    const delivered=await sync(b,[]);
+    assert.equal(delivered.events.filter(e=>e.type==='vehicleDamage').length,3);
+  }finally{DB.close();}
+});
