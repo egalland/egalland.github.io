@@ -10,7 +10,7 @@ async function readPreset(key) {
   return {
     metadata:{...d.metadata,sector:{...d.metadata.sector,preset:key}},
     buildings:d.buildings.map(([id,poly,h,kind,holes,observed])=>({id,poly,h,kind,holes:holes||[],observedHeight:!!observed})),
-    streets:d.streets.map(([id,path,w,kind,name,level])=>({id,path,w,kind,name,level,bridge:level>0})),
+    streets:d.streets.map(([id,path,w,kind,name,level,oneway=0])=>({id,path,w,kind,name,level,bridge:level>0,oneway})),
     water:d.water.map(([poly,holes])=>({poly,holes})),
     green:d.green.map(([poly,holes,kind])=>({poly,holes,kind}))
   };

@@ -18,7 +18,7 @@ EAST = [(2.33651,48.86103),(2.3369,48.86256),(2.3229,48.86655),(2.32115,48.86563
 MAP_AXIS = EAST[:-1] + AXIS
 LAYERS = {
     'batiment':['geometrie','cleabs','usage_1','nature','hauteur','nombre_d_etages','etat_de_l_objet'],
-    'troncon_de_route':['geometrie','cleabs','nature','etat_de_l_objet','importance','nom_voie_ban_gauche','nom_voie_ban_droite','nom_collaboratif_gauche','nom_collaboratif_droite','largeur_de_chaussee','nombre_de_voies','position_par_rapport_au_sol','prive'],
+    'troncon_de_route':['geometrie','cleabs','nature','etat_de_l_objet','importance','nom_voie_ban_gauche','nom_voie_ban_droite','nom_collaboratif_gauche','nom_collaboratif_droite','largeur_de_chaussee','nombre_de_voies','position_par_rapport_au_sol','prive','sens_de_circulation'],
     'zone_de_vegetation':['geometrie','cleabs','nature'],
     'surface_hydrographique':['geometrie','cleabs','nature','persistance'],
     }
@@ -38,7 +38,8 @@ def acquire(job):
     tile,layer,b=job
     features=[]
     for start in range(0,60000,PAGE_SIZE):
-        cache=CACHE / f'{tile}-{layer}-{start}-v1.json'
+        version=2 if layer=='troncon_de_route' else 1
+        cache=CACHE / f'{tile}-{layer}-{start}-v{version}.json'
         if cache.exists():
             data=json.loads(cache.read_bytes())
         else:
@@ -80,6 +81,24 @@ def simple_points(line,closed=False):
     if closed and pts and pts[-1]==pts[0]:pts.pop()
     return pts
 def ids(identifier):return identifier.lstrip('ABCDEFGHIJKLMNOPQRSTUVWXYZ0') or identifier
+
+def travel_direction(value,points,original_lines):
+    """Match the clipped road's vertex order with IGN's digitized direction."""
+    sign={'Sens direct':1,'Sens inverse':-1}.get(value,0)
+    if not sign:return 0
+    # Centres of long retained edges are less sensitive to metre rounding at clipped ends.
+    a,b=max(zip(points,points[1:]),key=lambda pair:math.dist(pair[0][:2],pair[1][:2]))
+    x,y=(a[0]+b[0])/2,(a[1]+b[1])/2
+    best=(float('inf'),0);order=1
+    for line in original_lines:
+        for u,v in zip(line,line[1:]):
+            dx,dy=v[0]-u[0],v[1]-u[1];length2=dx*dx+dy*dy
+            if not length2:continue
+            t=max(0,min(1,((x-u[0])*dx+(y-u[1])*dy)/length2))
+            dot=(b[0]-a[0])*dx+(b[1]-a[1])*dy
+            rank=((x-u[0]-t*dx)**2+(y-u[1]-t*dy)**2,-abs(dot)/math.sqrt(length2))
+            if rank<best:best=rank;order=1 if dot>=0 else -1
+    return sign*order
 PRESETS = {'eiffel': (2.29232,48.85935,'Tour Eiffel'), 'notre-dame': (2.34790,48.85348,'Notre-Dame de Paris'), 'sacre-coeur': (2.34318,48.88480,'Sacré-Cœur')}
 
 def emit(preset=None):
@@ -141,10 +160,12 @@ def emit(preset=None):
                 if not width or width<.5:width=2.4 if path else max(4,(p.get('nombre_de_voies') or (2 if importance<=4 else 1))*3.35)
                 name=p.get('nom_voie_ban_gauche') or p.get('nom_voie_ban_droite') or p.get('nom_collaboratif_gauche') or p.get('nom_collaboratif_droite') or ''
                 cut=g.Intersection(boundary).Simplify(.6)
+                original_lines=[line.GetPoints() for line in lines(g)]
                 for n,part in enumerate(lines(cut)):
                     points=simple_points(part)
                     if len(points)<2:continue
-                    st.append([ids(key)+(f'-{n}' if n else ''),points,round(float(width),1),kind,name,level])
+                    direction=travel_direction(p.get('sens_de_circulation'),points,original_lines)
+                    st.append([ids(key)+(f'-{n}' if n else ''),points,round(float(width),1),kind,name,level,direction])
             else:
                 cut=g.Intersection(boundary).SimplifyPreserveTopology(1.25 if layer=='zone_de_vegetation' else .8)
                 for n,poly in enumerate(polygons(cut)):
@@ -166,7 +187,7 @@ def emit(preset=None):
         return
     content="/* IGN BD TOPO®, Licence Ouverte 2.0. See licenses/geography.md and scripts/geo-extract.py. */\n"
     content+="export const buildings="+js(bld)+".map(([id,poly,h,kind,holes,observed])=>({id,poly,h,kind,holes:holes||[],observedHeight:!!observed}));\n"
-    content+="export const streets="+js(st)+".map(([id,path,w,kind,name,level])=>({id,path,w,kind,name,level,bridge:level>0}));\n"
+    content+="export const streets="+js(st)+".map(([id,path,w,kind,name,level,oneway=0])=>({id,path,w,kind,name,level,bridge:level>0,oneway}));\n"
     content+="export const water="+js(waters)+".map(([poly,holes])=>({poly,holes}));\n"
     content+="export const green="+js(green)+".map(([poly,holes,kind])=>({poly,holes,kind}));\n"
     content+="export const metadata="+js(meta)+";\n"

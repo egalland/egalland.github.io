@@ -1,7 +1,7 @@
 // Only the four public IGN vector layers used to construct a local game sector are exposed.
 const fieldsByLayer = new Map([
   ['batiment','geometrie,cleabs,usage_1,nature,hauteur,nombre_d_etages,etat_de_l_objet'],
-  ['troncon_de_route','geometrie,cleabs,nature,etat_de_l_objet,importance,nom_voie_ban_gauche,nom_voie_ban_droite,nom_collaboratif_gauche,nom_collaboratif_droite,largeur_de_chaussee,nombre_de_voies,position_par_rapport_au_sol,prive'],
+  ['troncon_de_route','geometrie,cleabs,nature,etat_de_l_objet,importance,nom_voie_ban_gauche,nom_voie_ban_droite,nom_collaboratif_gauche,nom_collaboratif_droite,largeur_de_chaussee,nombre_de_voies,position_par_rapport_au_sol,prive,sens_de_circulation'],
   ['surface_hydrographique','geometrie,cleabs,nature,persistance'],
   ['zone_de_vegetation','geometrie,cleabs,nature']
 ]);

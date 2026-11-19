@@ -85,8 +85,11 @@ test('an independent Paris-region tile spawns beside a real road, retains histor
   };
   const source=await readFile(new URL('../public/paris-world.js',import.meta.url),'utf8');
   const dataModule='data:text/javascript;base64,'+Buffer.from(Object.entries(fixture).map(([k,v])=>'export const '+k+'='+JSON.stringify(v)+';').join('\n')).toString('base64');
-  const vehicleModule=new URL('../public/vehicle-types.js',import.meta.url).href;
-  const tileModule='data:text/javascript;base64,'+Buffer.from(source.replace("'./paris-data.js'",JSON.stringify(dataModule)).replace("'./vehicle-types.js'",JSON.stringify(vehicleModule))).toString('base64');
+  const resolvedSource=source.replace(/from '(\.\/[^']+)'/g,(_,specifier)=>{
+    const url=specifier==='./paris-data.js'?dataModule:new URL('../public/'+specifier.slice(2),import.meta.url).href;
+    return 'from '+JSON.stringify(url);
+  });
+  const tileModule='data:text/javascript;base64,'+Buffer.from(resolvedSource).toString('base64');
   const tile=await import(tileModule);
   assert.equal(tile.destinations.length,1);
   assert.equal(tile.coreDestinations.length,10);

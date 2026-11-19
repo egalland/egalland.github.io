@@ -3,6 +3,7 @@ const RADIUS = 660;
 const COUNT = 1000;
 const LAYERS = ['batiment', 'troncon_de_route', 'surface_hydrographique', 'zone_de_vegetation'];
 const CACHE_NAME = 'maille-city-ign-sectors-v1';
+const CACHE_SCHEMA = 2;
 const FRESH_FOR = 7 * 86400_000;
 const CACHE_LIMIT = 10;
 const inflight = new Map();
@@ -88,11 +89,12 @@ function projectFeatures(collections,bounds,center) {
         const kind=path?'path':motorTypes.has(p.nature)?'motorway':importance<=3?'primary':importance===4?'secondary':'residential';
         const w=Number(p.largeur_de_chaussee)>=.5?Number(p.largeur_de_chaussee):path?2.4:Math.max(4,(Number(p.nombre_de_voies)||(importance<=4?2:1))*3.35);
         const name=p.nom_voie_ban_gauche||p.nom_voie_ban_droite||p.nom_collaboratif_gauche||p.nom_collaboratif_droite||'';
+        const oneway=p.sens_de_circulation==='Sens direct'?1:p.sens_de_circulation==='Sens inverse'?-1:0;
         const paths=g.type==='MultiLineString'?g.coordinates:g.type==='LineString'?[g.coordinates]:[];
         let index=0;
         for(const line of paths) for(const polyline of clipLine(line.map(toMap),bounds)) {
           const id=index?baseId+'-'+index:baseId;index++;
-          streets.push({id,path:polyline,w,kind,name,level,bridge:level>0});
+          streets.push({id,path:polyline,w,kind,name,level,bridge:level>0,oneway});
         }
         continue;
       }
@@ -130,7 +132,7 @@ function projectFeatures(collections,bounds,center) {
 
 const FIELDS = {
   batiment:'geometrie,cleabs,usage_1,nature,hauteur,nombre_d_etages,etat_de_l_objet',
-  troncon_de_route:'geometrie,cleabs,nature,etat_de_l_objet,importance,nom_voie_ban_gauche,nom_voie_ban_droite,nom_collaboratif_gauche,nom_collaboratif_droite,largeur_de_chaussee,nombre_de_voies,position_par_rapport_au_sol,prive',
+  troncon_de_route:'geometrie,cleabs,nature,etat_de_l_objet,importance,nom_voie_ban_gauche,nom_voie_ban_droite,nom_collaboratif_gauche,nom_collaboratif_droite,largeur_de_chaussee,nombre_de_voies,position_par_rapport_au_sol,prive,sens_de_circulation',
   surface_hydrographique:'geometrie,cleabs,nature,persistance',
   zone_de_vegetation:'geometrie,cleabs,nature'
 };
@@ -152,6 +154,7 @@ async function fetchLayer(layer,bbox,signal) {
   const seen=new Set(),features=[];
   for(let start=0;start<20000;start+=COUNT) {
     const params=new URLSearchParams({layer,bbox,start:String(start)});
+    if(layer==='troncon_de_route')params.set('v',String(CACHE_SCHEMA));
     let page;
     if(!direct) {
       const request=new AbortController(),cancel=()=>request.abort();
@@ -204,13 +207,13 @@ async function cacheWrite(key,entry) {
 
 async function readOrLoad(key,bounds,center) {
   const cached=memory.get(key)||await cacheRead(key);
-  if(cached && Date.now()-cached.saved<FRESH_FOR)return cached.data;
+  if(cached?.schema===CACHE_SCHEMA&&Date.now()-cached.saved<FRESH_FOR)return cached.data;
   const sw=fromMap([bounds[0],bounds[3]]),ne=fromMap([bounds[2],bounds[1]]);
   const bbox=[...sw,...ne].map(n=>n.toFixed(7)).join(',');
   const controller=new AbortController(),deadline=setTimeout(()=>controller.abort(),60_000);
   try{
     const pages=await Promise.all(LAYERS.map(layer=>fetchLayer(layer,bbox,controller.signal)));
-    const data=projectFeatures(pages,bounds,center),entry={saved:Date.now(),data};
+    const data=projectFeatures(pages,bounds,center),entry={saved:Date.now(),schema:CACHE_SCHEMA,data};
     if(memory.size>=3)memory.delete(memory.keys().next().value);
     memory.set(key,entry);
     void cacheWrite(key,entry);

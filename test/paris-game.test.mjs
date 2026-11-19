@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SPAWN, getTravelPoint, nearbyProps, blocked } from '../public/paris-world.js';
+import { SPAWN, getTravelPoint, nearbyProps, blocked, routeAgents } from '../public/paris-world.js';
 import { createGame } from '../public/game.js';
+import { vehicleSpec } from '../public/vehicle-types.js';
 import { nearbyWeaponDrops } from '../public/weapon-drops.js';
 
 test('Chase-camera controls, car possession, shared effects and travel share the real Paris world',()=>{
@@ -69,7 +70,9 @@ test('Chase-camera controls, car possession, shared effects and travel share the
     eventCallback({type:'npc',player:'nearby-fox',data:{id:'unit-police-nearby-fox',kind:'police',...here,started:epoch-13000,level:1}});
     step();
     const officer=viewState.entities.find(e=>e.id==='unit-police-nearby-fox-foot');
-    assert(officer);assert.ok(Math.hypot(officer.x-otherSpot.x,officer.y-otherSpot.y)<.1);
+    assert(officer);
+    const clearance=Math.hypot(officer.x-otherSpot.x,officer.y-otherSpot.y);
+    assert.ok(clearance>=.75&&clearance<4,'the officer reaches the remote suspect while leaving both bodies clear');
     const health=viewState.p.health;
     eventCallback({type:'hit',player:'distant-0',data:{target:'test',damage:10}});
     assert.equal(viewState.p.health,health);
@@ -316,4 +319,106 @@ test('A witnessed NPC knockout renders from its shared impulse and an older snap
   h.step(45);model=h.scene.entities.find(e=>e.id===id);assert(model.down&&model.ragdoll);
   assert.equal(game.selectWeapon('pistol'),true);h.step(370);
   assert(!h.scene.entities.some(e=>e.id===id&&e.down));
+});
+
+const separation=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+function surfaceDistance(vehicle,point){
+  const {halfLength,halfWidth}=vehicleSpec(vehicle.type),x=point.x-vehicle.x,y=point.y-vehicle.y;
+  const c=Math.cos(vehicle.angle),s=Math.sin(vehicle.angle);
+  return Math.hypot(Math.max(0,Math.abs(x*c+y*s)-halfLength),Math.max(0,Math.abs(y*c-x*s)-halfWidth));
+}
+
+test('A passerby meeting an idle player on a Paris pavement gives way, and the player can walk away',t=>{
+  const h=startGame(t),now=routeAgents(SPAWN.x,SPAWN.y,95,h.epoch);
+  const next=routeAgents(SPAWN.x,SPAWN.y,120,h.epoch+2300);
+  const pedestrian=now.actors.find(actor=>{
+    const ahead=next.actors.find(a=>a.id===actor.id);
+    return actor.type==='pedestrian'&&ahead&&separation(actor,ahead)>2&&!blocked(ahead.x,ahead.y,.5)
+      &&Math.cos(actor.angle-ahead.angle)>.98&&now.cars.every(v=>surfaceDistance(v,ahead)>4);
+  });
+  assert.ok(pedestrian,'find a walker on an unobstructed Paris pavement');
+  const meeting=next.actors.find(a=>a.id===pedestrian.id);
+  assert(h.game.restoreTravelState({...h.game.exportTravelState(),x:meeting.x,y:meeting.y,yaw:pedestrian.angle}));
+  const player=h.game.getPosition();assert.ok(separation(player,meeting)<.05);
+  let clearance=Infinity,encountered=false;
+  for(let frame=0;frame<360;frame++){
+    h.step();
+    const actor=h.scene.entities.find(e=>e.id===pedestrian.id);
+    assert.ok(actor,'a pedestrian should stay present when meeting the player');
+    const gap=separation(actor,h.game.getPosition());
+    if(gap<2)encountered=true;
+    clearance=Math.min(clearance,gap);
+  }
+  assert.ok(encountered,'the test includes an actual close encounter');
+  assert.ok(clearance>=.74,`the closest pedestrian centre was ${clearance.toFixed(3)} m from the idle player`);
+  assert.ok(separation(player,h.game.getPosition())<.01,'standing still must not be pushed by a walker');
+  h.game.setMove(0,-1);h.step(90);h.game.setMove(0,0);
+  assert.ok(separation(player,h.game.getPosition())>1,'the pedestrian does not pin the player in place');
+  t.diagnostic(`Closest passerby to a stationary player: ${clearance.toFixed(2)} m`);
+});
+
+test('Multiple services arriving at one Paris incident keep separate bodies around the player',t=>{
+  const h=startGame(t),origin=h.game.getPosition(),roles=['police','swat','medic','firefighter'];
+  for(const role of roles){
+    h.receive({type:'npc',player:'neighbour',data:{id:`unit-${role}-${h.net.id}`,kind:role,x:origin.x,y:origin.y,started:h.epoch-12000,level:1}});
+  }
+  let nearestPlayer=Infinity,nearestUnit=Infinity,atScene=0;
+  for(let frame=0;frame<240;frame++){
+    h.step();
+    const units=h.scene.entities.filter(a=>a.id.endsWith('-foot'));
+    assert.equal(units.length,roles.length);
+    for(const [i,unit] of units.entries()){
+      nearestPlayer=Math.min(nearestPlayer,separation(unit,h.game.getPosition()));
+      for(const neighbour of units.slice(i+1))nearestUnit=Math.min(nearestUnit,separation(unit,neighbour));
+    }
+    atScene=Math.max(atScene,units.filter(a=>separation(a,origin)<4).length);
+  }
+  assert.equal(atScene,4,'all four units reach their incident');
+  assert.ok(nearestPlayer>=.74,`responder-player clearance ${nearestPlayer.toFixed(3)} m`);
+  assert.ok(nearestUnit>=.72,`responder-responder clearance ${nearestUnit.toFixed(3)} m`);
+  t.diagnostic(`Minimum centre distance for four responders: ${nearestPlayer.toFixed(2)} m to player, ${nearestUnit.toFixed(2)} m between units`);
+});
+
+test('Paris traffic brakes before an on-foot peer and proceeds once the lane clears',t=>{
+  const h=startGame(t),angles=(a,b)=>Math.cos(a-b)>.99;
+  const city=(time)=>routeAgents(SPAWN.x,SPAWN.y,140,time).cars;
+  const before=city(h.epoch),future=city(h.epoch+3100),after=city(h.epoch+6100);
+  const car=before.find(v=>{
+    const reach=future.find(w=>w.id===v.id),beyond=after.find(w=>w.id===v.id);
+    if(!(v.speed>3&&reach&&beyond&&v.distanceSq<85**2&&angles(v.angle,reach.angle)&&angles(v.angle,beyond.angle)))return false;
+    // Choose a clear, straight stretch to isolate the reaction to the pedestrian.
+    const x=reach.x-v.x,y=reach.y-v.y,c=Math.cos(v.angle),s=Math.sin(v.angle),ahead=x*c+y*s;
+    return ahead>v.speed*2.9&&Math.abs(x*s-y*c)<.45&&before.filter(w=>w.id!==v.id).every(w=>{
+      const dx=w.x-v.x,dy=w.y-v.y;
+      return dx*c+dy*s<0||dx*c+dy*s>ahead+10||Math.abs(dx*s-dy*c)>3;
+    });
+  });
+  assert.ok(car,'select an active vehicle on a clear Paris street');
+  const point=future.find(v=>v.id===car.id),peer={id:'person-in-street',x:point.x,y:point.y,wanted:0};
+  h.players.push(peer);
+  let minClearance=Infinity,stopped=false,last=null,biggestStep=0;
+  function update(){
+    h.step();
+    const truck=h.scene.entities.find(e=>e.isCar&&e.id===car.id);
+    assert.ok(truck,'a driver must stay visible while waiting for a pedestrian');
+    if(last)biggestStep=Math.max(biggestStep,separation(last,truck));
+    last={...truck};return truck;
+  }
+  for(let i=0;i<480;i++){
+    const vehicle=update(),gap=surfaceDistance(vehicle,point);
+    minClearance=Math.min(minClearance,gap);
+    if(i>190&&Math.abs(vehicle.speed)<.35&&gap<8)stopped=true;
+  }
+  assert.ok(stopped,'a driver came to a stop before the pedestrian');
+  assert.ok(minClearance>=.36,`vehicle hull passed within ${minClearance.toFixed(3)} m of the pedestrian centre`);
+  const holding={...last};h.players.length=0;
+  let travelled=0;
+  for(let i=0;i<360;i++){
+    const vehicle=update();travelled=Math.max(travelled,separation(holding,vehicle));
+    if(travelled>9)break;
+  }
+  assert.ok(travelled>9,'vehicle leaves its stopping place after the lane clears');
+  assert.ok(biggestStep<.4,`largest movement in one frame was ${biggestStep.toFixed(2)} m`);
+  t.diagnostic(`Peer crossing: ${minClearance.toFixed(2)} m minimum clearance from the bumper; driver resumed over ${travelled.toFixed(1)} m`);
 });

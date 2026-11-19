@@ -1,4 +1,9 @@
-import { SPAWN, destinations, districtAt, streetAt, nearbyProps, blocked, contactAt, moveBody, routeAgents, getTravelPoint, paintMap } from './paris-world.js';
+import { SPAWN, destinations, districtAt, streetAt, nearbyProps, blocked, contactAt, moveBody, routeAgents, sampleTrafficRoute, trafficVehicleAt, getTravelPoint, paintMap } from './paris-world.js';
+import { nearbyDrivableStreets } from './paris-world.js';
+import { planDispatch, stepDispatch, dispatchDoor, footApproach, stepDispatchFoot } from './dispatch-roads.js';
+import { createTrafficFlow } from './traffic-flow.js';
+import { createCrowdMotion, WALKER_RADIUS, PLAYER_RADIUS } from './crowd-motion.js';
+import { packTraffic, receiveTraffic } from './traffic-sync.js';
 import { createView } from './game-render.js';
 import { nearbyWeaponDrops, weaponDrops } from './weapon-drops.js';
 import { createWanted } from './wanted.js';
@@ -24,12 +29,23 @@ const services={police:'police',firefighter:'firetruck',medic:'ambulance',swat:'
 const dimensions=e=>{const {halfLength,halfWidth}=vehicleSpec(e.type);return {halfLength,halfWidth};};
 const softProp=o=>o && ['bollard','bench','bin','hydrant','postbox','crate','lamp','tree'].includes(o.type);
 function collisionBody(e){
-  return e.isCar?{id:e.id,x:e.x,y:e.y,angle:e.angle,r:1,...dimensions(e)}:{id:e.id,x:e.x,y:e.y,r:e.stunned?.36:.37};
+  const {id,x,y,angle,speed}=e;
+  const vx=e.vx??((speed||0)*Math.cos(angle||0)),vy=e.vy??((speed||0)*Math.sin(angle||0));
+  if(e.isCar)return {id,x,y,angle,vx,vy,speed,isCar:true,type:e.type,...dimensions(e)};
+  return {id,x,y,angle,vx,vy,speed,r:e.stunned?.36:WALKER_RADIUS};
 }
 
 export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},onAimLock=()=>{},initialPursuit=null,initialVitality=null,loadout=[],onLoadoutChange=()=>{},buildView=createView}){
   const p={...SPAWN,id:'local',type:'fox',health:100,wanted:0,walk:0,angle:SPAWN.angle||0,moving:false};
   const view=buildView(canvas,SPAWN,onNotice),keys=new Set(),destroyed=new Set(),peers=new Map(),carsShared=new Map(),npcShared=new Map(),incidents=new Map(),bubbles=new Map();
+  const traffic=createTrafficFlow(sampleTrafficRoute);
+  const crowd=createCrowdMotion({
+    blocked:(x,y,r)=>blocked(x,y,r,destroyed),
+    move:(x,y,dx,dy,r)=>moveBody(x,y,dx,dy,{radius:r,destroyed})
+  });
+  const streetBlocked=(x,y,angle,spec)=>!!contactAt(x,y,{angle,halfLength:spec.halfLength,halfWidth:spec.halfWidth,destroyed});
+  let trafficPeers={checkpoints:[],followers:new Set()};
+  let drives=[];
   const owned=new Set(starterWeapons);
   const ownedWeapons=()=>Object.keys(weapons).filter(k=>owned.has(k));
   function addLoadout(list){
@@ -54,7 +70,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
   const emit=(type,data)=>net?.emit?.(type,data);
   function publish(){
     net?.publish?.({x:p.x,y:p.y,angle:p.angle,vx,vy,moving:p.moving,sprinting:p.sprinting,shooting:shootPose>.6,
-      walk:p.walk,type:'fox',health:Math.ceil(p.health),downUntil:life.downUntil,ragdoll:life.ragdoll,appearance,wanted:p.wanted,weapon,
+      walk:p.walk,traffic:drives.length?packTraffic(drives,p,trafficPeers.followers,epoch):undefined,type:'fox',health:Math.ceil(p.health),downUntil:life.downUntil,ragdoll:life.ragdoll,appearance,wanted:p.wanted,weapon,
       speed:car?speed:Math.hypot(vx,vy),vehicle:car&&!travelClaim?{...car,x:p.x,y:p.y,angle:p.angle,moving:Math.abs(speed)>.2,speed}:null});
   }
   function unlock(){if(!sound)return;try{audio ||=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume().catch(()=>{});}catch{}}
@@ -247,7 +263,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
   function dropCar(denied=false){
     if(!car)return true;
     const exits=vehicleDoorways({...p,type:car.type},.87);
-    const geometry={radius:.42,destroyed,colliders:obstacles,ignoreId:car.id};
+    const geometry={radius:PLAYER_RADIUS,destroyed,colliders:obstacles,ignoreId:car.id};
     const clear=exits.find(q=>!contactAt(q.x,q.y,geometry));
     if(!clear&&!denied){onNotice('Les portières sont bloquées. Avance un peu.');return false;}
     if(!denied&&(!travelClaim||travelClaim.sent)){const record={...car,x:p.x,y:p.y,angle:p.angle,moving:false,occupied:false,speed:0,owner:''};
@@ -255,11 +271,15 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     if(clear){p.x=clear.x;p.y=clear.y;}
     travelClaim=null;car=null;speed=vx=vy=steer=0;p.moving=false;popTick=0;publish();return true;
   }
+  function resetPopulation(){
+    traffic.reset();crowd.reset();drives=[];actors=[];cars=[];routeActors=[];routeCars=[];
+    trafficPeers={checkpoints:[],followers:new Set()};trafficTick=0;popTick=0;
+  }
   function placeAt(place){
     if(car&&!dropCar())return false;
     p.x=place.x;p.y=place.y;p.angle=place.angle??SPAWN.angle;p.moving=false;p.sprinting=false;
     yaw=p.angle;pitch=.13;vx=vy=speed=turn=0;cameraSnap=true;popTick=trafficTick=mapTick=hudTick=0;nearCar=null;
-    routeClock=0;resetInputs();publish();return true;
+    routeClock=0;resetPopulation();resetInputs();publish();return true;
   }
   function damage(amount,angle=p.angle,force=0,cause='weapon'){
     const direction=(!car&&force>=.18)||amount>=life.health?fallDirection(p,angle):angle;
@@ -309,6 +329,8 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
       e.data=d;peers.set(d.id,e);
     }
     for(const id of peers.keys())if(!present.has(id))peers.delete(id);
+    const joinedAt=net?.players?.().find(member=>member.id===net?.id)?.joinedAt??Infinity;
+    trafficPeers=receiveTraffic(roster,{x:p.x,y:p.y,id:net?.id||'self',joinedAt},drives,epoch,trafficVehicleAt,sampleTrafficRoute);
     const world=net?.world?.()||{};
     settleTravelClaim(roster,world);
     for(const id of world.destroyed||[])destroyed.add(id);
@@ -334,32 +356,57 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
         moving:!!d.moving,move:!!d.moving,fire:d.shooting?.75:0,walk:e.walk,bubble:bubbles.get(d.id)?.symbol});
     }
   }
-  function serviceResponse(d,t){
-    const age=(epoch-d.started)/1000;if(age<0||age>29||dist(d,p)>115)return;
-    const role=d.kind,vehicleType=services[role];if(!vehicleType)return;
-    // A responder arrives from the clearest of eight approaches and parks beside the incident.
-    if(!d.approach){
-      const candidates=Array.from({length:8},(_,i)=>i*Math.PI*.25);
-      let best=0,bestScore=-1;
-      for(const a of candidates){let n=0;for(let k=2;k<=30;k+=3){const q=offset(d,a,k);if(blocked(q.x,q.y,1,destroyed))break;n++;}if(n>bestScore){bestScore=n;best=a;}}
-      d.approach={angle:best,length:Math.max(4,Math.min(29,bestScore*3))};
+  const dispatchStates=new WeakMap();
+  function serviceResponse(d,t,dt=1/60,trafficBlockers=[]){
+    const age=(epoch-d.started)/1000;
+    const role=d.kind,type=services[role];
+    if(age<0||age>29||!type||dist(d,p)>115)return;
+    const vehicleId=d.id+'-car',footId=d.id+'-foot';
+    const playerBody=collisionBody({...p,...car,isCar:!!car});
+    const bodies=[playerBody,...[...actors,...remotes,...cars,...trafficBlockers]
+      .filter(e=>e.id!==vehicleId&&e.id!==footId&&dist(e,d)<83)
+      .map(e=>e.halfLength||e.r?e:collisionBody(e))];
+    const walkable=q=>!contactAt(q.x,q.y,{radius:.44,destroyed});
+    const carClear=(q,spec,colliders=[])=>!contactAt(q.x,q.y,{angle:q.angle,halfLength:spec.halfLength+.16,
+      halfWidth:spec.halfWidth+.12,destroyed,colliders});
+    let state=dispatchStates.get(d);
+    if(!state){
+      const reserved=[...bodies];
+      for(const other of incidents.values()){
+        const plan=dispatchStates.get(other)?.plan;
+        if(plan)reserved.push({...plan.park,halfLength:plan.spec.halfLength+.8,halfWidth:plan.spec.halfWidth+.35});
+      }
+      const plan=planDispatch(d,type,nearbyDrivableStreets(d.x,d.y,62),
+        (q,spec,parking)=>carClear(q,spec,parking?reserved:[]),walkable);
+      state={plan,arrived:plan?null:2,foot:plan?null:footApproach(d,walkable)};
+      dispatchStates.set(d,state);
     }
-    const a=d.approach.angle,len=d.approach.length,progress=clamp(age/4,0,1),parkDistance=clamp(len,2,6);
-    const carPos=offset(d,a,len+(parkDistance-len)*progress);
-    const id=d.id+'-car';if(car?.id!==id && !carsShared.has(id) && !blocked(carPos.x,carPos.y,.85,destroyed)){
-      cars.push({...carPos,id,type:vehicleType,angle:a+Math.PI,isCar:true,speed:progress<1?4:0,moving:progress<1,siren:true});
+    if(state.plan){
+      const claimed=car?.id===vehicleId||carsShared.has(vehicleId)||remotes.some(e=>e.vehicle?.id===vehicleId);
+      if(!claimed){
+        const vehicle=stepDispatch(state,age,dt,(q,spec)=>carClear(q,spec,bodies));
+        if(vehicle){
+          cars.push({...vehicle,id:vehicleId,type,isCar:true,siren:true,move:vehicle.moving});
+          if(state.arrived!=null&&!state.foot)state.foot=dispatchDoor(vehicle,type,d,walkable)??state.plan.door;
+        }else if(age>3){
+          // An occupied street can have no safe entry. Send the crew in on foot.
+          state.plan=null;state.foot=footApproach(d,walkable);state.arrived=age;
+        }
+      }else if(!state.foot){
+        const vehicle=car?.id===vehicleId?p:carsShared.get(vehicleId)||state.plan.park;
+        state.foot=dispatchDoor(vehicle,type,d,walkable)??footApproach(d,walkable);state.arrived=age;
+      }
     }
-    if(age<3)return;
-    // Every client chases the player attached to this dispatch, using the same world-space incident.
+    if(!state.foot||age<state.arrived+.3)return;
     const sourceId=d.id.slice(('unit-'+role+'-').length);
     const suspect=sourceId===(net?.id||'self')?p:peers.get(sourceId)?.data;
     const level=clamp(d.level||0,0,5),chasing=(role==='police'||role==='swat')&&suspect?.wanted;
     const target=(chasing||role==='medic')&&suspect&&dist(suspect,d)<24+level*9?suspect:d;
     const stride=(role==='swat'?2.4:1.7)+(chasing ? .25*level : 0);
-    const at=offset(d,a,parkDistance),distance=dist(at,target)||1;
-    const f=clamp((age-3)*stride/distance,0,1),q={x:at.x+(target.x-at.x)*f,y:at.y+(target.y-at.y)*f};
-    if(blocked(q.x,q.y,.36,destroyed)){q.x=at.x;q.y=at.y;}
-    actors.push({...q,id:d.id+'-foot',type:role,angle:Math.atan2(target.y-at.y,target.x-at.x),moving:f<1,move:f<1,speed:f<1?stride:0,walk:t*8});
+    const parked=cars.find(v=>v.id===vehicleId);
+    const colliders=parked?[collisionBody(parked)]:[];
+    const foot=stepDispatchFoot(state,target,age,stride,q=>!contactAt(q.x,q.y,{radius:.44,destroyed,colliders}));
+    actors.push({...foot,id:footId,type:role,walk:t*8});
   }
   function population(dt){
     updateRemote(dt);trafficTick-=dt;
@@ -367,13 +414,21 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
       routeActors=list.actors;routeCars=list.cars;}
     const extrap=clamp((epoch-routeClock)/1000,0,.12);
     const step=e=>{const v=e.moving===false?0:e.speed||0;return {...e,x:e.x+Math.cos(e.angle||0)*v*extrap,y:e.y+Math.sin(e.angle||0)*v*extrap,moving:!!v,move:!!v,walk:time*(Math.abs(v)*3.4+2),speed:v};};
+    const lastWalkers=new Map(actors.map(e=>[e.id,e]));
+    const previousBodies=incidents.size?[...cars,...actors].map(collisionBody):[];
     actors=routeActors.map(step);cars=[];
     const occupied=new Set(remotes.map(r=>r.vehicle?.id).filter(Boolean));if(car)occupied.add(car.id);
-    for(const raw of routeCars){if(occupied.has(raw.id)||carsShared.has(raw.id))continue;cars.push({...step(raw),isCar:true});}
+    const excluded=new Set([...occupied,...carsShared.keys()]);
+    const ambient=[];
+    for(const raw of routeCars){
+      if(excluded.has(raw.id))continue;
+      if(raw.routeId)ambient.push(raw);
+      else cars.push({...step(raw),isCar:true});
+    }
     for(const d of carsShared.values())if(!occupied.has(d.id)&&dist(d,p)<135){
       if(d.occupied&&(peers.has(d.owner)||d.owner===net?.id))continue;
       cars.push({...d,angle:d.angle||0,isCar:true,moving:false,speed:0});}
-    for(const [id,d] of incidents){if(epoch-d.started>30000)incidents.delete(id);else serviceResponse(d,time);}
+    for(const [id,d] of incidents){if(epoch-d.started>30000)incidents.delete(id);else serviceResponse(d,time,dt,previousBodies);}
     for(const [id,state] of npcShared){
       const health=npcHealthAt(state,epoch),until=Math.max(state.stunnedUntil||0,state.downUntil||0);
       if(health>=100&&until+800<epoch){npcShared.delete(id);continue;}
@@ -390,6 +445,16 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
         if(!blocked(x,y,.36,destroyed)){actor.x=x;actor.y=y;}
       }
     }
+    const selfBody=car
+      ? collisionBody({...p,...car,isCar:true,vx,vy,speed})
+      : {id:net?.id||'self',x:p.x,y:p.y,r:PLAYER_RADIUS,vx,vy};
+    const fixedBodies=[selfBody,...remotes.map(collisionBody),...cars.map(collisionBody)];
+    // Begin with the pedestrians' last resolved positions, then let them react to this frame's actual vehicles.
+    const walkerBodies=actors.map(e=>collisionBody((!e.stunned&&lastWalkers.get(e.id))||e));
+    drives=traffic.step(ambient,{dt,epoch,observer:p,excluded,checkpoints:trafficPeers.checkpoints,
+      blockers:[...fixedBodies,...walkerBodies],blockedPose:streetBlocked});
+    cars.push(...drives);
+    crowd.step(actors,[...fixedBodies,...drives.map(collisionBody)],dt);
     if(epoch>=trafficImpactAt){
       trafficImpactAt=epoch+250;
       outer: for(const v of cars){
@@ -403,7 +468,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
         }
       }
     }
-    const near=[...actors,...cars,...remotes].filter(e=>dist(e,p)<9);
+    const near=[...actors,...cars,...remotes].filter(e=>dist(e,p)<(car?14:9));
     obstacles=near.filter(e=>!e.stunned).map(collisionBody);
     nearCar=car?null:closestBoardableCar();
   }
@@ -435,7 +500,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     const carsNear=[...nearby.cars.filter(v=>!shared[v.id]&&!occupied.has(v.id)),...Object.values(shared)];
     const entities=[...nearby.actors,...carsNear.filter(v=>v.id!==vehicle?.id).map(v=>({...v,isCar:true})),
       ...occupants.filter(r=>r.id!==sourceId&&(!vehicle||r.vehicle?.id!==vehicle.id)).map(r=>({...r,type:r.vehicle?.type||'fox',isCar:!!r.vehicle}))];
-    const geometry={radius:.39,angle,destroyed,colliders:entities.filter(e=>dist(e,{x,y})<60).map(collisionBody)};
+    const geometry={radius:PLAYER_RADIUS,angle,destroyed,colliders:entities.filter(e=>dist(e,{x,y})<60).map(collisionBody)};
     if(vehicle)Object.assign(geometry,dimensions(vehicle));
     if(!contactAt(x,y,geometry))return {x,y};
     for(const radius of [.8,1.8,3.5,6,10,16,25,40,55]){
@@ -463,7 +528,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
     for(const id of net?.world?.().destroyed||[])destroyed.add(id);
     const q=travelSpot(s.x,s.y,angle,ride,s.sourceId);
     if(!q || (car&&car.id!==ride?.id&&!dropCar()))return false;
-    resetInputs();arrivalChecked=true;cameraSnap=true;levelPlace=null;
+    resetInputs();resetPopulation();arrivalChecked=true;cameraSnap=true;levelPlace=null;
     p.x=q.x;p.y=q.y;p.angle=angle;
     life.restore({...s.vitality,health:finite(s.health,100,0,100)},epoch);p.health=life.health;
     p.wanted=pursuit.restore(s.version===2?s.pursuit:{wanted:s.wanted,heat:s.heat,sinceCrime:s.sinceCrime},time).level;
@@ -561,16 +626,18 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
         if(destroyProp(result.touched))recordAction('destroy');speed*=.76;impact=.7;result=moveBody(p.x,p.y,dx*.76,dy*.76,options);
       }
       if(result.hit){
+        const normalSpeed=Math.max(0,-oldSpeed*(Math.cos(targetAngle)*result.normalX+Math.sin(targetAngle)*result.normalY));
         const struck=actors.find(e=>e.id===result.touched?.id);
         if(struck&&!struck.stunned&&Math.abs(speed)>4.8&&hurtNpc(struck,pedestrianDamage(speed),targetAngle+(speed<0?Math.PI:0),clamp(Math.abs(speed)/13,.4,1)))
           recordAction(['police','swat'].includes(struck.type)?'hitOfficer':'hitCivilian');
-        if(contactLock<=0 && Math.abs(speed)>2.2){
-          impact=clamp(Math.abs(oldSpeed)/12,.25,1);tone(95,.10,'triangle',.04,38);
-          if(Math.abs(oldSpeed)>11.5){damage(crashDamage(oldSpeed),targetAngle,.3,'crash');if(life.down)return;}
-          if(result.touched?.id&&remotes.some(e=>e.id===result.touched.id)&&Math.abs(oldSpeed)>8){
+        if(contactLock<=0 && normalSpeed>2.2){
+          impact=clamp(normalSpeed/12,.25,1);tone(95,.10,'triangle',.04,38);
+          if(normalSpeed>11.5){damage(crashDamage(normalSpeed),targetAngle,.3,'crash');if(life.down)return;}
+          if(result.touched?.id&&remotes.some(e=>e.id===result.touched.id)&&normalSpeed>8){
             emit('hit',{target:result.touched.id,damage:pedestrianDamage(oldSpeed),force:clamp(Math.abs(oldSpeed)/15,.4,1),angle:targetAngle+(speed<0?Math.PI:0),cause:'traffic'});recordAction('hitPlayer');
           }
-          speed*=Math.abs(oldSpeed)>3?-.18:0;contactLock=.32;
+          const incidence=normalSpeed/Math.max(.1,Math.abs(oldSpeed));
+          speed*=incidence>.75?-.18:Math.sqrt(Math.max(0,1-incidence*incidence));contactLock=.32;
         }
         if(Math.hypot(result.x-p.x,result.y-p.y)>.025)p.angle=targetAngle;
       }else p.angle=targetAngle;
@@ -583,7 +650,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
       const forward=Math.cos(yaw),across=Math.sin(yaw),targetX=(sy*forward-sx*across)*maximum,targetY=(sy*across+sx*forward)*maximum;
       const k=blend(m>.08?9.0:13.5,dt);vx+=(targetX-vx)*k;vy+=(targetY-vy)*k;
       if(Math.hypot(vx,vy)<.035){vx=0;vy=0;}
-      const result=moveBody(p.x,p.y,vx*dt,vy*dt,{radius:.39,destroyed,colliders:obstacles});
+      const result=moveBody(p.x,p.y,vx*dt,vy*dt,{radius:PLAYER_RADIUS,destroyed,colliders:obstacles});
       const actual=Math.hypot(result.x-p.x,result.y-p.y)/dt;
       if(result.hit){const inward=vx*result.normalX+vy*result.normalY;if(inward<0){vx-=inward*result.normalX;vy-=inward*result.normalY;}}
       p.x=result.x;p.y=result.y;p.moving=actual>.11;p.walk+=actual*dt*3.25;
@@ -596,7 +663,7 @@ export function createGame({canvas,minimap,net,onState=()=>{},onNotice=()=>{},on
           const shape=vehicleSpec(traffic.type);
           if(Math.abs(localX)<shape.halfLength+.18&&Math.abs(localY)<shape.halfWidth+.18){
             const side=(Math.sign(localY)||1)*(shape.halfWidth+.58),px=traffic.x+c*localX-s*side,py=traffic.y+s*localX+c*side;
-            if(!blocked(px,py,.39,destroyed)){p.x=px;p.y=py;}
+            if(!contactAt(px,py,{radius:PLAYER_RADIUS,destroyed,colliders:obstacles,ignoreId:traffic.id})){p.x=px;p.y=py;}
             impact=.8;damage(pedestrianDamage(traffic.speed),traffic.angle,clamp(Math.abs(traffic.speed)/13,.38,1),'traffic');contactLock=1.5;
           }}
       }

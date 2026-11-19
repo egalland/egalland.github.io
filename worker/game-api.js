@@ -1,3 +1,4 @@
+import {cleanTrafficPacket} from '../public/traffic-sync.js';
 import {normalizeAppearance} from '../public/kikalmo-schema.js';
 import { decodeDropId, isEligibleDropId } from '../public/drop-id.js';
 
@@ -91,6 +92,7 @@ function playerState(raw,now) {
   const s=dict(raw), result={...pose(s),...vitalityFields(s,now)};
   const appearance=normalizeAppearance(s.appearance);if(appearance)result.appearance=appearance;
   if (!Number.isFinite(s.x) || !Number.isFinite(s.y)) return {};
+  const traffic=cleanTrafficPacket(s.traffic,now);if(traffic)result.traffic=traffic;
   if (s.vehicle && key(s.vehicle.id)) result.vehicle={...pose(s.vehicle),id:key(s.vehicle.id)};
   else result.vehicle=null;
   return result;
@@ -123,8 +125,11 @@ function eventData(type,raw,now) {
     default: return null;
   }
 }
-function roster(rows) {
-  return rows.map(r=>({...JSON.parse(r.state),id:r.id,name:r.name,joinedAt:r.joined,updatedAt:r.seen}));
+function roster(rows,viewerId) {
+  const players=rows.map(r=>({...JSON.parse(r.state),id:r.id,name:r.name,joinedAt:r.joined,updatedAt:r.seen}));
+  const viewer=players.find(r=>r.id===viewerId);
+  for(const r of players)if(r.id===viewerId||!viewer||Math.hypot(r.x-viewer.x,r.y-viewer.y)>290)delete r.traffic;
+  return players;
 }
 function events(rows) {
   return rows.map(r=>({seq:r.seq,player:r.player,name:r.name,type:r.type,data:JSON.parse(r.data),at:r.at}));
@@ -163,7 +168,7 @@ async function join(db,b,now) {
   if (!results[4].results.length) return json({error:'session'},403);
   const world=shared(results[8].results);
   for(const pickup of results[9].results)world.pickups[pickup.item]=pickup.available;
-  return json({now,players:roster(results[5].results),history:events(results[6].results.reverse()),
+  return json({now,players:roster(results[5].results,id),history:events(results[6].results.reverse()),
     cursor:results[7].results[0].last,world});
 }
 function recordPickup(stmts,q,{room,id,token,name,op,item,weapon,state,now}){
@@ -283,7 +288,7 @@ async function sync(db,b,now) {
   const denied=claims.size ? result[membersIndex+2].results.filter(c=>c.owner && c.owner!==id) : [];
   const pickupResults=pickupOps.size?result[pickupIndex].results.filter(r=>pickupOps.get(r.op)===r.item)
     .map(r=>({op:r.op,id:r.item,ok:r.ok===1,availableAt:r.available})):undefined;
-  return json({now,players:roster(result[membersIndex].results),events:feed,denied,pickupResults,cursor:feed.at(-1)?.seq??cursor});
+  return json({now,players:roster(result[membersIndex].results,id),events:feed,denied,pickupResults,cursor:feed.at(-1)?.seq??cursor});
 }
 export async function handleApi(request, env) {
   const pathname=new URL(request.url).pathname;

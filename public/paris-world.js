@@ -1,7 +1,8 @@
 // Local coordinates are metres, east and south. All map layers share the IGN projection in paris-data.
 import { buildings, streets, water, green, metadata } from './paris-data.js';
 
-import { vehicleSpec } from './vehicle-types.js';
+import { vehicleSpec, vehicleDoorways } from './vehicle-types.js';
+import { buildTrafficRoutes, sampleRoadRoute } from './traffic-roads.js';
 
 const EMPTY = new Set();
 const TAU = Math.PI * 2;
@@ -54,7 +55,10 @@ class Grid {
     this.cellsFor(b,key=>{if(!this.cells.has(key))this.cells.set(key,[]);this.cells.get(key).push(item);});
   }
   area(x,y,r){
-    const b={minX:x-r,maxX:x+r,minY:y-r,maxY:y+r}, result=new Set();
+    return this.areaBox({minX:x-r,maxX:x+r,minY:y-r,maxY:y+r});
+  }
+  areaBox(b){
+    const result=new Set();
     this.cellsFor(b,key=>{for(const item of this.cells.get(key)||[])if(overlaps(b,item.box))result.add(item);});
     return result;
   }
@@ -251,22 +255,101 @@ export function blocked(x,y,radius=.42,destroyed=EMPTY,height=1.4) {
   return !!testPose(x,y,{radius,destroyed,height});
 }
 export function contactAt(x,y,opt={}){return testPose(x,y,opt);}
-function contactNormal(x,y,d,dx,dy) {
-  let mx,my;
-  if(d.poly||d===boundaryItem){
-    let best=Infinity;
-    for(const ring of d===boundaryItem?[boundary]:[d.poly,...(d.holes||[])]){
-      for(let i=0,j=ring.length-1;i<ring.length;j=i++){
-        const nd=lineDist2(x,y,ring[i],ring[j]);if(nd>=best)continue;
-        best=nd;const q=nearestPoint(x,y,ring[i],ring[j]);mx=x-q[0];my=y-q[1];
+// Outward normal and signed clearance between a point and an oriented rectangle.
+function pointBoxContact(px,py,x,y,angle,l,w) {
+  const c=Math.cos(angle),s=Math.sin(angle);
+  const u=(px-x)*c+(py-y)*s,v=-(px-x)*s+(py-y)*c;
+  const du=u-clamp(u,-l,l),dv=v-clamp(v,-w,w),outside=Math.hypot(du,dv);
+  if(outside>0)return [(du*c-dv*s)/outside,(du*s+dv*c)/outside,outside];
+  if(l-Math.abs(u)<w-Math.abs(v)){
+    const sign=u<0?-1:1;return [sign*c,sign*s,Math.abs(u)-l];
+  }
+  const sign=v<0?-1:1;return [-sign*s,sign*c,Math.abs(v)-w];
+}
+function bodyContact(x,y,opt,d,dx,dy){
+  const bx=x-d.x,by=y-d.y,rect=!!(opt.halfLength&&opt.halfWidth),otherRect=!!(d.halfLength&&d.halfWidth);
+  if(rect&&otherRect){
+    const c=Math.cos(opt.angle||0),s=Math.sin(opt.angle||0),bc=Math.cos(d.angle||0),bs=Math.sin(d.angle||0);
+    let gap=-Infinity,nx=0,ny=0;
+    for(const [ax,ay] of [[c,s],[-s,c],[bc,bs],[-bs,bc]]){
+      const projection=bx*ax+by*ay;
+      const distance=Math.abs(projection)-opt.halfLength*Math.abs(ax*c+ay*s)-opt.halfWidth*Math.abs(-ax*s+ay*c)
+        -d.halfLength*Math.abs(ax*bc+ay*bs)-d.halfWidth*Math.abs(-ax*bs+ay*bc);
+      if(distance>gap){const sign=projection<0?-1:1;gap=distance;nx=ax*sign;ny=ay*sign;}
+    }
+    return [nx,ny,gap];
+  }
+  if(otherRect){
+    const [nx,ny,gap]=pointBoxContact(x,y,d.x,d.y,d.angle||0,d.halfLength,d.halfWidth);
+    return [nx,ny,gap-(opt.radius??.42)];
+  }
+  if(rect){
+    const [nx,ny,gap]=pointBoxContact(d.x,d.y,x,y,opt.angle||0,opt.halfLength,opt.halfWidth);
+    return [-nx,-ny,gap-(d.r||.5)];
+  }
+  const len=Math.hypot(bx,by),gap=len-(opt.radius??.42)-(d.r||.5);
+  if(len>0)return [bx/len,by/len,gap];
+  const movement=Math.hypot(dx,dy);
+  return movement?[dx/movement,dy/movement,gap]:[1,0,gap];
+}
+function boxBuildingNormal(x,y,opt,building){
+  const angle=opt.angle||0,c=Math.cos(angle),s=Math.sin(angle),l=opt.halfLength,w=opt.halfWidth;
+  const corners=[];
+  for(const u of [-l,l])for(const v of [-w,w])corners.push([x+u*c-v*s,y+u*s+v*c]);
+  let best=Infinity,nx=0,ny=0;
+  // Between two disjoint polygon edges, a closest pair includes an endpoint.
+  // Either a building corner grazes the car flank, or a bumper corner grazes a wall.
+  for(const ring of [building.poly,...(building.holes||[])]){
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const a=ring[i],b=ring[j];
+      const [vx,vy,gap]=pointBoxContact(a[0],a[1],x,y,angle,l,w);
+      if(gap<=0)return null;
+      if(gap*gap<best){best=gap*gap;nx=-vx;ny=-vy;}
+      for(const [px,py] of corners){
+        const d2=lineDist2(px,py,a,b);if(d2>=best)continue;
+        if(d2<1e-14)return null;
+        const q=nearestPoint(px,py,a,b),distance=Math.sqrt(d2);
+        best=d2;nx=(px-q[0])/distance;ny=(py-q[1])/distance;
       }
     }
-  } else {
-    mx=x-d.x;my=y-d.y;
+  }
+  return best<Infinity?[nx,ny]:null;
+}
+function contactNormal(x,y,opt,d,dx,dy) {
+  if(!d.poly&&d!==boundaryItem)return bodyContact(x,y,opt,d,dx,dy);
+  if(opt.halfLength&&opt.halfWidth&&d.poly){
+    const normal=boxBuildingNormal(x,y,opt,d);
+    if(normal)return normal;
+  }
+  let mx,my;
+  let best=Infinity;
+  for(const ring of d===boundaryItem?[boundary]:[d.poly,...(d.holes||[])]){
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const nd=lineDist2(x,y,ring[i],ring[j]);if(nd>=best)continue;
+      best=nd;const q=nearestPoint(x,y,ring[i],ring[j]);mx=x-q[0];my=y-q[1];
+    }
   }
   let len=Math.hypot(mx,my);
   if(!len){mx=-dx;my=-dy;len=Math.hypot(mx,my)||1;}
   return [mx/len,my/len];
+}
+function canSeparateBody(x,y,dx,dy,opt){
+  const overlapping=[],others=[];
+  for(const body of opt.colliders){
+    if(opt.ignoreId&&body.id===opt.ignoreId)continue;
+    const gap=bodyContact(x,y,opt,body,dx,dy)[2];
+    if(gap<0)overlapping.push({body,gap});
+    else others.push(body);
+  }
+  const geometry={...opt,colliders:others},steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.18));
+  for(let i=1;i<=steps;i++){
+    const px=x+dx*i/steps,py=y+dy*i/steps;
+    if(testPose(px,py,geometry))return false;
+    for(const {body,gap} of overlapping){
+      if(bodyContact(px,py,opt,body,dx,dy)[2]<gap-.00001)return false;
+    }
+  }
+  return true;
 }
 export function moveBody(x,y,dx,dy,opt={}) {
   let touched=null,nx=0,ny=0;
@@ -276,7 +359,17 @@ export function moveBody(x,y,dx,dy,opt={}) {
     const d=testPose(x+sx,y+sy,opt);
     if(!d){x+=sx;y+=sy;continue;}
     if(!touched)touched=d;
-    [nx,ny]=contactNormal(x,y,d,sx,sy);
+    const contact=contactNormal(x,y,opt,d,sx,sy);
+    [nx,ny]=contact;
+    // A newly received peer pose can start inside our body. Only separate dynamic
+    // overlaps, sweeping the correction against walls, props and all other bodies.
+    if(contact[2]<-.0001&&opt.colliders?.includes(d)){
+      const push=-contact[2]+.002;
+      if(canSeparateBody(x,y,nx*push,ny*push,opt)){x+=nx*push;y+=ny*push;}
+      else if(bodyContact(x+sx,y+sy,opt,d,sx,sy)[2]>contact[2]+.00001&&canSeparateBody(x,y,sx,sy,opt)){
+        x+=sx;y+=sy;continue;
+      }
+    }
     const along=sx*nx+sy*ny,tx=sx-nx*Math.min(along,0),ty=sy-ny*Math.min(along,0);
     if((Math.abs(tx)+Math.abs(ty))>.0001&&!testPose(x+tx,y+ty,opt)){x+=tx;y+=ty;}
     else if(sx && !testPose(x+sx,y,opt))x+=sx;
@@ -312,6 +405,16 @@ export function streetAt(x,y){
   return seg.road.name===seg.road.name.toUpperCase()
     ?seg.road.name.toLocaleLowerCase('fr').replace(/(^|[ -])\p{L}/gu,c=>c.toLocaleUpperCase('fr'))
     :seg.road.name;
+}
+// Road sections close enough for an emergency vehicle to pull up beside the caller.
+export function nearbyDrivableStreets(x,y,radius){
+  const found=new Map();
+  for(const {road,a,b} of roadGrid.area(x,y,radius)){
+    if(road.kind==='path'||road.kind==='motorway'||road.w<3.2)continue;
+    const d=lineDist2(x,y,a,b);
+    if(d<=radius*radius && (!found.has(road)||d<found.get(road)))found.set(road,d);
+  }
+  return [...found.keys()].sort((a,b)=>found.get(a)-found.get(b)||String(a.id).localeCompare(String(b.id)));
 }
 function practicalPoint(key,label,x,y,match,target,justRoad=false){
   const take=s=>s.kind!=='motorway' && (!match||match.test(prefix(s.name)));
@@ -490,95 +593,120 @@ const tintedCars=['#8ac7b4','#bb6681','#bb8657','#65829d','#ab6256','#98aaa4','#
 const tintedPeds=['#91bcae','#c98a82','#c1a17c','#929dc3','#b7738c','#8fa27f','#9d81b4'];
 const serviceTypes=['police','firefighter','medic','swat'];
 const parkedFleet=['compact','taxi','sedan','van','compact','taxi','sport','sport','sedan','compact'];
-const vehiclesAtStops=destinations.map((d,i)=>{
-  const preferred=sector?parkedFleet[hash(Math.round(midX)+':'+Math.round(midY))%parkedFleet.length]:parkedFleet[i];
-  const canPark=(p,type)=>{
-    const {halfLength,halfWidth}=vehicleSpec(type);
-    return !testPose(p.x,p.y,{angle:p.angle??d.angle,halfLength,halfWidth});
-  };
-  const coords=[];
-  for(const distance of [3.75,4.35,5.4,7,9])for(const offset of [-Math.PI/2,Math.PI/2,Math.PI,0,2.22,-2.22])
-    coords.push({x:d.x+distance*Math.cos(d.angle+offset),y:d.y+distance*Math.sin(d.angle+offset)});
-  if(d.park)coords.unshift(d.park);
-  let type=preferred;
-  let v=coords.find(p=>canPark(p,type));
-  if(!v){type='compact';v=coords.find(p=>canPark(p,type))||coords[0];}
-  return {...v,id:d.key==='sector'?'car-region-'+hash((sector.key||'')+':'+Math.round(midX)+':'+Math.round(midY)):'car-'+d.key,angle:v.angle??d.angle,kind:'car',type,color:tintedCars[(i+1)%tintedCars.length],speed:0,moving:false,parked:true};
-});
-export const parkedCars=vehiclesAtStops;
-
-// Connect road-section endpoints for traffic. Each circuit follows a continuous set of
-// imported sections, returning on the opposing lane instead of wrapping at a section end.
-const nodes=new Map(),trafficSeeds=new Map(),walkerSeeds=new Map();
-const nodeKey=(p,level)=>p[0]+':'+p[1]+':'+level;
+const trafficSeeds=new Map(),walkerSeeds=new Map();
 const cellKey=(x,y,size)=>Math.floor(x/size)+4096*Math.floor(y/size);
 function considerSeed(store,key,candidate,rank){
   if(!store.has(key)||store.get(key).rank<rank)store.set(key,{p:candidate,rank});
 }
 for(const p of routeRecords){
-  const road=p.road, mid=alongPath(p,p.length*.5);
+  const road=p.road,mid=alongPath(p,p.length*.5);
   if(road.kind==='motorway')continue;
   const rank=Math.min(p.length,160)+(road.kind==='primary'?40:0)+(p.key%13)/20;
-  if(road.kind!=='path'){
-    for(const flip of [false,true]){
-      const end=flip?road.path.at(-1):road.path[0],k=nodeKey(end,road.level);
-      if(!nodes.has(k))nodes.set(k,[]);
-      nodes.get(k).push({p,flip});
-    }
-    if(p.length>18 && road.w>=3.2)considerSeed(trafficSeeds,cellKey(mid.x,mid.y,106),p,rank);
+  if(road.kind!=='path'&&p.length>18&&road.w>=(road.oneway?3:4)){
+    const key=cellKey(mid.x,mid.y,106),candidates=trafficSeeds.get(key)||[];
+    candidates.push({p,rank});trafficSeeds.set(key,candidates);
   }
-  if(!road.bridge && p.length>15)considerSeed(walkerSeeds,cellKey(mid.x,mid.y,60),p,rank+(road.kind==='path'?60:0));
-}
-function orient(p,flip){return flip?p.path.slice().reverse():p.path;}
-function extendPath(seed){
-  const used=new Set([seed.road.id]);
-  function arm(flip){
-    let current=seed,reversed=flip,ext=[],length=0;
-    for(let k=0;k<6 && length<265;k++){
-      const v=orient(current,reversed), end=v.at(-1),prev=v.at(-2);
-      const angle=Math.atan2(end[1]-prev[1],end[0]-prev[0]);
-      const options=nodes.get(nodeKey(end,current.road.level))||[];
-      let next=null,best=-Infinity;
-      for(const c of options){
-        if(used.has(c.p.road.id)||c.p.road.w<3.2)continue;
-        const op=c.flip?c.p.path.at(-2):c.p.path[1],ndir=Math.atan2(op[1]-end[1],op[0]-end[0]);
-        const score=Math.cos(ndir-angle)*3+(c.p.road.name===current.road.name ? .6 : 0)+((c.p.key%41)/100);
-        if(score>best){best=score;next=c;}
-      }
-      if(!next||best<-.6)break;
-      used.add(next.p.road.id);current=next.p;reversed=next.flip;length+=current.length;
-      ext.push({p:current,flip:reversed});
-    }
-    return ext;
-  }
-  const east=arm(false),west=arm(true).reverse().map(e=>({p:e.p,flip:!e.flip}));
-  return [...west,{p:seed,flip:false},...east];
+  if(!road.bridge&&p.length>15)considerSeed(walkerSeeds,cellKey(mid.x,mid.y,60),p,rank+(road.kind==='path'?60:0));
 }
 const circulation=new Grid(96),footPatrol=new Grid(64);
-function offsetLine(points,widths,side){
-  return points.map((p,i)=>{
-    const a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)];
-    const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1,off=widths[i]*side;
-    return [p[0]-dy/l*off,p[1]+dx/l*off];
-  });
+const seedGroups=[...trafficSeeds.values()].map(group=>group.sort((a,b)=>b.rank-a.rank||a.p.id.localeCompare(b.p.id)).slice(0,4).map(s=>s.p));
+const trafficRoutes=buildTrafficRoutes(routeRecords,seedGroups,{
+  atEdge:([x,y])=>!withinBoundary(x,y,4),
+  portalClear:(x,y)=>withinBoundary(x,y,5),
+  laneClear:p=>{
+    const hit=testPose(p.x,p.y,{angle:p.angle,halfLength:1.75,halfWidth:.83},false);
+    return !hit||hit===boundaryItem;
+  }
+});
+// An offset inside a bend can place furniture from a neighbouring carriageway in a
+// driver's swept path. Clear that generated furniture where the actual lane passes.
+function clearTrafficFurniture(){
+  const excluded=new Set();
+  const envelopes=[vehicleSpec('compact'),{halfLength:2.32,halfWidth:.96},vehicleSpec('firetruck'),vehicleSpec('bus')];
+  for(const route of trafficRoutes.values()){
+    let capacity=route.availableWidth>=6?3:route.availableWidth>=4.25?2:1;
+    const body=envelopes[capacity];
+    for(let i=1;i<route.points.length;i++){
+      const a=route.points[i-1],b=route.points[i],dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);
+      if(!len)continue;
+      const x=(a[0]+b[0])*.5,y=(a[1]+b[1])*.5,c=dx/len,s=dy/len;
+      const longitudinal=len*.5+body.halfLength+.45,lateral=body.halfWidth+.38;
+      const w=Math.abs(c)*longitudinal+Math.abs(s)*lateral,h=Math.abs(s)*longitudinal+Math.abs(c)*lateral;
+      const box={minX:x-w,minY:y-h,maxX:x+w,maxY:y+h};
+      for(const b of terrain.areaBox(box)){
+        if(b.type!=='building'||b.minHeight>1.3||b.h<=1.3)continue;
+        while(capacity>=0){
+          const limit=envelopes[capacity];
+          if(!rectShape(x,y,c,s,len*.5+limit.halfLength+.14,limit.halfWidth+.10,b))break;
+          capacity--;
+        }
+        if(capacity<0)break;
+      }
+      if(capacity<0)break;
+      for(const prop of decor.areaBox(box)){
+        if(rectCircle(x,y,c,s,longitudinal,lateral,prop.x,prop.y,prop.r))excluded.add(prop);
+      }
+    }
+    if(capacity<0)trafficRoutes.delete(route.id);
+    else route.clearance=envelopes[capacity];
+  }
+  if(!excluded.size)return;
+  for(const [key,items] of decor.cells)decor.cells.set(key,items.filter(p=>!excluded.has(p)));
+  let retained=0;for(const p of props)if(!excluded.has(p))props[retained++]=p;
+  props.length=retained;
 }
-for(const {p} of trafficSeeds.values()){
-  const sections=extendPath(p),v=[],widths=[];
-  for(const {p:r,flip} of sections){
-    const vertices=orient(r,flip);
-    for(const pt of vertices){
-      if(v.length && Math.hypot(pt[0]-v.at(-1)[0],pt[1]-v.at(-1)[1])<.1)continue;
-      v.push(pt);widths.push(clamp(r.road.w*.22,.8,3.0));
+clearTrafficFurniture();
+for(const route of trafficRoutes.values())circulation.insert(route,bounds(route.points,4));
+export const sampleTrafficRoute=(routeId,distance)=>sampleRoadRoute(trafficRoutes.get(routeId),distance);
+// Build the swept envelopes of the traffic lanes once, near each travel stop.
+// A stationary car needs to clear the rear of a turning bus as well as its centre line.
+function lanesNearStop(stop,radius){
+  const lanes=[];
+  for(const route of circulation.area(stop.x,stop.y,radius)){
+    const largest=route.clearance;
+    const range=radius+largest.halfLength;
+    for(let i=1;i<route.points.length;i++){
+      const a=route.points[i-1],b=route.points[i],point=nearestPoint(stop.x,stop.y,a,b);
+      if(sq(point[0]-stop.x)+sq(point[1]-stop.y)>range*range)continue;
+      const nearest=route.lengths[i-1]+Math.hypot(point[0]-a[0],point[1]-a[1]);
+      const from=Math.max(route.lengths[i-1],nearest-range),to=Math.min(route.lengths[i],nearest+range);
+      for(let d=from;;d=Math.min(d+1,to)){
+        const pose=sampleRoadRoute(route,d);
+        lanes.push({...pose,halfLength:largest.halfLength+.75,halfWidth:largest.halfWidth+.43});
+        if(d>=to)break;
+      }
     }
   }
-  const left=offsetLine(v,widths,-1).reverse(),right=offsetLine(v,widths,1);
-  const loop=pathGeometry([...right,...left,right[0]]);
-  if(loop.length<40)continue;
-  const clipped=sections.some(e=>e.p.part);
-  const id=clipped?p.road.id+':'+hash(sections.map(e=>e.p.id).join('/')).toString(36):p.road.id;
-  const rec={...loop,id,key:p.key,road:p.road,wide:sections.every(s=>s.p.road.w>=6),count:Math.max(1,Math.round(loop.length/208))};
-  circulation.insert(rec,bounds(loop.path,4));
+  return lanes;
 }
+function parkedVehicleAtStop(stop,i){
+  const preferred=sector?parkedFleet[hash(Math.round(midX)+':'+Math.round(midY))%parkedFleet.length]:parkedFleet[i];
+  const lanes=lanesNearStop(stop,34);
+  const street=closestRoad(stop.x,stop.y,35,s=>s.kind!=='motorway'&&s.kind!=='path');
+  const roadAngle=street?.angle??stop.angle;
+  function usable(p,type){
+    const {halfLength,halfWidth}=vehicleSpec(type);
+    const shape={x:p.x,y:p.y,angle:p.angle,halfLength,halfWidth};
+    if(testPose(p.x,p.y,shape)||lanes.some(b=>rectAgainstRect(p.x,p.y,p.angle,halfLength,halfWidth,b)))return false;
+    if(rectCircle(p.x,p.y,Math.cos(p.angle),Math.sin(p.angle),halfLength,halfWidth,stop.x,stop.y,.65))return false;
+    return vehicleDoorways({...p,type},.75).some(d=>!testPose(d.x,d.y,{radius:.43}));
+  }
+  const coords=[];
+  if(stop.park)coords.push({...stop.park,angle:stop.park.angle??stop.angle});
+  for(const radius of [3.75,4.35,5.1,6.5,9,13,19,29]){
+    for(const offset of [-Math.PI/2,Math.PI/2,Math.PI,0,2.22,-2.22,...Array.from({length:20},(_,k)=>k*Math.PI/10)]){
+      const x=stop.x+radius*Math.cos(stop.angle+offset),y=stop.y+radius*Math.sin(stop.angle+offset);
+      coords.push({x,y,angle:stop.angle},{x,y,angle:roadAngle},{x,y,angle:roadAngle+Math.PI});
+    }
+  }
+  for(const type of new Set([preferred,'compact'])){
+    const v=coords.find(p=>usable(p,type));
+    if(v)return {...v,id:stop.key==='sector'?'car-region-'+hash((sector.key||'')+':'+Math.round(midX)+':'+Math.round(midY)):'car-'+stop.key,
+      kind:'car',type,color:tintedCars[(i+1)%tintedCars.length],speed:0,moving:false,parked:true};
+  }
+  return null;
+}
+export const parkedCars=destinations.map(parkedVehicleAtStop).filter(Boolean);
 function addPatrol(patrol,id,name){
   if(patrol.length<4)return;
   const path=pathGeometry(patrol);
@@ -605,6 +733,20 @@ for(const {p} of walkerSeeds.values()){
 }
 const flocks=['pedestrian','pedestrian','pedestrian','pedestrian','police','pedestrian','pedestrian','firefighter','pedestrian','medic','pedestrian','swat','pedestrian','pedestrian'];
 const fleet=['compact','sedan','taxi','police','van','compact','sport','ambulance','sedan','bus','firetruck','van','taxi','swat','compact','sedan','car','bus'];
+// Stable global identities let a delayed car keep the same wardrobe and footprint on every client.
+export function trafficVehicleAt(routeId,index){
+  const route=trafficRoutes.get(routeId);
+  if(!route||!Number.isSafeInteger(index)||index<0||(route.closed&&index>=route.count))return null;
+  const slot=index%route.count,seed=route.key+slot*5;
+  // Large vehicles get a scheduled slot on routes wide enough for their envelope.
+  const canBus=route.availableWidth>=6&&route.clearance.halfLength>=vehicleSpec('bus').halfLength;
+  let type=slot===0&&canBus?'bus':fleet[seed%fleet.length];
+  const body=vehicleSpec(type);
+  if((type==='bus'&&!canBus)||body.halfWidth*4+.12>route.availableWidth||body.halfWidth>route.clearance.halfWidth||body.halfLength>route.clearance.halfLength)type='compact';
+  const cruiseSpeed=(4.7+(route.key%51)*.08)*vehicleSpec(type).cruise;
+  return {id:'v'+route.id+'-'+index,routeId,routeIndex:index,routeLength:route.length,routeLoop:route.closed,
+    type,kind:type,color:tintedCars[(route.key+slot)%tintedCars.length],speed:cruiseSpeed,cruiseSpeed,moving:true};
+}
 export function routeAgents(x,y,radius=140,epochMs=Date.now()){
   const actors=[],cars=[],r2=radius*radius,sec=epochMs*.001;
   const consider=(list,entity)=>{
@@ -612,16 +754,16 @@ export function routeAgents(x,y,radius=140,epochMs=Date.now()){
     if(d2<=r2){entity.distanceSq=d2;list.push(entity);}
   };
   for(const route of circulation.area(x,y,radius)){
-    const nominalSpeed=4.7+(route.key%51)*.08,span=route.length;
-    for(let i=0;i<route.count;i++){
-      let type=fleet[(route.key+i*5)%fleet.length];
-      if(type==='bus' && !route.wide)type='compact';
-      const spec=vehicleSpec(type),base=nominalSpeed*spec.cruise;
-      const d=wrap(sec*base+route.key%span+i*span/route.count,span);
-      const p=alongPath(route,d),ahead=alongPath(route,wrap(d+2.2,span)),back=alongPath(route,wrap(d-1.5,span));
-      p.angle=Math.atan2(ahead.y-back.y,ahead.x-back.x);
-      if(sq(x-p.x)+sq(y-p.y)>r2 || testPose(p.x,p.y,{angle:p.angle,halfLength:spec.halfLength,halfWidth:spec.halfWidth},false))continue;
-      consider(cars,{...p,id:'v'+route.id+'-'+i,type,kind:type,color:tintedCars[(route.key+i)%tintedCars.length],speed:base,moving:true});
+    for(let slot=0;slot<route.count;slot++){
+      let car=trafficVehicleAt(route.id,slot);
+      const elapsed=sec*car.cruiseSpeed+route.key%route.length+slot*route.length/route.count;
+      if(!route.closed)car=trafficVehicleAt(route.id,Math.floor(elapsed/route.length)*route.count+slot);
+      if(!car)continue;
+      const routeDistance=wrap(elapsed,route.length),p=sampleRoadRoute(route,routeDistance);
+      if(sq(x-p.x)+sq(y-p.y)>r2)continue;
+      const spec=vehicleSpec(car.type);
+      if(testPose(p.x,p.y,{angle:p.angle,halfLength:spec.halfLength,halfWidth:spec.halfWidth},false))continue;
+      consider(cars,{...p,...car,routeDistance});
     }
   }
   for(const route of footPatrol.area(x,y,radius)){
