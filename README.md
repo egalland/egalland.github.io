@@ -4,6 +4,8 @@ Un atlas interactif des âges de Tolkien. On peut y explorer six panoramas illus
 
 ## Lancer l’atlas
 
+Les six panoramas sont accessibles dès le premier lancement, avant la préparation de la carte.
+
 Les cartes se construisent localement à partir de 33 couches GeoJSON. Le dépôt contient le moteur, les scripts de préparation, les panoramas générés pour le projet et le grain de cuir original. Il faut fournir les données géographiques compatibles au premier démarrage.
 
 1. Préparer une copie locale du projet **Arda Maps** ou un jeu de couches compatible. Le script lit l’organisation des fichiers `QGIS/first age/arda1`, `QGIS/second age/arda2` et `QGIS/third age/arda3`. [Données géographiques utilisées par la maquette](https://github.com/kwoxer/Arda-Maps)
