@@ -30,3 +30,14 @@ test('stdio initialization and quota read against a fake process', async()=>{
 test('missing Codex produces an explicit failure',async()=>{
  await assert.rejects(readQuotas('/nonexistent/codex'));
 });
+
+test('Node launcher supports an npm-installed Codex script', async()=>{
+ const previous=process.env.CODEX_SCRIPT;
+ try {
+  process.env.CODEX_SCRIPT=fileURLToPath(new URL('./fake-codex.mjs',import.meta.url));
+  const result=await readQuotas();
+  assert.equal(result.windows[0].remaining,65);
+ } finally {
+  if(previous===undefined) delete process.env.CODEX_SCRIPT; else process.env.CODEX_SCRIPT=previous;
+ }
+});

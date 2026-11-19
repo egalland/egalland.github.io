@@ -21,7 +21,8 @@ export function normalize(result, now = Date.now()) {
 }
 
 export async function readQuotas(command = process.env.CODEX_COMMAND || 'codex') {
-  const proc = spawn(command, ['app-server'], { stdio: ['pipe', 'pipe', 'pipe'], shell: false });
+  const script = process.env.CODEX_SCRIPT;
+  const proc = spawn(script ? process.execPath : command, script ? [script, 'app-server'] : ['app-server'], { stdio: ['pipe', 'pipe', 'pipe'], shell: false });
   // Do not log protocol output: it may contain account information.
   proc.stderr.resume();
   const lines = createInterface({ input: proc.stdout });

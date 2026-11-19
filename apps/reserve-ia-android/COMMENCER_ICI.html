@@ -1,0 +1,135 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Réserve IA — guide</title><style>body{font:17px/1.6 system-ui,sans-serif;background:#f1f5f9;color:#17233a;margin:0}main{max-width:940px;margin:auto;background:white;padding:40px}h1{color:#134e4a}h2{margin-top:2em;border-top:1px solid #dde5ec;padding-top:1em}pre{padding:18px;background:#13243a;color:#f1f5f9;border-radius:8px;overflow:auto;font-size:14px}code{overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;font-size:14px}td{padding:10px;border:1px solid #d6e0ea;vertical-align:top}tr:first-child{background:#e6f4ef;font-weight:700}a{color:#095a9c;overflow-wrap:anywhere}@media(max-width:600px){main{padding:20px}table{display:block;overflow:auto}}@media print{body{background:white}main{padding:0}pre{white-space:pre-wrap;color:black;background:#eee}h2{break-after:avoid}}</style><main><h1>Réserve IA — installation sur Poco Android</h1>
+<p>Package personnel • 16 octobre 2026 • version de préparation 0.2</p>
+<h2>À lire avant de commencer</h2>
+<p>Ce package contient le code Android, le relais, des scripts de démarrage et les instructions. Il ne contient PAS d’APK déjà compilé. La notification est textuelle et dépliable : pourcentages restants, renouvellements, dernière mesure et bouton Actualiser. Il n’y a pas encore de jauges graphiques, d’alerte à 20 % ni d’historique quotidien.</p>
+<p>Les tests du relais utilisent un faux processus Codex. Ils ne prouvent pas la connexion à votre compte. La compilation Android, le workflow GitHub, les scripts Windows et l’essai sur Poco restent à effectuer. Ne considérez l’installation comme réussie qu’après comparaison avec vos quotas réels.</p>
+<h2>1. Choisir où faire tourner le relais</h2>
+<table>
+<tr><td>Choix</td><td>PC personnel allumé ?</td><td>Ce qu’il faut</td></tr>
+<tr><td>Essai sur Windows</td><td>Oui, pendant le suivi</td><td>PC avec Node.js, Codex CLI et Tailscale</td></tr>
+<tr><td>Relais sur serveur Linux personnel / VPS</td><td>Non</td><td>Un serveur restant disponible, avec les mêmes outils ; hébergement éventuel à votre charge</td></tr>
+<tr><td>Téléphone seul, directement connecté à ChatGPT</td><td>Pas disponible dans ce package</td><td>Connexion autonome non validée</td></tr>
+<tr><td>Codex Cloud comme relais permanent</td><td>Pas fourni</td><td>Le lancement de tâches cloud ne valide pas un service permanent accessible par l’application</td></tr>
+</table>
+<p>Commencez par tester la lecture de votre compte sur un ordinateur existant. Ne prenez pas un abonnement serveur uniquement sur la foi de ce prototype. Le guide VPS est une procédure proposée, pas un déploiement déjà testé.</p>
+<p>Le relais lit les fenêtres réellement exposées pour le quota Codex. Il ne mesure pas tous les outils de ChatGPT et ne suppose pas qu’une fenêtre de cinq heures ou hebdomadaire soit toujours présente.</p>
+<h2>2. Installer les outils sur Windows</h2>
+<p>1. Décompressez tout le ZIP dans un dossier, par exemple <code>C:\ReserveIA</code>. Ne lancez pas les fichiers depuis l’aperçu du ZIP.</p>
+<p>2. Installez Node.js 22 ou une version LTS plus récente depuis <a href="https://nodejs.org/">https://nodejs.org/</a> ; incluez npm. Rouvrez PowerShell après installation.</p>
+<p>3. Dans PowerShell, vérifiez et installez Codex CLI :</p>
+<pre><code>
+node --version
+
+npm.cmd install -g @openai/codex
+
+codex.cmd login
+
+</code></pre>
+<p>4. Connectez votre compte ChatGPT avec son abonnement dans le navigateur. Une clé API OpenAI ne remplace pas cette connexion.</p>
+<p>5. Placez-vous dans le dossier contenant <code>build.gradle</code>, <code>app</code> et <code>bridge</code>, puis lancez le contrôle :</p>
+<pre><code>
+cd C:\ReserveIA
+
+$env:CODEX_SCRIPT = Join-Path ((npm.cmd root -g).Trim()) &#x27;@openai/codex/bin/codex.js&#x27;
+
+node scripts/verifier-compte.mjs
+
+</code></pre>
+<p>Résultat attendu : au moins une fenêtre avec un pourcentage restant et une date. Comparez avec votre tableau d’utilisation Codex. Si la lecture échoue, arrêtez ici et vérifiez votre connexion, la version de Codex et les quotas disponibles : inutile de compiler Android tant que cette étape ne fonctionne pas.</p>
+<h2>3. Démarrer le relais Windows</h2>
+<p>Depuis le même dossier, exécutez :</p>
+<pre><code>
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\demarrer-windows.ps1
+
+</code></pre>
+<p>L’option Bypass s’applique à cette invocation PowerShell, sans modifier durablement votre politique. Vous pouvez lire le script avant de l’exécuter.</p>
+<p>Le script crée un jeton aléatoire, limite les droits de son fichier à votre compte Windows et démarre le relais sur <code>127.0.0.1:8765</code>. Gardez la fenêtre ouverte. Ctrl+C arrête le relais. Le script ne configure pas de démarrage automatique Windows.</p>
+<p>Le fichier du jeton est dans <code>%LOCALAPPDATA%\ReserveIA\panel-token.txt</code>. Ouvrez-le localement avec le Bloc-notes pour saisir sa valeur dans l’application Android. Ce jeton est distinct du mot de passe ChatGPT. Ne le publiez pas et ne le mettez pas dans GitHub.</p>
+<h2>4. Relier le Poco au relais en HTTPS privé</h2>
+<p>Cette étape utilise Tailscale comme réseau privé entre vos appareils ; elle exige un compte Tailscale et une connexion sur les deux appareils. Un VPN déjà actif sur Android peut entrer en conflit avec Tailscale.</p>
+<p>1. Installez Tailscale sur le PC depuis <a href="https://tailscale.com/download">https://tailscale.com/download</a> et sur le Poco depuis Google Play. Connectez les deux au même réseau privé Tailscale.</p>
+<p>2. Vérifiez que les deux appareils sont connectés.</p>
+<p>3. Dans une deuxième fenêtre PowerShell sur le PC :</p>
+<pre><code>
+tailscale serve --bg http://127.0.0.1:8765
+
+</code></pre>
+<p>4. Si Tailscale demande d’activer HTTPS, suivez le lien proposé et terminez cette configuration.</p>
+<p>5. Notez l’adresse HTTPS affichée. Ajoutez <code>/quota</code> à la fin, par exemple <code><a href="https://nom-machine.nom-reseau.ts.net/quota">https://nom-machine.nom-reseau.ts.net/quota</a></code>. L’exemple n’est pas une adresse utilisable telle quelle.</p>
+<p>Utilisez <strong>Serve</strong>, pas Funnel : l’objectif est un accès privé. Il n’y a pas de port à ouvrir sur votre box. <code><a href="https://127.0.0.1:8765/quota">https://127.0.0.1:8765/quota</a></code> ne fonctionnera pas sur le téléphone : cette adresse désignerait le téléphone lui-même et le relais ne fournit pas directement TLS.</p>
+<p>Ouvrir l’adresse sans jeton peut afficher « Non autorisé » : c’est normal, l’application ajoute le jeton. Cela ne confirme pas encore la lecture des quotas.</p>
+<h2>5. Obtenir le fichier APK</h2>
+<h3>Méthode A — Android Studio</h3>
+<p>1. Installez Android Studio depuis <a href="https://developer.android.com/studio">https://developer.android.com/studio</a> sur un ordinateur.</p>
+<p>2. Ouvrez le dossier qui contient <code>settings.gradle</code> comme projet.</p>
+<p>3. Installez Android SDK Platform 35 et Build Tools 35.0.0 avec SDK Manager.</p>
+<p>4. Utilisez JDK 17 pour Gradle. Le projet utilise Android Gradle Plugin 8.9.2 et Gradle 8.11.1. Aucun Gradle Wrapper n’est inclus : installez Gradle 8.11.1 depuis <a href="https://gradle.org/releases/">https://gradle.org/releases/</a> et sélectionnez cette installation locale dans les paramètres Gradle d’Android Studio.</p>
+<p>5. Synchronisez le projet. Puis utilisez le menu Build pour générer un APK de développement ; les intitulés du menu varient selon la version. Autre possibilité avec Gradle installé dans le PATH :</p>
+<pre><code>
+gradle :app:assembleDebug
+
+</code></pre>
+<p>6. Le fichier attendu est <code>app/build/outputs/apk/debug/app-debug.apk</code>. Une erreur de compilation signifie qu’aucun APK utilisable n’est encore produit. Conservez le message d’erreur pour correction.</p>
+<h3>Méthode B — GitHub Actions, sans Android Studio local</h3>
+<p>Un workflow manuel est inclus dans <code>.github/workflows/android.yml</code>. Il n’a pas été exécuté dans la préparation de ce package.</p>
+<p>1. Créez un dépôt personnel GitHub, de préférence privé, et ajoutez tous les fichiers du projet à sa racine, y compris le dossier <code>.github</code>. N’ajoutez ni jeton, ni fichier d’authentification Codex.</p>
+<p>2. Ouvrez Actions, puis « Generer APK personnel », et lancez Run workflow. GitHub peut demander d’activer Actions. Vérifiez les éventuels coûts ou limites de votre compte avant exécution.</p>
+<p>3. Attendez une exécution verte. Si elle échoue, consultez l’étape en erreur : l’APK n’est pas disponible tant que la compilation échoue.</p>
+<p>4. Téléchargez l’artefact « Reserve-IA-APK-debug » et décompressez-le pour obtenir <code>app-debug.apk</code>.</p>
+<p>Aucun compte ChatGPT ni secret n’est nécessaire pour compiler. Un APK debug est signé pour le développement, pas pour une publication Play Store. La clé de signature peut changer entre deux compilations GitHub : une mise à jour peut alors exiger de désinstaller l’ancienne version, ce qui efface sa configuration. Une diffusion durable nécessite une signature de distribution conservée.</p>
+<h2>6. Installer et configurer le Poco</h2>
+<p>1. Transférez <code>app-debug.apk</code> sur le téléphone et ouvrez-le avec le gestionnaire de fichiers.</p>
+<p>2. Si Android le demande, autorisez temporairement cette source à installer des applications inconnues. Après installation, vous pouvez retirer cette autorisation.</p>
+<p>3. Ouvrez « Réserve IA ».</p>
+<p>4. Saisissez l’adresse HTTPS se terminant par <code>/quota</code> et le jeton du relais.</p>
+<p>5. Touchez « Enregistrer et activer le suivi », puis autorisez les notifications.</p>
+<p>6. Vérifiez la notification, les pourcentages et l’heure de mesure. Comparez-les à votre compte Codex.</p>
+<p>7. Si HyperOS bloque les mises à jour, cherchez les réglages d’activité en arrière-plan / batterie de Réserve IA et de Tailscale. Les noms dépendent de la version du Poco.</p>
+<p>Le suivi demande une actualisation toutes les 15 minutes ; Android peut la retarder. Le bouton Actualiser ouvre l’application et déclenche une lecture. La notification peut être balayable selon Android. Ce n’est pas une notification multimédia Spotify ni une garantie d’affichage indélébile.</p>
+<h2>7. Option sans PC personnel allumé : relais Linux / VPS</h2>
+<p>Cette option remplace le PC Windows par un serveur à vous. Elle ne se sert pas de Codex Cloud comme hébergement. Il faut administrer ce serveur et maintenir son accès au compte. Aucun serveur n’est créé ni payé par ce package.</p>
+<p>1. Sur un serveur Linux disposant de Node.js 22+, installez Codex CLI et Tailscale en suivant leurs sites officiels. Utilisez un compte utilisateur dédié et non administrateur pour le relais.</p>
+<p>2. Copiez le dossier du package sur le serveur. Connectez Codex avec votre compte :</p>
+<pre><code>
+npm install -g @openai/codex
+
+codex login --device-auth
+
+</code></pre>
+<p>3. Suivez le lien et le code depuis votre téléphone. Si la connexion par code est indisponible ou refusée pour votre compte, résolvez ce point avant de poursuivre. Ne transférez pas vos identifiants dans un dépôt.</p>
+<p>4. Depuis le dossier du package, contrôlez le compte puis lancez le relais :</p>
+<pre><code>
+node scripts/verifier-compte.mjs
+
+bash scripts/demarrer-linux.sh
+
+</code></pre>
+<p>5. Le jeton est créé dans <code>~/.config/reserve-ia/panel-token</code> (ou sous XDG_CONFIG_HOME si défini). Consultez-le localement pour configurer Android. Le processus doit rester actif ; fermer la session SSH peut l’arrêter.</p>
+<p>6. Connectez Tailscale au même réseau privé que le Poco, puis configurez :</p>
+<pre><code>
+tailscale serve --bg http://127.0.0.1:8765
+
+</code></pre>
+<p>Selon les droits du serveur, l’administration Tailscale peut nécessiter sudo. Utilisez l’adresse HTTPS du serveur suivie de <code>/quota</code> dans Réserve IA, avec le jeton du serveur.</p>
+<p>Pour un fonctionnement durable, configurez le script comme service utilisateur systemd avec votre chemin absolu de projet dans ExecStart et un PATH donnant accès à node et codex. Activez le maintien des services après déconnexion avec <code>loginctl enable-linger</code> pour cet utilisateur, si votre politique serveur le permet. Ces réglages dépendent du serveur et ne sont pas automatisés ici. Vérifiez la reprise après redémarrage avant de compter sur le suivi.</p>
+<h2>8. Contrôles et dépannage</h2>
+<table>
+<tr><td>Symptôme</td><td>Contrôle</td></tr>
+<tr><td>Lecture du compte impossible</td><td>Exécuter <code>codex login</code>, mettre à jour Codex, relancer le contrôle du compte</td></tr>
+<tr><td>Non autorisé / 401</td><td>Vérifier que le même jeton est utilisé sur le relais et le téléphone</td></tr>
+<tr><td>Lecture impossible / 503</td><td>Vérifier Codex sur la machine du relais ; ne pas remplacer par des chiffres d’exemple</td></tr>
+<tr><td>Adresse inaccessible</td><td>Vérifier Tailscale sur les deux appareils, Serve, HTTPS et la fenêtre du relais</td></tr>
+<tr><td>Pas de notification</td><td>Autorisation Android, suivi activé, restrictions HyperOS</td></tr>
+<tr><td>Ancienne mesure</td><td>Regarder l’horodatage ; tester Actualiser et la disponibilité du relais</td></tr>
+<tr><td>Une seule réserve</td><td>Une seule fenêtre peut être exposée par le compte ; aucune seconde jauge n’est inventée</td></tr>
+<tr><td>APK refusé en mise à jour</td><td>Vérifier la signature ; désinstallation éventuelle avec perte de configuration</td></tr>
+</table>
+<p>Avant de valider : comparer les chiffres réels, couper le relais et vérifier l’état d’erreur, le relancer, tester écran éteint puis redémarrage, et utiliser Arrêter pour vérifier que le suivi cesse. Ne pas prendre un ancien pourcentage comme une donnée fraîche.</p>
+<p>Pour désactiver : touchez « Arrêter et retirer la notification », arrêtez le processus du relais et, si vous ne l’utilisez pour rien d’autre, désactivez sa configuration Serve avec <code>tailscale serve reset</code>. Cette commande retire toute configuration Serve de cette machine : vérifiez ses autres usages avant de l’exécuter.</p>
+<h2>Sources et détails</h2>
+<p>- Protocole de quotas : <a href="https://learn.chatgpt.com/docs/app-server">https://learn.chatgpt.com/docs/app-server</a></p>
+<p>- Connexion Codex : <a href="https://learn.chatgpt.com/docs/auth">https://learn.chatgpt.com/docs/auth</a></p>
+<p>- Tâches Codex Cloud : <a href="https://learn.chatgpt.com/docs/cloud">https://learn.chatgpt.com/docs/cloud</a></p>
+<p>- Réseau privé HTTPS : <a href="https://tailscale.com/docs/reference/tailscale-cli/serve">https://tailscale.com/docs/reference/tailscale-cli/serve</a></p>
+<p>- Installation Android Studio : <a href="https://developer.android.com/studio">https://developer.android.com/studio</a></p>
+<p>Le README technique d’origine est conservé sous <code>README_TECHNIQUE.md</code>. Aucun mot de passe, jeton réel, clé de signature ou APK compilé n’est inclus.</p></main></html>

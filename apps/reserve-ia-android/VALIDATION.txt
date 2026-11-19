@@ -1,0 +1,4 @@
+16 octobre 2026
+8 tests du relais passes sur Linux, dont protocole avec faux processus et lancement via script Node.
+Syntaxe Bash verifiee. Archive ZIP verifiee.
+Non executes : compilation Android, workflow GitHub Actions, scripts PowerShell, deploiement Tailscale/VPS et connexion au compte reel, essai Poco.
