@@ -1,0 +1,103 @@
+/* Content can scroll with the on-screen keyboard open while the form action stays reachable. */
+#modal {
+  --sheet-pad: clamp(18px, 3vw, 26px);
+  --sheet-bg: #fafaf5;
+  --sheet-ink: #202c24;
+  --sheet-sub: #556452;
+  --sheet-rule: #dbe0d4;
+  --sheet-accent: #c34c20;
+  --sheet-main: #284532;
+  box-sizing:border-box;
+  border:1px solid var(--sheet-rule);
+  border-radius:21px;
+  padding:0;
+  width: min(510px, calc(100% - 32px));
+  max-width:100%;
+  max-height:calc(100dvh - 48px);
+  background:var(--sheet-bg);
+  color:var(--sheet-ink);
+  overflow:hidden;
+  box-shadow:0 22px 80px #15241932;
+  text-align:left;
+}
+#modal::backdrop { background:rgb(21 32 24 / .45); backdrop-filter:blur(3px); }
+#modalBody { display:flex; flex-direction:column; max-height:calc(100dvh - 50px); min-height:0; }
+#modal .modal-head { display:flex; align-items:center; flex:none; justify-content:space-between; gap:14px; margin:0; padding:14px var(--sheet-pad); border-bottom:1px solid var(--sheet-rule); }
+#modal .modal-head h2 { color:var(--sheet-ink); font:700 clamp(1.13rem, 3vw, 1.4rem)/1.22 'DM Sans',sans-serif; letter-spacing:-.035em; margin:0; }
+#modal .modal-head .close { display:grid; flex:none; place-items:center; width:44px; height:44px; border:1px solid var(--sheet-rule); background:transparent; color:var(--sheet-sub); border-radius:50%; font:400 24px/1 sans-serif; padding:0; }
+.sheet-scroll { overflow:auto; padding:20px var(--sheet-pad) 22px; min-height:0; overscroll-behavior:contain; scroll-padding-block:12px; }
+.sheet-scroll form { display:grid; min-width:0; gap:16px; margin:0; }
+#modal .row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; }
+#modal label { display:grid; gap:6px; min-width:0; color:var(--sheet-sub); font-size:.81rem; font-weight:650; }
+#modal :is(input,select,textarea) { box-sizing:border-box; width:100%; min-width:0; min-height:45px; border:1px solid var(--sheet-rule); border-radius:10px; background:white; color:var(--sheet-ink); padding:10px 12px; font:500 16px/1.4 'DM Sans',sans-serif; }
+#modal input:focus, #modal textarea:focus, #modal select:focus { outline:2px solid #88a281; outline-offset:1px; }
+#modal input[type=date] { display:block; }
+#modal input[hidden] { display:none; }
+#modal textarea { min-height:86px; resize:vertical; }
+#modal .primary, #modal .secondary, #modal .danger, #modal .timer-actions button {
+  display:inline-flex; align-items:center; justify-content:center; min-height:45px; min-width:0; padding:10px 15px; border-radius:10px; line-height:1.25; font-size:14px; font-weight:650; white-space:normal; text-align:center;
+}
+#modal .primary { border:1px solid transparent; background:var(--sheet-main); color:white; }
+#modal .primary:hover { background:#36533c; }
+#modal .secondary { background:transparent; border:1px solid #cbd4c5; color:var(--sheet-ink); }
+#modal .danger { background:transparent; color:#a33623; }
+#modal .hint { color:var(--sheet-sub); font-size:.79rem; line-height:1.5; margin:2px 0; }
+#modal .form-actions, #modal .timer-actions, #modal .sheet-actions { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:10px; margin:16px 0 0; }
+#modal .sheet-actions { margin:0; padding:12px var(--sheet-pad); background:var(--sheet-bg); border-top:1px solid var(--sheet-rule); flex:none; }
+#modal .sheet-actions .primary { flex:1 1 auto; }
+#modal .form-actions .danger, #modal .sheet-actions .danger { margin-right:auto; }
+#modal .focus-hint { margin:13px 0 0; text-align:center; }
+#modal .duration-options { display:flex; gap:7px; margin:6px 0 0; flex-wrap:wrap; }
+#modal .duration-options button { min-height:44px; flex:1; min-width:42px; background:#f1f3ea; border:1px solid var(--sheet-rule); color:var(--sheet-sub); border-radius:9px; padding:6px; font:600 13px/1.25 'DM Sans',sans-serif; }
+#modal .duration-options button[aria-pressed=true] { border-color:#537c55; background:#e5edde; color:#294632; }
+#modal .unit-input { position:relative; display:block; min-width:0; }
+#modal .unit-input input { padding-right:50px; }
+#modal .unit-input span { position:absolute; top:50%; right:14px; transform:translateY(-50%); font-weight:550; color:var(--sheet-sub); pointer-events:none; }
+#modal .duration-field { display:grid; gap:2px; }
+#modal .estimate-action { width:max-content; max-width:100%; min-height:44px; border:0; background:transparent; color:#3e6645; font-weight:650; font-size:13px; padding:6px 2px; text-decoration:underline; text-underline-offset:3px; margin:-12px 0 -6px; }
+#modal .sheet-details { border-top:1px solid var(--sheet-rule); border-bottom:1px solid var(--sheet-rule); }
+#modal .sheet-details summary { cursor:pointer; min-height:44px; display:list-item; align-content:center; line-height:24px; font-size:14px; font-weight:650; padding:10px 1px; }
+#modal .sheet-details label { margin:3px 0 14px; }
+#modal .sheet-task-name { font-size:1.04rem; line-height:1.4; font-weight:650; margin:0 0 18px; overflow-wrap:anywhere; }
+#modal .focus-task { display:grid; justify-items:center; text-align:center; gap:8px; }
+#modal .focus-category { color:var(--sheet-sub); font-weight:650; font-size:.75rem; }
+#modal .focus-task h3 { max-width:36ch; font-size:1.13rem; line-height:1.4; text-wrap:balance; overflow-wrap:anywhere; margin:0; }
+#modal .focus-dial { --progress:0%; width:min(200px,55vw); aspect-ratio:1; display:grid; place-items:center; margin:20px auto; padding:7px; box-sizing:border-box; background:conic-gradient(var(--sheet-accent) var(--progress), #dfE5d7 0); border-radius:50%; }
+#modal .focus-dial-face { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:var(--sheet-bg); border-radius:50%; }
+#modal .focus-status { display:inline-flex; align-items:center; gap:7px; font-size:.75rem; font-weight:650; color:var(--sheet-sub); }
+#modal .focus-status::before { content:''; width:7px; height:7px; border-radius:50%; background:#597547; }
+#modal .paused .focus-status::before { background:#a4874d; }
+#modal #focusTime { color:var(--sheet-ink); font:650 clamp(30px,8vw,43px)/1 'DM Sans',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:-.055em; }
+#modal .focus-dial-face>span:last-child { font-size:.8rem; color:var(--sheet-sub); }
+#modal .timer-actions { justify-content:center; }
+#modal .timer-actions button { flex:1; }
+#modal #draft { width:100%; margin:12px 0; }
+#modal #copyMessage { margin-top:12px; }
+#toast { pointer-events:none; }
+@media (max-width:700px) {
+  #modal { position:fixed; inset:auto 0 var(--keyboard-gap, 0px); margin:0; width:100%; max-width:none; max-height:min(94dvh,calc(var(--sheet-viewport, 100dvh) - 8px)); border-radius:21px 21px 0 0; border:0; }
+  #modalBody { max-height:min(94dvh,calc(var(--sheet-viewport, 100dvh) - 8px)); }
+  #modal .modal-head { position:relative; padding-top:18px; padding-bottom:10px; }
+  #modal .modal-head::before { content:''; position:absolute; top:6px; width:32px; height:4px; border-radius:5px; background:#cbd2c3; left:calc(50% - 16px); }
+  #modal .sheet-actions { padding-bottom:max(12px,env(safe-area-inset-bottom)); }
+  #modal .sheet-scroll:last-child { padding-bottom:max(22px,env(safe-area-inset-bottom)); }
+  #modal .timer-actions { gap:8px; }
+  #modal .duration-options button { min-height:44px; }
+  body:has(#modal[open]) { overflow:hidden; }
+  #toast { bottom:calc(80px + env(safe-area-inset-bottom)); }
+}
+@media (max-width:355px) {
+  #modal .row { grid-template-columns:minmax(0,1fr); }
+  #modal .sheet-actions { flex-wrap:nowrap; }
+}
+@media (prefers-reduced-motion:no-preference) {
+  @media (max-width:700px) {
+    #modal[open] { animation:elan-sheet-in .16s ease-out; }
+    @keyframes elan-sheet-in { from { transform:translateY(22px); opacity:.6; } to { transform:translateY(0); opacity:1; } }
+  }
+}
+#modal .row[hidden] { display:none; }
+#modal .follow-shortcuts, #modal .transaction-choice { display:flex; align-items:stretch; gap:6px; }
+#modal .follow-shortcuts { margin-top:-8px; }
+#modal .follow-shortcuts button, #modal .transaction-choice button { flex:1; min-height:44px; background:#eff2e8; color:var(--sheet-sub); border:1px solid var(--sheet-rule); font-size:13px; font-weight:600; padding:7px; border-radius:9px; }
+#modal .follow-shortcuts button[aria-pressed=true], #modal .transaction-choice button[aria-pressed=true] { color:#294632; border-color:#648060; background:#e4ecdd; }
