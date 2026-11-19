@@ -1,3 +1,4 @@
+import {equipmentHeight} from './equipment.js';
 import {ROOM_TYPES,OBJECTS,area,compute,objectRect,objectLevel,openingSegment,openingLevel,levelOf,boundarySegments,overlap,unionCells} from './engine.js';
 import {SURFACE_TYPES} from './surfaces.js';
 import {rect,line,text,fmt,esc,objectGlyph} from './assets.js';
@@ -18,7 +19,7 @@ export function plan2D(s,u,exporting=false){
  }
  for(const b of active.boundaries){const horiz=b.axis==='h';out+=line(horiz?b.a:b.pos,horiz?b.pos:b.a,horiz?b.b:b.pos,horiz?b.pos:b.b,'#697d60',b.partition?.075:.115,'pointer-events="none"');}
  if(u.layer==='thermal')for(const b of active.boundaries.filter(b=>!b.partition)){const horiz=b.axis==='h';out+=line(horiz?b.a:b.pos,horiz?b.pos:b.a,horiz?b.b:b.pos,horiz?b.pos:b.b,'url(#hatch)',.22,'pointer-events="none"');}
- if(u.layer==='layout')for(const o of s.objects.filter(o=>objectLevel(s,o)===active.id||o.kind==='stairs'&&o.targetLevelId===active.id)){
+ if(u.layer==='layout'||u.layer==='ceiling')for(const o of s.objects.filter(o=>(objectLevel(s,o)===active.id||o.kind==='stairs'&&o.targetLevelId===active.id)&&(u.layer==='ceiling'?OBJECTS[o.kind].group==='ceiling':OBJECTS[o.kind].group!=='ceiling')).sort((a,b)=>({ceiling:-2,pool:-1}[a.kind]??0)-({ceiling:-2,pool:-1}[b.kind]??0))){
   const p=objectRect(s,o),landing=o.kind==='stairs'&&o.targetLevelId===active.id;
   out+=`<g data-entity="object" data-id="${o.id}" transform="translate(${p.x} ${p.y})" filter="url(#shadow)" ${landing?'opacity=".7"':''}>${objectGlyph(o)}${landing?text(o.w/2,o.l/2,'TRÉMIE',.12,'#68775c','text-anchor="middle"'):''}</g>`;
  }
@@ -64,7 +65,13 @@ export function volume(s,u){
   }
   for(const o of s.objects.filter(o=>objectLevel(s,o)===lev.id)){
    const r=objectRect(s,o),col=OBJECTS[o.kind].color;const obox=(x,y,h,w,l,hh,color)=>box(x,y,z+h,w,l,hh,color);let shape='';
-   if(o.kind==='stairs'){
+   if(OBJECTS[o.kind].group==='ceiling'){
+    if(!u.overhead||u.overhead==='open'||o.kind==='ceiling'&&u.overhead!=='closed')continue;
+    const mount=z+equipmentHeight(s,o),height=o.equipmentHeight??OBJECTS[o.kind].h;
+    shape=box(r.x,r.y,mount-height,r.w,r.l,height,col);
+   }else if(o.kind==='pool'){
+    shape=box(r.x,r.y,z+.015,r.w,r.l,.11,'#d4c8ae')+box(r.x+.12,r.y+.12,z+.12,Math.max(.02,r.w-.24),Math.max(.02,r.l-.24),.015,'#72b9c3');
+   }else if(o.kind==='stairs'){
     const rise=Math.max(.3,levelOf(s,o.targetLevelId).elevation-lev.elevation),count=Math.max(3,Math.ceil(rise/.18));
     for(let i=0;i<count;i++){const q=o.rotation%360,vertical=q===0||q===180,w=vertical?r.w:r.w/count,l=vertical?r.l/count:r.l,x=r.x+(vertical?0:q===90?(count-1-i)*w:i*w),y=r.y+(vertical?q===180?(count-1-i)*l:i*l:0);shape+=obox(x,y,0,w,l,rise*(i+1)/count,'#c9b896');}
    }else{

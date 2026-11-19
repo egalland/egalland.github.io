@@ -23,6 +23,22 @@ else if(kind==='car'){out+=rect(0,0,w,l,'#bdc7c6','#83968a',.035,.3)+rect(w*.12,
 else if(kind==='stairs'){out+=rect(0,0,w,l,'#d2c6ac','#9a8d71',.025,.02);for(let i=1;i<12;i++)out+=line(0,l*i/12,w,l*i/12,'#9c9279',.018);out+=line(w*.5,l*.15,w*.5,l*.8,'#5c7555',.035)+line(w*.5,l*.8,w*.32,l*.65,'#5c7555',.035)+line(w*.5,l*.8,w*.68,l*.65,'#5c7555',.035);}
 else if(kind==='desk'||kind==='workbench'){out+=rect(0,0,w,l,col,'#9c896b',.025,.04)+rect(w*.23,l*.12,w*.38,l*.32,'#82978b','#597868',.018,.02)+line(w*.42,l*.43,w*.42,l*.61,'#738c78',.03)+rect(w*.7,l*.26,w*.15,l*.45,'#e3ddc3','#ab9e80',.015,.02);}
 else{out+=rect(0,0,w,l,col,'#92a18d',.025,.025)+line(w/2,.025,w/2,l-.025)+line(w*.38,l*.45,w*.38,l*.65)+line(w*.62,l*.45,w*.62,l*.65);}
+if(k?.group==='ceiling') {
+ const beam=kind==='beam'||kind==='steelBeam';
+ out=rect(0,0,w,l,beam?col:kind==='ceiling'?'#e9e5d480':col,'#6f7967',.025,.03);
+ if(beam)out+=line(w/2,.06,w/2,l-.06,'#f0e5cf',.018);
+ if(kind==='spot'||kind==='pendant')out+=circle(w/2,l/2,Math.min(w,l)*.31,'#fff1be','#a38651');
+ if(kind==='vent')for(let i=1;i<5;i++)out+=line(w*.17,l*i/5,w*.83,l*i/5,'#657974',.018);
+}
+if(kind==='pool'){
+ const inset=Math.min(.15,w*.15,l*.15);
+ out=rect(0,0,w,l,'#e7ddc8','#9ba89c',.026,.08)+rect(inset,inset,w-2*inset,l-2*inset,'#80cbd1','#408d9b',.025,.035);
+ for(let i=1;i<6;i++)out+=line(w*.18,l*i/6,w*.82,l*i/6,'#c4f0eb',.025);
+ out+=line(w/2,l*.08,w/2,l*.92,'#488fa0',.018);
+}else if(k?.group==='pool'){
+ out=rect(0,0,w,l,col,'#698681',.026,.045);
+ for(let i=1;i<5;i++)out+=line(w*.12,l*i/5,w*.88,l*i/5,'#f0e5cf',.025);
+}
 return out;}
 export function thumb(kind,isRoom=false){if(isRoom){const k=ROOM_TYPES[kind];const g={living:'sofa',kitchen:'kitchen',bed:'bed',bath:'shower',office:'desk',hall:'wardrobe',other:'table'}[kind];return `<svg viewBox="-.15 -.15 3.3 2.3"><rect x="0" y="0" width="3" height="2" rx=".04" fill="${k.color}" stroke="#a7b294" stroke-width=".05"/><path d="M0 2V0H3V2" fill="none" stroke="#73866e" stroke-width=".09"/><g transform="translate(.55 .36)">${glyph(g,1.85,1.1)}</g></svg>`;}const k=OBJECTS[kind];return `<svg viewBox="-.25 -.25 ${k.w+.5} ${k.l+.5}">${glyph(kind,k.w,k.l)}</svg>`;}
 export const line=(x1,y1,x2,y2,stroke,width=.02,extra='')=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${width}" ${extra}/>`;

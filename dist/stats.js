@@ -7,7 +7,8 @@ export function compute(s){
  const B=s.building,T=s.thermal,L=s.light,total=area(B),br={x:0,y:0,...B};
  const levels=s.levels.map(l=>{const rooms=s.rooms.filter(r=>r.levelId===l.id),holes=stairHoles(s,l.id),cells=unionCells(rooms,holes),deck=unionCells(deckRects(s,l.id),holes);return{...l,rooms,surfaces:(s.surfaces||[]).filter(q=>q.levelId===l.id),cells,holes,deck,home:cells.reduce((a,r)=>a+area(r),0),deckArea:deck.reduce((a,r)=>a+area(r),0),boundaries:boundarySegments(rooms,B)};});
  const home=levels.reduce((a,l)=>a+l.home,0),groundHome=levels[0].home,groundStairs=s.objects.filter(o=>o.kind==='stairs'&&objectLevel(s,o)===levels[0].id).map(o=>objectRect(s,o));
- const groundSurfaces=levels[0].surfaces,groundOccupied=unionArea([...levels[0].cells,...groundStairs,...groundSurfaces.map(q=>intersect(q,br)).filter(Boolean)]),free=Math.max(0,total-groundOccupied),upperArea=levels.slice(1).reduce((a,l)=>a+l.deckArea,0),upperOpen=levels.slice(1).reduce((a,l)=>a+Math.max(0,l.deckArea-l.home),0),pairs=[],verticalConflicts=[],heightWarnings=[];
+ const groundPools=s.objects.filter(o=>o.kind==='pool'&&objectLevel(s,o)===levels[0].id).map(o=>objectRect(s,o));
+ const groundSurfaces=levels[0].surfaces,groundOccupied=unionArea([...levels[0].cells,...groundStairs,...groundPools,...groundSurfaces.map(q=>intersect(q,br)).filter(Boolean)]),free=Math.max(0,total-groundOccupied),upperArea=levels.slice(1).reduce((a,l)=>a+l.deckArea,0),upperOpen=levels.slice(1).reduce((a,l)=>a+Math.max(0,l.deckArea-l.home),0),pairs=[],verticalConflicts=[],heightWarnings=[];
  for(let i=0;i<s.rooms.length;i++){
   const a=s.rooms[i],la=levelOf(s,a.levelId);
   if(la.elevation+a.h>B.h+.001)heightWarnings.push(`${a.name} : plafond à ${(la.elevation+a.h).toFixed(2)} m, au-dessus du bâtiment`);

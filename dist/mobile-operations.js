@@ -1,4 +1,4 @@
-import {clamp,objectRect,objectLevel,openingParent,surfaceLimits} from './engine.js';
+import {clamp,objectRect,objectLevel,openingParent,surfaceLimits,OBJECTS} from './engine.js';
 
 // Use the same absolute placement and room attachment rules as dragging.
 export function nudgeElement(s,selection,dx,dy){
@@ -13,7 +13,7 @@ export function nudgeElement(s,selection,dx,dy){
  }
  if(type==='object'){
   const p=objectRect(s,o),levelId=objectLevel(s,o),x=bound(p.x+dx,s.building.w-o.w),y=bound(p.y+dy,s.building.l-o.l);
-  const room=o.kind==='stairs'?null:s.rooms.find(r=>r.levelId===levelId&&x+o.w/2>=r.x&&x+o.w/2<=r.x+r.w&&y+o.l/2>=r.y&&y+o.l/2<=r.y+r.l&&o.w<=r.w&&o.l<=r.l);
+  const room=o.kind==='stairs'||OBJECTS[o.kind].group==='pool'?null:s.rooms.find(r=>r.levelId===levelId&&x+o.w/2>=r.x&&x+o.w/2<=r.x+r.w&&y+o.l/2>=r.y&&y+o.l/2<=r.y+r.l&&o.w<=r.w&&o.l<=r.l);
   o.roomId=room?.id||null;o.levelId=levelId;o.x=bound(x-(room?.x||0),(room||s.building).w-o.w);o.y=bound(y-(room?.y||0),(room||s.building).l-o.l);return;
  }
  o.x=bound(o.x+dx,s.building.w-o.w);o.y=bound(o.y+dy,s.building.l-o.l);

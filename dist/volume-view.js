@@ -1,3 +1,4 @@
+import {equipmentHeight} from './equipment.js';
 import * as THREE from './vendor/three.module.js';
 import {SVGRenderer} from './vendor/SVGRenderer.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
@@ -52,7 +53,52 @@ export class VolumeView{
   if(this.software){const shadow=new THREE.Mesh(new THREE.CircleGeometry(1,18),new THREE.MeshBasicMaterial({color:'#425340',transparent:true,opacity:.09}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.015;shadow.scale.set(w*.6,l*.6,1);shadow.renderOrder=(this.order||0)-.5;g.add(shadow);}
   const box=(x,h,y,bw,bh,bl,c='#c7b496',round=false,finish='plain')=>this.box(g,x-w/2,h,y-l/2,bw,bh,bl,c,null,round,finish),col=OBJECTS[o.kind].color;
   const legs=(height=.68,inset=.1)=>{for(const x of[inset,w-inset-.05])for(const y of[inset,l-inset-.05])box(x,.03,y,.05,height,.05,'#7d806b');};
-  if(o.kind==='stairs'){
+  if(OBJECTS[o.kind].group==='ceiling'){
+   const height=o.equipmentHeight??OBJECTS[o.kind].h;
+   if(o.kind==='steelBeam'){
+    const flange=Math.min(.035,height/3);
+    box(0,-height,0,w,flange,l,col,false,'metal');
+    box(0,-flange,0,w,flange,l,col,false,'metal');
+    box(w*.36,-height+flange,0,w*.28,height-2*flange,l,col,false,'metal');
+   }else if(o.kind==='pendant'){
+    this.rod(g,[0,0,0],[0,-height,0],.013,'#605949');
+    this.cylinder(g,0,-height,0,Math.min(w,l)*.47,.15,col,Math.min(w,l)*.24);
+   }else if(o.kind==='spot'){
+    this.cylinder(g,0,-height,0,Math.min(w,l)*.47,height,'#e6cf93');
+   }else{
+    box(0,o.kind==='ceiling'?0:-height,0,w,height,l,col,false,o.kind==='beam'?'wood':'plain');
+    if(o.kind==='vent')for(let i=1;i<6;i++)box(w*.12,-height-.006,l*i/6,w*.76,.009,.009,'#566f67');
+   }
+  }else if(o.kind==='pool'){
+   const depth=o.equipmentHeight??1.45,edge=Math.min(.15,w*.18,l*.18),coping='#d8ccb3';
+   for(const x of[0,w-edge])box(x,-depth,0,edge,depth+.03,l,coping);
+   for(const y of[0,l-edge])box(edge,-depth,y,w-2*edge,depth+.03,edge,coping);
+   box(edge,-.075,edge,w-2*edge,.04,l-2*edge,'#69b7c4');
+   box(w*.49,-.032,l*.10,w*.02,.004,l*.80,'#418c9f');
+   for(let i=1;i<8;i++)box(w*.18,-.030,l*i/8,w*.64,.004,.012,'#a9d9d9');
+  }else if(o.kind==='poolLadder'){
+   for(const x of[-w*.35,w*.35]){
+    this.rod(g,[x,-.7,l*.3],[x,.6,l*.3],.025,'#9aaeb0');
+    this.rod(g,[x,.6,l*.3],[x,.6,-l*.37],.025,'#9aaeb0');
+    this.rod(g,[x,.6,-l*.37],[x,0,-l*.37],.025,'#9aaeb0');
+   }
+   for(let i=0;i<4;i++)this.rod(g,[-w*.35,-i*.22,l*.3],[w*.35,-i*.22,l*.3],.025,'#9aaeb0');
+  }else if(o.kind==='poolShower'){
+   box(0,0,0,w,.065,l,'#c9cbbc');
+   this.rod(g,[0,.05,-l*.3],[0,2.05,-l*.3],.026,'#849a97');
+   this.rod(g,[0,2.05,-l*.3],[0,2.05,l*.13],.026,'#849a97');
+   this.cylinder(g,0,2,l*.1,.11,.03,'#849a97');
+  }else if(o.kind==='poolCover'){
+   this.rod(g,[-w*.47,.22,0],[w*.47,.22,0],.10,'#8bb2b6');
+   for(const x of[0,w-.07])box(x,0,0,.07,.3,l,'#8a9e97');
+  }else if(o.kind==='poolFilter'){
+   box(0,0,0,w,.52,l,'#98a798',true);
+   this.cylinder(g,0,.52,0,Math.min(w,l)*.25,.22,'#657c70');
+  }else if(o.kind==='lounger'){
+   legs(.24,.08);
+   box(0,.24,0,w,.075,l,col,true);
+   const back=box(0,.29,.06,w,.08,l*.37,'#d9c49f',true);back.rotation.x=.48;
+  }else if(o.kind==='stairs'){
    const rise=Math.max(.3,levelOf(s,o.targetLevelId).elevation-levelOf(s,objectLevel(s,o)).elevation),n=Math.min(60,Math.max(3,Math.ceil(rise/.18)));
    for(let i=0;i<n;i++)box(0,0,i*l/n,w,rise*(i+1)/n,l/n,'#c9b18a');
    for(const x of[-w/2+.03,w/2-.03]){this.rod(g,[x,1,-l/2],[x,rise+1,l/2],.025);for(let i=0;i<=n;i+=Math.max(1,Math.floor(n/5)))this.rod(g,[x,rise*i/n,-l/2+l*i/n],[x,rise*i/n+1,-l/2+l*i/n],.018);}
@@ -84,19 +130,22 @@ export class VolumeView{
  }
  update(s,u,{fit=false}={}){
   this.visible=true;this.canvas.hidden=!!this.software;this.element.style.display='block';this.controls.enabled=true;
-  const key=JSON.stringify([s,u.levelId,u.allLevels,u.exploded]);this.cutaway=u.cutaway!==false;
+  const key=JSON.stringify([s,u.levelId,u.allLevels,u.exploded,u.overhead]);this.cutaway=u.cutaway!==false;
   if(key!==this.key){this.key=key;this.rebuild(s,u);fit=true;}
   this.highlight(s,u.selected);this.resize();if(fit)this.fit();this.cutWalls();this.schedule();if(this.fitDistance)this.onZoom?.(this.fitDistance/this.camera.position.distanceTo(this.controls.target));
  }
  rebuild(s,u){
   this.content.traverse(o=>{if(o.geometry&&!['BoxGeometry','RoundedBoxGeometry'].includes(o.geometry.type))o.geometry.dispose();});this.content.clear();this.wallParts=[];
   const C=compute(s),levels=u.allLevels===false?C.levels.filter(l=>l.id===u.levelId):C.levels,offsets=levelOffsets(C.levels,u.exploded&&u.allLevels!==false),B=s.building;
-  this.order=-100;this.floor(this.content,{x:0,y:0,w:B.w,l:B.l},0,.2,'#d4dacf','plain');
+  const poolsOn=id=>s.objects.filter(o=>o.kind==='pool'&&objectLevel(s,o)===id).map(o=>objectRect(s,o));
+  this.order=-100;
+  for(const patch of unionCells([{x:0,y:0,w:B.w,l:B.l}],poolsOn(s.levels[0].id)))this.floor(this.content,patch,0,.2,'#d4dacf','plain');
   for(const lev of [...levels].sort((a,b)=>a.elevation-b.elevation)){
    this.order=[...C.levels].sort((a,b)=>a.elevation-b.elevation).findIndex(l=>l.id===lev.id)*10;const z=offsets.get(lev.id),group=new THREE.Group();group.name=lev.name;this.content.add(group);
-   if(lev.kind!=='ground')for(const r of lev.deck)this.floor(group,r,z,lev.thickness,'#e0cda8','wood');
-   for(const q of lev.surfaces||[])for(const r of unionCells([q],[...lev.holes,...lev.rooms]))this.floor(group,r,z+.014,lev.kind==='ground'?.1:Math.max(.04,lev.thickness-.014),q.finish==='concrete'?'#cdd4c9':'#e0c9a0',q.finish,{type:'surface',id:q.id});
-   for(const r of lev.rooms)for(const cell of unionCells([r],lev.holes))this.floor(group,cell,z+.025,.035,ROOM_TYPES[r.type].color,r.type==='bath'?'tile':'wood',{type:'room',id:r.id});
+   const pools=poolsOn(lev.id);
+   if(lev.kind!=='ground')for(const r of unionCells(lev.deck,pools))this.floor(group,r,z,lev.thickness,'#e0cda8','wood');
+   for(const q of lev.surfaces||[])for(const r of unionCells([q],[...lev.holes,...lev.rooms,...pools]))this.floor(group,r,z+.014,lev.kind==='ground'?.1:Math.max(.04,lev.thickness-.014),q.finish==='concrete'?'#cdd4c9':'#e0c9a0',q.finish,{type:'surface',id:q.id});
+   for(const r of lev.rooms)for(const cell of unionCells([r],[...lev.holes,...pools]))this.floor(group,cell,z+.025,.035,ROOM_TYPES[r.type].color,r.type==='bath'?'tile':'wood',{type:'room',id:r.id});
    this.order+=1;for(const p of wallPieces(s,lev)){
     const h=p.height,mesh=p.axis==='h'?this.box(group,p.start,z+p.bottom,p.pos-.06,p.length,h,.12,'#e3e7d8'):this.box(group,p.pos-.06,z+p.bottom,p.start,.12,h,p.length,'#d5ddca');
     this.wallParts.push({mesh,p,z});
@@ -110,7 +159,16 @@ export class VolumeView{
     for(let i=0;i<=n;i++){const q=b.a+length*i/n,x=horizontal?q:b.pos,y=horizontal?b.pos:q;this.rod(group,[x,z,y],[x,z+1,y],.021,'#72826b');}
     for(const h of[.48,1])this.rod(group,horizontal?[b.a,z+h,b.pos]:[b.pos,z+h,b.a],horizontal?[b.b,z+h,b.pos]:[b.pos,z+h,b.b],.026,'#7a8c70');
    }
-   for(const o of s.objects.filter(o=>objectLevel(s,o)===lev.id))this.furniture(group,s,o,z+.055);
+   for(const o of s.objects.filter(o=>objectLevel(s,o)===lev.id)){
+    if(OBJECTS[o.kind].group!=='ceiling'){
+     this.furniture(group,s,o,z+.055);continue;
+    }
+    if(!u.overhead||u.overhead==='open'||o.kind==='ceiling'&&u.overhead!=='closed')continue;
+    const before=this.order;
+    this.order+=o.kind==='ceiling'?4:2;
+    this.furniture(group,s,o,z+equipmentHeight(s,o));
+    this.order=before;
+   }
    for(const o of s.openings.filter(o=>openingLevel(s,o)===lev.id)){
     const p=openingSegment(s,o),horizontal=Math.abs(p.y1-p.y2)<.01,e={type:'opening',id:o.id},bottom=z+o.sill;
     const part=(a,h,w,height,color,finish='plain')=>horizontal?this.box(group,p.x1+a,bottom+h,p.y1-.035,w,height,.07,color,e,false,finish):this.box(group,p.x1-.035,bottom+h,p.y1+a,.07,height,w,color,e,false,finish);
