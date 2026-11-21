@@ -1,4 +1,5 @@
 import {themeSwitch} from '/portfolio-assets/theme-switch.mjs?v=dossier2';
+import {preservesNativeMenu} from '/portfolio-assets/context-menu.mjs?v=dossier1';
 import {enableStripScroll} from '/chrome/strip-scroll.mjs';
 
 const root = document.documentElement;
@@ -13,6 +14,9 @@ const stopTemplate = document.querySelector('#room-stop-template');
 const roomNav = room.querySelector('.room-navigation');
 const previousStop = roomNav.querySelector('[data-room-step="-1"]');
 const nextStop = roomNav.querySelector('[data-room-step="1"]');
+const contextTrigger = roomNav.querySelector('.dossier-menu-trigger');
+const contextMenu = document.querySelector('#dossier-context');
+const contextObjects = contextMenu.querySelector('.dossier-context-objects');
 const roomPassages = room.querySelector('.room-passages');
 const explore = room.querySelector('.room-explore');
 const roomName = room.querySelector('.room-name');
@@ -57,13 +61,14 @@ const passages = {
  contact: [['about', 'Studio'], ['home', 'Atrium']]
 };
 const roomStops = {
- home: [['home', 'Profil'], ['profile-role', 'Mon métier'], ['print-cv', 'CV imprimable']],
- parcours: [['experience-1', 'Saint-Gobain'], ['experience-2', 'Frontend'], ['experience-4', 'Backend']],
- competences: [['competences', 'Compétences'], ['tools', 'Outils'], ['formation', 'Formation']],
- work: [['market-plus', 'Market Plus'], ['kikalmo', 'Kikalmo'], ['pills', 'Pills']],
- atelier: [['livre', 'Atelier du livre'], ['redim', 'Redim'], ['atlas', 'Atlas']],
- about: [['practice-1', 'Animer'], ['practice-3', 'Relier'], ['practice-4', 'Automatiser']],
- contact: [['contact', 'Contact'], ['contact-github', 'GitHub']]
+ // Centre et dimensions de chaque objet, en pourcentage de la fresque.
+ home: [['home', 'Profil', 23, 48, 16, 31], ['profile-role', 'Mon métier', 68, 61, 15, 18], ['print-cv', 'CV imprimable', 87, 63, 16, 15]],
+ parcours: [['experience-1', 'Saint-Gobain', 26, 57, 20, 58], ['experience-2', 'Frontend', 49, 59, 10, 20], ['experience-4', 'Backend', 77, 67, 13, 43]],
+ competences: [['competences', 'Compétences', 22, 63, 17, 30], ['tools', 'Outils', 60, 57, 14, 24], ['formation', 'Formation', 92, 57, 14, 25]],
+ work: [['market-plus', 'Market Plus', 31, 66, 16, 15], ['kikalmo', 'Kikalmo', 57, 59, 7, 16], ['pills', 'Pills', 73, 54, 15, 13]],
+ atelier: [['livre', 'Atelier du livre', 29, 57, 15, 46], ['redim', 'Redim', 53, 70, 21, 28], ['atlas', 'Atlas', 87, 60, 12, 20]],
+ about: [['practice-1', 'Animer', 27, 48, 15, 27], ['practice-3', 'Relier', 53, 63, 9, 39], ['practice-4', 'Automatiser', 68, 57, 8, 22]],
+ contact: [['contact', 'Contact', 20.5, 54, 9.5, 56], ['contact-github', 'GitHub', 89, 62, 11, 29]]
 };
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const doorTime = 420;
@@ -83,6 +88,7 @@ let panProgress = 0;
 let panWidth = 0;
 let panRange = 0;
 let detailTrigger;
+let suppressHotspotClick = false;
 
 const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
 const panBlocked = () => Boolean(cabin.dataset.travel || cabin.hasAttribute('data-details') || shell.dataset.console);
@@ -108,23 +114,19 @@ function moveToStop(index, smooth = false) {
  syncPanorama();
 }
 
-function layoutStops() {
- const spacing = maxPan() / Math.max(1, stops.length - 1);
- stops.forEach((stop, index) => {
-  stop.style.left = (scroller.clientWidth / 2 + spacing * index) + 'px';
- });
-}
-
 function renderStops(floor) {
  detailTrigger = undefined;
- stops = roomStops[floor.id].map(([id, name]) => {
+ stops = roomStops[floor.id].map(([id, name, x, y, width, height]) => {
   const stop = stopTemplate.content.firstElementChild.cloneNode(true);
   stop.dataset.target = id;
   stop.querySelector('.room-hotspot-label').textContent = name;
+  stop.style.left = x + '%';
+  stop.style.top = y + '%';
+  stop.style.width = width + '%';
+  stop.style.height = height + '%';
   return stop;
  });
  stopsLayer.replaceChildren(...stops);
- layoutStops();
  roomPassages.replaceChildren(...passages[floor.id].map(([id, name]) => {
   const link = document.createElement('a');
   link.href = '#' + id;
@@ -215,8 +217,9 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
  explore.firstChild.textContent = floor.action + ' ';
  if (newRoom) {
   renderStops(floor);
-  const linkedStop = stops.findIndex(stop => stop.dataset.target === target.id);
-  moveToStop(linkedStop > 0 ? Math.round(2 * linkedStop / (stops.length - 1)) : 0);
+  const linkedStop = stops.find(stop => stop.dataset.target === target.id && target !== floor.section);
+  scroller.scrollLeft = linkedStop ? linkedStop.offsetLeft - scroller.clientWidth / 2 : 0;
+  syncPanorama();
  }
  const details = reveal || target !== floor.section;
  setDetails(details);
@@ -323,7 +326,7 @@ document.addEventListener('click', event => {
 
 stopsLayer.addEventListener('click', event => {
  const stop = event.target.closest('[data-target]');
- if (!stop || cabin.dataset.travel) return;
+ if (!stop || cabin.dataset.travel || (suppressHotspotClick && event.detail)) return;
  detailTrigger = stop;
  select('#' + stop.dataset.target, {moveFocus: true, reveal: true});
 });
@@ -378,7 +381,7 @@ consoleClose.addEventListener('click', () => setConsole(false));
 consoleBackdrop.addEventListener('click', () => setConsole(false));
 
 document.addEventListener('keydown', event => {
- if (event.key !== 'Escape') return;
+ if (event.key !== 'Escape' || contextMenu.matches(':popover-open')) return;
  if (shell.dataset.console) {
   setConsole(false);
   display.focus({preventScroll: true});
@@ -387,16 +390,100 @@ document.addEventListener('keydown', event => {
  }
 });
 
+function openContext(x, y) {
+ if (shell.dataset.console || cabin.dataset.travel) return false;
+ contextMenu.querySelector('[data-context-action="panorama"]').textContent = cabin.hasAttribute('data-details')
+  ? 'Revenir à la fresque' : 'Début de la fresque';
+ contextObjects.replaceChildren(...stops.map(stop => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.contextTarget = stop.dataset.target;
+  button.textContent = stop.querySelector('.room-hotspot-label').textContent;
+  return button;
+ }));
+ for (const link of contextMenu.querySelectorAll('[data-context-view]')) {
+  link.href = document.querySelector('.theme-switch a[data-theme-choice="' + link.dataset.contextView + '"]').href;
+ }
+ if (!contextMenu.matches(':popover-open')) contextMenu.showPopover();
+ const bounds = contextMenu.getBoundingClientRect();
+ contextMenu.style.left = Math.max(8, Math.min(x, innerWidth - bounds.width - 8)) + 'px';
+ contextMenu.style.top = Math.max(8, Math.min(y, innerHeight - bounds.height - 8)) + 'px';
+ return true;
+}
+
+contextTrigger.addEventListener('click', event => {
+ if (contextMenu.matches(':popover-open')) contextMenu.hidePopover();
+ else {
+  const box = contextTrigger.getBoundingClientRect();
+  if (openContext(box.right, box.bottom + 4) && !event.detail) {
+   contextMenu.querySelector('[data-context-action]').focus();
+  }
+ }
+});
+contextMenu.addEventListener('toggle', () => {
+ contextTrigger.setAttribute('aria-expanded', String(contextMenu.matches(':popover-open')));
+});
+contextMenu.addEventListener('click', event => {
+ const command = event.target.closest('[data-context-action], [data-context-target]');
+ if (!command) return;
+ const {contextAction, contextTarget} = command.dataset;
+ contextMenu.hidePopover();
+ if (contextTarget) {
+  detailTrigger = stops.find(stop => stop.dataset.target === contextTarget);
+  if (detailTrigger) scroller.scrollLeft = detailTrigger.offsetLeft - scroller.clientWidth / 2;
+  select('#' + contextTarget, {moveFocus: true, reveal: true});
+ } else if (contextAction === 'plan') setConsole(true);
+ else if (contextAction === 'print') window.print();
+ else if (cabin.hasAttribute('data-details')) roomBack.click();
+ else {
+  moveToStop(0, true);
+  scroller.focus({preventScroll: true});
+ }
+});
+contextMenu.addEventListener('keydown', event => {
+ if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+ const choices = [...contextMenu.querySelectorAll('[data-context-action], [data-context-target], a')];
+ const index = choices.indexOf(document.activeElement);
+ const step = event.key === 'ArrowDown' ? 1 : -1;
+ const next = event.key === 'Home' ? 0 : event.key === 'End' ? choices.length - 1
+  : (Math.max(index, step > 0 ? -1 : 0) + step + choices.length) % choices.length;
+ event.preventDefault();
+ choices[next].focus();
+});
+document.addEventListener('contextmenu', event => {
+ const selection = getSelection()?.toString();
+ if (contextMenu.contains(event.target) || preservesNativeMenu(event.target, {shiftKey: event.shiftKey, selection})) return;
+ if (openContext(event.clientX + 8, event.clientY + 6)) event.preventDefault();
+});
+document.addEventListener('keydown', event => {
+ if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
+ if (preservesNativeMenu(event.target, {selection: getSelection()?.toString()})) return;
+ const box = document.activeElement.getBoundingClientRect();
+ if (!openContext(box.left + 8, box.top + 8)) return;
+ event.preventDefault();
+ contextMenu.querySelector('[data-context-action]').focus();
+});
+addEventListener('resize', () => {
+ if (contextMenu.matches(':popover-open')) contextMenu.hidePopover();
+});
+
 let drag;
 scroller.addEventListener('pointerdown', event => {
- if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button') || panBlocked()) return;
+ suppressHotspotClick = false;
+ if (event.pointerType !== 'mouse' || event.button !== 0 || panBlocked()) return;
  drag = {id: event.pointerId, start: event.clientX, left: scroller.scrollLeft};
- scroller.setPointerCapture(event.pointerId);
- scroller.dataset.dragging = '';
 });
 
 scroller.addEventListener('pointermove', event => {
- if (drag?.id === event.pointerId && !panBlocked()) scroller.scrollLeft = drag.left + drag.start - event.clientX;
+ if (drag?.id !== event.pointerId || panBlocked()) return;
+ const distance = drag.start - event.clientX;
+ if (!suppressHotspotClick) {
+  if (Math.abs(distance) < 5) return;
+  suppressHotspotClick = true;
+  scroller.setPointerCapture(event.pointerId);
+  scroller.dataset.dragging = '';
+ }
+ scroller.scrollLeft = drag.left + distance;
 });
 
 function stopDrag(event) {
@@ -405,7 +492,7 @@ function stopDrag(event) {
  delete scroller.dataset.dragging;
 }
 
-scroller.addEventListener('pointerup', stopDrag);
+window.addEventListener('pointerup', stopDrag);
 scroller.addEventListener('pointercancel', stopDrag);
 scroller.addEventListener('lostpointercapture', stopDrag);
 
@@ -416,7 +503,6 @@ new ResizeObserver(() => {
  const widthChanged = width !== panWidth;
  panWidth = width;
  panRange = range;
- layoutStops();
  if (widthChanged) scroller.scrollLeft = range * panProgress;
  syncPanorama();
 }).observe(scroller);

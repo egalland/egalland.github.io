@@ -8,10 +8,10 @@
  <meta name="description" content="Le CV interactif d’Emmanuel Galland, analyste Tarif & Référentiel et développeur web. Parcours, compétences et projets.">
  <link rel="canonical" href="https://egalland.github.io/?theme=dossier">
  <link rel="stylesheet" href="/portfolio-assets/theme-switch.css?v=dossier1">
- <link rel="stylesheet" href="/dossier/dossier.css?v=panorama2">
+ <link rel="stylesheet" href="/dossier/dossier.css?v=zones1">
  <link rel="stylesheet" href="/dossier/cover.css">
  <link rel="stylesheet" href="/dossier/scenes.css?v=panorama2">
- <script type="module" src="/dossier/dossier.mjs?v=panorama2"></script>
+ <script type="module" src="/dossier/dossier.mjs?v=zones1"></script>
  <title>Emmanuel Galland — CV & projets</title>
 </head>
 <body>
@@ -57,14 +57,16 @@
      <div class="lift-room" hidden>
       <div class="room-scroller" tabindex="0" role="region" aria-label="Fresque de l’étage. Balayez ou faites défiler pour parcourir le décor.">
        <div class="room-track">
-        <div class="room-scenery" aria-hidden="true"></div>
-        <div class="room-stops"></div>
+        <div class="room-window">
+         <div class="room-scenery"><div class="room-stops"></div></div>
+        </div>
        </div>
       </div>
       <nav class="room-navigation" aria-label="Se déplacer dans le décor">
        <button type="button" data-room-step="-1" aria-label="Explorer vers la gauche">←</button>
        <span class="room-position" aria-hidden="true">Fresque</span>
        <button type="button" data-room-step="1" aria-label="Explorer vers la droite">→</button>
+       <button type="button" class="dossier-menu-trigger" aria-label="Menu du Dossier" aria-controls="dossier-context" aria-expanded="false">⋯</button>
       </nav>
       <div class="room-caption">
        <div><p class="room-level">R / Profil</p><h1 class="room-name">Atrium</h1></div>
@@ -224,7 +226,21 @@
    </div>
   </div>
  </div>
- <template id="room-stop-template"><button class="room-hotspot" type="button"><span aria-hidden="true">+</span><span class="room-hotspot-label"></span></button></template>
+ <div id="dossier-context" popover="auto" aria-label="Navigation du Dossier">
+  <div class="dossier-context-heading"><strong>Navigation du Dossier</strong><button type="button" popovertarget="dossier-context" popovertargetaction="hide" aria-label="Fermer le menu">×</button></div>
+  <div class="dossier-context-actions">
+   <button type="button" data-context-action="plan">Plan de la tour</button>
+   <button type="button" data-context-action="panorama">Revenir à la fresque</button>
+   <button type="button" data-context-action="print">Imprimer le CV</button>
+  </div>
+  <nav class="dossier-context-objects" aria-label="Objets de cet étage"></nav>
+  <nav class="dossier-context-views" aria-label="Autres versions du CV">
+   <a data-context-view="curseurs" href="/?theme=curseurs">Curseur</a>
+   <a data-context-view="points" href="/?theme=points">Points</a>
+   <a data-context-view="chrome" href="/?theme=chrome">Chrome</a>
+  </nav>
+ </div>
+ <template id="room-stop-template"><button class="room-hotspot" type="button"><span class="room-hotspot-marker" aria-hidden="true">+</span><span class="room-hotspot-label"></span></button></template>
  <p class="lift-announcement" role="status"></p>
 </body>
 </html>

@@ -53,6 +53,7 @@ header.dossier-bar {
  grid-area: opening;
  position: relative;
  isolation: isolate;
+ container-type: inline-size;
  min-width: 0;
  border: 1px solid #8e9a91;
  background: #161c1b;
@@ -76,7 +77,7 @@ header.dossier-bar {
 .floor-label {color: #ccefa6}
 .lift-stage {position: relative; isolation: isolate}
 html[data-lift="ready"] .lift-stage {
- height: clamp(440px, calc(100svh - 184px), 1040px);
+ height: max(clamp(440px, calc(100svh - 184px), 1040px), calc(42cqw + 160px));
  overflow: hidden;
 }
 .lift-threshold {
@@ -205,9 +206,16 @@ html[data-lift="ready"] .lift-stage {
   repeating-linear-gradient(90deg, #d2d4c80b 0 1px, transparent 1px 7px),
   #252e2c;
 }
-.room-scenery {
+.room-window {
  position: absolute;
  inset: var(--pan-top) 0 var(--pan-bottom);
+ overflow: clip;
+}
+.room-scenery {
+ position: absolute;
+ inset: 50% 0 auto;
+ aspect-ratio: 3;
+ translate: 0 -50%;
  background-position: center;
  background-size: 100% auto;
  background-repeat: no-repeat;
@@ -244,6 +252,7 @@ html[data-lift="ready"] .lift-stage {
 }
 .room-navigation button:hover:not([aria-disabled="true"]) {background: #d8efc3; color: #18241b}
 .room-navigation [aria-disabled="true"] {opacity: .45; cursor: default}
+.room-navigation .dossier-menu-trigger {border-left: 1px solid #c4ddd24d}
 .room-position {min-width: 92px; padding-inline: 4px; text-align: center}
 .room-caption {
  position: absolute;
@@ -270,34 +279,96 @@ html[data-lift="ready"] .lift-stage {
 .room-hotspot {
  position: absolute;
  z-index: 2;
- top: 48%;
- transform: translate(-50%, -50%);
+ translate: -50% -50%;
  pointer-events: auto;
- width: 46px;
- height: 46px;
- border: 1px solid #f0ffe7;
- border-radius: 50%;
- background: #0e1c1aa3;
- color: #e8ffd9;
- box-shadow: 0 0 0 5px #d2ffc239, 0 2px 24px #060b0b;
+ min-width: 44px;
+ min-height: 44px;
+ padding: 0;
+ border: 1px solid #e3f5ec7c;
+ border-radius: 3px;
+ background: #b7f2eb09;
+ color: #f2fffa;
+ box-shadow: 0 0 0 1px #131b1982;
  cursor: pointer;
- font: 400 24px/1 var(--mono);
- transition: box-shadow .2s, background .2s;
+ font: 600 13px/1.2 var(--mono);
+ transition: box-shadow .16s, background .16s;
+}
+.room-hotspot-marker {
+ position: absolute;
+ right: 0;
+ bottom: 0;
+ display: grid;
+ width: 22px;
+ height: 22px;
+ place-items: center;
+ border-top: 1px solid #e3f5ec7c;
+ border-left: 1px solid #e3f5ec7c;
+ background: #162523e8;
+}
+.room-hotspot:is(:hover, :focus-visible, :active) {
+ z-index: 3;
+ border-color: #d1fff3;
+ background: #a3fff133;
+ box-shadow: 0 0 0 1px #183328, 0 0 14px #75f7df8c, inset 0 0 12px #a1ffee70;
+ outline-color: #d1fff3;
 }
 .room-hotspot-label {
  position: absolute;
- top: calc(100% + 10px);
+ top: calc(100% + 4px);
  left: 50%;
  width: max-content;
- max-width: 110px;
+ max-width: 120px;
  padding: 4px 6px;
  transform: translateX(-50%);
  border: 1px solid #b9ceab85;
  background: #0b1714ed;
  color: #f0f8ea;
- font: 650 10px/1.25 var(--mono);
+ font: 650 11px/1.25 var(--mono);
+ opacity: 0;
+ pointer-events: none;
 }
-.room-hotspot:hover, .room-hotspot:focus-visible {box-shadow: 0 0 0 10px #edffd75e; background: #1f3929}
+.room-hotspot:is(:hover, :focus-visible, :active) .room-hotspot-label {opacity: 1}
+.room-scroller[data-dragging] .room-hotspot {cursor: grabbing}
+
+#dossier-context {
+ position: fixed;
+ inset: 8px auto auto 8px;
+ margin: 0;
+ padding: 8px;
+ width: min(274px, calc(100vw - 16px));
+ max-height: calc(100dvh - 16px);
+ overflow: auto;
+ border: 1px solid #829790;
+ border-radius: 3px;
+ background: #192221;
+ box-shadow: 0 8px 24px #0009, inset 0 0 0 3px #303b39;
+ color: #eff8f1;
+ font: 600 13px/1.2 var(--mono);
+}
+.dossier-context-heading {
+ display: flex;
+ min-height: 42px;
+ align-items: center;
+ justify-content: space-between;
+ padding-left: 8px;
+ color: #b6e7e3;
+}
+#dossier-context :is(button, a) {
+ display: flex;
+ min-height: 40px;
+ align-items: center;
+ padding: 4px 9px;
+ border: 0;
+ background: none;
+ color: inherit;
+ font: inherit;
+ text-align: left;
+ cursor: pointer;
+}
+#dossier-context :is(button, a):is(:hover, :focus-visible) {background: #b6e7e3; color: #152523; outline-offset: -2px}
+#dossier-context .dossier-context-heading button {justify-content: center; min-width: 40px; font-size: 19px}
+.dossier-context-actions, .dossier-context-objects {display: grid; padding-block: 4px; border-top: 1px solid #a7c0b941}
+.dossier-context-views {display: flex; flex-wrap: wrap; border-top: 1px solid #a7c0b941}
 .room-explore, .room-back {
  display: inline-flex;
  align-items: center;
@@ -629,7 +700,7 @@ h1, h2, h3 {font-family: var(--display)}
  html[data-lift="ready"] .lift-opening {border: 0; box-shadow: 0 0 0 2px #292b29, 0 0 0 4px #77756c90}
  html[data-lift="ready"] .lift-header {display: none}
  html[data-lift="ready"] .lift-stage {
-  height: max(310px, calc(100svh - var(--mobile-lintel) - var(--mobile-sill) - var(--mobile-bar)));
+  height: max(310px, calc(42cqw + 160px), calc(100svh - var(--mobile-lintel) - var(--mobile-sill) - var(--mobile-bar)));
  }
  .lift-threshold {
   height: var(--mobile-sill, 17px);
@@ -704,9 +775,7 @@ h1, h2, h3 {font-family: var(--display)}
  .room-explore {padding-inline: 0; border: 0; background: transparent; color: #f5eee0; font-size: 11px}
  .room-explore:hover {background: transparent; color: var(--mobile-light)}
  .room-explore span {display: none}
- .room-hotspot {top: 47%; width: 44px; height: 44px; background: #181c1b66; color: #fff; border-color: #fffc; box-shadow: 0 0 0 4px #fff4}
- .room-hotspot-label {opacity: 0; transition: opacity .15s}
- .room-hotspot:focus-visible .room-hotspot-label {opacity: 1}
+ #dossier-context :is(button, a) {min-height: 44px}
  .room-navigation {
   inset: 7px 7px auto auto;
   border: 0;
@@ -725,14 +794,14 @@ h1, h2, h3 {font-family: var(--display)}
  .lift-doors i + i {border-left-color: #282d2a}
 }
 @media (prefers-reduced-motion: reduce) {
- .lift-doors i, .room-scenery {transition: none}
+ .lift-doors i, .room-hotspot {transition: none}
 }
 @media print {
  @page {size: A4; margin: 15mm}
  :root {color-scheme: light; --paper: white; --ink: #171717; --muted: #343434; --rule: #bdbdbd; --acid: #26391a}
  body {font-size: 10.5pt}
  .dossier-layout {display: block; width: auto}
- header.dossier-bar, .lift-console, .console-backdrop, .lift-header, .lift-threshold, .lift-room, .lift-details-bar, .lift-announcement, .skip, .cover-art, .cover-actions {display: none}
+ header.dossier-bar, .lift-console, .console-backdrop, .lift-header, .lift-threshold, .lift-room, .lift-details-bar, .lift-announcement, .skip, .cover-art, .cover-actions, #dossier-context {display: none}
  .lift, .lift-opening {display: block; background: none; border: 0; box-shadow: none; padding: 0; margin: 0; overflow: visible}
  html[data-lift="ready"] .lift-stage {height: auto; overflow: visible}
  html[data-lift="ready"] .lift-viewport,
