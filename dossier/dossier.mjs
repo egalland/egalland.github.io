@@ -13,6 +13,7 @@ const roomNav = room.querySelector('.room-navigation');
 const previousStop = roomNav.querySelector('[data-room-step="-1"]');
 const nextStop = roomNav.querySelector('[data-room-step="1"]');
 const roomPosition = roomNav.querySelector('.room-position');
+const roomPassages = room.querySelector('.room-passages');
 const explore = room.querySelector('.room-explore');
 const roomName = room.querySelector('.room-name');
 const roomLevel = room.querySelector('.room-level');
@@ -38,11 +39,23 @@ const floors = [...panel.querySelectorAll('a')].map(link => ({
  link,
  id: link.hash.slice(1),
  number: link.dataset.floor,
+ level: Number(link.dataset.level),
  name: link.querySelector('span').textContent,
  roomName: link.dataset.roomName,
  action: link.dataset.action,
  section: document.querySelector(link.hash)
 }));
+const serviced = [...new Set(floors.map(floor => floor.level))].sort((a, b) => a - b);
+const entrance = floors.findIndex(floor => floor.id === 'home');
+const passages = {
+ home: [['work', 'Galerie'], ['parcours', 'Archives']],
+ parcours: [['home', 'Atrium'], ['competences', 'Labo']],
+ competences: [['atelier', 'Atelier'], ['parcours', 'Archives']],
+ work: [['atelier', 'Atelier'], ['contact', 'Terrasse']],
+ atelier: [['work', 'Galerie'], ['competences', 'Labo']],
+ about: [['work', 'Galerie'], ['contact', 'Terrasse']],
+ contact: [['about', 'Studio'], ['home', 'Atrium']]
+};
 const roomStops = {
  home: [['home', 'Profil'], ['profile-role', 'Mon métier'], ['print-cv', 'CV imprimable']],
  parcours: [['experience-1', 'Saint-Gobain'], ['experience-2', 'Frontend'], ['experience-4', 'Backend']],
@@ -56,9 +69,9 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const doorTime = 420;
 cabin.style.setProperty('--door-time', doorTime + 'ms');
 
-let current = 0;
-let passing = 0;
-let destination = 0;
+let current = entrance;
+let passingLevel = 0;
+let destination = entrance;
 let trip = 0;
 let closedAt = 0;
 let shaftMotion;
@@ -69,29 +82,31 @@ let stopIndex = 0;
 let detailTrigger;
 
 const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+const floorAt = level => floors.find(floor => floor.level === level);
+const displayLevel = level => floorAt(level)?.number ?? String(level).padStart(2, '0');
 
 function syncPanorama() {
  const progress = maxPan() ? scroller.scrollLeft / maxPan() : 0;
- stopIndex = Math.round(progress * (stops.length - 1));
- roomPosition.textContent = (stopIndex + 1) + ' / ' + stops.length;
+ stopIndex = Math.round(progress);
+ roomPosition.textContent = stopIndex === 0 ? 'Fresque' : 'Pièce voisine';
  previousStop.setAttribute('aria-disabled', String(stopIndex === 0));
- nextStop.setAttribute('aria-disabled', String(stopIndex >= stops.length - 1));
+ nextStop.setAttribute('aria-disabled', String(stopIndex === 1));
 }
 
 function moveToStop(index, smooth = false) {
- const position = Math.max(0, Math.min(index, stops.length - 1));
+ const position = Math.max(0, Math.min(index, 1));
  if (position === stopIndex && smooth) return;
  scroller.scrollTo({
-  left: maxPan() * position / Math.max(1, stops.length - 1),
+  left: maxPan() * position,
   behavior: smooth && !reducedMotion.matches ? 'smooth' : 'instant'
  });
  syncPanorama();
 }
 
 function layoutStops() {
- const distance = maxPan() / Math.max(1, stops.length - 1);
+ const positions = stops.length === 2 ? [.55, 1.52] : [.55, 1.32, 1.71];
  stops.forEach((stop, index) => {
-  stop.style.left = (scroller.clientWidth / 2 + index * distance) + 'px';
+  stop.style.left = scroller.clientWidth * positions[index] + 'px';
  });
 }
 
@@ -105,6 +120,12 @@ function renderStops(floor) {
  });
  stopsLayer.replaceChildren(...stops);
  layoutStops();
+ roomPassages.replaceChildren(...passages[floor.id].map(([id, name]) => {
+  const link = document.createElement('a');
+  link.href = '#' + id;
+  link.textContent = name;
+  return link;
+ }));
 }
 
 function targetFor(hash) {
@@ -114,7 +135,7 @@ function targetFor(hash) {
  const target = document.getElementById(id);
  const section = target?.closest('.dossier-section');
  const index = floors.findIndex(floor => floor.section === section);
- return index >= 0 ? {index, target} : {index: 0, target: floors[0].section};
+ return index >= 0 ? {index, target} : {index: entrance, target: floors[entrance].section};
 }
 
 function syncProject() {
@@ -151,8 +172,8 @@ function setConsole(open) {
   }
  }
  display.setAttribute('aria-expanded', String(open));
- display.setAttribute('aria-label', open ? 'Réduire le panneau de commande' : 'Agrandir le panneau de commande');
- display.title = open ? 'Revenir à la cabine' : 'Agrandir les commandes';
+ display.setAttribute('aria-label', open ? 'Fermer le plan de la tour' : 'Ouvrir le plan de la tour');
+ display.title = open ? 'Revenir à la cabine' : 'Ouvrir le plan de la tour';
  consoleClose.hidden = !open;
  consoleBackdrop.hidden = !open;
  cabin.inert = open;
@@ -160,8 +181,9 @@ function setConsole(open) {
 }
 
 function showFloor({index, target}, {moveFocus, announce, reveal}) {
- current = passing = index;
+ current = index;
  const floor = floors[index];
+ passingLevel = floor.level;
  for (const item of floors) {
   const active = item === floor;
   item.section.inert = !active;
@@ -180,8 +202,8 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
  delete cabin.dataset.shaft;
  shaftTrack.replaceChildren();
  indicator.textContent = floor.number;
- direction.textContent = '⤢';
- readout.textContent = index === 0 ? 'Rez-de-chaussée' : floor.name;
+ direction.textContent = 'Plan';
+ readout.textContent = floor.level === 0 ? 'Rez-de-chaussée' : floor.name;
  label.textContent = floor.number + ' / ' + floor.name;
  roomLevel.textContent = label.textContent;
  roomName.textContent = floor.roomName;
@@ -189,7 +211,7 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
  if (newRoom) {
   renderStops(floor);
   const linkedStop = stops.findIndex(stop => stop.dataset.target === target.id);
-  moveToStop(Math.max(0, linkedStop));
+  moveToStop(Number(linkedStop > 0));
  }
  const details = reveal || target !== floor.section;
  setDetails(details);
@@ -204,16 +226,18 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
   if (details) focusContent(target);
   else scroller.focus({preventScroll: true});
  }
- if (announce) announcement.textContent = (index === 0 ? 'Rez-de-chaussée' : 'Étage ' + floor.number) + ' · ' + floor.roomName;
+ if (announce) announcement.textContent = floor.roomName + ' · ' + (floor.number === 'T' ? 'Toit' : floor.level === 0 ? 'Rez-de-chaussée' : 'Niveau ' + floor.number);
 }
 
-function prepareShaft(from, to, step) {
+function prepareShaft(from, target, step) {
  const route = [];
- for (let index = from; index !== to + step; index += step) {
+ for (let level = from; level !== target.level + step; level += step) {
   const scene = document.createElement('div');
   scene.className = 'shaft-floor';
-  scene.style.top = (from - index) * 100 + '%';
-  const asset = new URL('scenes/' + floors[index].id + '.webp', import.meta.url);
+  scene.style.top = (from - level) * 100 + '%';
+  const floor = level === target.level ? target : level === floors[current].level ? floors[current] : floorAt(level);
+  scene.toggleAttribute('data-service', !floor);
+  const asset = new URL('scenes/' + (floor?.id ?? 'shaft') + '.webp', import.meta.url);
   scene.style.backgroundImage = 'url("' + asset.href + '")';
   route.push(scene);
  }
@@ -223,27 +247,31 @@ function prepareShaft(from, to, step) {
 async function go(hash, {animate = true, moveFocus = false, announce = true, reveal = false} = {}) {
  const target = targetFor(hash);
  destination = target.index;
- down.setAttribute('aria-disabled', String(destination === 0));
- up.setAttribute('aria-disabled', String(destination === floors.length - 1));
+ const floor = floors[destination];
+ const destinationLevel = serviced.indexOf(floor.level);
+ down.setAttribute('aria-disabled', String(destinationLevel === 0));
+ up.setAttribute('aria-disabled', String(destinationLevel === serviced.length - 1));
  const ticket = ++trip;
  const options = {moveFocus, announce, reveal};
- const from = passing;
- const distance = Math.abs(destination - from);
+ const from = passingLevel;
+ const distance = Math.abs(floor.level - from);
  shaftMotion?.cancel();
  shaftMotion = undefined;
  if (!distance || !animate || reducedMotion.matches) {
+  const crossing = !distance && destination !== current && animate && !reducedMotion.matches && !cabin.dataset.travel;
   showFloor(target, options);
+  if (crossing) room.animate([{opacity: .3}, {opacity: 1}], {duration: 360});
   return;
  }
- const step = Math.sign(destination - from);
- prepareShaft(from, destination, step);
+ const step = Math.sign(floor.level - from);
+ prepareShaft(from, floor, step);
  setDetails(false);
  room.inert = true;
  if (cabin.dataset.doors !== 'closed') closedAt = performance.now() + doorTime;
  cabin.dataset.doors = 'closed';
  cabin.dataset.travel = step > 0 ? 'up' : 'down';
  direction.textContent = step > 0 ? '↑' : '↓';
- readout.textContent = (step > 0 ? 'Montée' : 'Descente') + ' · ' + floors[destination].number;
+ readout.textContent = (step > 0 ? 'Montée' : 'Descente') + ' · ' + floor.number;
  const remaining = closedAt - performance.now();
  if (remaining > 0) await wait(remaining);
  if (ticket !== trip) return;
@@ -256,18 +284,18 @@ async function go(hash, {animate = true, moveFocus = false, announce = true, rev
  const updateIndicator = () => {
   if (shaftMotion !== motion || motion.playState === 'finished') return;
   const progress = motion.effect.getComputedTiming().progress ?? 0;
-  const floor = from + step * Math.round(progress * distance);
-  if (floor !== passing) {
-   passing = floor;
-   indicator.textContent = floors[floor].number;
+  const level = from + step * Math.round(progress * distance);
+  if (level !== passingLevel) {
+   passingLevel = level;
+   indicator.textContent = displayLevel(level);
   }
   requestAnimationFrame(updateIndicator);
  };
  requestAnimationFrame(updateIndicator);
  await motion.finished.catch(() => {});
  if (ticket !== trip) return;
- passing = target.index;
- indicator.textContent = floors[passing].number;
+ passingLevel = floor.level;
+ indicator.textContent = floor.number;
  await wait(130);
  if (ticket !== trip) return;
  motion.cancel();
@@ -319,7 +347,7 @@ scroller.addEventListener('scroll', syncPanorama, {passive: true});
 scroller.addEventListener('keydown', event => {
  if (event.target !== scroller || !['Home', 'End', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
  event.preventDefault();
- const index = {Home: 0, End: stops.length - 1, ArrowLeft: stopIndex - 1, ArrowRight: stopIndex + 1}[event.key];
+ const index = {Home: 0, End: 1, ArrowLeft: stopIndex - 1, ArrowRight: stopIndex + 1}[event.key];
  moveToStop(index, true);
 });
 
@@ -387,7 +415,7 @@ panel.addEventListener('keydown', event => {
 travel.addEventListener('click', event => {
  const button = event.target.closest('[data-step]');
  if (!button) return;
- const next = floors[destination + Number(button.dataset.step)];
+ const next = floorAt(serviced[serviced.indexOf(floors[destination].level) + Number(button.dataset.step)]);
  if (next) {
   if (shell.dataset.console) setConsole(false);
   select(next.link.hash);

@@ -6,7 +6,11 @@
 .lift-opening[data-room="atelier"] .room-scenery {background-image: url("scenes/atelier.webp")}
 .lift-opening[data-room="about"] .room-scenery {background-image: url("scenes/about.webp")}
 .lift-opening[data-room="contact"] .room-scenery {background-image: url("scenes/contact.webp")}
+.lift-opening[data-room="home"] .room-wing {background-image: url("scenes/home-wing.webp")}
+.lift-opening[data-room="parcours"] .room-wing {background-image: url("scenes/parcours-wing.webp")}
+.lift-opening[data-room="competences"] .room-wing {background-image: url("scenes/competences-wing.webp")}
+.lift-opening[data-room="work"] .room-wing {background-image: url("scenes/work-wing.webp")}
+.lift-opening[data-room="atelier"] .room-wing {background-image: url("scenes/atelier-wing.webp")}
+.lift-opening[data-room="about"] .room-wing {background-image: url("scenes/about-wing.webp")}
+.lift-opening[data-room="contact"] .room-wing {background-image: url("scenes/contact-wing.webp")}
 .lift-shaft {--shaft-texture: url("scenes/shaft.webp")}
-@media screen and (max-width: 650px) {
- .lift-opening[data-room="home"] .room-scenery {background-position: 75% center}
-}

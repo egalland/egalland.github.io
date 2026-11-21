@@ -155,8 +155,8 @@ test('les commandes de cabine ouvrent chacune un étage du Dossier', () => {
  const nav = html.match(/<nav class="lift-buttons"[\s\S]*?<\/nav>/)[0];
  const buttons = [...nav.matchAll(/href="#([^"]+)" data-floor="([^"]+)"/g)].map(([, id, number]) => [id, number]);
  assert.deepEqual(buttons, [
-  ['home', 'R'], ['parcours', '01'], ['competences', '02'], ['work', '03'],
-  ['atelier', '04'], ['about', '05'], ['contact', '06']
+  ['contact', 'T'], ['about', '07'], ['work', '04'], ['atelier', '04'],
+  ['competences', '02'], ['home', 'R'], ['parcours', '−1']
  ]);
  for (const [id] of buttons) assert.match(html, new RegExp('<section[^>]+id="' + id + '"'));
  assert.match(html, /class="lift-doors" aria-hidden="true"/);
@@ -171,6 +171,10 @@ test('chaque étage possède un décor et un accès au contenu', () => {
    : '[data-room="' + id + '"] .room-scenery {background-image: url("scenes/' + id + '.webp")}';
   assert.ok(scenes.includes(rule));
   assert.equal(fs.readFileSync(new URL('../dossier/scenes/' + id + '.webp', import.meta.url)).toString('ascii', 8, 12), 'WEBP');
+  if (id !== 'shaft') {
+   assert.ok(scenes.includes('[data-room="' + id + '"] .room-wing {background-image: url("scenes/' + id + '-wing.webp")}'));
+   assert.equal(fs.readFileSync(new URL('../dossier/scenes/' + id + '-wing.webp', import.meta.url)).toString('ascii', 8, 12), 'WEBP');
+  }
  }
  for (const control of ['room-hotspot', 'room-explore', 'room-back', 'console-close']) {
   assert.match(html, new RegExp('<button class="' + control + '"'));
@@ -181,8 +185,13 @@ test('le panorama dispose de commandes et de points liés à du contenu réel', 
  const html = read('dossier/index.html');
  const css = read('dossier/dossier.css');
  const source = read('dossier/dossier.mjs');
+ assert.match(html, /href="#work" data-floor="04" data-level="4"/);
+ assert.match(html, /href="#atelier" data-floor="04" data-level="4"/);
+ assert.match(html, /href="#parcours" data-floor="−1" data-level="-1"/);
  const spots = source.match(/const roomStops = \{([\s\S]*?)\n\};/)[1];
  assert.match(html, /class="room-scroller" tabindex="0"/);
+ assert.match(html, /class="room-scenery room-wing"/);
+ assert.match(html, /class="room-passages"/);
  assert.match(html, /class="room-track"/);
  assert.match(css, /\.room-scroller \{[^}]+overflow: auto hidden/);
  assert.match(html, /data-room-step="-1"/);
