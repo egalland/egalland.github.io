@@ -1,16 +1,9 @@
 /* Photomontages du Dossier. */
-.lift-opening[data-room="home"] .room-scenery {background-image: url("scenes/home.webp")}
-.lift-opening[data-room="parcours"] .room-scenery {background-image: url("scenes/parcours.webp")}
-.lift-opening[data-room="competences"] .room-scenery {background-image: url("scenes/competences.webp")}
-.lift-opening[data-room="work"] .room-scenery {background-image: url("scenes/work.webp")}
-.lift-opening[data-room="atelier"] .room-scenery {background-image: url("scenes/atelier.webp")}
-.lift-opening[data-room="about"] .room-scenery {background-image: url("scenes/about.webp")}
-.lift-opening[data-room="contact"] .room-scenery {background-image: url("scenes/contact.webp")}
-.lift-opening[data-room="home"] .room-wing {background-image: url("scenes/home-wing.webp")}
-.lift-opening[data-room="parcours"] .room-wing {background-image: url("scenes/parcours-wing.webp")}
-.lift-opening[data-room="competences"] .room-wing {background-image: url("scenes/competences-wing.webp")}
-.lift-opening[data-room="work"] .room-wing {background-image: url("scenes/work-wing.webp")}
-.lift-opening[data-room="atelier"] .room-wing {background-image: url("scenes/atelier-wing.webp")}
-.lift-opening[data-room="about"] .room-wing {background-image: url("scenes/about-wing.webp")}
-.lift-opening[data-room="contact"] .room-wing {background-image: url("scenes/contact-wing.webp")}
+.lift-opening[data-room="home"] .room-scenery {background-image: url("scenes/home-panorama.webp")}
+.lift-opening[data-room="parcours"] .room-scenery {background-image: url("scenes/parcours-panorama.webp")}
+.lift-opening[data-room="competences"] .room-scenery {background-image: url("scenes/competences-panorama.webp")}
+.lift-opening[data-room="work"] .room-scenery {background-image: url("scenes/work-panorama.webp")}
+.lift-opening[data-room="atelier"] .room-scenery {background-image: url("scenes/atelier-panorama.webp")}
+.lift-opening[data-room="about"] .room-scenery {background-image: url("scenes/about-panorama.webp")}
+.lift-opening[data-room="contact"] .room-scenery {background-image: url("scenes/contact-panorama.webp")}
 .lift-shaft {--shaft-texture: url("scenes/shaft.webp")}

@@ -168,13 +168,10 @@ test('chaque étage possède un décor et un accès au contenu', () => {
  for (const id of ['home', 'parcours', 'competences', 'work', 'atelier', 'about', 'contact', 'shaft']) {
   const rule = id === 'shaft'
    ? '.lift-shaft {--shaft-texture: url("scenes/shaft.webp")}'
-   : '[data-room="' + id + '"] .room-scenery {background-image: url("scenes/' + id + '.webp")}';
+   : '[data-room="' + id + '"] .room-scenery {background-image: url("scenes/' + id + '-panorama.webp")}';
   assert.ok(scenes.includes(rule));
-  assert.equal(fs.readFileSync(new URL('../dossier/scenes/' + id + '.webp', import.meta.url)).toString('ascii', 8, 12), 'WEBP');
-  if (id !== 'shaft') {
-   assert.ok(scenes.includes('[data-room="' + id + '"] .room-wing {background-image: url("scenes/' + id + '-wing.webp")}'));
-   assert.equal(fs.readFileSync(new URL('../dossier/scenes/' + id + '-wing.webp', import.meta.url)).toString('ascii', 8, 12), 'WEBP');
-  }
+  const filename = id === 'shaft' ? 'shaft.webp' : id + '-panorama.webp';
+  assert.equal(fs.readFileSync(new URL('../dossier/scenes/' + filename, import.meta.url)).toString('ascii', 8, 12), 'WEBP');
  }
  for (const control of ['room-hotspot', 'room-explore', 'room-back', 'console-close']) {
   assert.match(html, new RegExp('<button class="' + control + '"'));
@@ -190,7 +187,7 @@ test('le panorama dispose de commandes et de points liés à du contenu réel', 
  assert.match(html, /href="#parcours" data-floor="−1" data-level="-1"/);
  const spots = source.match(/const roomStops = \{([\s\S]*?)\n\};/)[1];
  assert.match(html, /class="room-scroller" tabindex="0"/);
- assert.match(html, /class="room-scenery room-wing"/);
+ assert.equal([...html.matchAll(/class="room-scenery"/g)].length, 1);
  assert.match(html, /class="room-passages"/);
  assert.match(html, /class="room-track"/);
  assert.match(css, /\.room-scroller \{[^}]+overflow: auto hidden/);

@@ -180,9 +180,12 @@ html[data-lift="ready"] .lift-stage {
 
 .lift-room {position: absolute; z-index: 1; inset: 0; overflow: hidden; background: #202e2c}
 .room-scroller {
+ --pan-top: 52px;
+ --pan-bottom: 108px;
  position: absolute;
  inset: 0;
  overflow: auto hidden;
+ container-type: size;
  overscroll-behavior-x: contain;
  touch-action: pan-x pinch-zoom;
  scrollbar-width: thin;
@@ -194,24 +197,19 @@ html[data-lift="ready"] .lift-stage {
 .room-track {
  position: relative;
  isolation: isolate;
- display: grid;
- grid-template-columns: repeat(2, minmax(0, 1fr));
  width: 200%;
+ width: clamp(125%, calc((100cqh - var(--pan-top) - var(--pan-bottom)) * 3), 225%);
  height: 100%;
-}
-.room-panel {
- position: relative;
  background:
   linear-gradient(180deg, #0a0e0e, transparent 25%, transparent 71%, #070b0b),
   repeating-linear-gradient(90deg, #d2d4c80b 0 1px, transparent 1px 7px),
   #252e2c;
 }
-.room-panel + .room-panel {box-shadow: inset 2px 0 #9ba49c45}
 .room-scenery {
  position: absolute;
- inset: 52px 0 108px;
+ inset: var(--pan-top) 0 var(--pan-bottom);
  background-position: center;
- background-size: contain;
+ background-size: 100% auto;
  background-repeat: no-repeat;
 }
 .room-stops {position: absolute; inset: 0; pointer-events: none}
@@ -389,11 +387,11 @@ html[data-lift="ready"] .lift-opening[data-shaft] .lift-shaft {visibility: visib
  position: absolute;
  inset-inline: 0;
  height: 100%;
- background-position: center;
- background-size: contain;
+ background-position: left center;
+ background-size: 155% auto;
  background-repeat: no-repeat;
 }
-.shaft-floor[data-service] {background-size: cover}
+.shaft-floor[data-service] {background-position: center; background-size: cover}
 .shaft-floor::after {
  content: "";
  position: absolute;
@@ -699,6 +697,7 @@ h1, h2, h3 {font-family: var(--display)}
  }
  .lift[data-console="expanded"] .lift-buttons a[aria-current] b {background: var(--mobile-light); box-shadow: 0 0 12px #8be8e366}
  .room-scroller {scrollbar-width: none}
+ .shaft-floor:not([data-service]) {background-size: 225% auto}
  .room-caption {align-items: center; gap: 2px 10px; padding: 0 10px 4px}
  .room-level {display: none}
  .room-name {font: 700 clamp(14px, 4.2vw, 25px)/1 var(--display); letter-spacing: -.025em; text-wrap: wrap}

@@ -13,7 +13,6 @@ const stopTemplate = document.querySelector('#room-stop-template');
 const roomNav = room.querySelector('.room-navigation');
 const previousStop = roomNav.querySelector('[data-room-step="-1"]');
 const nextStop = roomNav.querySelector('[data-room-step="1"]');
-const roomPosition = roomNav.querySelector('.room-position');
 const roomPassages = room.querySelector('.room-passages');
 const explore = room.querySelector('.room-explore');
 const roomName = room.querySelector('.room-name');
@@ -82,6 +81,7 @@ let stops = [];
 let stopIndex = 0;
 let panProgress = 0;
 let panWidth = 0;
+let panRange = 0;
 let detailTrigger;
 
 const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
@@ -92,16 +92,15 @@ const displayLevel = level => floorAt(level)?.number ?? String(level).padStart(2
 function syncPanorama() {
  const distance = maxPan();
  panProgress = distance ? Math.max(0, Math.min(1, scroller.scrollLeft / distance)) : 0;
- stopIndex = Math.round(panProgress);
+ stopIndex = Math.round(panProgress * 2);
  roomNav.style.setProperty('--pan-progress', (panProgress * 100) + '%');
- roomPosition.textContent = stopIndex === 0 ? 'Fresque' : 'Pièce voisine';
- previousStop.setAttribute('aria-disabled', String(stopIndex === 0));
- nextStop.setAttribute('aria-disabled', String(stopIndex === 1));
+ previousStop.setAttribute('aria-disabled', String(panProgress <= .005));
+ nextStop.setAttribute('aria-disabled', String(panProgress >= .995));
 }
 
 function moveToStop(index, smooth = false) {
- const position = Math.max(0, Math.min(index, 1));
- if (position === stopIndex && smooth) return;
+ const position = Math.max(0, Math.min(index, 2)) / 2;
+ if (Math.abs(position - panProgress) <= .005 && smooth) return;
  scroller.scrollTo({
   left: maxPan() * position,
   behavior: smooth && !reducedMotion.matches ? 'smooth' : 'instant'
@@ -110,9 +109,9 @@ function moveToStop(index, smooth = false) {
 }
 
 function layoutStops() {
- const positions = stops.length === 2 ? [.55, 1.52] : [.55, 1.32, 1.71];
+ const spacing = maxPan() / Math.max(1, stops.length - 1);
  stops.forEach((stop, index) => {
-  stop.style.left = scroller.clientWidth * positions[index] + 'px';
+  stop.style.left = (scroller.clientWidth / 2 + spacing * index) + 'px';
  });
 }
 
@@ -217,7 +216,7 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
  if (newRoom) {
   renderStops(floor);
   const linkedStop = stops.findIndex(stop => stop.dataset.target === target.id);
-  moveToStop(Number(linkedStop > 0));
+  moveToStop(linkedStop > 0 ? Math.round(2 * linkedStop / (stops.length - 1)) : 0);
  }
  const details = reveal || target !== floor.section;
  setDetails(details);
@@ -243,7 +242,7 @@ function prepareShaft(from, target, step) {
   scene.style.top = (from - level) * 100 + '%';
   const floor = level === target.level ? target : level === floors[current].level ? floors[current] : floorAt(level);
   scene.toggleAttribute('data-service', !floor);
-  const asset = new URL('scenes/' + (floor?.id ?? 'shaft') + '.webp', import.meta.url);
+  const asset = new URL('scenes/' + (floor ? floor.id + '-panorama' : 'shaft') + '.webp', import.meta.url);
   scene.style.backgroundImage = 'url("' + asset.href + '")';
   route.push(scene);
  }
@@ -353,7 +352,7 @@ scroller.addEventListener('scroll', syncPanorama, {passive: true});
 scroller.addEventListener('keydown', event => {
  if (event.target !== scroller || !['Home', 'End', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
  event.preventDefault();
- const index = {Home: 0, End: 1, ArrowLeft: stopIndex - 1, ArrowRight: stopIndex + 1}[event.key];
+ const index = {Home: 0, End: 2, ArrowLeft: stopIndex - 1, ArrowRight: stopIndex + 1}[event.key];
  moveToStop(index, true);
 });
 
@@ -412,10 +411,13 @@ scroller.addEventListener('lostpointercapture', stopDrag);
 
 new ResizeObserver(() => {
  const width = scroller.clientWidth;
- if (!stops.length || !width || width === panWidth) return;
+ const range = maxPan();
+ if (!stops.length || !width || (width === panWidth && range === panRange)) return;
+ const widthChanged = width !== panWidth;
  panWidth = width;
+ panRange = range;
  layoutStops();
- scroller.scrollLeft = maxPan() * panProgress;
+ if (widthChanged) scroller.scrollLeft = range * panProgress;
  syncPanorama();
 }).observe(scroller);
 
