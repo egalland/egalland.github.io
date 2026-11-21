@@ -5,6 +5,7 @@ const cabin = document.querySelector('.lift-opening');
 const shell = document.querySelector('.lift');
 const shortcuts = shell.querySelector('.mobile-floor-nav');
 const room = document.querySelector('.lift-room');
+const shaftTrack = cabin.querySelector('.shaft-track');
 const scroller = room.querySelector('.room-scroller');
 const stopsLayer = room.querySelector('.room-stops');
 const stopTemplate = document.querySelector('#room-stop-template');
@@ -52,10 +53,15 @@ const roomStops = {
  contact: [['contact', 'Contact'], ['contact-github', 'GitHub']]
 };
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const doorTime = 420;
+cabin.style.setProperty('--door-time', doorTime + 'ms');
 
 let current = 0;
+let passing = 0;
 let destination = 0;
 let trip = 0;
+let closedAt = 0;
+let shaftMotion;
 let projectAnchors = [];
 let arrivalScrollTop;
 let stops = [];
@@ -154,7 +160,7 @@ function setConsole(open) {
 }
 
 function showFloor({index, target}, {moveFocus, announce, reveal}) {
- current = index;
+ current = passing = index;
  const floor = floors[index];
  for (const item of floors) {
   const active = item === floor;
@@ -172,6 +178,7 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
  cabin.dataset.doors = 'open';
  delete cabin.dataset.travel;
  delete cabin.dataset.shaft;
+ shaftTrack.replaceChildren();
  indicator.textContent = floor.number;
  direction.textContent = '⤢';
  readout.textContent = index === 0 ? 'Rez-de-chaussée' : floor.name;
@@ -200,6 +207,19 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
  if (announce) announcement.textContent = (index === 0 ? 'Rez-de-chaussée' : 'Étage ' + floor.number) + ' · ' + floor.roomName;
 }
 
+function prepareShaft(from, to, step) {
+ const route = [];
+ for (let index = from; index !== to + step; index += step) {
+  const scene = document.createElement('div');
+  scene.className = 'shaft-floor';
+  scene.style.top = (from - index) * 100 + '%';
+  const asset = new URL('scenes/' + floors[index].id + '.webp', import.meta.url);
+  scene.style.backgroundImage = 'url("' + asset.href + '")';
+  route.push(scene);
+ }
+ shaftTrack.replaceChildren(...route);
+}
+
 async function go(hash, {animate = true, moveFocus = false, announce = true, reveal = false} = {}) {
  const target = targetFor(hash);
  destination = target.index;
@@ -207,28 +227,52 @@ async function go(hash, {animate = true, moveFocus = false, announce = true, rev
  up.setAttribute('aria-disabled', String(destination === floors.length - 1));
  const ticket = ++trip;
  const options = {moveFocus, announce, reveal};
- if (destination === current || !animate || reducedMotion.matches) {
+ const from = passing;
+ const distance = Math.abs(destination - from);
+ shaftMotion?.cancel();
+ shaftMotion = undefined;
+ if (!distance || !animate || reducedMotion.matches) {
   showFloor(target, options);
   return;
  }
- const step = Math.sign(destination - current);
- // Give the next panorama the duration of the elevator trip to load.
- const nextScene = new Image();
- nextScene.src = new URL('scenes/' + floors[destination].id + '.webp', import.meta.url).href;
+ const step = Math.sign(destination - from);
+ prepareShaft(from, destination, step);
  setDetails(false);
+ room.inert = true;
+ if (cabin.dataset.doors !== 'closed') closedAt = performance.now() + doorTime;
  cabin.dataset.doors = 'closed';
  cabin.dataset.travel = step > 0 ? 'up' : 'down';
  direction.textContent = step > 0 ? '↑' : '↓';
- readout.textContent = 'En déplacement';
- await wait(340);
+ readout.textContent = (step > 0 ? 'Montée' : 'Descente') + ' · ' + floors[destination].number;
+ const remaining = closedAt - performance.now();
+ if (remaining > 0) await wait(remaining);
  if (ticket !== trip) return;
  cabin.dataset.shaft = '';
- for (let index = current + step; ticket === trip; index += step) {
-  indicator.textContent = floors[index].number;
-  await wait(130);
-  if (index === target.index) break;
- }
- if (ticket === trip) showFloor(target, options);
+ const motion = shaftTrack.animate(
+  [{transform: 'translateY(0)'}, {transform: 'translateY(' + step * distance * 100 + '%)'}],
+  {duration: 300 + 240 * distance, easing: 'cubic-bezier(.42,.05,.58,.95)', fill: 'forwards'}
+ );
+ shaftMotion = motion;
+ const updateIndicator = () => {
+  if (shaftMotion !== motion || motion.playState === 'finished') return;
+  const progress = motion.effect.getComputedTiming().progress ?? 0;
+  const floor = from + step * Math.round(progress * distance);
+  if (floor !== passing) {
+   passing = floor;
+   indicator.textContent = floors[floor].number;
+  }
+  requestAnimationFrame(updateIndicator);
+ };
+ requestAnimationFrame(updateIndicator);
+ await motion.finished.catch(() => {});
+ if (ticket !== trip) return;
+ passing = target.index;
+ indicator.textContent = floors[passing].number;
+ await wait(130);
+ if (ticket !== trip) return;
+ motion.cancel();
+ shaftMotion = undefined;
+ showFloor(target, options);
 }
 
 function select(hash, options) {

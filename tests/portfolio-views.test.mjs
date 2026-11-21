@@ -166,8 +166,10 @@ test('chaque étage possède un décor et un accès au contenu', () => {
  const html = read('dossier/index.html');
  const scenes = read('dossier/scenes.css');
  for (const id of ['home', 'parcours', 'competences', 'work', 'atelier', 'about', 'contact', 'shaft']) {
-  const selector = id === 'shaft' ? '[data-shaft]' : '[data-room="' + id + '"]';
-  assert.ok(scenes.includes(selector + ' .room-scenery {background-image: url("scenes/' + id + '.webp")}'));
+  const rule = id === 'shaft'
+   ? '.lift-shaft {--shaft-texture: url("scenes/shaft.webp")}'
+   : '[data-room="' + id + '"] .room-scenery {background-image: url("scenes/' + id + '.webp")}';
+  assert.ok(scenes.includes(rule));
   assert.equal(fs.readFileSync(new URL('../dossier/scenes/' + id + '.webp', import.meta.url)).toString('ascii', 8, 12), 'WEBP');
  }
  for (const control of ['room-hotspot', 'room-explore', 'room-back', 'console-close']) {
