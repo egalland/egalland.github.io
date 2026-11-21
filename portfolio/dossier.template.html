@@ -8,10 +8,10 @@
  <meta name="description" content="Le CV interactif d’Emmanuel Galland, analyste Tarif & Référentiel et développeur web. Parcours, compétences et projets.">
  <link rel="canonical" href="https://egalland.github.io/?theme=dossier">
  <link rel="stylesheet" href="/portfolio-assets/theme-switch.css?v=dossier1">
- <link rel="stylesheet" href="/dossier/dossier.css?v=panorama1">
+ <link rel="stylesheet" href="/dossier/dossier.css?v=cabine-mobile1">
  <link rel="stylesheet" href="/dossier/cover.css">
  <link rel="stylesheet" href="/dossier/scenes.css?v=etages1">
- <script type="module" src="/dossier/dossier.mjs?v=panorama1"></script>
+ <script type="module" src="/dossier/dossier.mjs?v=cabine-mobile1"></script>
  <title>Emmanuel Galland — CV & projets</title>
 </head>
 <body>
@@ -19,6 +19,13 @@
  <header class="portfolio-bar dossier-bar">{{brandHtml}}{{themeSwitchHtml}}<div class="bar-actions"><a href="{{profile.github}}" aria-label="Profil GitHub d’Emmanuel Galland">GitHub ↗</a></div></header>
  <div class="dossier-layout">
   <div class="lift">
+   <nav class="mobile-floor-nav" aria-label="Accès directs du Dossier">
+    <a href="#home" aria-current="location">Profil</a>
+    <a href="#parcours">Parcours</a>
+    <a href="#work">Projets</a>
+    <a href="#atelier">Atelier</a>
+    <a href="#contact">Contact</a>
+   </nav>
    <button class="console-backdrop" type="button" hidden aria-label="Quitter les commandes"></button>
    <aside class="lift-console" aria-label="Commandes de l’ascenseur">
     <div class="console-heading"><span>Ascenseur</span><button class="console-close" type="button" hidden aria-label="Revenir à la cabine">×</button></div>

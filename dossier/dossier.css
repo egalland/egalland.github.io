@@ -497,29 +497,11 @@ h1, h2, h3 {font-family: var(--display)}
 .practices span {font-size: 14px; color: var(--muted)}
 .practices small {color: var(--acid); font: 12px/1.6 var(--mono)}
 .dossier-footer {display: none}
-@media (max-width: 650px) {
+.mobile-floor-nav {display: none}
+@media screen and (max-width: 650px) {
  .dossier-layout {width: calc(100% - 12px); margin: 7px auto}
  .lift {grid-template-columns: minmax(0, 1fr) 61px; gap: 8px; padding: 7px}
- .lift-console {padding: 4px}
- .console-heading {font-size: 7px; letter-spacing: 0}
- .lift-display {padding: 5px 4px}
- .lift-number {font-size: 29px}
- .lift-direction {font-size: 10px}
- .lift-readout {font-size: 7px; overflow-wrap: anywhere}
- .lift:not([data-console="expanded"]) .lift-buttons, .lift:not([data-console="expanded"]) .lift-travel {grid-template-columns: 1fr}
- .lift-buttons a, .lift-travel button {min-height: 34px}
- .lift-buttons b {width: 23px; height: 23px}
- .lift:not([data-console="expanded"]) .lift-travel button {min-height: 29px}
- .lift-header {padding: 5px 8px; font-size: 9px}
- .lift-brandplate {font-size: 8px; letter-spacing: .035em; text-align: right}
- html[data-lift="ready"] .lift-stage {height: clamp(420px, calc(100svh - 140px), 800px)}
  html[data-lift="ready"] .cover {min-height: 365px}
- .room-caption {padding: 14px}
- .room-name {font-size: clamp(29px, 9vw, 53px)}
- .room-hotspot {width: 44px; height: 44px}
- .room-track {width: 290%}
- .room-navigation {top: 8px; right: 8px}
- .room-navigation button {width: 44px; height: 42px}
  .cover {min-height: 360px; padding: 20px 14px}
  .cover-art {background-position: 63% center}
  .cover h1 {font-size: clamp(32px, 9vw, 55px)}
@@ -529,6 +511,161 @@ h1, h2, h3 {font-family: var(--display)}
  .reel-entry .frame {grid-row: 1}
  .frame span {font-size: 50px}
  .dossier-bar .bar-actions a {font-size: 11px}
+
+ html[data-lift="ready"] {
+  --mobile-lintel: 76px;
+  --mobile-sill: 23px;
+  --mobile-bar: 56px;
+  --mobile-jamb: clamp(19px, 7vw, 48px);
+  --mobile-light: #b6e7e3;
+ }
+ html[data-lift="ready"] body {display: flex; flex-direction: column; background: #24292a}
+ html[data-lift="ready"] .dossier-layout {order: -1; width: 100%; margin: 0}
+ html[data-lift="ready"] header.dossier-bar {
+  position: relative;
+  height: var(--mobile-bar);
+  grid-template-columns: 28px auto minmax(0, 1fr);
+  column-gap: 7px;
+  padding-inline: max(8px, env(safe-area-inset-left));
+  background: linear-gradient(#343a3a, #232829);
+  border-top: 1px solid #9b9b8b55;
+  border-bottom: 0;
+ }
+ html[data-lift="ready"] .dossier-bar .bar-brand b {color: #edf1e9}
+ html[data-lift="ready"] .dossier-bar .theme-switch {border: 0; border-radius: 0; background: transparent}
+ html[data-lift="ready"] .dossier-bar .theme-switch > * {min-width: 43px; min-height: 44px; border-radius: 2px}
+ html[data-lift="ready"] .dossier-bar .theme-switch [aria-current] {background: #535c5c; color: #fff}
+ html[data-lift="ready"] .lift {
+  display: block;
+  padding: var(--mobile-lintel) var(--mobile-jamb) 0;
+  border: 0;
+  box-shadow: none;
+  background:
+   linear-gradient(180deg, #e8e3d5, #aca79a 37%, #6e6a61 95%, #33332f) top / 100% var(--mobile-lintel) no-repeat,
+   repeating-linear-gradient(90deg, #e4ded308 0 1px, transparent 1px 4px),
+   linear-gradient(90deg, #4c4c46, #77766b 7%, #353632 15%, #393b37 82%, #78786e 94%, #464742);
+ }
+ html[data-lift="ready"] .mobile-floor-nav {
+  position: absolute;
+  z-index: 4;
+  top: 15px;
+  inset-inline: var(--mobile-jamb);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 0 3px;
+  background: #181c1c;
+  box-shadow: 0 2px 6px #302e2860;
+ }
+ .mobile-floor-nav a {
+  display: grid;
+  min-height: 44px;
+  place-items: center;
+  box-shadow: inset 0 -2px transparent;
+  color: #e1ddd3;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font: 700 clamp(10px, 2.8vw, 14px)/1 var(--mono);
+ }
+ .mobile-floor-nav a[aria-current] {color: var(--mobile-light); box-shadow: inset 0 -2px var(--mobile-light)}
+ html[data-lift="ready"] .lift-opening {border: 0; box-shadow: 0 0 0 2px #292b29, 0 0 0 4px #77756c90}
+ html[data-lift="ready"] .lift-header {display: none}
+ html[data-lift="ready"] .lift-stage {
+  height: max(310px, calc(100svh - var(--mobile-lintel) - var(--mobile-sill) - var(--mobile-bar)));
+ }
+ .lift-threshold {
+  height: var(--mobile-sill, 17px);
+  background: linear-gradient(#696c65, #b7b7ad 21%, #777b74 30%, #a6aaa1 44%, #5e645e 80%, #333a38);
+  box-shadow: inset 0 1px 3px #3335;
+ }
+ .lift:not([data-console="expanded"]) .lift-console {
+  position: absolute;
+  z-index: 5;
+  top: 48%;
+  right: 5px;
+  width: 48px;
+  padding: 3px;
+  border: 1px solid #8c8d80;
+  border-radius: 2px;
+  background: #292e2e;
+  box-shadow: 0 2px 8px #12161480;
+ }
+ .lift:not([data-console="expanded"]) .lift-console :is(.console-heading, .lift-buttons, .lift-travel, .lift-readout) {display: none}
+ .lift:not([data-console="expanded"]) .lift-display {
+  grid-template: "number" 1fr "direction" auto / 1fr;
+  justify-items: center;
+  gap: 3px;
+  margin: 0;
+  padding: 7px 1px 4px;
+  border-color: #646b68;
+  background: #141b1b;
+  color: var(--mobile-light);
+  text-align: center;
+ }
+ .lift:not([data-console="expanded"]) .lift-number {
+  font-size: 26px;
+  letter-spacing: -.04em;
+  text-shadow: 0 0 12px #8be8e38a;
+ }
+ .lift:not([data-console="expanded"]) .lift-direction {font-size: 14px; line-height: 1}
+ .lift[data-console="expanded"] .lift-console {
+  top: 50%;
+  max-height: calc(100% - 28px);
+  overflow: auto;
+  background: #242a2a;
+  border-color: #a8a69b;
+  box-shadow: 0 10px 36px #0008, inset 0 0 0 3px #3d4443;
+ }
+ .lift[data-console="expanded"] .lift-display {
+  background: #121919;
+  border-color: #637371;
+  color: var(--mobile-light);
+ }
+ .lift[data-console="expanded"] .lift-number {text-shadow: 0 0 14px #8be8e38a}
+ .lift[data-console="expanded"] .lift-buttons {grid-template-columns: 1fr 1fr}
+ .lift[data-console="expanded"] :is(.lift-buttons a, .lift-travel button, .console-close) {
+  min-height: 44px;
+  background: #323938;
+  border-color: #797f78;
+  color: #f1f1e7;
+ }
+ .lift[data-console="expanded"] .lift-buttons a {grid-template-columns: 29px 1fr; gap: 5px; padding-inline: 5px}
+ .lift[data-console="expanded"] .lift-buttons b {
+  width: 25px;
+  height: 25px;
+  background: linear-gradient(#eeece2, #b6b6ab);
+  color: #222a2a;
+  border-color: #f1eee2;
+ }
+ .lift[data-console="expanded"] .lift-buttons a[aria-current] b {background: var(--mobile-light); box-shadow: 0 0 12px #8be8e366}
+ .room-track {width: 225%}
+ .room-scroller {scrollbar-width: none}
+ .lift-room::after {background: linear-gradient(0deg, #101717f5, #14181844 15%, transparent 31%)}
+ .room-caption {align-items: center; gap: 2px 10px; padding: 0 10px 9px}
+ .room-level {display: none}
+ .room-name {font: 700 clamp(14px, 4.2vw, 25px)/1 var(--display); letter-spacing: -.025em; text-wrap: wrap}
+ .room-explore {padding-inline: 0; border: 0; background: transparent; color: #f5eee0; font-size: 11px}
+ .room-explore:hover {background: transparent; color: var(--mobile-light)}
+ .room-explore span {display: none}
+ .room-hotspot {top: 53%; width: 44px; height: 44px; background: #181c1b66; color: #fff; border-color: #fffc; box-shadow: 0 0 0 4px #fff4}
+ .room-hotspot-label {opacity: 0; transition: opacity .15s}
+ .room-hotspot:focus-visible .room-hotspot-label {opacity: 1}
+ .room-navigation {
+  inset: 7px 7px auto auto;
+  border: 0;
+  background: #141919d9;
+  color: #f5eee0;
+ }
+ .room-navigation button {width: 44px; height: 44px}
+ .room-position {min-width: 30px}
+ .lift-opening[data-details] .lift-viewport {scrollbar-gutter: auto}
+ .lift:has(.lift-opening[data-details]):not([data-console="expanded"]) .lift-console {top: calc(var(--mobile-lintel) + 4px)}
+ .lift-doors i, .lift-doors i + i {
+  border: 0;
+  background: repeating-linear-gradient(90deg, #e4ded30b 0 1px, transparent 1px 4px), linear-gradient(95deg, #4e514e, #a3a69d 31%, #6f756f 76%, #424943);
+  box-shadow: inset 0 0 0 1px #383c37;
+ }
+ .lift-doors i::after {display: none}
 }
 @media (prefers-reduced-motion: reduce) {
  .lift-doors i, .room-scenery {transition: none}

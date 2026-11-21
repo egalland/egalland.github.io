@@ -3,6 +3,7 @@ import {themeSwitch} from '/portfolio-assets/theme-switch.mjs?v=dossier2';
 const root = document.documentElement;
 const cabin = document.querySelector('.lift-opening');
 const shell = document.querySelector('.lift');
+const shortcuts = shell.querySelector('.mobile-floor-nav');
 const room = document.querySelector('.lift-room');
 const scroller = room.querySelector('.room-scroller');
 const stopsLayer = room.querySelector('.room-stops');
@@ -138,7 +139,8 @@ function setConsole(open) {
   (panel.querySelector('[aria-current]') || display).focus({preventScroll: true});
  } else {
   delete shell.dataset.console;
-  if (consoleClose.contains(document.activeElement) || consoleBackdrop === document.activeElement) {
+  if (panel.contains(document.activeElement) || travel.contains(document.activeElement) ||
+      consoleClose === document.activeElement || consoleBackdrop === document.activeElement) {
    display.focus({preventScroll: true});
   }
  }
@@ -148,6 +150,7 @@ function setConsole(open) {
  consoleClose.hidden = !open;
  consoleBackdrop.hidden = !open;
  cabin.inert = open;
+ shortcuts.inert = open;
 }
 
 function showFloor({index, target}, {moveFocus, announce, reveal}) {
@@ -159,6 +162,10 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
   item.section.toggleAttribute('data-active-floor', active);
   if (active) item.link.setAttribute('aria-current', 'location');
   else item.link.removeAttribute('aria-current');
+ }
+ for (const link of shortcuts.querySelectorAll('a')) {
+  if (link.hash === floor.link.hash) link.setAttribute('aria-current', 'location');
+  else link.removeAttribute('aria-current');
  }
  const newRoom = cabin.dataset.room !== floor.id;
  cabin.dataset.room = floor.id;
