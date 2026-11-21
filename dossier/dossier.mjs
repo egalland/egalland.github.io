@@ -1,4 +1,5 @@
 import {themeSwitch} from '/portfolio-assets/theme-switch.mjs?v=dossier2';
+import {enableStripScroll} from '/chrome/strip-scroll.mjs';
 
 const root = document.documentElement;
 const cabin = document.querySelector('.lift-opening');
@@ -79,15 +80,20 @@ let projectAnchors = [];
 let arrivalScrollTop;
 let stops = [];
 let stopIndex = 0;
+let panProgress = 0;
+let panWidth = 0;
 let detailTrigger;
 
 const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+const panBlocked = () => Boolean(cabin.dataset.travel || cabin.hasAttribute('data-details') || shell.dataset.console);
 const floorAt = level => floors.find(floor => floor.level === level);
 const displayLevel = level => floorAt(level)?.number ?? String(level).padStart(2, '0');
 
 function syncPanorama() {
- const progress = maxPan() ? scroller.scrollLeft / maxPan() : 0;
- stopIndex = Math.round(progress);
+ const distance = maxPan();
+ panProgress = distance ? Math.max(0, Math.min(1, scroller.scrollLeft / distance)) : 0;
+ stopIndex = Math.round(panProgress);
+ roomNav.style.setProperty('--pan-progress', (panProgress * 100) + '%');
  roomPosition.textContent = stopIndex === 0 ? 'Fresque' : 'Pièce voisine';
  previousStop.setAttribute('aria-disabled', String(stopIndex === 0));
  nextStop.setAttribute('aria-disabled', String(stopIndex === 1));
@@ -351,14 +357,22 @@ scroller.addEventListener('keydown', event => {
  moveToStop(index, true);
 });
 
-scroller.addEventListener('wheel', event => {
- if (event.ctrlKey || event.shiftKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY) || cabin.dataset.travel) return;
- const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroller.clientWidth : 1);
+room.addEventListener('wheel', event => {
+ if (event.ctrlKey || panBlocked()) return;
+ const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroller.clientWidth : 1;
+ const delta = unit * (Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY);
  const position = Math.max(0, Math.min(maxPan(), scroller.scrollLeft + delta));
- if (Math.abs(position - scroller.scrollLeft) < 1) return;
+ if (position === scroller.scrollLeft) return;
  event.preventDefault();
  scroller.scrollLeft = position;
 }, {passive: false});
+
+enableStripScroll(scroller, {
+ blocked: panBlocked,
+ coast: distance => {
+  if (!reducedMotion.matches) scroller.scrollBy({left: distance, behavior: 'smooth'});
+ }
+});
 
 display.addEventListener('click', () => setConsole(!shell.dataset.console));
 consoleClose.addEventListener('click', () => setConsole(false));
@@ -376,14 +390,14 @@ document.addEventListener('keydown', event => {
 
 let drag;
 scroller.addEventListener('pointerdown', event => {
- if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button') || cabin.dataset.travel) return;
+ if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button') || panBlocked()) return;
  drag = {id: event.pointerId, start: event.clientX, left: scroller.scrollLeft};
  scroller.setPointerCapture(event.pointerId);
  scroller.dataset.dragging = '';
 });
 
 scroller.addEventListener('pointermove', event => {
- if (drag?.id === event.pointerId) scroller.scrollLeft = drag.left + drag.start - event.clientX;
+ if (drag?.id === event.pointerId && !panBlocked()) scroller.scrollLeft = drag.left + drag.start - event.clientX;
 });
 
 function stopDrag(event) {
@@ -397,10 +411,12 @@ scroller.addEventListener('pointercancel', stopDrag);
 scroller.addEventListener('lostpointercapture', stopDrag);
 
 new ResizeObserver(() => {
- if (!stops.length) return;
- const position = stopIndex;
+ const width = scroller.clientWidth;
+ if (!stops.length || !width || width === panWidth) return;
+ panWidth = width;
  layoutStops();
- moveToStop(position);
+ scroller.scrollLeft = maxPan() * panProgress;
+ syncPanorama();
 }).observe(scroller);
 
 panel.addEventListener('keydown', event => {

@@ -184,6 +184,7 @@ html[data-lift="ready"] .lift-stage {
  inset: 0;
  overflow: auto hidden;
  overscroll-behavior-x: contain;
+ touch-action: pan-x pinch-zoom;
  scrollbar-width: thin;
  scrollbar-color: #b6c6a8 #192520;
  cursor: grab;
@@ -225,6 +226,14 @@ html[data-lift="ready"] .lift-stage {
  background: #13211ee8;
  color: #f0ffe5;
  font: 650 11px/1 var(--mono);
+}
+.room-navigation::after {
+ content: "";
+ position: absolute;
+ inset: auto 0 0;
+ height: 2px;
+ pointer-events: none;
+ background: linear-gradient(90deg, #b6e7e3 var(--pan-progress, 0%), #e3eee044 var(--pan-progress, 0%));
 }
 .room-navigation button {
  width: 43px;
