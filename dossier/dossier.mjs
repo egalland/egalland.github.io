@@ -67,7 +67,6 @@ const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
 function syncPanorama() {
  const progress = maxPan() ? scroller.scrollLeft / maxPan() : 0;
  stopIndex = Math.round(progress * (stops.length - 1));
- stops.forEach((stop, index) => stop.toggleAttribute('data-current', index === stopIndex));
  roomPosition.textContent = (stopIndex + 1) + ' / ' + stops.length;
  previousStop.setAttribute('aria-disabled', String(stopIndex === 0));
  nextStop.setAttribute('aria-disabled', String(stopIndex >= stops.length - 1));

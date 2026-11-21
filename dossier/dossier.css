@@ -648,7 +648,6 @@ h1, h2, h3 {font-family: var(--display)}
  .room-explore:hover {background: transparent; color: var(--mobile-light)}
  .room-explore span {display: none}
  .room-hotspot {top: 53%; width: 44px; height: 44px; background: #181c1b66; color: #fff; border-color: #fffc; box-shadow: 0 0 0 4px #fff4}
- .room-hotspot:not([data-current], :focus-visible) {opacity: 0; pointer-events: none}
  .room-hotspot-label {opacity: 0; transition: opacity .15s}
  .room-hotspot:focus-visible .room-hotspot-label {opacity: 1}
  .room-navigation {
