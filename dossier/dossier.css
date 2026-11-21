@@ -638,7 +638,7 @@ h1, h2, h3 {font-family: var(--display)}
   border-color: #f1eee2;
  }
  .lift[data-console="expanded"] .lift-buttons a[aria-current] b {background: var(--mobile-light); box-shadow: 0 0 12px #8be8e366}
- .room-track {width: 225%}
+ .room-track {width: 185%}
  .room-scroller {scrollbar-width: none}
  .lift-room::after {background: linear-gradient(0deg, #101717f5, #14181844 15%, transparent 31%)}
  .room-caption {align-items: center; gap: 2px 10px; padding: 0 10px 9px}
@@ -648,6 +648,7 @@ h1, h2, h3 {font-family: var(--display)}
  .room-explore:hover {background: transparent; color: var(--mobile-light)}
  .room-explore span {display: none}
  .room-hotspot {top: 53%; width: 44px; height: 44px; background: #181c1b66; color: #fff; border-color: #fffc; box-shadow: 0 0 0 4px #fff4}
+ .room-hotspot:not([data-current], :focus-visible) {opacity: 0; pointer-events: none}
  .room-hotspot-label {opacity: 0; transition: opacity .15s}
  .room-hotspot:focus-visible .room-hotspot-label {opacity: 1}
  .room-navigation {

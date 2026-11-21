@@ -67,6 +67,7 @@ const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
 function syncPanorama() {
  const progress = maxPan() ? scroller.scrollLeft / maxPan() : 0;
  stopIndex = Math.round(progress * (stops.length - 1));
+ stops.forEach((stop, index) => stop.toggleAttribute('data-current', index === stopIndex));
  roomPosition.textContent = (stopIndex + 1) + ' / ' + stops.length;
  previousStop.setAttribute('aria-disabled', String(stopIndex === 0));
  nextStop.setAttribute('aria-disabled', String(stopIndex >= stops.length - 1));
@@ -212,6 +213,9 @@ async function go(hash, {animate = true, moveFocus = false, announce = true, rev
   return;
  }
  const step = Math.sign(destination - current);
+ // Give the next panorama the duration of the elevator trip to load.
+ const nextScene = new Image();
+ nextScene.src = new URL('scenes/' + floors[destination].id + '.webp', import.meta.url).href;
  setDetails(false);
  cabin.dataset.doors = 'closed';
  cabin.dataset.travel = step > 0 ? 'up' : 'down';
