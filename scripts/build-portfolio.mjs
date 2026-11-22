@@ -79,14 +79,18 @@ const projectScenes = {
  redim: ['atelier', 56],
  atlas: ['atelier', 100]
 };
+const projectLettering = {'market-plus': [100, 75], livre: [100, 42, 76], atlas: [45, 7, 100]};
 function reelEntry(project) {
  const details = data.details[project.id === 'market-plus' ? 'market' : project.id];
  const features = details?.features.map(feature => `<li>${escape(feature)}</li>`).join('');
  const [scene, focus] = projectScenes[project.id] ?? [];
  const backdrop = scene ? '/dossier/scenes/' + scene + '-panorama.webp' : '/inktober-2026/woodland.webp';
+ const lettering = (projectLettering[project.id] ?? [100]).map((width, index) =>
+  `<img src="/chrome/lettering/${project.id}-${index}.webp" alt="" style="width:${width}%" loading="lazy" decoding="async">`
+ ).join('');
  return `<article class="reel-entry" id="${project.id}" aria-labelledby="${project.id}-title">
   <figure class="project-screen" aria-hidden="true" style="--screen-image:url('${backdrop}');--screen-focus:${focus ?? 50}%">
-   <img src="/chrome/lettering/${project.id}-0.webp" alt="" loading="lazy" decoding="async">
+   <div class="project-lettering">${lettering}</div>
   </figure>
   <div class="project-copy">
    <p class="eyebrow">${escape(project.category)}${project.status ? ' · ' + escape(project.status.replace('● ', '')) : ''}</p>

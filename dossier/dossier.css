@@ -571,6 +571,7 @@ html[data-lift="ready"] .dossier-section[data-active-floor][data-project-open] {
  min-height: calc(100% - 1px);
  padding: 0;
 }
+.lift-opening[data-project] :is(main, .reel) {display: grid}
 [data-project-open] > h2 {display: none}
 .project-index {
  display: grid;
@@ -667,10 +668,15 @@ html[data-lift="ready"] .dossier-section[data-active-floor][data-project-open] {
   radial-gradient(ellipse, #0b17115e, #101c16d6);
  box-shadow: inset 0 0 72px #0f1a15b3;
 }
-.project-screen img {
+.project-lettering {
+ display: grid;
+ justify-items: center;
+ gap: 3px;
+ width: min(72%, 400px);
+}
+.project-lettering img {
  display: block;
- width: min(79%, 420px);
- max-height: 64%;
+ max-height: 112px;
  object-fit: contain;
  filter: drop-shadow(0 8px 14px #06110be6);
 }
@@ -682,6 +688,7 @@ html[data-lift="ready"] .dossier-section[data-active-floor][data-project-open] {
   border-right: 0;
   border-bottom: 1px solid #56695f;
  }
+ .project-lettering img {max-height: 8cqw}
 }
 @container (max-width: 400px) {
  .project-index a {grid-template-columns: 1fr 26px}
