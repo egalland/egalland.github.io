@@ -123,7 +123,7 @@ test('les quatre en-têtes partagent le même sélecteur et gardent le projet da
  }
 });
 
-test('Dossier affiche les éléments du CV, les projets communs et des ancres uniques', () => {
+test('La Tour affiche les éléments du CV, les projets communs et des ancres uniques', () => {
  const html = read('dossier/index.html');
  const cv = JSON.parse(read('portfolio/cv.json'));
  const shown = text(html);
@@ -150,13 +150,13 @@ test('les ancres propres au CV pointent vers Pratiques dans les autres vues', as
  }
 });
 
-test('les commandes de cabine ouvrent chacune un étage du Dossier', () => {
+test('les commandes de cabine ouvrent chacune un étage de La Tour', () => {
  const html = read('dossier/index.html');
  const nav = html.match(/<nav class="lift-buttons"[\s\S]*?<\/nav>/)[0];
  const buttons = [...nav.matchAll(/href="#([^"]+)" data-floor="([^"]+)"/g)].map(([, id, number]) => [id, number]);
  assert.deepEqual(buttons, [
-  ['contact', 'T'], ['about', '07'], ['work', '04'], ['atelier', '04'],
-  ['competences', '02'], ['home', 'R'], ['parcours', '−1']
+  ['contact', '5'], ['about', '4'], ['work', '3'], ['atelier', '2'],
+  ['competences', '1'], ['home', 'R'], ['parcours', '−1']
  ]);
  for (const [id] of buttons) assert.match(html, new RegExp('<section[^>]+id="' + id + '"'));
  assert.match(html, /class="lift-doors" aria-hidden="true"/);
@@ -182,8 +182,8 @@ test('le panorama dispose de commandes et de points liés à du contenu réel', 
  const html = read('dossier/index.html');
  const css = read('dossier/dossier.css');
  const source = read('dossier/dossier.mjs');
- assert.match(html, /href="#work" data-floor="04" data-level="4"/);
- assert.match(html, /href="#atelier" data-floor="04" data-level="4"/);
+ assert.match(html, /href="#work" data-floor="3" data-level="3"/);
+ assert.match(html, /href="#atelier" data-floor="2" data-level="2"/);
  assert.match(html, /href="#parcours" data-floor="−1" data-level="-1"/);
  const spots = source.match(/const roomStops = \{([\s\S]*?)\n\};/)[1];
  assert.match(html, /class="room-scroller" tabindex="0"/);

@@ -1,7 +1,7 @@
 import {themeSwitch,themeUrl} from './theme-switch.mjs?v=dossier2';
 import './portfolio-content.mjs?v=pratiques1';
 import {THEMES,normalizeTheme,createThemeManager} from './theme-manager.mjs?v=crew2';
-import {createPortfolioMenu} from './context-menu.mjs?v=dossier1';
+import {createPortfolioMenu} from './context-menu.mjs?v=latour1';
 
 const root=document.documentElement,status=document.querySelector('#theme-status');
 const preference=matchMedia('(prefers-reduced-motion: reduce)');

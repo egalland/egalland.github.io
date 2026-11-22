@@ -1,6 +1,6 @@
 # Projets d’Emmanuel
 
-Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur donne aussi accès à Points, [Chrome](https://egalland.github.io/?theme=chrome) et [Dossier](https://egalland.github.io/?theme=dossier), le CV interactif présenté dans sept décors d’étage. La cabine ouvre le panorama horizontal de chaque rubrique, avec des points interactifs qui donnent accès à son contenu. Les quatre vues partagent la sélection de projets et les liens. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
+Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. Le sélecteur donne aussi accès à Points, [Chrome](https://egalland.github.io/?theme=chrome) et [La Tour](https://egalland.github.io/?theme=dossier), le CV interactif présenté dans sept décors d’étage. La cabine ouvre le panorama horizontal de chaque rubrique, avec des points interactifs qui donnent accès à son contenu. Les quatre vues partagent la sélection de projets et les liens. Le [calendrier Inktober 2026](https://egalland.github.io/inktober-2026/) donne accès aux applications, statistiques et dépôts sources.
 
 ## Organisation
 
@@ -10,7 +10,7 @@ Le [portfolio d’Emmanuel](https://egalland.github.io/) s’ouvre sur Curseur. 
 - `portfolio-assets/portfolio.mjs` : ouverture de Curseur par défaut et passage vers les autres vues au projet en cours.
 - `points/index.html`, `points/app.js`, `points/style.css` : scène fixe et 17 tableaux restaurés depuis le commit pré-fusion `48359f0`, avec morphing 3D des points au défilement et au clavier.
 - `points/assets/` : ressources et polices originales conservées sans altération.
-- `portfolio/content.json` : source commune des projets et liens. `portfolio/cv.json` contient le parcours, les compétences et la formation affichés dans Dossier. `scripts/build-portfolio.mjs` génère les quatre vues depuis leurs gabarits.
+- `portfolio/content.json` : source commune des projets et liens. `portfolio/cv.json` contient le parcours, les compétences et la formation affichés dans La Tour. `scripts/build-portfolio.mjs` génère les quatre vues depuis leurs gabarits.
 - `inktober-2026/` : calendrier, registre des projets, statistiques et leurs sources ; `/inktober/` reste aussi une adresse d’accès.
 - Un dossier portant le nom du projet : version jouable ou accès à sa version serveur.
 - Les anciens noms et les numéros de jours : raccourcis vers les adresses nommées, pour conserver les liens partagés.

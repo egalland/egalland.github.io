@@ -16,13 +16,16 @@ const previousStop = roomNav.querySelector('[data-room-step="-1"]');
 const nextStop = roomNav.querySelector('[data-room-step="1"]');
 const contextTrigger = roomNav.querySelector('.dossier-menu-trigger');
 const contextMenu = document.querySelector('#dossier-context');
-const contextObjects = contextMenu.querySelector('.dossier-context-objects');
 const roomPassages = room.querySelector('.room-passages');
 const explore = room.querySelector('.room-explore');
 const roomName = room.querySelector('.room-name');
 const roomLevel = room.querySelector('.room-level');
 const detailBar = document.querySelector('.lift-details-bar');
 const roomBack = detailBar.querySelector('.room-back');
+const backLabel = roomBack.querySelector('.room-back-label');
+const projectNavigation = detailBar.querySelector('.project-navigation');
+const projectPosition = projectNavigation.querySelector('.project-position');
+const projectSteps = [...projectNavigation.querySelectorAll('[data-project-step]')];
 const viewport = document.querySelector('.lift-viewport');
 const display = document.querySelector('.lift-display');
 const consoleClose = document.querySelector('.console-close');
@@ -49,7 +52,19 @@ const floors = [...panel.querySelectorAll('a')].map(link => ({
  action: link.dataset.action,
  section: document.querySelector(link.hash)
 }));
-const serviced = [...new Set(floors.map(floor => floor.level))].sort((a, b) => a - b);
+const serviced = floors.map(floor => floor.level).reverse();
+const contextLinks = floors.map(({link, number, name}) => {
+ const button = link.cloneNode(false);
+ button.removeAttribute('aria-current');
+ button.removeAttribute('data-level');
+ button.removeAttribute('data-room-name');
+ button.removeAttribute('data-action');
+ button.setAttribute('aria-label', number + ' · ' + name);
+ button.title = name;
+ button.append(link.querySelector('b').cloneNode(true));
+ return button;
+});
+contextMenu.replaceChildren(...contextLinks);
 const entrance = floors.findIndex(floor => floor.id === 'home');
 const passages = {
  home: [['work', 'Galerie'], ['parcours', 'Archives']],
@@ -80,8 +95,6 @@ let destination = entrance;
 let trip = 0;
 let closedAt = 0;
 let shaftMotion;
-let projectAnchors = [];
-let arrivalScrollTop;
 let stops = [];
 let stopIndex = 0;
 let panProgress = 0;
@@ -93,7 +106,7 @@ let suppressHotspotClick = false;
 const maxPan = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
 const panBlocked = () => Boolean(cabin.dataset.travel || cabin.hasAttribute('data-details') || shell.dataset.console);
 const floorAt = level => floors.find(floor => floor.level === level);
-const displayLevel = level => floorAt(level)?.number ?? String(level).padStart(2, '0');
+const displayLevel = level => floorAt(level)?.number ?? String(level);
 
 function syncPanorama() {
  const distance = maxPan();
@@ -145,13 +158,26 @@ function targetFor(hash) {
  return index >= 0 ? {index, target} : {index: entrance, target: floors[entrance].section};
 }
 
-function syncProject() {
- if (viewport.scrollTop === arrivalScrollTop) return;
- arrivalScrollTop = undefined;
- const top = viewport.getBoundingClientRect().top + 96;
- const atEnd = viewport.scrollTop > 0 && viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < 2;
- const project = atEnd ? projectAnchors.at(-1) : projectAnchors.findLast(node => node.getBoundingClientRect().top <= top);
- updateLinks(project?.id || floors[current].id);
+function showProject(floor, project) {
+ const index = floor.section.querySelector('.project-index');
+ const projects = [...floor.section.querySelectorAll('.reel-entry')];
+ const selected = projects.indexOf(project);
+ cabin.toggleAttribute('data-project', Boolean(project));
+ floor.section.toggleAttribute('data-project-open', Boolean(project));
+ if (index) index.hidden = Boolean(project);
+ for (const entry of projects) entry.hidden = entry !== project;
+ projectNavigation.hidden = !project;
+ backLabel.textContent = project && history.state?.fromProjectIndex
+  ? (floor.id === 'work' ? 'Tous les projets' : 'L’atelier')
+  : 'Retour au décor';
+ if (!project) return;
+ projectPosition.textContent = (selected + 1) + ' / ' + projects.length;
+ for (const step of projectSteps) {
+  const next = projects[selected + Number(step.dataset.projectStep)];
+  if (next) step.href = '#' + next.id;
+  else step.removeAttribute('href');
+  step.setAttribute('aria-disabled', String(!next));
+ }
 }
 
 function setDetails(open) {
@@ -198,7 +224,7 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
   if (active) item.link.setAttribute('aria-current', 'location');
   else item.link.removeAttribute('aria-current');
  }
- for (const link of shortcuts.querySelectorAll('a')) {
+ for (const link of [...shortcuts.querySelectorAll('a'), ...contextLinks]) {
   if (link.hash === floor.link.hash) link.setAttribute('aria-current', 'location');
   else link.removeAttribute('aria-current');
  }
@@ -222,19 +248,19 @@ function showFloor({index, target}, {moveFocus, announce, reveal}) {
   syncPanorama();
  }
  const details = reveal || target !== floor.section;
+ const project = target.matches('.reel-entry') ? target : null;
+ showProject(floor, project);
  setDetails(details);
- projectAnchors = [...floor.section.querySelectorAll('.reel-entry')];
  viewport.scrollTop = 0;
- if (details && target !== floor.section) {
+ if (details && !project && target !== floor.section) {
   viewport.scrollTop = target.getBoundingClientRect().top - viewport.getBoundingClientRect().top;
  }
- arrivalScrollTop = viewport.scrollTop;
- updateLinks(target.matches('.reel-entry') ? target.id : floor.id);
+ updateLinks(project?.id || floor.id);
  if (moveFocus) {
   if (details) focusContent(target);
   else scroller.focus({preventScroll: true});
  }
- if (announce) announcement.textContent = floor.roomName + ' · ' + (floor.number === 'T' ? 'Toit' : floor.level === 0 ? 'Rez-de-chaussée' : 'Niveau ' + floor.number);
+ if (announce) announcement.textContent = floor.roomName + ' · ' + (floor.level === 0 ? 'Rez-de-chaussée' : 'Niveau ' + floor.number);
 }
 
 function prepareShaft(from, target, step) {
@@ -266,9 +292,7 @@ async function go(hash, {animate = true, moveFocus = false, announce = true, rev
  shaftMotion?.cancel();
  shaftMotion = undefined;
  if (!distance || !animate || reducedMotion.matches) {
-  const crossing = !distance && destination !== current && animate && !reducedMotion.matches && !cabin.dataset.travel;
   showFloor(target, options);
-  if (crossing) room.animate([{opacity: .3}, {opacity: 1}], {duration: 360});
   return;
  }
  const step = Math.sign(floor.level - from);
@@ -311,8 +335,12 @@ async function go(hash, {animate = true, moveFocus = false, announce = true, rev
  showFloor(target, options);
 }
 
-function select(hash, options) {
- if (hash !== location.hash) history.pushState(null, '', hash);
+function select(hash, {replace = false, fromProjectIndex = false, ...options} = {}) {
+ const state = {reveal: Boolean(options.reveal), fromProjectIndex};
+ if (replace) history.replaceState(state, '', hash);
+ else if (hash !== location.hash || state.reveal !== Boolean(history.state?.reveal)) {
+  history.pushState(state, '', hash);
+ }
  void go(hash, options);
 }
 
@@ -321,7 +349,15 @@ document.addEventListener('click', event => {
  if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
  event.preventDefault();
  if (shell.dataset.console) setConsole(false);
- select(link.hash, {moveFocus: !panel.contains(link), reveal: link.classList.contains('skip')});
+ if (contextMenu.matches(':popover-open')) contextMenu.hidePopover();
+ const fromIndex = Boolean(link.closest('.project-index'));
+ const projectStep = link.hasAttribute('data-project-step');
+ select(link.hash, {
+  moveFocus: !panel.contains(link),
+  reveal: link.classList.contains('skip'),
+  replace: projectStep,
+  fromProjectIndex: fromIndex || (projectStep && Boolean(history.state?.fromProjectIndex))
+ });
 });
 
 stopsLayer.addEventListener('click', event => {
@@ -338,9 +374,13 @@ explore.addEventListener('click', () => {
 });
 
 roomBack.addEventListener('click', () => {
+ if (cabin.hasAttribute('data-project') && history.state?.fromProjectIndex) {
+  history.back();
+  return;
+ }
  setDetails(false);
  const floor = floors[current];
- if (location.hash && location.hash !== floor.link.hash) history.replaceState(null, '', floor.link.hash);
+ if (location.hash !== floor.link.hash || history.state?.reveal) history.replaceState(null, '', floor.link.hash);
  updateLinks(floor.id);
  (detailTrigger || scroller).focus({preventScroll: true});
 });
@@ -392,18 +432,6 @@ document.addEventListener('keydown', event => {
 
 function openContext(x, y) {
  if (shell.dataset.console || cabin.dataset.travel) return false;
- contextMenu.querySelector('[data-context-action="panorama"]').textContent = cabin.hasAttribute('data-details')
-  ? 'Revenir à la fresque' : 'Début de la fresque';
- contextObjects.replaceChildren(...stops.map(stop => {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.dataset.contextTarget = stop.dataset.target;
-  button.textContent = stop.querySelector('.room-hotspot-label').textContent;
-  return button;
- }));
- for (const link of contextMenu.querySelectorAll('[data-context-view]')) {
-  link.href = document.querySelector('.theme-switch a[data-theme-choice="' + link.dataset.contextView + '"]').href;
- }
  if (!contextMenu.matches(':popover-open')) contextMenu.showPopover();
  const bounds = contextMenu.getBoundingClientRect();
  contextMenu.style.left = Math.max(8, Math.min(x, innerWidth - bounds.width - 8)) + 'px';
@@ -416,44 +444,28 @@ contextTrigger.addEventListener('click', event => {
  else {
   const box = contextTrigger.getBoundingClientRect();
   if (openContext(box.right, box.bottom + 4) && !event.detail) {
-   contextMenu.querySelector('[data-context-action]').focus();
+   (contextMenu.querySelector('[aria-current]') || contextLinks[0]).focus();
   }
  }
 });
 contextMenu.addEventListener('toggle', () => {
  contextTrigger.setAttribute('aria-expanded', String(contextMenu.matches(':popover-open')));
 });
-contextMenu.addEventListener('click', event => {
- const command = event.target.closest('[data-context-action], [data-context-target]');
- if (!command) return;
- const {contextAction, contextTarget} = command.dataset;
- contextMenu.hidePopover();
- if (contextTarget) {
-  detailTrigger = stops.find(stop => stop.dataset.target === contextTarget);
-  if (detailTrigger) scroller.scrollLeft = detailTrigger.offsetLeft - scroller.clientWidth / 2;
-  select('#' + contextTarget, {moveFocus: true, reveal: true});
- } else if (contextAction === 'plan') setConsole(true);
- else if (contextAction === 'print') window.print();
- else if (cabin.hasAttribute('data-details')) roomBack.click();
- else {
-  moveToStop(0, true);
-  scroller.focus({preventScroll: true});
- }
-});
 contextMenu.addEventListener('keydown', event => {
- if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
- const choices = [...contextMenu.querySelectorAll('[data-context-action], [data-context-target], a')];
- const index = choices.indexOf(document.activeElement);
- const step = event.key === 'ArrowDown' ? 1 : -1;
- const next = event.key === 'Home' ? 0 : event.key === 'End' ? choices.length - 1
-  : (Math.max(index, step > 0 ? -1 : 0) + step + choices.length) % choices.length;
+ const index = contextLinks.indexOf(document.activeElement);
+ const next = ({ArrowUp: index - 3, ArrowDown: index + 3, ArrowLeft: index - 1,
+  ArrowRight: index + 1, Home: 0, End: contextLinks.length - 1})[event.key];
+ if (next === undefined) return;
  event.preventDefault();
- choices[next].focus();
+ contextLinks[Math.max(0, Math.min(next, contextLinks.length - 1))].focus();
 });
 document.addEventListener('contextmenu', event => {
  const selection = getSelection()?.toString();
  if (contextMenu.contains(event.target) || preservesNativeMenu(event.target, {shiftKey: event.shiftKey, selection})) return;
- if (openContext(event.clientX + 8, event.clientY + 6)) event.preventDefault();
+ if (openContext(event.clientX + 8, event.clientY + 6)) {
+  event.preventDefault();
+  (contextMenu.querySelector('[aria-current]') || contextLinks[0]).focus({preventScroll: true});
+ }
 });
 document.addEventListener('keydown', event => {
  if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
@@ -461,7 +473,7 @@ document.addEventListener('keydown', event => {
  const box = document.activeElement.getBoundingClientRect();
  if (!openContext(box.left + 8, box.top + 8)) return;
  event.preventDefault();
- contextMenu.querySelector('[data-context-action]').focus();
+ (contextMenu.querySelector('[aria-current]') || contextLinks[0]).focus();
 });
 addEventListener('resize', () => {
  if (contextMenu.matches(':popover-open')) contextMenu.hidePopover();
@@ -526,12 +538,13 @@ travel.addEventListener('click', event => {
  }
 });
 
-addEventListener('hashchange', () => { void go(location.hash); });
-viewport.addEventListener('scroll', syncProject, {passive: true});
+addEventListener('popstate', () => {
+ void go(location.hash, {moveFocus: true, reveal: history.state?.reveal});
+});
 print.addEventListener('click', () => window.print());
 for (const floor of floors) floor.link.title = floor.name;
 print.hidden = false;
 travel.hidden = false;
 room.hidden = false;
 root.dataset.lift = 'ready';
-void go(location.hash, {animate: false, announce: false});
+void go(location.hash, {animate: false, announce: false, reveal: history.state?.reveal});
